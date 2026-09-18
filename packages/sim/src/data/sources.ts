@@ -11,15 +11,24 @@ export const SOURCE_IDS = [
   "OCHMO-RAD",
   "OCHMO-TB047",
   "ICES-2017",
-  "NTRS-MARGINS",
+  // Margins and contingency. Three specific documents, replacing the earlier vague
+  // "NTRS-MARGINS" entry: Ames for margin by review milestone, GSFC for the
+  // basic-plus-growth rule, THEMIS for contingency by maturity and historical growth.
+  "NASA-AMES-STD8070",
+  "GSFC-STD-1000H",
+  "THEMIS-MARGINS",
   "NASA-WATER-2023",
   "MIT-MOXIE-2023",
   "FRONTIERS-2024",
-  "MSL-RAD",
+  // The two MSL RAD numbers come from two different papers, so they are cited separately
+  // rather than under one "MSL-RAD" label.
+  "MSL-RAD-SURFACE",
+  "MSL-RAD-CRUISE",
+  "MSL-RAD-SUMMARY",
   "CE4-LND-2020",
   "NASA-FSP",
+  "NASA-FSP-IAC2024",
   "NSSDC-FACTS",
-  "NASA-STD-3001",
   "STOICHIOMETRY",
   "GAME-DESIGN",
 ] as const;

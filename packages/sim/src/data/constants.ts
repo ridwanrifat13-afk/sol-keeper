@@ -284,7 +284,7 @@ export const radiation = {
     unit: "mSv/day",
     min: 0.52,
     max: 0.76,
-    source: "MSL-RAD",
+    source: "MSL-RAD-SURFACE",
     confidence: "measured",
     note: "0.64 +/- 0.12 mSv/day, Curiosity RAD, unshielded surface.",
   }),
@@ -293,7 +293,7 @@ export const radiation = {
     unit: "mSv/day",
     min: 1.54,
     max: 2.14,
-    source: "MSL-RAD",
+    source: "MSL-RAD-CRUISE",
     confidence: "measured",
     note: "1.84 +/- 0.30 mSv/day during MSL cruise.",
   }),
@@ -314,33 +314,33 @@ export const radiation = {
   careerLimitMSv: c({
     value: 600,
     unit: "mSv",
-    source: "NASA-STD-3001",
+    source: "OCHMO-RAD",
     confidence: "measured",
   }),
   solarParticleEventLimitMSv: c({
     value: 250,
     unit: "mSv",
-    source: "NASA-STD-3001",
+    source: "OCHMO-RAD",
     confidence: "measured",
     note: "Per solar particle event.",
   }),
   nuclearTechLimitMSvPerMissionYear: c({
     value: 20,
     unit: "mSv/mission-year",
-    source: "NASA-STD-3001",
+    source: "OCHMO-RAD",
     confidence: "measured",
   }),
   surfaceDesignTargetMSvPerDay: c({
     value: 0.8,
     unit: "mSv/day",
-    source: "NASA-STD-3001",
+    source: "OCHMO-RAD",
     confidence: "measured",
     note: "Galactic-cosmic-ray design target on planetary surfaces.",
   }),
   freeSpaceDesignTargetMSvPerDay: c({
     value: 1.3,
     unit: "mSv/day",
-    source: "NASA-STD-3001",
+    source: "OCHMO-RAD",
     confidence: "measured",
     note: "Design target in free space behind roughly 10 g/cm^2 aluminium.",
   }),
@@ -645,77 +645,96 @@ export const management = {
   contingencyConceptFraction: c({
     value: 0.25,
     unit: "fraction",
-    source: "NTRS-MARGINS",
+    source: "THEMIS-MARGINS",
     confidence: "measured",
   }),
   contingencyDesignFraction: c({
     value: 0.15,
     unit: "fraction",
-    source: "NTRS-MARGINS",
+    source: "THEMIS-MARGINS",
     confidence: "measured",
   }),
   contingencyPriorBuildFraction: c({
     value: 0.075,
     unit: "fraction",
-    source: "NTRS-MARGINS",
+    source: "THEMIS-MARGINS",
     confidence: "measured",
   }),
   contingencyFabricationFraction: c({
     value: 0.04,
     unit: "fraction",
-    source: "NTRS-MARGINS",
+    source: "THEMIS-MARGINS",
     confidence: "measured",
   }),
   contingencyFlightFraction: c({
     value: 0.02,
     unit: "fraction",
-    source: "NTRS-MARGINS",
+    source: "THEMIS-MARGINS",
     confidence: "measured",
   }),
+  /**
+   * Required mass margin at each review milestone.
+   *
+   * Note for whoever verifies these: the two sources use *different milestone sets* and do
+   * not fully agree. NASA Ames APR 8070.1 Table 3.1.1.1-1 lists 30% SRR, 20% PDR, 15% CDR,
+   * 5% SIR. The project brief's schedule is Phase A >30%, PDR >20%, CDR >15%, PER >10%,
+   * pre-ship 2-5%. They match at PDR and CDR; SRR and Phase A are both the early-design
+   * milestone at 30%; but Ames has no PER row, and its 5% at SIR sits inside the brief's
+   * 2-5% pre-ship band rather than matching the brief's 10% at PER.
+   *
+   * The brief's values are seeded here as-is. The two early ones are cited to Ames, which
+   * states them directly; PER and pre-ship are cited to THEMIS, whose margin schedule is
+   * milestone-based in the same way. If a verifier finds the Ames table authoritative for
+   * this project, marginPerFraction is the entry to reconcile.
+   */
   marginPhaseAFraction: c({
     value: 0.3,
     unit: "fraction",
-    source: "NTRS-MARGINS",
+    source: "NASA-AMES-STD8070",
     confidence: "measured",
-    note: "Required margin is greater than this.",
+    note: "Required margin is greater than this. Ames Table 3.1.1.1-1 states 30% at SRR, the equivalent early-design milestone.",
   }),
   marginPdrFraction: c({
     value: 0.2,
     unit: "fraction",
-    source: "NTRS-MARGINS",
+    source: "NASA-AMES-STD8070",
     confidence: "measured",
+    note: "Ames Table 3.1.1.1-1. GSFC-STD-1000H corroborates the basic-mass-plus-growth-allowance rule.",
   }),
   marginCdrFraction: c({
     value: 0.15,
     unit: "fraction",
-    source: "NTRS-MARGINS",
+    source: "NASA-AMES-STD8070",
     confidence: "measured",
+    note: "Ames Table 3.1.1.1-1.",
   }),
   marginPerFraction: c({
     value: 0.1,
     unit: "fraction",
-    source: "NTRS-MARGINS",
+    source: "THEMIS-MARGINS",
     confidence: "measured",
+    note: "TO VERIFY: Ames Table 3.1.1.1-1 has no PER row; its nearest milestone, SIR, is 5%. This is the one margin value the two sources disagree on.",
   }),
   marginPreShipFraction: c({
     value: 0.035,
     unit: "fraction",
     min: 0.02,
     max: 0.05,
-    source: "NTRS-MARGINS",
+    source: "THEMIS-MARGINS",
     confidence: "measured",
+    note: "Midpoint of the brief's 2-5% pre-ship band. Ames states 5% at SIR, the top of this range.",
   }),
   historicalGrowthMinFraction: c({
     value: 0.2,
     unit: "fraction",
-    source: "NTRS-MARGINS",
+    source: "THEMIS-MARGINS",
     confidence: "measured",
     note: "JPL: mass and power grow 20-48% from Phase B to launch.",
   }),
   historicalGrowthMaxFraction: c({
     value: 0.48,
     unit: "fraction",
-    source: "NTRS-MARGINS",
+    source: "THEMIS-MARGINS",
     confidence: "measured",
   }),
   /** Hourly failure rate multiplier by Technology Readiness Level (1 = least mature). */
