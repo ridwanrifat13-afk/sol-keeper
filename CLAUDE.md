@@ -67,7 +67,7 @@ Directory is `apps/web`; `packages/sim` is consumed as a built workspace package
 
 ## Data and API notes
 
-- Tile URLs come **only** from `docs/api-samples/trek_layers.md`, and only from layers whose
+- Tile URLs come **only** from `docs/trek_layers.md`, and only from layers whose
   Status is "tested". Never guess a tile URL. Trek global layers are equirectangular:
   Leaflet needs `L.CRS.EPSG4326` (max native zoom 7 Mars / 8 Moon, 256 px tiles).
 - DONKI field names differ per event type (FLR `flrID`/`beginTime`, SEP `sepID`/`eventTime`,

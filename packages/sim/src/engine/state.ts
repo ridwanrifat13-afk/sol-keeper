@@ -1,0 +1,158 @@
+/**
+ * Builds the opening `SimState` from a `Scenario` and the run `Params`.
+ *
+ * Everything produced here is plain, serialisable data — no class instances, no closures —
+ * so `structuredClone(state)` is a complete save and two runs can be deep-equal compared.
+ */
+import { environment, physics, radiation } from "../data/constants.js";
+import { getScenario } from "../data/scenarios/index.js";
+import type { CropTray, Params, Scenario, SimState, SystemId, SystemState } from "../types.js";
+import { auToLightSeconds, partialPressureMmHg } from "../units.js";
+import { createRngState } from "./rng.js";
+
+const CREW_NAMES = ["Ayesha", "Diego", "Mei", "Tunde", "Nadia", "Petra"] as const;
+
+function buildCrew(size: number) {
+  return Array.from({ length: size }, (_, i) => ({
+    id: `crew-${i + 1}`,
+    name: CREW_NAMES[i % CREW_NAMES.length] ?? `Crew ${i + 1}`,
+    location: "habitat" as const,
+    healthFraction: 1,
+    moraleFraction: 1,
+    cumulativeDoseMSv: 0,
+    eventDoseMSv: 0,
+    bodyTempC: 37,
+    alive: true,
+  }));
+}
+
+function buildSystems(scenario: Scenario): Record<SystemId, SystemState> {
+  const out = {} as Record<SystemId, SystemState>;
+  for (const spec of scenario.systems) {
+    out[spec.id] = {
+      id: spec.id,
+      trl: spec.trl,
+      nominalPowerKw: spec.nominalPowerKw,
+      priority: spec.priority,
+      operational: true,
+      spares: spec.spares,
+      poweredThisHour: false,
+    };
+  }
+  return out;
+}
+
+function buildTrays(scenario: Scenario): CropTray[] {
+  return scenario.initial.cropTrays.map((t, i) => ({
+    id: `tray-${i + 1}`,
+    crop: t.crop,
+    areaM2: t.areaM2,
+    lightHours: 0,
+    healthFraction: 1,
+  }));
+}
+
+/** Unshielded ambient dose rate for a body, before the habitat shell is applied. */
+export function ambientDoseMSvPerDay(body: Scenario["body"]): number {
+  return body === "mars"
+    ? radiation.marsSurfaceMSvPerDay.value
+    : radiation.moonSurfaceMSvPerDay.value;
+}
+
+export function createInitialState(params: Params): SimState {
+  const scenario = getScenario(params.scenarioId);
+  const init = scenario.initial;
+
+  const startTempC = 22;
+  const crew = buildCrew(params.crewSize);
+
+  return {
+    hour: 0,
+
+    environment: {
+      irradianceWPerM2: 0,
+      dustObscurationFraction: 0,
+      outsideTempC:
+        scenario.body === "mars"
+          ? environment.marsMeanSurfaceTempC.value
+          : environment.moonEquatorMinTempC.value,
+      isDaylight: false,
+      stormActive: false,
+    },
+
+    power: {
+      generationKw: 0,
+      demandKw: 0,
+      servedKw: 0,
+      batteryEnergyKwh: init.batteryEnergyKwh,
+      batteryCapacityKwh: init.batteryCapacityKwh,
+      shedSystems: [],
+    },
+
+    thermal: {
+      habitatTempC: startTempC,
+      heaterKw: 0,
+      crewHeatKw: 0,
+      lossKw: 0,
+    },
+
+    atmosphere: {
+      o2Kg: init.o2Kg,
+      co2Kg: init.co2Kg,
+      habitatVolumeM3: init.habitatVolumeM3,
+      o2PartialPressureMmHg: partialPressureMmHg(
+        init.o2Kg,
+        physics.molarMassO2GPerMol.value,
+        init.habitatVolumeM3,
+        startTempC,
+      ),
+      co2PartialPressureMmHg: partialPressureMmHg(
+        init.co2Kg,
+        physics.molarMassCo2GPerMol.value,
+        init.habitatVolumeM3,
+        startTempC,
+      ),
+    },
+
+    water: {
+      potableKg: init.potableWaterKg,
+      wasteKg: 0,
+      recoveryFraction: 0, // set by the water model on the first tick
+      cumulativeLossKg: 0,
+    },
+
+    food: {
+      storedDryMassKg: init.foodDryMassKg,
+      mode: "nominal",
+      trays: buildTrays(scenario),
+      cumulativeHarvestKg: 0,
+    },
+
+    radiation: {
+      ambientMSvPerDay: ambientDoseMSvPerDay(scenario.body),
+      shieldingGPerCm2: init.shieldingGPerCm2,
+      solarParticleEventActive: false,
+    },
+
+    crew,
+    systems: buildSystems(scenario),
+
+    comms: {
+      oneWayLightSeconds:
+        scenario.body === "mars"
+          ? auToLightSeconds(environment.marsMeanDistanceAu.value - 1)
+          : 1.28,
+      blackout: false,
+    },
+
+    isru: {
+      moxieRunning: false,
+      moxieO2ProducedKg: 0,
+      electrolysisO2ProducedKg: 0,
+    },
+
+    rng: createRngState(params.seed),
+    log: [],
+    status: "running",
+  };
+}

@@ -1,0 +1,15 @@
+# Saved NASA API responses are evidence, not source. They must stay byte-identical to what
+# the API actually returned, because the M5 parsers are unit-tested against them and a
+# reformatted fixture no longer proves the parser handles the real payload.
+docs/api-samples/
+
+# Documentation is hand-maintained and co-edited by the team. Prettier realigns markdown
+# tables, which produces noisy diffs and conflicts with edits made in an editor.
+docs/
+*.md
+
+# Build output and dependencies
+dist/
+node_modules/
+pnpm-lock.yaml
+.vercel/

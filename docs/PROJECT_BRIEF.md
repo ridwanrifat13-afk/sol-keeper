@@ -110,7 +110,7 @@ rules automatically in every session.
    `https://images-api.nasa.gov/search?q&media_type=image`
    Use: photos for "What NASA did" fact cards. Return a normalized, trimmed list only.
 4. **Moon/Mars Trek WMTS tiles** (no key), loaded directly by Leaflet in the browser.
-   Tile URLs come ONLY from `docs/api-samples/trek_layers.md` (provided by the lead
+   Tile URLs come ONLY from `docs/trek_layers.md` (provided by the lead
    developer, parsed from each layer's GetCapabilities XML). Never guess tile URLs.
 
 Do NOT use: Mars Rover Photos API (backend reported down), APOD, NeoWs, EPIC.

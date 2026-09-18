@@ -1,0 +1,23 @@
+{
+  "name": "@sol-keeper/sim",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure, deterministic outpost simulation for Sol Keeper. No DOM, no I/O, no wall clock.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "sim": "pnpm run build && node dist/cli.js"
+  }
+}

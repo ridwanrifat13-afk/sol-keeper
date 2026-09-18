@@ -17,6 +17,9 @@ Status: ☐ unverified · ☑ verified (page/table recorded)
 | CE4-LND-2020 | Chang'e-4 lunar surface dose, Science Advances | (add link) | CE4-LND-2020.pdf | 1.37 mSv/day | | | ☐ |
 | NASA-FSP | Fission Surface Power project | (add NASA page link) | — | 40 kWe, 10 yr, ≤6000 kg | — | | ☐ |
 | NSSDC-FACTS | NASA planetary fact sheets | https://nssdc.gsfc.nasa.gov/planetary/factsheet/ | — | gravity, day length, irradiance | — | | ☐ |
+| NASA-STD-3001 | NASA Space Flight Human-System Standard, Volume 1 | https://www.nasa.gov/ochmo/human-spaceflight-and-aviation-standards/ | — | career 600 mSv, SPE 250 mSv, GCR design targets | | | ☐ |
+| STOICHIOMETRY | Textbook physical chemistry and IAU/CODATA defined values | — | — | molar masses, gas constant, mmHg, AU, light time per AU | — | n/a | ☑ |
+| GAME-DESIGN | Sol Keeper gameplay tuning (not a NASA source) | — | — | shielding curves, thermal conductance, failure rates, crop photoperiod | — | n/a | ☑ |
 
 ## APIs
 | ID | Service | Endpoint | Key | Used for |
@@ -24,7 +27,7 @@ Status: ☐ unverified · ☑ verified (page/table recorded)
 | API-DONKI | NASA DONKI | https://api.nasa.gov/DONKI/{FLR,SEP,CME,GST} | yes | Live Sky radiation storms |
 | API-HORIZONS | JPL Horizons | https://ssd.jpl.nasa.gov/api/horizons.api | no | comms light-time |
 | API-IMAGES | NASA Image and Video Library | https://images-api.nasa.gov/search | no | fact-card photos |
-| API-TREK | Moon/Mars Trek WMTS | see docs/api-samples/trek_layers.md | no | landing-site maps |
+| API-TREK | Moon/Mars Trek WMTS | see docs/trek_layers.md | no | landing-site maps |
 
 ## Game simplifications (disclosed to players)
 - Shielding curves, crop yields, thermal conductance, and failure rates are tuned for gameplay.
