@@ -1,0 +1,12 @@
+   # secrets
+   .env
+   .env.*
+   !.env.example
+   # local-only source documents
+   docs/sources/*.pdf
+   docs/sources/*.txt
+   # build and tooling
+   node_modules
+   dist
+   .vercel
+   .DS_Store
