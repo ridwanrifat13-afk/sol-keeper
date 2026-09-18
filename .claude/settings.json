@@ -1,8 +1,8 @@
-   {
-     "permissions": {
-       "deny": [
-         "Read(./.env)", "Read(./.env.*)",
-         "Read(./apps/web/.env)", "Read(./apps/web/.env.*)"
-       ]
-     }
-   }
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)", "Read(./.env.*)",
+      "Read(./apps/web/.env)", "Read(./apps/web/.env.*)"
+    ]
+  }
+}
