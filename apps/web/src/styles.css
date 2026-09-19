@@ -1,0 +1,524 @@
+/*
+ * Sol Keeper — Operate view.
+ *
+ * Two constraints from the brief shape all of this (rule 6):
+ *   - status is never carried by colour alone. Each status class sets a *fill pattern* as
+ *     well as a hue, so the three levels stay distinguishable in greyscale, in bright
+ *     sunlight, and to a colour-blind player. The glyph and the status word are in the DOM.
+ *   - it has to run on a low-end Android phone. No animations beyond a colour transition,
+ *     no shadows on scrolling lists, system fonts only, single stylesheet.
+ */
+
+:root {
+  --bg: #0b1020;
+  --bg-panel: #141b31;
+  --bg-raised: #1d2642;
+  --line: #2b3557;
+  --text: #e8ecf8;
+  --text-dim: #9aa6c7;
+
+  --nominal: #4ade80;
+  --caution: #fbbf24;
+  --critical: #f87171;
+
+  --radius: 10px;
+  --gap: 12px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f4f6fc;
+    --bg-panel: #ffffff;
+    --bg-raised: #eef1f9;
+    --line: #ccd4e8;
+    --text: #131a2e;
+    --text-dim: #55618a;
+
+    --nominal: #15803d;
+    --caution: #a16207;
+    --critical: #b91c1c;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+h2 {
+  font-size: 1rem;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--bg-raised);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------- status */
+/* The pattern is the accessibility mechanism, not decoration: it distinguishes the three
+   levels without relying on hue. */
+.is-nominal {
+  --status: var(--nominal);
+  --pattern: none;
+}
+.is-caution {
+  --status: var(--caution);
+  --pattern: repeating-linear-gradient(
+    45deg,
+    rgb(0 0 0 / 28%) 0 4px,
+    rgb(0 0 0 / 0%) 4px 8px
+  );
+}
+.is-critical {
+  --status: var(--critical);
+  --pattern: repeating-linear-gradient(
+    90deg,
+    rgb(0 0 0 / 40%) 0 2px,
+    rgb(0 0 0 / 0%) 2px 5px
+  );
+}
+
+/* ---------------------------------------------------------------- layout */
+.mission-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--gap);
+}
+
+.mission-site {
+  margin: 2px 0 0;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.run-badge {
+  border: 1px solid var(--status);
+  color: var(--status);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.run-badge-reason {
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: var(--gap);
+}
+
+.panel-hint {
+  margin: 0 0 10px;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+}
+
+@media (min-width: 760px) {
+  .two-col {
+    grid-template-columns: 1fr 1fr;
+  }
+  .two-col > .panel {
+    margin-bottom: 0;
+  }
+}
+
+/* ---------------------------------------------------------------- buttons */
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn {
+  background: var(--bg-raised);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  /* 44px minimum touch target. */
+  min-height: 44px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--text-dim);
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--nominal);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-active {
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+.btn-quiet {
+  color: var(--text-dim);
+}
+
+.btn-tiny {
+  min-height: 34px;
+  min-width: 34px;
+  padding: 2px 8px;
+}
+
+.btn-sub {
+  display: block;
+  font-size: 0.68rem;
+  opacity: 0.75;
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------------- clock */
+.time-controls {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: var(--gap);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  align-items: center;
+}
+
+.clock {
+  display: flex;
+  flex-direction: column;
+  min-width: 96px;
+}
+
+.clock-sol {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.clock-hour {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- gauges */
+.gauge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.gauge {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--status);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.gauge-head {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 0.78rem;
+}
+
+.gauge-icon {
+  color: var(--status);
+  font-size: 1rem;
+}
+
+.gauge-label {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gauge-status {
+  margin-left: auto;
+  color: var(--status);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gauge-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin: 3px 0 6px;
+}
+
+.gauge-track {
+  height: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.gauge-fill {
+  height: 100%;
+  background-color: var(--status);
+  background-image: var(--pattern);
+  transition: width 200ms linear;
+}
+
+.gauge-detail {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.inline-alert {
+  margin: 12px 0 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--status);
+  color: var(--status);
+  background-image: var(--pattern);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- priorities */
+.priority-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.priority-row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--status);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.priority-rank {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+}
+
+.priority-name {
+  font-size: 0.88rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.priority-power {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.priority-state {
+  color: var(--status);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.priority-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* ---------------------------------------------------------------- crew */
+.crew-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.crew-row {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--status);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 0.8rem;
+}
+
+.crew-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-basis: 100%;
+}
+
+.crew-lost {
+  color: var(--critical);
+  font-weight: 400;
+}
+
+.crew-stat {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.crew-dose {
+  flex-basis: 100%;
+}
+
+.crew-dose-limit {
+  opacity: 0.8;
+}
+
+/* ---------------------------------------------------------------- events */
+.event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.event-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--status);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.event-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.72rem;
+  margin-bottom: 3px;
+}
+
+.event-sev {
+  color: var(--status);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.event-time {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.event-text {
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.event-cause {
+  margin: 5px 0 0;
+  padding-left: 8px;
+  border-left: 2px solid var(--line);
+  color: var(--text-dim);
+  font-size: 0.75rem;
+}
+
+.event-empty {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  padding: 10px 0;
+}
+
+/* ---------------------------------------------------------------- credits */
+.credits {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  padding: 4px 2px 24px;
+}
+
+.credits p {
+  margin: 0 0 6px;
+}
+
+.credits-fine {
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gauge-fill {
+    transition: none;
+  }
+}

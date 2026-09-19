@@ -1,0 +1,24 @@
+{
+  "name": "@sol-keeper/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "pnpm --filter @sol-keeper/sim build && vite build",
+    "preview": "vite preview",
+    "typecheck": "pnpm --filter @sol-keeper/sim build && tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@sol-keeper/sim": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.7.0",
+    "vite": "^6.3.6"
+  }
+}
