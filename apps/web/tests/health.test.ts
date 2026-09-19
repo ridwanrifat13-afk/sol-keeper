@@ -9,9 +9,9 @@
  * config. If the workspace link ever breaks, this fails here rather than silently at M5.
  */
 import { describe, expect, it } from "vitest";
-import { GET } from "../api/health";
-import { CDN_CACHE, NO_CACHE, badRequest, json, upstreamFailed } from "../server-lib/http";
-import type { HealthResponse } from "../server-lib/types";
+import { GET } from "../api/health.js";
+import { CDN_CACHE, NO_CACHE, badRequest, json, upstreamFailed } from "../server-lib/http.js";
+import type { HealthResponse } from "../server-lib/types.js";
 
 describe("GET /api/health", () => {
   it("returns 200 with the sim resolved", async () => {

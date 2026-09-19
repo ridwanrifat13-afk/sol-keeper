@@ -3,7 +3,7 @@
  *
  * Lives in server-lib rather than api/ so it is never deployed as an endpoint of its own.
  */
-import type { ApiError } from "./types";
+import type { ApiError } from "./types.js";
 
 /**
  * Cache policy from the brief: Vercel's CDN serves a response for six hours and may serve a

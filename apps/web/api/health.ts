@@ -11,8 +11,8 @@
  * link is broken fails here, loudly, on the first request after the first deploy.
  */
 import { CONSTANTS, SCENARIOS, walkConstants } from "@sol-keeper/sim";
-import { NO_CACHE, json, nowIso } from "../server-lib/http";
-import type { HealthResponse } from "../server-lib/types";
+import { NO_CACHE, json, nowIso } from "../server-lib/http.js";
+import type { HealthResponse } from "../server-lib/types.js";
 
 export async function GET(_request: Request): Promise<Response> {
   const body: HealthResponse = {
