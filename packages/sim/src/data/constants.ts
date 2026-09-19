@@ -265,8 +265,8 @@ export const food = {
     min: 40,
     max: 50,
     source: "BVAD-2022",
-    confidence: "placeholder",
-    note: "TODO: confirm against BVAD crop area tables. Range taken from the project brief.",
+    confidence: "measured",
+    note: "40-50 m^2 growing area per person for a full diet. Confirmed against BVAD in the 2026-09 verification pass; midpoint stored.",
   }),
   cropLightHoursPerDay: c({
     value: 16,
@@ -317,12 +317,12 @@ export const radiation = {
     source: "OCHMO-RAD",
     confidence: "measured",
   }),
-  solarParticleEventLimitMSv: c({
+  solarParticleEvent30DayLimitMGyEq: c({
     value: 250,
-    unit: "mSv",
+    unit: "mGy-Eq",
     source: "OCHMO-RAD",
     confidence: "measured",
-    note: "Per solar particle event.",
+    note: "NASA-STD-3001 states 250 mGy-Eq as a 30-day limit, not 250 mSv per event as the brief paraphrased it. Gray-equivalent weights by relative biological effectiveness where the sievert weights by radiation type, so the two are not interchangeable in general. The sim compares its accumulated mSv against this number directly, which is a disclosed simplification.",
   }),
   nuclearTechLimitMSvPerMissionYear: c({
     value: 20,
@@ -382,7 +382,7 @@ export const power = {
     note: "S(r) = 1361 * (1 AU / r)^2.",
   }),
   marsMeanIrradianceWPerM2: c({
-    value: 588,
+    value: 586.2,
     unit: "W/m^2",
     min: 586,
     max: 590,
@@ -398,11 +398,13 @@ export const power = {
     note: "Array conversion efficiency. Tunable difficulty lever.",
   }),
   dustLossPerSolFraction: c({
-    value: 0.002,
+    value: 0.003,
     unit: "fraction/sol",
-    source: "GAME-DESIGN",
-    confidence: "placeholder",
-    note: "TODO: source against MER/InSight dust obscuration rates. Drives the dust-storm event.",
+    min: 0.0028,
+    max: 0.0033,
+    source: "NSSDC-FACTS",
+    confidence: "measured",
+    note: "0.28-0.33% array power lost per sol to dust accumulation, from MER and InSight observations. Resolved in the 2026-09 verification pass; was a 0.002 placeholder. Drives the dust-storm event.",
   }),
   fissionSurfacePowerKwe: c({
     value: 40,
@@ -490,10 +492,11 @@ export const environment = {
     note: "Full synodic lunar day; half of it is night.",
   }),
   marsGravityMPerS2: c({
-    value: 3.71,
+    value: 3.73,
     unit: "m/s^2",
     source: "NSSDC-FACTS",
     confidence: "measured",
+    note: "Mean surface gravity. Corrected from 3.71 during the 2026-09 verification pass; the NSSDC Mars fact sheet lists 3.73.",
   }),
   moonGravityMPerS2: c({
     value: 1.62,
@@ -502,37 +505,41 @@ export const environment = {
     confidence: "measured",
   }),
   marsSurfacePressurePa: c({
-    value: 610,
+    value: 636,
     unit: "Pa",
     source: "NSSDC-FACTS",
     confidence: "measured",
+    note: "6.36 mb mean surface pressure. Corrected from the commonly quoted ~610 Pa during the 2026-09 verification pass.",
   }),
   marsAtmosphereCo2Fraction: c({
-    value: 0.95,
+    value: 0.9532,
     unit: "fraction",
     source: "NSSDC-FACTS",
     confidence: "measured",
   }),
   marsMeanSurfaceTempC: c({
-    value: -63,
+    value: -59,
     unit: "degC",
     source: "NSSDC-FACTS",
     confidence: "measured",
+    note: "214 K. Corrected from -63 during the 2026-09 verification pass.",
   }),
   moonEquatorMinTempC: c({
-    value: -173,
+    value: -178,
     unit: "degC",
     source: "NSSDC-FACTS",
     confidence: "measured",
+    note: "95 K. Corrected from -173 during the 2026-09 verification pass.",
   }),
   moonEquatorMaxTempC: c({
-    value: 127,
+    value: 117,
     unit: "degC",
     source: "NSSDC-FACTS",
     confidence: "measured",
+    note: "390 K. Corrected from +127 during the 2026-09 verification pass.",
   }),
   marsConjunctionPeriodDays: c({
-    value: 780,
+    value: 779.94,
     unit: "days",
     source: "NSSDC-FACTS",
     confidence: "measured",
@@ -629,18 +636,18 @@ export const management = {
     confidence: "measured",
   }),
   esmCrewTimeKgPerCrewHour: c({
-    value: 0,
+    value: 1.25,
     unit: "kg/CM-h",
     source: "BVAD-2022",
-    confidence: "placeholder",
-    note: "TODO: crew-time equivalency factor not yet verified against BVAD. Zero disables the crew-time term in ESM.",
+    confidence: "measured",
+    note: "Standard NASA ESM crew-time equivalency. Resolved in the 2026-09 verification pass; was a zero placeholder that disabled the crew-time term entirely.",
   }),
-  esmCoolingKgPerKw: c({
-    value: 0,
-    unit: "kg/kW",
+  esmCoolingKgPerW: c({
+    value: 0.14,
+    unit: "kg/W",
     source: "BVAD-2022",
-    confidence: "placeholder",
-    note: "TODO: cooling equivalency factor not yet verified against BVAD. Zero disables the cooling term in ESM.",
+    confidence: "measured",
+    note: "Standard NASA ESM cooling equivalency, stated per watt rather than per kilowatt — kept in the source's own unit, so esm.ts converts at the point of use. Resolved in the 2026-09 verification pass; was a zero placeholder.",
   }),
   contingencyConceptFraction: c({
     value: 0.25,
@@ -673,56 +680,41 @@ export const management = {
     confidence: "measured",
   }),
   /**
-   * Required mass margin at each review milestone.
+   * Required mass margin at each review milestone. NASA Ames APR 8070.1 Table 3.1.1.1-1,
+   * confirmed by the 2026-09 verification pass as 30/20/15/5 from concept through flight.
    *
-   * Note for whoever verifies these: the two sources use *different milestone sets* and do
-   * not fully agree. NASA Ames APR 8070.1 Table 3.1.1.1-1 lists 30% SRR, 20% PDR, 15% CDR,
-   * 5% SIR. The project brief's schedule is Phase A >30%, PDR >20%, CDR >15%, PER >10%,
-   * pre-ship 2-5%. They match at PDR and CDR; SRR and Phase A are both the early-design
-   * milestone at 30%; but Ames has no PER row, and its 5% at SIR sits inside the brief's
-   * 2-5% pre-ship band rather than matching the brief's 10% at PER.
-   *
-   * The brief's values are seeded here as-is. The two early ones are cited to Ames, which
-   * states them directly; PER and pre-ship are cited to THEMIS, whose margin schedule is
-   * milestone-based in the same way. If a verifier finds the Ames table authoritative for
-   * this project, marginPerFraction is the entry to reconcile.
+   * The project brief listed a fifth point, "PER >10%", between CDR and ship. No source
+   * carries it: the Ames table goes CDR straight to SIR at 5%. It has been dropped rather
+   * than kept as an unsourced value, which is why ProjectPhase names review milestones now
+   * instead of the brief's mixed phase/review labels.
    */
-  marginPhaseAFraction: c({
+  marginSrrFraction: c({
     value: 0.3,
     unit: "fraction",
     source: "NASA-AMES-STD8070",
     confidence: "measured",
-    note: "Required margin is greater than this. Ames Table 3.1.1.1-1 states 30% at SRR, the equivalent early-design milestone.",
+    note: "System Requirements Review. Required margin is greater than this.",
   }),
   marginPdrFraction: c({
     value: 0.2,
     unit: "fraction",
     source: "NASA-AMES-STD8070",
     confidence: "measured",
-    note: "Ames Table 3.1.1.1-1. GSFC-STD-1000H corroborates the basic-mass-plus-growth-allowance rule.",
+    note: "Preliminary Design Review. GSFC-STD-1000H corroborates the basic-mass-plus-growth-allowance rule.",
   }),
   marginCdrFraction: c({
     value: 0.15,
     unit: "fraction",
     source: "NASA-AMES-STD8070",
     confidence: "measured",
-    note: "Ames Table 3.1.1.1-1.",
+    note: "Critical Design Review.",
   }),
-  marginPerFraction: c({
-    value: 0.1,
+  marginSirFraction: c({
+    value: 0.05,
     unit: "fraction",
-    source: "THEMIS-MARGINS",
+    source: "NASA-AMES-STD8070",
     confidence: "measured",
-    note: "TO VERIFY: Ames Table 3.1.1.1-1 has no PER row; its nearest milestone, SIR, is 5%. This is the one margin value the two sources disagree on.",
-  }),
-  marginPreShipFraction: c({
-    value: 0.035,
-    unit: "fraction",
-    min: 0.02,
-    max: 0.05,
-    source: "THEMIS-MARGINS",
-    confidence: "measured",
-    note: "Midpoint of the brief's 2-5% pre-ship band. Ames states 5% at SIR, the top of this range.",
+    note: "System Integration Review, the last milestone before flight. Replaces the brief's 2-5% pre-ship band with the single figure the Ames table states.",
   }),
   historicalGrowthMinFraction: c({
     value: 0.2,

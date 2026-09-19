@@ -34,20 +34,19 @@ export function contingencyFraction(maturity: Maturity): number {
   }
 }
 
-export type ProjectPhase = "phaseA" | "pdr" | "cdr" | "per" | "preShip";
+/** Review milestones as NASA Ames APR 8070.1 Table 3.1.1.1-1 names them. */
+export type ProjectPhase = "srr" | "pdr" | "cdr" | "sir";
 
 export function requiredMarginFraction(phase: ProjectPhase): number {
   switch (phase) {
-    case "phaseA":
-      return management.marginPhaseAFraction.value;
+    case "srr":
+      return management.marginSrrFraction.value;
     case "pdr":
       return management.marginPdrFraction.value;
     case "cdr":
       return management.marginCdrFraction.value;
-    case "per":
-      return management.marginPerFraction.value;
-    case "preShip":
-      return management.marginPreShipFraction.value;
+    case "sir":
+      return management.marginSirFraction.value;
   }
 }
 

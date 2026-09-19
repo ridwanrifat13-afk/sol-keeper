@@ -80,7 +80,7 @@ export function radiationStage(ctx: TickContext): void {
       });
     }
 
-    if (member.eventDoseMSv >= radConstants.solarParticleEventLimitMSv.value) {
+    if (member.eventDoseMSv >= radConstants.solarParticleEvent30DayLimitMGyEq.value) {
       log.logEdge({
         kind: "crew",
         severity: "critical",
@@ -88,7 +88,7 @@ export function radiationStage(ctx: TickContext): void {
         data: {
           crew: member.name,
           eventDoseMSv: round(member.eventDoseMSv),
-          limitMSv: radConstants.solarParticleEventLimitMSv.value,
+          limitMGyEq: radConstants.solarParticleEvent30DayLimitMGyEq.value,
         },
       });
     }

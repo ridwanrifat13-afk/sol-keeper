@@ -62,7 +62,13 @@ lacks).
 
 ## Game simplifications (disclosed to players)
 - Shielding curves, crop yields, thermal conductance, and failure rates are tuned for gameplay.
-- Crop area per person (40–50 m²) is a placeholder estimate pending verification.
+- The solar-particle-event limit is stated by NASA-STD-3001 as 250 mGy-Eq over 30 days.
+  Gray-equivalent weights by relative biological effectiveness where the sievert weights by
+  radiation type, so the two are not interchangeable. The game accumulates dose in mSv and
+  compares it against 250 directly, which is close enough for the lesson (shelter during a
+  storm) but is not a dosimetry calculation.
+- Habitat oxygen set point (160 mmHg) and fire-risk threshold (200 mmHg) are still
+  unverified placeholders. They decide how much power and water making oxygen costs.
 - DONKI events are observed near Earth. Moon storms are realistic; Mars storms are
   "based on real solar activity on [date]", not claimed to hit Mars.
 - Equirectangular maps stretch near the poles (visible in the lunar south pole view).

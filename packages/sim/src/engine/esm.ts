@@ -7,11 +7,12 @@
  * constrains a mission: mass to the surface. This is the P1 "ESM budget as currency"
  * mechanic — the player spends kilograms, not coins.
  *
- * The crew-time and cooling equivalency factors are `placeholder` (zero) in constants.ts
- * until someone verifies them against BVAD, so those two terms currently contribute
- * nothing. That is deliberate and visible rather than a guessed number.
+ * All five terms are live. The crew-time (1.25 kg/CM-h) and cooling (0.14 kg/W) factors
+ * were zero placeholders until the 2026-09 verification pass supplied the standard NASA
+ * values, so ESM totals from before that date are lower than they should be.
  */
 import { management } from "../data/constants.js";
+import { kwToWatts } from "../units.js";
 
 export interface EsmInputs {
   /** Hardware mass, kg. */
@@ -58,7 +59,9 @@ export function equivalentSystemMass(
 ): EsmBreakdown {
   const volumeKg = inputs.volumeM3 * management.esmTransitVolumeKgPerM3.value;
   const powerKg = inputs.powerKw * powerEquivalencyKgPerKw(powerInfrastructure);
-  const coolingKg = inputs.coolingKw * management.esmCoolingKgPerKw.value;
+  // The cooling equivalency is stated per watt, so the kilowatt input converts here
+  // rather than the literal being pre-multiplied in constants.ts.
+  const coolingKg = kwToWatts(inputs.coolingKw) * management.esmCoolingKgPerW.value;
   const crewTimeKg =
     inputs.crewHoursPerDay * inputs.durationDays * management.esmCrewTimeKgPerCrewHour.value;
 

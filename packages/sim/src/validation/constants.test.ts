@@ -63,13 +63,11 @@ describe("constants registry (brief rule 1)", () => {
       .sort();
 
     // Update this list deliberately when a placeholder is sourced or a new one is added.
+    // The 2026-09 verification pass cleared four of the original six. The two that remain
+    // are the habitat oxygen set points, which that pass did not cover.
     expect(placeholders).toEqual([
-      "food.cropAreaPerPersonFullDietM2",
       "habitat.fireRiskO2PartialPressureMmHg",
       "habitat.targetO2PartialPressureMmHg",
-      "management.esmCoolingKgPerKw",
-      "management.esmCrewTimeKgPerCrewHour",
-      "power.dustLossPerSolFraction",
     ]);
   });
 
