@@ -237,10 +237,23 @@ Values come from the brief, each as a `Constant`, grouped: `crew`, `lifeSupport`
 `radiation`, `power`, `environment`, `management`. Ranges become `min`/`max` (battery is
 `value: 200, min: 150, max: 250` Wh/kg).
 
-Known `"placeholder"` entries to declare in the M1 summary: `cropAreaPerPersonFullDiet`
-(40–50 m²), `dustLossPerSol`, the ESM crew-time and cooling factors, and the two shielding
-attenuation curves (`"tuned"`, noting that solar-particle-event dose falls steeply with
-areal density while galactic-cosmic-ray dose falls weakly and saturates).
+A teammate verification pass in 2026-09 checked 50 parameters against the NASA fact sheets
+and literature. Where its result conflicts with the project brief, **the verification wins**;
+the constant keeps a note recording what changed. That pass corrected Mars gravity, surface
+pressure, mean temperature and the lunar equatorial range, resolved four of the six
+placeholders, restated the solar-particle-event limit in its own unit (250 mGy-Eq over 30
+days, not 250 mSv per event), and cut the margin schedule down to the four Ames review
+milestones. `validation/environment.test.ts` pins all of it, because the tempting "fix" for
+each corrected value is to restore the familiar textbook figure.
+
+Remaining `"placeholder"` entries, both habitat oxygen set points the pass did not cover:
+`habitat.targetO2PartialPressureMmHg` (160) and `habitat.fireRiskO2PartialPressureMmHg`
+(200). They decide how much power and water making oxygen costs, so they are not cosmetic.
+
+Separately `"tuned"`, and disclosed as game simplifications rather than NASA data: the two
+shielding attenuation curves, thermal conductance and mass, failure rates, cell efficiency
+and the crop photoperiod. All are sourced to `GAME-DESIGN`, which a test enforces — a tuned
+value may never be attributed to NASA.
 
 ## 6. Vercel and monorepo configuration
 
@@ -261,9 +274,29 @@ areal density while galactic-cosmic-ray dose falls weakly and saturates).
     "functions": { "api/*.ts": { "memory": 128, "maxDuration": 10 } }
   }
   ```
-- Proof obligation at M2: `vercel build` succeeds locally with `@sol-keeper/sim` resolving,
-  and `/api/health` responds from the build output. Only then are the dashboard connect
-  steps handed over.
+### Settled at M2
+
+`vercel build` and `vercel dev` were both run against the linked project. Results worth
+keeping, because each cost time to establish:
+
+- **The workspace package resolves inside a deployed function.** The built `.func` directory
+  contains no `node_modules`, which looks like a failure; Vercel instead records the package
+  in `.vc-config.json`'s `filePathMap` and resolves it when the prebuilt output is uploaded.
+  `vercel dev` confirms the handler really loads it: `/api/health` returns
+  `{"sim":{"resolved":true,"constantCount":112,...}}`. Do not "fix" the missing directory.
+- **Imports under `api/` and `server-lib/` must carry explicit `.js` extensions.** The
+  emitted function is ESM and `tsc` preserves specifiers verbatim, so an extensionless
+  import throws `ERR_MODULE_NOT_FOUND` at the first request. This is not a place to follow
+  bundler conventions.
+- **Tests must not live in `api/`.** Vercel deploys every file there as an endpoint, so
+  `apps/web/tests/` holds them instead.
+- **`rootDirectory` is unset on the project** because the link was made from inside
+  `apps/web`. That is fine for CLI builds run from that directory and wrong for a
+  Git-connected deploy, which clones the repo root. It must be set to `apps/web` in the
+  dashboard before the first push-to-deploy.
+- Routing from `vercel.json` verified live: `/debrief` serves `index.html`, `/api/missing`
+  returns 404 rather than being swallowed by the SPA rewrite, and `/sw.js` is sent
+  `cache-control: no-cache`.
 
 ## 7. Validation tests
 
