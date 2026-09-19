@@ -1,17 +1,6 @@
 import { useRun } from "../store/run.js";
-import type { SystemId } from "@sol-keeper/sim";
-
-const SYSTEM_LABELS: Record<SystemId, string> = {
-  powerDistribution: "Power distribution",
-  lifeSupport: "Life support",
-  co2Scrubber: "CO₂ scrubber",
-  thermalControl: "Heating",
-  oxygenGenerator: "Oxygen generator",
-  waterRecovery: "Water recovery",
-  moxie: "MOXIE (oxygen from air)",
-  greenhouse: "Greenhouse",
-  comms: "Comms",
-};
+import { useDial } from "../store/dial.js";
+import { systemLabel } from "../dial/labels.js";
 
 /**
  * The load-shed order.
@@ -26,6 +15,7 @@ export function PowerPriorities() {
   const hour = useRun((s) => s.state.hour);
   const systems = useRun((s) => s.state.systems);
   const setPriority = useRun((s) => s.setPriority);
+  const level = useDial((s) => s.level);
 
   const ordered = Object.values(systems).sort((a, b) => a.priority - b.priority);
   // Before the first tick, `poweredThisHour` is just its unset default (false) for every
@@ -35,6 +25,11 @@ export function PowerPriorities() {
   // opening the built app (see e2e/operate.spec.ts) rather than by a render test, which
   // never observes the pristine pre-tick frame a real user's first paint does.
   const missionStarted = hour > 0;
+
+  const words =
+    level === "cadet"
+      ? { standby: "Waiting", powered: "On", shed: "Off", failed: "Broken" }
+      : { standby: "Standby", powered: "Powered", shed: "Shed", failed: "Failed" };
 
   return (
     <section className="panel" aria-labelledby="power-priorities-heading">
@@ -46,12 +41,13 @@ export function PowerPriorities() {
       <ol className="priority-list" key={version}>
         {ordered.map((system, index) => {
           const state = !missionStarted
-            ? { glyph: "○", word: "Standby", cls: "is-standby" }
+            ? { glyph: "○", word: words.standby, cls: "is-standby" }
             : system.poweredThisHour
-              ? { glyph: "●", word: "Powered", cls: "is-nominal" }
+              ? { glyph: "●", word: words.powered, cls: "is-nominal" }
               : system.operational
-                ? { glyph: "▲", word: "Shed", cls: "is-caution" }
-                : { glyph: "■", word: "Failed", cls: "is-critical" };
+                ? { glyph: "▲", word: words.shed, cls: "is-caution" }
+                : { glyph: "■", word: words.failed, cls: "is-critical" };
+          const name = systemLabel(system.id, level);
 
           return (
             <li key={system.id} className={`priority-row ${state.cls}`}>
@@ -59,7 +55,7 @@ export function PowerPriorities() {
                 {index + 1}
               </span>
               <span className="priority-name">
-                {SYSTEM_LABELS[system.id]}
+                {name}
                 <span className="priority-power">{system.nominalPowerKw.toFixed(1)} kW</span>
               </span>
               <span className="priority-state">
@@ -70,7 +66,7 @@ export function PowerPriorities() {
                   type="button"
                   className="btn btn-tiny"
                   disabled={index === 0}
-                  aria-label={`Move ${SYSTEM_LABELS[system.id]} up, keep it powered longer`}
+                  aria-label={`Move ${name} up, keep it powered longer`}
                   onClick={() => {
                     setPriority(system.id, -1);
                   }}
@@ -81,7 +77,7 @@ export function PowerPriorities() {
                   type="button"
                   className="btn btn-tiny"
                   disabled={index === ordered.length - 1}
-                  aria-label={`Move ${SYSTEM_LABELS[system.id]} down, shed it sooner`}
+                  aria-label={`Move ${name} down, shed it sooner`}
                   onClick={() => {
                     setPriority(system.id, 1);
                   }}
@@ -96,5 +92,3 @@ export function PowerPriorities() {
     </section>
   );
 }
-
-export { SYSTEM_LABELS };

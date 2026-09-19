@@ -1,17 +1,21 @@
 import { useRun } from "../store/run.js";
+import { useDial } from "../store/dial.js";
 import { radiation } from "@sol-keeper/sim";
 import { statusFromReserve } from "./status.js";
+import { presentDose } from "../dial/present.js";
+import { statusWord } from "../dial/statusWords.js";
 
 /**
  * Crew health, morale and accumulated dose.
  *
  * Dose is shown against the 600 mSv career limit rather than as a bare number, because the
  * number only means something next to the limit — that comparison is the whole point of the
- * radiation model.
+ * radiation model, at every Reality Dial level.
  */
 export function CrewPanel() {
   const version = useRun((s) => s.version);
   const crew = useRun((s) => s.state.crew);
+  const level = useDial((s) => s.level);
   const careerLimit = radiation.careerLimitMSv.value;
 
   return (
@@ -20,7 +24,8 @@ export function CrewPanel() {
       <ul className="crew-list" key={version}>
         {crew.map((member) => {
           const health = statusFromReserve(member.healthFraction);
-          const dosePct = (member.cumulativeDoseMSv / careerLimit) * 100;
+          const dose = presentDose(level, member.cumulativeDoseMSv, careerLimit);
+          const healthWord = statusWord(level, health.level, health.label);
 
           return (
             <li key={member.id} className={`crew-row ${member.alive ? health.className : "is-critical"}`}>
@@ -29,18 +34,15 @@ export function CrewPanel() {
                 {!member.alive && <span className="crew-lost"> — lost</span>}
               </span>
               <span className="crew-stat">
-                <span aria-hidden="true">{health.glyph}</span> health{" "}
-                {Math.round(member.healthFraction * 100)}%
+                <span aria-hidden="true">{health.glyph}</span> {healthWord}
+                {level !== "cadet" && ` (${Math.round(member.healthFraction * 100)}%)`}
               </span>
               <span className="crew-stat">
-                morale {Math.round(member.moraleFraction * 100)}%
+                {level === "cadet" ? "spirits" : "morale"} {Math.round(member.moraleFraction * 100)}%
               </span>
               <span className="crew-stat crew-dose">
-                dose {member.cumulativeDoseMSv.toFixed(1)} mSv
-                <span className="crew-dose-limit">
-                  {" "}
-                  ({dosePct.toFixed(0)}% of the {careerLimit} mSv career limit)
-                </span>
+                {level === "cadet" ? dose.headline : `dose ${dose.headline}`}
+                <span className="crew-dose-limit"> {level === "cadet" ? dose.detail : `(${dose.detail})`}</span>
               </span>
             </li>
           );

@@ -6,12 +6,21 @@ export interface GaugeProps {
   readonly label: string;
   readonly value: number;
   readonly unit: string;
-  /** 0..1 fill. */
+  /** 0..1 fill. Physically accurate at every Reality Dial level — a bar needs no unit. */
   readonly fraction: number;
   readonly status: StatusPresentation;
   /** Optional second line, e.g. "pO₂ 156 mmHg". */
   readonly detail?: string;
   readonly decimals?: number;
+  /**
+   * Reality Dial cadet level: replaces the numeric "value unit" headline with a plain-word
+   * phrase outright (e.g. "🫁 Plenty of air"). `value`/`unit`/`decimals` are still required
+   * even when this is set, because the real number still drives `aria-valuenow` — a screen
+   * reader user gets the same simplified wording, not a worse experience than a sighted one.
+   */
+  readonly valueText?: string | undefined;
+  /** Reality Dial cadet level: overrides the status word ("Good" instead of "Nominal"). */
+  readonly statusLabel?: string;
 }
 
 /**
@@ -30,9 +39,12 @@ export function Gauge({
   status,
   detail,
   decimals = 1,
+  valueText,
+  statusLabel,
 }: GaugeProps) {
   const pct = Math.max(0, Math.min(100, fraction * 100));
-  const shown = `${value.toFixed(decimals)} ${unit}`;
+  const shown = valueText ?? `${value.toFixed(decimals)} ${unit}`;
+  const word = statusLabel ?? status.label;
 
   return (
     <div className={`gauge ${status.className}`}>
@@ -42,7 +54,7 @@ export function Gauge({
         </span>
         <span className="gauge-label">{label}</span>
         <span className="gauge-status">
-          <span aria-hidden="true">{status.glyph}</span> {status.label}
+          <span aria-hidden="true">{status.glyph}</span> {word}
         </span>
       </div>
 
@@ -54,7 +66,7 @@ export function Gauge({
         aria-valuenow={Math.round(pct)}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuetext={`${shown}, ${status.label}`}
+        aria-valuetext={`${shown}, ${word}`}
         aria-label={label}
       >
         <div className="gauge-fill" style={{ width: `${pct}%` }} />

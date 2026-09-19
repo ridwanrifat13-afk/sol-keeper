@@ -530,3 +530,269 @@ code {
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------- tab nav */
+.tab-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: var(--gap);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.tab-button {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 10px 14px;
+  cursor: pointer;
+  min-height: 44px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab-button:hover {
+  color: var(--text);
+}
+
+.tab-button:focus-visible {
+  outline: 3px solid var(--nominal);
+  outline-offset: -2px;
+}
+
+.tab-button-active {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+
+.tab-badge {
+  color: var(--nominal);
+  font-size: 0.6rem;
+}
+
+/* ---------------------------------------------------------------- dial switch */
+.dial-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--gap);
+}
+
+.btn-dial {
+  flex: 1 1 140px;
+}
+
+/* ---------------------------------------------------------------- view heads (Debrief, Data Sources) */
+.view-head {
+  margin-bottom: var(--gap);
+}
+
+.view-head h1 {
+  font-size: 1.3rem;
+  margin: 0 0 4px;
+}
+
+.view-hint {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------- debrief: final numbers */
+.final-numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.final-number {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--status);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.final-number dt {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.final-number dd {
+  margin: 2px 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------- debrief: incidents */
+.incident-list,
+.condition-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.incident-row {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.incident-head {
+  display: flex;
+  gap: 10px;
+  font-size: 0.86rem;
+  margin-bottom: 4px;
+}
+
+.incident-time {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.incident-effects {
+  margin: 0;
+  padding-left: 8px;
+  border-left: 2px solid var(--line);
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
+/* ---------------------------------------------------------------- debrief: crew loss */
+.crew-loss-report {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.crew-loss-report:last-child {
+  border-bottom: none;
+}
+
+.crew-loss-headline {
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.condition-row {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 0.82rem;
+}
+
+/* ---------------------------------------------------------------- debrief: full timeline */
+/* Unbounded height here made a completed 30-sol run's debrief page tens of thousands of
+   pixels tall — hundreds of full-size cards, one per log entry, with no way to see the page
+   as a whole. Bounded and scrollable, like the live feed, but taller: this is the "look at
+   everything" record, not a rolling window of the last 40 events. */
+.event-list-full {
+  max-height: 640px;
+}
+
+/* ---------------------------------------------------------------- data sources */
+.credit-line {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.source-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.source-row {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.source-row-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+}
+
+.source-id {
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.source-count {
+  color: var(--text-dim);
+}
+
+.source-title {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+}
+
+.source-title a {
+  color: inherit;
+}
+
+.source-used-for {
+  margin: 0 0 4px;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.source-confidence {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.placeholder-list,
+.simplification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.simplification-list {
+  list-style: disc;
+  padding-left: 1.2em;
+}
+
+.simplification-list li {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.placeholder-row {
+  background: var(--bg-raised);
+  border: 1px solid var(--caution);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.placeholder-note {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}

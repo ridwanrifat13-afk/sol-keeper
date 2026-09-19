@@ -348,3 +348,77 @@ observed shapes rather than guesses.
 - **Trek**: the capabilities XML confirms `TileWidth` 256 and a maximum TileMatrix of **7
   for Mars, 8 for the Moon**, matching `trek_layers.md`. Both global layers are
   equirectangular, so Leaflet must use `L.CRS.EPSG4326` with `maxNativeZoom` 7 / 8.
+
+## 9. The Reality Dial, the Black Box, and Data Sources (M3)
+
+`apps/web/src/dial/` is the whole Reality Dial: `types.ts` defines the three levels,
+`present.ts` turns a resource's already-decided status into a headline and detail string per
+level, `labels.ts` turns a machine id (`SystemId`, `CrewLocation`, `SurvivalMode`,
+`CropTray["crop"]`) into a word per level, `statusWords.ts` does the same for
+Nominal/Caution/Critical, and `resourceSummary.ts` computes the six gauges' status, bar
+fraction and text once so OperateView and DebriefView can never disagree about what state a
+resource is in. **Status and bar fraction are computed once, level-independently, and only
+the text differs per level** — `dial/resourceSummary.ts` is the one place that split lives,
+proved by a test that runs a real 30-sol simulation and asserts every resource's status is
+identical across all three levels. The level itself lives in `store/dial.ts`, a separate
+zustand store from the run (so restarting a mission does not reset how the player likes
+their numbers shown), persisted to `localStorage` through a try/catch wrapper that falls
+back to `"specialist"` silently if storage throws or is unavailable.
+
+`i18n/logText.ts` holds three complete template tables (cadet/specialist/commander) over the
+same ~35 log codes, matched by a test that fails if any table's key set diverges from the
+other two. Interpolation resolves `{system}`, `{location}`, `{crop}` and `{mode}` through
+`dial/labels.ts` rather than printing the sim's raw machine id — before this milestone,
+`power.systemShed` rendered literally as `"co2Scrubber lost power"`; the label-aware
+interpolation was necessary just to make the specialist level correct, not only to add the
+other two.
+
+**The Black Box (`views/Debrief/`) is built on two definitions kept in `dial/blackBox.ts`,
+away from the view, specifically so they can be tested against a real simulation run rather
+than a hand-built fixture:**
+- `majorIncidents(log)` is *any entry the engine recorded as the cause of at least one other
+  entry* (`directEffects(log, id).length > 0`) — never a hardcoded list of hazard codes, so
+  it can't claim a causal link the engine didn't actually build, and it never needs updating
+  when a new hazard type is added. A test runs a full 30-sol mission and asserts
+  `system.failure` — critical, but never wrapped in a `because()` scope — never appears here.
+- `crewLossConditions(entry, log, windowHours)` gathers severe/warning entries in the 72
+  hours before a `crew.lost` entry, naming the same crew member or a mission-wide hazard.
+  This is explicitly framed as *conditions*, not a cause: `crew.lost` carries no `causedBy`
+  today, because health decline is the cumulative result of several models applying
+  penalties hour by hour, not one traceable event. Presenting it as proven causation would
+  overclaim what rule 4's implementation actually establishes.
+- `groupIncidents` exists only for display: a sustained hazard re-triggers `power.brownout`
+  every time the shed set changes, which produced **85** separate incidents in one real run
+  — technically each one is a genuine root cause, but 85 rows is the raw log again, not a
+  debrief. Consecutive same-code incidents collapse into one row with a count and hour
+  range; `majorIncidents` itself is untouched, so what counts as an incident never changes.
+
+`views/DataSources/` and `data/sourceRegistry.ts` are built the same way: the constants tree
+is walked live (`walkConstants(CONSTANTS)`), so the source list, per-source constant counts,
+and the placeholder disclosure can never say something the sim no longer agrees with.
+`sourceRegistry.ts` is a hand-kept manifest of titles and URLs (the sim has no reason to know
+what a citation looks like), typed as `Record<SourceId, SourceInfo>` — a missing or
+misspelled entry is a `tsc` error the moment `@sol-keeper/sim` adds a `SourceId`, so no
+runtime coverage test is needed for it, unlike the sim-side markdown check in
+`validation/constants.test.ts`.
+
+`App.tsx` became a three-tab router (Operate / Debrief / Data Sources) over local `useState`
+rather than a routing library — three views did not justify a new dependency. **Prepare
+(mission setup) is P0 in the feature list but not named in M3's scope and stays deferred**;
+the player still starts directly in Operate.
+
+### Two things learned about testing this milestone
+
+- **zustand v5 supplies every store's `getInitialState()` as `useSyncExternalStore`'s server
+  snapshot**, not just `useRun`'s. A `renderToString` test is frozen to whatever every
+  zustand store held at module import, for the life of that test file — no `set()` call
+  after that point is ever visible to it, including from `store/dial.ts`'s `setLevel`. Two
+  tests that assumed otherwise were removed rather than left to give false confidence; the
+  level's real effect on rendered text is proven directly against `dial/present.ts` instead,
+  and against a live DOM in `e2e/dial.spec.ts`, where a real browser's hydration does not
+  have this limitation.
+- **A finished 30-sol mission generates 700-800 log entries.** Rendering all of them at full
+  card height with no bound made the Debrief page 58,443 px tall — found by actually opening
+  a full-page Playwright screenshot, not by any unit test, because nothing about the DOM
+  structure was wrong. `.event-list-full` is now bounded and scrollable at 640px, matching
+  the pattern the live Operate feed already used at 420px.

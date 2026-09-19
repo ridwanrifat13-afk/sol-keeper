@@ -21,20 +21,25 @@
  * So this covers assembly, wiring and the accessibility rules in the markup. It does not
  * cover layout, paint, or interaction — opening the page still does that.
  */
+import type { ReactElement } from "react";
 import { renderToString } from "react-dom/server";
 import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "../src/App";
+import { DebriefView } from "../src/views/Debrief/DebriefView";
+import { DataSourcesView } from "../src/views/DataSources/DataSourcesView";
 import { useRun } from "../src/store/run";
+import { useDial } from "../src/store/dial";
 import { logText } from "../src/i18n/logText";
 import { statusFromCeiling, statusFromReserve } from "../src/components/status";
 
 /** Render, with React's text-node separators removed. */
-function render(): string {
-  return renderToString(<App />).replace(/<!-- -->/g, "");
+function render(node: ReactElement = <App />): string {
+  return renderToString(node).replace(/<!-- -->/g, "");
 }
 
 beforeEach(() => {
   useRun.getState().reset();
+  useDial.getState().setLevel("specialist");
 });
 
 describe("Operate view, first frame", () => {
@@ -148,6 +153,76 @@ describe("accessibility: status is never carried by colour alone (brief rule 6)"
     const out = render();
     // Every bare glyph is paired with aria-hidden so it is not read out as punctuation.
     expect(out).toContain('<span aria-hidden="true">●</span>');
+  });
+});
+
+describe("App shell: tab nav and Reality Dial, first frame", () => {
+  it("renders three tabs with Operate active by default", () => {
+    const out = render();
+    expect(out).toContain("Operate");
+    expect(out).toContain("Debrief");
+    expect(out).toContain("Data Sources");
+    // aria-current="page" is only present on the active tab's button.
+    expect((out.match(/aria-current="page"/g) ?? []).length).toBe(1);
+  });
+
+  it("renders the Reality Dial with Specialist selected by default", () => {
+    const out = render();
+    expect(out).toContain("Cadet");
+    expect(out).toContain("Specialist");
+    expect(out).toContain("Commander");
+    expect((out.match(/aria-pressed="true"/g) ?? []).length).toBeGreaterThanOrEqual(1);
+  });
+
+  // Switching the dial level and re-rendering to prove it changes the text is *not* testable
+  // through renderToString: zustand v5 supplies every store's getInitialState() as
+  // useSyncExternalStore's server snapshot, so an SSR render is frozen to whatever every
+  // store held at module import, and setLevel() (like useRun's step()/reset()) simply never
+  // reaches it. That behaviour is what "renders the Reality Dial with Specialist selected by
+  // default" above actually exercises. The level's real effect on rendered text is proven
+  // directly against dial/present.ts in dial.test.ts, and against a live DOM in
+  // e2e/dial.spec.ts, where a real browser's hydration does observe store updates.
+});
+
+describe("DataSourcesView, first frame", () => {
+  it("carries the credit line, disclosing rather than hiding the branding rule", () => {
+    const out = render(<DataSourcesView />);
+    expect(out).toContain("Not affiliated with or endorsed by NASA");
+    // Rule 5 is disclosed here in prose ("carries no NASA logo, insignia, or 'meatball'"),
+    // which necessarily names the very things it says are absent — unlike the Operate view,
+    // where those words should never appear at all. What must never appear on this or any
+    // screen is an actual image asset presented as one.
+    expect(out).not.toMatch(/<img[^>]+nasa/i);
+  });
+
+  it("lists a source for every distinct SourceId actually cited by a constant", () => {
+    const out = render(<DataSourcesView />);
+    for (const id of ["BVAD-2022", "OCHMO-RAD", "MIT-MOXIE-2023", "NSSDC-FACTS", "GAME-DESIGN"]) {
+      expect(out, `missing source row: ${id}`).toContain(id);
+    }
+  });
+
+  it("discloses the two open placeholders by name", () => {
+    const out = render(<DataSourcesView />);
+    expect(out).toContain("Still unsourced");
+    expect(out).toContain("habitat.targetO2PartialPressureMmHg");
+    expect(out).toContain("habitat.fireRiskO2PartialPressureMmHg");
+  });
+
+  it("discloses the SPE unit simplification rather than staying silent about it", () => {
+    const out = render(<DataSourcesView />);
+    expect(out).toContain("mGy-Eq");
+  });
+});
+
+describe("DebriefView, mission still running (first frame)", () => {
+  it("shows a not-ready state rather than an empty debrief", () => {
+    const out = render(<DebriefView />);
+    expect(out).toContain("Debrief");
+    expect(out).toContain("fills in once the mission ends");
+    // Nothing from an ended-mission section should appear yet.
+    expect(out).not.toContain("Final numbers");
+    expect(out).not.toContain("Major incidents");
   });
 });
 

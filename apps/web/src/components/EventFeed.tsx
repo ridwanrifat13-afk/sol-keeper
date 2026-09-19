@@ -1,20 +1,24 @@
 import { useRun } from "../store/run.js";
+import { useDial } from "../store/dial.js";
 import { logText } from "../i18n/logText.js";
 import { statusFromSeverity } from "./status.js";
 import { units } from "@sol-keeper/sim";
 
 const MAX_CARDS = 40;
 
+const CAUSE_PREFIX = { cadet: "why: ", specialist: "because: ", commander: "caused by: " } as const;
+
 /**
- * The event feed — the M2 stand-in for M3's Black Box.
+ * The event feed — recent history, at whatever Reality Dial level the player has chosen.
  *
  * Entries already carry `causedBy`, so each card can show what it followed. Showing the
- * chain from the start, rather than bolting it on at M3, is what proves the causal links
- * the engine records are actually usable.
+ * chain here, not just in the Debrief, proves the causal links the engine records are
+ * actually usable rather than theoretically present.
  */
 export function EventFeed() {
   const version = useRun((s) => s.version);
   const log = useRun((s) => s.state.log);
+  const level = useDial((s) => s.level);
 
   const byId = new Map(log.map((e) => [e.id, e]));
   const recent = log.slice(-MAX_CARDS).reverse();
@@ -47,11 +51,12 @@ export function EventFeed() {
                   Sol {units.hoursToSols(entry.hour).toFixed(2)}
                 </span>
               </div>
-              <p className="event-text">{logText(entry)}</p>
+              <p className="event-text">{logText(entry, level)}</p>
               {causes.length > 0 && (
                 <p className="event-cause">
                   <span aria-hidden="true">↳ </span>
-                  because: {causes.map((c) => logText(c)).join("; ")}
+                  {CAUSE_PREFIX[level]}
+                  {causes.map((c) => logText(c, level)).join("; ")}
                 </p>
               )}
             </li>

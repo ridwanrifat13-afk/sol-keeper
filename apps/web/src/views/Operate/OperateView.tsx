@@ -1,47 +1,36 @@
 import { useRun } from "../../store/run.js";
+import { useDial } from "../../store/dial.js";
 import { Gauge } from "../../components/Gauge.js";
 import { TimeControls } from "../../components/TimeControls.js";
 import { PowerPriorities } from "../../components/PowerPriorities.js";
 import { EventFeed } from "../../components/EventFeed.js";
 import { CrewPanel } from "../../components/CrewPanel.js";
-import {
-  STATUS,
-  statusFromBand,
-  statusFromCeiling,
-  statusFromReserve,
-} from "../../components/status.js";
-import {
-  crew as crewConstants,
-  rationKgPerCrewDay,
-  survivalModes,
-  type SurvivalMode,
-} from "@sol-keeper/sim";
+import { DialSwitch } from "../../components/DialSwitch.js";
+import { STATUS } from "../../components/status.js";
+import { statusWord } from "../../dial/statusWords.js";
+import { survivalModeLabel } from "../../dial/labels.js";
+import { buildResourceSummary } from "../../dial/resourceSummary.js";
+import { survivalModes, type SurvivalMode } from "@sol-keeper/sim";
 
-const MODE_LABELS: Record<SurvivalMode, string> = {
-  nominal: "Nominal",
-  mode1: "Reduced",
-  mode2: "Survival",
-};
+const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
 
-/** The Operate view: what the outpost is doing right now, and what the player can change. */
+/**
+ * The Operate view: what the outpost is doing right now, and what the player can change.
+ *
+ * Every Gauge here gets the same three inputs regardless of Reality Dial level — the real
+ * value, the physically accurate bar fraction, and the status the thresholds in status.ts
+ * decided (via dial/resourceSummary.ts, shared with the Debrief) — and only asks
+ * dial/present.ts to turn those into words. The simulation and the status thresholds never
+ * see the dial level; only the last mile of formatting does.
+ */
 export function OperateView() {
   const version = useRun((s) => s.version);
   const state = useRun((s) => s.state);
   const scenario = useRun((s) => s.scenario);
   const setSurvivalMode = useRun((s) => s.setSurvivalMode);
+  const level = useDial((s) => s.level);
 
-  const living = state.crew.filter((c) => c.alive).length;
-  const mode = survivalModes[state.food.mode];
-
-  // Reserves are shown as days remaining, which is the unit a decision is actually made in.
-  const waterDays =
-    living > 0 ? state.water.potableKg / (living * crewConstants.waterUseTotalKgPerCrewDay.value) : 0;
-  const foodDays =
-    living > 0
-      ? state.food.storedDryMassKg / (living * rationKgPerCrewDay(state.food.mode))
-      : 0;
-
-  const batteryFraction = state.power.batteryEnergyKwh / state.power.batteryCapacityKwh;
+  const summary = buildResourceSummary(state, level);
   const powerServedFraction =
     state.power.demandKw > 0 ? state.power.servedKw / state.power.demandKw : 1;
 
@@ -52,11 +41,13 @@ export function OperateView() {
           <h1>Sol Keeper</h1>
           <p className="mission-site">
             {scenario.site.name} · {scenario.body === "mars" ? "Mars" : "Moon"} ·{" "}
-            {scenario.durationSols} sols · {living}/{state.crew.length} crew
+            {scenario.durationSols} sols · {summary.livingCrew}/{state.crew.length} crew
           </p>
         </div>
         <RunStatusBadge />
       </header>
+
+      <DialSwitch />
 
       <TimeControls />
 
@@ -67,64 +58,73 @@ export function OperateView() {
             icon="◇"
             label="Oxygen"
             value={state.atmosphere.o2PartialPressureMmHg}
-            unit="mmHg"
-            decimals={0}
-            fraction={state.atmosphere.o2PartialPressureMmHg / 200}
-            status={statusFromBand(state.atmosphere.o2PartialPressureMmHg, 120, 200)}
-            detail={`${state.atmosphere.o2Kg.toFixed(1)} kg in the cabin`}
+            unit={summary.oxygen.text.unit}
+            decimals={summary.oxygen.text.decimals}
+            valueText={summary.oxygen.text.valueText}
+            fraction={summary.oxygen.fraction}
+            status={summary.oxygen.status}
+            statusLabel={statusWord(level, summary.oxygen.status.level, summary.oxygen.status.label)}
+            detail={summary.oxygen.text.detail}
           />
           <Gauge
             icon="▽"
             label="Carbon dioxide"
             value={state.atmosphere.co2PartialPressureMmHg}
-            unit="mmHg"
-            decimals={2}
-            fraction={state.atmosphere.co2PartialPressureMmHg / mode.co2LimitMmHg.value}
-            status={statusFromCeiling(
-              state.atmosphere.co2PartialPressureMmHg,
-              mode.co2LimitMmHg.value,
-            )}
-            detail={`limit ${mode.co2LimitMmHg.value} mmHg in ${MODE_LABELS[state.food.mode]} mode`}
+            unit={summary.co2.text.unit}
+            decimals={summary.co2.text.decimals}
+            valueText={summary.co2.text.valueText}
+            fraction={summary.co2.fraction}
+            status={summary.co2.status}
+            statusLabel={statusWord(level, summary.co2.status.level, summary.co2.status.label)}
+            detail={summary.co2.text.detail}
           />
           <Gauge
             icon="≈"
             label="Water"
             value={state.water.potableKg}
-            unit="kg"
-            decimals={0}
-            fraction={Math.min(1, waterDays / 30)}
-            status={statusFromReserve(Math.min(1, waterDays / 30))}
-            detail={`${waterDays.toFixed(1)} days at the current rate`}
+            unit={summary.water.text.unit}
+            decimals={summary.water.text.decimals}
+            valueText={summary.water.text.valueText}
+            fraction={summary.water.fraction}
+            status={summary.water.status}
+            statusLabel={statusWord(level, summary.water.status.level, summary.water.status.label)}
+            detail={summary.water.text.detail}
           />
           <Gauge
             icon="✦"
             label="Food"
             value={state.food.storedDryMassKg}
-            unit="kg dry"
-            decimals={0}
-            fraction={Math.min(1, foodDays / 30)}
-            status={statusFromReserve(Math.min(1, foodDays / 30))}
-            detail={`${foodDays.toFixed(1)} days · ${state.food.cumulativeHarvestKg.toFixed(1)} kg grown`}
+            unit={summary.food.text.unit}
+            decimals={summary.food.text.decimals}
+            valueText={summary.food.text.valueText}
+            fraction={summary.food.fraction}
+            status={summary.food.status}
+            statusLabel={statusWord(level, summary.food.status.level, summary.food.status.label)}
+            detail={summary.food.text.detail}
           />
           <Gauge
             icon="⌁"
             label="Battery"
             value={state.power.batteryEnergyKwh}
-            unit="kWh"
-            decimals={0}
-            fraction={batteryFraction}
-            status={statusFromReserve(batteryFraction)}
-            detail={`${state.power.generationKw.toFixed(1)} kW in · ${state.power.servedKw.toFixed(1)} of ${state.power.demandKw.toFixed(1)} kW served`}
+            unit={summary.battery.text.unit}
+            decimals={summary.battery.text.decimals}
+            valueText={summary.battery.text.valueText}
+            fraction={summary.battery.fraction}
+            status={summary.battery.status}
+            statusLabel={statusWord(level, summary.battery.status.level, summary.battery.status.label)}
+            detail={summary.battery.text.detail}
           />
           <Gauge
             icon="◈"
             label="Cabin"
             value={state.thermal.habitatTempC}
-            unit="°C"
-            decimals={1}
-            fraction={Math.max(0, Math.min(1, (state.thermal.habitatTempC + 10) / 40))}
-            status={statusFromBand(state.thermal.habitatTempC, mode.habitatTempC.value - 6, 30)}
-            detail={`outside ${state.environment.outsideTempC.toFixed(0)} °C · ${state.environment.isDaylight ? "daylight" : "night"}`}
+            unit={summary.cabin.text.unit}
+            decimals={summary.cabin.text.decimals}
+            valueText={summary.cabin.text.valueText}
+            fraction={summary.cabin.fraction}
+            status={summary.cabin.status}
+            statusLabel={statusWord(level, summary.cabin.status.level, summary.cabin.status.label)}
+            detail={summary.cabin.text.detail}
           />
         </div>
 
@@ -142,7 +142,7 @@ export function OperateView() {
           Cutting rations stretches the stores and costs the crew morale and warmth.
         </p>
         <div className="button-row" role="group" aria-label="Survival mode">
-          {(Object.keys(MODE_LABELS) as SurvivalMode[]).map((m) => (
+          {SURVIVAL_MODES.map((m) => (
             <button
               key={m}
               type="button"
@@ -152,7 +152,7 @@ export function OperateView() {
                 setSurvivalMode(m);
               }}
             >
-              {MODE_LABELS[m]}
+              {survivalModeLabel(m, level)}
               <span className="btn-sub">
                 {survivalModes[m].kcalPerCrewDay.value} kcal · {survivalModes[m].habitatTempC.value}{" "}
                 °C
@@ -171,8 +171,8 @@ export function OperateView() {
 
       <footer className="credits">
         <p>
-          Every number in this simulation comes from published NASA data. Sources are listed
-          in <code>docs/DATA_SOURCES.md</code>; a Data Sources screen follows at M3.
+          Every number in this simulation comes from published NASA data. See the Data
+          Sources tab above for the full list and what is tuned for gameplay.
         </p>
         <p className="credits-fine">
           Not affiliated with or endorsed by NASA. Data credited to NASA and the cited
