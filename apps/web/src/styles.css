@@ -112,6 +112,14 @@ code {
     rgb(0 0 0 / 0%) 2px 5px
   );
 }
+/* Not a fourth alarm level — a fourth truth value. Before the first tick, a system is
+   neither confirmed powered nor confirmed shed; "not yet known" is a different fact from
+   "known and fine", so it gets its own neutral colour and glyph rather than borrowing
+   is-nominal's green and implying a result that hasn't happened yet. */
+.is-standby {
+  --status: var(--text-dim);
+  --pattern: none;
+}
 
 /* ---------------------------------------------------------------- layout */
 .mission-head {

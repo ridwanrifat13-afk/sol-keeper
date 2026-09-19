@@ -56,7 +56,11 @@ simulation never changes between levels; only the presentation does.
 
 ## Tech stack
 
-- pnpm workspaces monorepo. TypeScript strict. Vitest. ESLint + Prettier.
+- pnpm workspaces monorepo. TypeScript strict. Vitest. ESLint + Prettier. Playwright
+  (`@playwright/test`, root devDependency, added M2) for real-browser checks the Vitest
+  render tests structurally cannot do — layout, paint, and phone-viewport rendering — and
+  for the M6 Lighthouse pass. Specs live in `/e2e`, run against the production build via
+  `pnpm e2e`, not the dev server.
 - `apps/web`: Vite + React 18 + Zustand. Habitat cutaway in SVG (PixiJS only if needed;
   ask first). d3-force for the "Ripple Web" dependency graph. Leaflet for Moon/Mars
   Trek map tiles (landing-site picker). i18next with `en` and `bn` (Bangla) locales from

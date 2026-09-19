@@ -82,6 +82,19 @@ describe("Operate view, first frame", () => {
     expect(out.indexOf("MOXIE")).toBeGreaterThan(cursor);
   });
 
+  /**
+   * Regression test for a bug an e2e screenshot caught: before the first tick,
+   * `poweredThisHour` is just its unset default for every system, and reading that default
+   * as "Shed" told a player nine systems had already lost power on a mission that had not
+   * started — right beside a battery gauge honestly reporting "0.0 of 0.0 kW served". A
+   * render test never saw it because it wasn't looking for the absence of a word.
+   */
+  it("does not claim any system is Shed before the mission clock has run", () => {
+    const out = render();
+    expect(out).not.toContain("Shed");
+    expect(out).toContain("Standby");
+  });
+
   it("renders the ration controls with their sourced calorie figures", () => {
     const out = render();
     expect(out).toContain("Rations");

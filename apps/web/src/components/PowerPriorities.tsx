@@ -23,10 +23,18 @@ const SYSTEM_LABELS: Record<SystemId, string> = {
  */
 export function PowerPriorities() {
   const version = useRun((s) => s.version);
+  const hour = useRun((s) => s.state.hour);
   const systems = useRun((s) => s.state.systems);
   const setPriority = useRun((s) => s.setPriority);
 
   const ordered = Object.values(systems).sort((a, b) => a.priority - b.priority);
+  // Before the first tick, `poweredThisHour` is just its unset default (false) for every
+  // system — no power stage has run to decide it. Reading that default as "Shed" would tell
+  // a player that nine systems already lost power on a mission that has not started, right
+  // next to a battery gauge honestly reporting "0.0 of 0.0 kW served". Caught by actually
+  // opening the built app (see e2e/operate.spec.ts) rather than by a render test, which
+  // never observes the pristine pre-tick frame a real user's first paint does.
+  const missionStarted = hour > 0;
 
   return (
     <section className="panel" aria-labelledby="power-priorities-heading">
@@ -37,11 +45,13 @@ export function PowerPriorities() {
 
       <ol className="priority-list" key={version}>
         {ordered.map((system, index) => {
-          const state = system.poweredThisHour
-            ? { glyph: "●", word: "Powered", cls: "is-nominal" }
-            : system.operational
-              ? { glyph: "▲", word: "Shed", cls: "is-caution" }
-              : { glyph: "■", word: "Failed", cls: "is-critical" };
+          const state = !missionStarted
+            ? { glyph: "○", word: "Standby", cls: "is-standby" }
+            : system.poweredThisHour
+              ? { glyph: "●", word: "Powered", cls: "is-nominal" }
+              : system.operational
+                ? { glyph: "▲", word: "Shed", cls: "is-caution" }
+                : { glyph: "■", word: "Failed", cls: "is-critical" };
 
           return (
             <li key={system.id} className={`priority-row ${state.cls}`}>

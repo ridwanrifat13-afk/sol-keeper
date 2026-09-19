@@ -297,6 +297,21 @@ keeping, because each cost time to establish:
 - Routing from `vercel.json` verified live: `/debrief` serves `index.html`, `/api/missing`
   returns 404 rather than being swallowed by the SPA rewrite, and `/sw.js` is sent
   `cache-control: no-cache`.
+- The linked Vercel project was later swapped: the lead developer had already created
+  `build-a-junior-astronaut-mission-trainer` in the dashboard with `NASA_API_KEY` set (for
+  Production and Preview — **not Development**, which the brief also calls for), so
+  `apps/web/.vercel` was relinked there rather than to the project this milestone created
+  in error. That stray project (`sol-keeper`) and a second stray
+  (`build-a-junior-astronaut-mission-trainer-naae`, already deployed once under "Other"
+  framework preset) are both still on the account, unresolved — see the milestone summary.
+- **A Playwright screenshot caught a bug no Vitest render test saw**: the power priority
+  list read "Shed" for every system on the very first paint, before any tick had run,
+  because `poweredThisHour` defaults to `false` and the component read that default as a
+  real result. Fixed with a fourth, neutral status — `Standby` — shown whenever
+  `state.hour === 0`, distinct from the three real outcomes rather than borrowing one of
+  their colours. This is the argument for keeping `/e2e` around after M2: a server-rendered
+  string assertion cannot notice an *absence* of the word "Standby" if it never occurred to
+  the author to look for one, but a person looking at a screenshot immediately can.
 
 ## 7. Validation tests
 

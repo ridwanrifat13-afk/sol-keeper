@@ -59,7 +59,9 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         // Root-level tooling files (vitest.config.ts and friends) belong to no package
-        // tsconfig, so let the default project pick them up.
+        // tsconfig, so let the default project pick them up. projectService otherwise
+        // auto-discovers the nearest tsconfig.json by walking up from each file, which is
+        // how e2e/tsconfig.json gets found without listing it here.
         projectService: { allowDefaultProject: ["*.ts", "*.js"] },
         tsconfigRootDir: import.meta.dirname,
       },

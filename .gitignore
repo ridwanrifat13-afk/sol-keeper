@@ -15,5 +15,11 @@ dist
 *.tsbuildinfo
 coverage
 
+# Playwright
+test-results
+playwright-report
+playwright/.cache
+blob-report
+
 # os
 .DS_Store
