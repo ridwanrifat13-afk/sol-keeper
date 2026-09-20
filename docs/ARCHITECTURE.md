@@ -478,6 +478,30 @@ than silently underreporting. This is a real scope cut, not a bug — if BVAD's 
 tables or the ECLSS specs become available, the formula can be completed later without
 changing its shape.
 
+**That gap closed shortly after M4 shipped**, when the research team supplied real M/C/CT
+figures — ISS subsystem trade-study data for CO2 scrubber, thermal control and oxygen
+generator; ISS Water Recovery System data; and named-architecture hardware masses for MOXIE,
+power distribution, and comms — recorded as `hardwareEsm` in `data/constants.ts` under five
+new `SourceId`s. `scenarioEsmBreakdown()` was rewritten so each system's line sums whichever
+terms the source actually states, through a `hardwareTermsFor()` lookup that returns
+`undefined` for a term with no source rather than a silent 0 — the two are not the same
+claim, and the function must never conflate them. Two systems stay genuinely incomplete on
+the research team's own recommendation, not by oversight:
+- **`lifeSupport` has no entry at all.** BVAD baselines individual life-support *functions*,
+  not one merged "life support system" mass, and the five subsystems already modelled here
+  (CO2 scrubber, thermal control, oxygen generator, water recovery, greenhouse) already
+  account for that hardware — giving "life support" its own mass on top would double-count
+  the same equipment under two names.
+- **`waterRecovery` has mass and crew-time but no cooling figure** — the source material
+  simply doesn't state one.
+
+Each `ScenarioEsmLine` now carries a `fullySourced` flag and optional `massKg`/`coolingKg`/
+`crewTimeKg` fields, and `EsmPanel.tsx` renders "not sourced" in the relevant cell — text, not
+a colour or a bare symbol (rule 6) — for whichever term a system's line is missing. Greenhouse
+is the one system priced per square metre rather than per unit: BVAD's plant-growth ESM
+factor is stated per m² of crop-tray area, so its hardware terms scale by
+`scenario.initial.cropTrays` total area rather than being a fixed figure.
+
 **The Ripple Web (`apps/web/src/ripple/`, `views/Ripple/RippleView.tsx`) is a live
 dependency graph, built to answer "what does shedding this take down with it" *before* a
 player decides, not after** (the Black Box already answers "what did that take down" after

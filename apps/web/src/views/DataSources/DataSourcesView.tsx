@@ -143,13 +143,13 @@ export function DataSourcesView() {
           <li>DONKI space-weather events are observed near Earth, not at Mars or the Moon.</li>
           <li>Equirectangular map layers stretch visibly near the poles.</li>
           <li>
-            The Mission ESM budget shows only the volume and power terms of BVAD's Equivalent
-            System Mass formula. Hardware mass, cooling load and crew-time to operate are
-            real terms too, but no NASA source we checked states them for these specific
-            systems — nine research attempts (MOXIE, the ISS Oxygen Generation Assembly, CO2
-            removal, water recovery, thermal control) turned up leads but nothing pinned to a
-            document anyone could open and verify, so those terms are left out rather than
-            filled with a guess.
+            The Mission ESM budget now carries hardware mass, cooling load and crew-time for
+            every system except Life Support, which is intentionally left without its own
+            hardware-mass figure: BVAD only baselines individual life-support functions, and
+            giving "Life Support" a mass on top of the five subsystems already listed here
+            (CO2 scrubber, thermal control, oxygen generator, water recovery, greenhouse)
+            would double-count the same hardware under two names. Water Recovery is missing
+            only its cooling figure — no NASA source checked so far states one.
           </li>
         </ul>
       </section>

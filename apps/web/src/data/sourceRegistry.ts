@@ -105,6 +105,27 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     url: "https://nssdc.gsfc.nasa.gov/planetary/factsheet/",
     usedFor: "gravity, day length, solar irradiance, orbital distance — Mars and Moon",
   },
+  "MIYAJIMA-LSS": {
+    title: "Miyajima, \"Self-Sustainable Life Support System Trade Study for Lunar Farming\"",
+    usedFor:
+      "CO2 scrubber, thermal control and oxygen generator hardware mass, cooling load and crew-time (ISS 4BMS / internal TCS / SPE)",
+  },
+  "MIT-16851-WRS": {
+    title: "MIT 16.851 Satellite Engineering portfolio — ISS Water Recovery System",
+    usedFor: "water recovery hardware mass and crew-time",
+  },
+  "MOXIE-MASS-NASA": {
+    title: "NASA Science / NASA JPL — Perseverance MOXIE instrument",
+    usedFor: "MOXIE hardware mass",
+  },
+  "MARS-POWER-ASTRA": {
+    title: "NASA ASTRA Technology Roadmaps — Mars surface power-distribution architecture",
+    usedFor: "power distribution hardware mass",
+  },
+  "SPACECRAFT-SUBSYS-NTRS": {
+    title: "NASA Technical Reports Server — spacecraft subsystem mass table",
+    usedFor: "communications hardware mass",
+  },
   STOICHIOMETRY: {
     title: "Textbook physical chemistry and IAU/CODATA defined values",
     usedFor: "molar masses, the gas constant, mmHg, the astronomical unit, light-time per AU",

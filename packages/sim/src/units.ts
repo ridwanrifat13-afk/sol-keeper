@@ -7,6 +7,12 @@
  */
 import { environment, physics } from "./data/constants.js";
 
+/** Days in a Julian year — a calendar fact, not a mission parameter. */
+export const DAYS_PER_YEAR = physics.daysPerJulianYear.value;
+
+/** A per-year rate (e.g. ESM's CM-h/yr crew-time terms) expressed per day. */
+export const perYearToPerDay = (perYear: number): number => perYear / DAYS_PER_YEAR;
+
 export const HOURS_PER_EARTH_DAY = 24;
 export const SECONDS_PER_HOUR = 3600;
 export const MINUTES_PER_HOUR = 60;

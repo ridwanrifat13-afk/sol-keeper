@@ -593,6 +593,13 @@ export const physics = {
     confidence: "measured",
     note: "One-way light time per AU; used by the comms model and /api/light-time.",
   }),
+  daysPerJulianYear: c({
+    value: 365.25,
+    unit: "day/yr",
+    source: "STOICHIOMETRY",
+    confidence: "measured",
+    note: "Calendar constant, not a mission parameter — used only to convert the ESM crew-time terms below from CM-h/yr into a per-day rate.",
+  }),
   kcalPerKgFoodDryMass: c({
     value: 5806.45,
     unit: "kcal/kg",
@@ -744,6 +751,159 @@ export const management = {
     confidence: "tuned",
     note: "Lower TRL buys better performance at the cost of reliability (brief: TRL 1-9).",
   }),
+} as const;
+
+/**
+ * Per-system ESM hardware terms: mass (M), cooling load (C), and crew-time to operate and
+ * maintain (CT) — the three BVAD terms `engine/esm.ts` could not source for M4's ESM readout.
+ * Supplied 2026-09 by the research team from ISS subsystem trade studies, not invented.
+ *
+ * `crewHoursPerYear` is stated per crew-member-hour per year, converted to a per-day rate
+ * via `units.perYearToPerDay` at the point of use rather than here, matching how
+ * `esmCoolingKgPerW` above is kept in its own source unit.
+ *
+ * Deliberately incomplete, matching exactly what the source material states — a missing
+ * field here is not a zero, it is "not reported by this source," and `engine/esm.ts` must
+ * never treat the two as the same thing:
+ * - `lifeSupport` has no entry at all. The research team explicitly recommended against
+ *   assigning "life support" its own hardware mass on top of the five subsystems below
+ *   (CO2 scrubber, thermal control, oxygen generator, water recovery, greenhouse) that
+ *   already model real life-support hardware — doing so would double-count the same
+ *   equipment under two names. BVAD itself only baselines individual life-support
+ *   functions, not one merged "life support system" figure.
+ * - `waterRecovery` has mass and crew-time but no cooling figure in the source material.
+ * - `moxie`, `powerDistribution`, and `comms` have mass only.
+ */
+export const hardwareEsm = {
+  co2Scrubber: {
+    massKg: c({
+      value: 185.1,
+      unit: "kg",
+      source: "MIYAJIMA-LSS",
+      confidence: "measured",
+      note: "ISS 4-Bed Molecular Sieve (4BMS) CO2 removal assembly.",
+    }),
+    coolingKw: c({
+      value: 0.55621,
+      unit: "kWth",
+      source: "MIYAJIMA-LSS",
+      confidence: "measured",
+    }),
+    crewHoursPerYear: c({
+      value: 2.76,
+      unit: "CM-h/yr",
+      source: "MIYAJIMA-LSS",
+      confidence: "measured",
+    }),
+  },
+  thermalControl: {
+    massKg: c({
+      value: 149.28,
+      unit: "kg",
+      source: "MIYAJIMA-LSS",
+      confidence: "measured",
+      note: "ISS-derived internal Thermal Control System (TCS).",
+    }),
+    coolingKw: c({
+      value: 0.51771,
+      unit: "kWth",
+      source: "MIYAJIMA-LSS",
+      confidence: "measured",
+    }),
+    crewHoursPerYear: c({
+      value: 0,
+      unit: "CM-h/yr",
+      source: "MIYAJIMA-LSS",
+      confidence: "measured",
+      note: "The source states zero scheduled crew-time for this subsystem, not a missing figure.",
+    }),
+  },
+  oxygenGenerator: {
+    massKg: c({
+      value: 388.97,
+      unit: "kg",
+      source: "MIYAJIMA-LSS",
+      confidence: "measured",
+      note: "ISS Oxygen Generation Assembly (OGA / Sabatier-Process Equipment, SPE).",
+    }),
+    coolingKw: c({
+      value: 1.86834,
+      unit: "kWth",
+      source: "MIYAJIMA-LSS",
+      confidence: "measured",
+    }),
+    crewHoursPerYear: c({
+      value: 10.1,
+      unit: "CM-h/yr",
+      source: "MIYAJIMA-LSS",
+      confidence: "measured",
+    }),
+  },
+  waterRecovery: {
+    massKg: c({
+      value: 638,
+      unit: "kg",
+      source: "MIT-16851-WRS",
+      confidence: "measured",
+      note: "ISS Water Recovery System (WRS), corroborated against NASA NTRS documentation of the same hardware — exact NTRS accession still pending from the research team.",
+    }),
+    crewHoursPerYear: c({
+      value: 8.0,
+      unit: "CM-h/yr",
+      source: "MIT-16851-WRS",
+      confidence: "measured",
+    }),
+    // No coolingKw: the source material states no cooling figure for the WRS. Left out
+    // rather than defaulted to zero — see the block comment above.
+  },
+  moxie: {
+    massKg: c({
+      value: 17.1,
+      unit: "kg",
+      source: "MOXIE-MASS-NASA",
+      confidence: "measured",
+      note: "Perseverance rover's MOXIE instrument hardware mass. Distinct from MIT-MOXIE-2023, which is cited for MOXIE's production-rate figures, not its mass.",
+    }),
+  },
+  powerDistribution: {
+    massKg: c({
+      value: 800,
+      unit: "kg",
+      source: "MARS-POWER-ASTRA",
+      confidence: "measured",
+      note: "NASA ASTRA Mars surface power-architecture study.",
+    }),
+  },
+  comms: {
+    massKg: c({
+      value: 61.0,
+      unit: "kg",
+      source: "SPACECRAFT-SUBSYS-NTRS",
+      confidence: "measured",
+      note: "NASA Technical Reports Server spacecraft-subsystem mass table.",
+    }),
+  },
+  /** BVAD's plant-growth ESM factor, stated per square metre of crop-tray area. */
+  greenhousePerM2: {
+    massKgPerM2: c({
+      value: 101.5,
+      unit: "kg/m^2",
+      source: "BVAD-2022",
+      confidence: "measured",
+    }),
+    coolingKwPerM2: c({
+      value: 2.6,
+      unit: "kWth/m^2",
+      source: "BVAD-2022",
+      confidence: "measured",
+    }),
+    crewHoursPerYearPerM2: c({
+      value: 13.1,
+      unit: "CM-h/yr/m^2",
+      source: "BVAD-2022",
+      confidence: "measured",
+    }),
+  },
 } as const;
 
 /** Habitat engineering parameters. Tuned for gameplay; disclosed on the Data Sources screen. */

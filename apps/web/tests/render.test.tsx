@@ -122,10 +122,12 @@ describe("Operate view, first frame", () => {
     expect(out).toContain("Battery hardware");
     // Jezero is solar-only; a scenario with no reactor must not show a reactor line.
     expect(out).not.toContain("Fission reactor");
-    // Discloses the partiality rather than presenting a complete-looking total. (React
-    // escapes the apostrophe in "we've" to &#x27; in the rendered HTML, so match around it.)
-    expect(out).toContain("NASA source");
-    expect(out).toContain("checked states them");
+    // A fully-sourced system (CO2 scrubber) shows real hardware/cooling/crew-time figures...
+    expect(out).toContain("CO₂ scrubber");
+    // ...while lifeSupport, which has no hardware data at all, says so in text, not just a
+    // marker — brief rule 6, never colour (or a bare asterisk) alone.
+    expect(out).toContain("not sourced");
+    expect(out).toContain("Life Support has no hardware-mass figure");
   });
 
   it("carries the credit line and no NASA insignia (brief rule 5)", () => {

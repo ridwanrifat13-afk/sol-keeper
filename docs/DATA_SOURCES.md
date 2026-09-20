@@ -24,6 +24,11 @@ Local PDFs live in docs/sources/ (gitignored). Links are the permanent reference
 | NASA-FSP | NASA Fission Surface Power project page | https://www.nasa.gov/exploration-systems-development-mission-directorate/fission-surface-power | — | 40 kW-class reactor; lunar operation targeted for the early 2030s | web page | | ☐ |
 | NASA-FSP-IAC2024 | Fission Surface Power project status, IAC 2024 manuscript (NTRS) | https://ntrs.nasa.gov/api/citations/20240011694/downloads/IAC%202024%20Manuscript_FSP%20FINAL.pdf | NASA-FSP-IAC2024.pdf (optional) | 40 kWe, 10-year life, < 6,000 kg, 4 m × 6 m stowed | Section 1 | | ☐ |
 | NSSDC-FACTS | NASA planetary fact sheets | https://nssdc.gsfc.nasa.gov/planetary/factsheet/ | — | gravity, day length, solar irradiance, orbital distance | Mars & Moon sheets | | ☐ |
+| MIYAJIMA-LSS | Miyajima, "Self-Sustainable Life Support System Trade Study for Lunar Farming" — ISS subsystem M/C/CT table | add link | — | CO2 scrubber (ISS 4BMS), thermal control (ISS-derived internal TCS), and oxygen generator (ISS SPE) hardware mass, cooling load, crew-time | | | ☐ |
+| MIT-16851-WRS | MIT 16.851 Satellite Engineering portfolio — ISS Water Recovery System (WRS) subsystem figures | add link | — | water recovery hardware mass and crew-time; corroborated against NASA NTRS documentation of the same hardware (exact NTRS accession still pending) | | | ☐ |
+| MOXIE-MASS-NASA | NASA Science / NASA JPL — Perseverance MOXIE instrument hardware mass | add link | — | MOXIE hardware mass (17.1 kg), distinct from MIT-MOXIE-2023's production-rate figures | | | ☐ |
+| MARS-POWER-ASTRA | NASA ASTRA Technology Roadmaps — Mars surface power-distribution architecture | add link | — | power distribution hardware mass | | | ☐ |
+| SPACECRAFT-SUBSYS-NTRS | NASA Technical Reports Server — spacecraft subsystem mass table | add link | — | communications hardware mass | | | ☐ |
  
 ## APIs and map services
  

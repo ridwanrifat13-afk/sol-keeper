@@ -872,6 +872,16 @@ code {
   margin: 0;
 }
 
+.esm-partial-mark {
+  color: var(--text-dim);
+}
+
+.esm-table-note {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin: 0 0 10px;
+}
+
 /* ---------------------------------------------------------------- ripple web */
 .ripple-svg {
   display: block;

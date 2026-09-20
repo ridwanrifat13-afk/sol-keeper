@@ -31,6 +31,13 @@ export const SOURCE_IDS = [
   "NSSDC-FACTS",
   "STOICHIOMETRY",
   "GAME-DESIGN",
+  // Per-system ESM hardware terms (mass, cooling, crew-time), supplied 2026-09 by the
+  // research team to complete the partial ESM readout shipped in M4.
+  "MIYAJIMA-LSS",
+  "MIT-16851-WRS",
+  "MOXIE-MASS-NASA",
+  "MARS-POWER-ASTRA",
+  "SPACECRAFT-SUBSYS-NTRS",
 ] as const;
 
 export type SourceId = (typeof SOURCE_IDS)[number];

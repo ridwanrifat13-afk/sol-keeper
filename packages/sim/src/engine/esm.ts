@@ -11,9 +11,9 @@
  * were zero placeholders until the 2026-09 verification pass supplied the standard NASA
  * values, so ESM totals from before that date are lower than they should be.
  */
-import { management, power } from "../data/constants.js";
+import { hardwareEsm, management, power } from "../data/constants.js";
 import type { Scenario, SystemId } from "../types.js";
-import { kwToWatts } from "../units.js";
+import { hoursToDays, kwToWatts, perYearToPerDay } from "../units.js";
 
 export interface EsmInputs {
   /** Hardware mass, kg. */
@@ -81,23 +81,85 @@ export function equivalentSystemMass(
 // ---------------------------------------------------------------------------
 
 /**
- * `equivalentSystemMass` above needs each system's own hardware mass, volume, cooling load
- * and crew-time to operate — real numbers, but ones no source in docs/DATA_SOURCES.md
- * currently states for these specific systems. Nine individual research attempts (MOXIE,
- * the ISS Oxygen Generation Assembly, CO2 removal, water recovery, thermal control) turned
- * up leads but nothing pinned to a document anyone could actually open and check, so per
- * rule 1 this stays undone rather than shipping nine invented "placeholder" masses.
- *
- * What *is* fully sourced today: each system's continuous power draw (already tracked, for
- * the power-priority simulation), the habitat's pressurised volume, the battery's specific
- * energy, and the fission reactor's own stated mass. Those four route straight through the
- * BVAD equivalency factors above with nothing invented, so the readout uses only them —
- * a real, honest partial ESM, not a complete one padded out with guesses.
+ * `equivalentSystemMass` above needs each system's own hardware mass, cooling load and
+ * crew-time to operate. Nine research attempts at M4 came up short on all of them, so the
+ * readout shipped with only the power term. The research team has since supplied real,
+ * ISS- and Mars-architecture-derived M/C/CT figures (`data/constants.ts`'s `hardwareEsm`)
+ * for every system except `lifeSupport` — deliberately: BVAD only baselines individual
+ * life-support *functions*, and the team judged that giving "life support" its own hardware
+ * mass on top of the five subsystems below that already model real life-support equipment
+ * (CO2 scrubber, thermal control, oxygen generator, water recovery, greenhouse) would double
+ * -count the same hardware under two names. `waterRecovery` also has no cooling figure in
+ * the source material. Both gaps are real absences of data, not zeros — `hardwareTermsFor`
+ * below returns `undefined` for a missing term, and this function never substitutes 0 for
+ * it, so a system's line simply omits the term the source doesn't state rather than
+ * silently claiming it costs nothing.
  */
+function totalGreenhouseAreaM2(scenario: Scenario): number {
+  return scenario.initial.cropTrays.reduce((sum, tray) => sum + tray.areaM2, 0);
+}
+
+interface HardwareTerms {
+  readonly massKg?: number;
+  readonly coolingKw?: number;
+  readonly crewHoursPerYear?: number;
+}
+
+function hardwareTermsFor(id: SystemId, scenario: Scenario): HardwareTerms | undefined {
+  switch (id) {
+    case "co2Scrubber":
+      return {
+        massKg: hardwareEsm.co2Scrubber.massKg.value,
+        coolingKw: hardwareEsm.co2Scrubber.coolingKw.value,
+        crewHoursPerYear: hardwareEsm.co2Scrubber.crewHoursPerYear.value,
+      };
+    case "thermalControl":
+      return {
+        massKg: hardwareEsm.thermalControl.massKg.value,
+        coolingKw: hardwareEsm.thermalControl.coolingKw.value,
+        crewHoursPerYear: hardwareEsm.thermalControl.crewHoursPerYear.value,
+      };
+    case "oxygenGenerator":
+      return {
+        massKg: hardwareEsm.oxygenGenerator.massKg.value,
+        coolingKw: hardwareEsm.oxygenGenerator.coolingKw.value,
+        crewHoursPerYear: hardwareEsm.oxygenGenerator.crewHoursPerYear.value,
+      };
+    case "waterRecovery":
+      return {
+        massKg: hardwareEsm.waterRecovery.massKg.value,
+        crewHoursPerYear: hardwareEsm.waterRecovery.crewHoursPerYear.value,
+      };
+    case "moxie":
+      return { massKg: hardwareEsm.moxie.massKg.value };
+    case "powerDistribution":
+      return { massKg: hardwareEsm.powerDistribution.massKg.value };
+    case "comms":
+      return { massKg: hardwareEsm.comms.massKg.value };
+    case "greenhouse": {
+      const areaM2 = totalGreenhouseAreaM2(scenario);
+      return {
+        massKg: hardwareEsm.greenhousePerM2.massKgPerM2.value * areaM2,
+        coolingKw: hardwareEsm.greenhousePerM2.coolingKwPerM2.value * areaM2,
+        crewHoursPerYear: hardwareEsm.greenhousePerM2.crewHoursPerYearPerM2.value * areaM2,
+      };
+    }
+    case "lifeSupport":
+      return undefined;
+  }
+}
+
 export interface ScenarioEsmLine {
   readonly system: SystemId;
   readonly powerKw: number;
+  readonly powerKg: number;
+  /** `undefined` when the source material states no figure for this system — not a zero. */
+  readonly massKg?: number | undefined;
+  readonly coolingKg?: number | undefined;
+  readonly crewTimeKg?: number | undefined;
   readonly equivalentKg: number;
+  /** True once every M/C/CT term the general BVAD formula wants has a sourced value. */
+  readonly fullySourced: boolean;
 }
 
 export interface ScenarioEsmBreakdown {
@@ -113,12 +175,32 @@ export function scenarioEsmBreakdown(
   powerInfrastructure: PowerInfrastructure = "surfaceMid",
 ): ScenarioEsmBreakdown {
   const kgPerKw = powerEquivalencyKgPerKw(powerInfrastructure);
+  const durationDays = hoursToDays(scenario.durationHours);
 
-  const perSystem = scenario.systems.map((spec) => ({
-    system: spec.id,
-    powerKw: spec.nominalPowerKw,
-    equivalentKg: spec.nominalPowerKw * kgPerKw,
-  }));
+  const perSystem = scenario.systems.map((spec): ScenarioEsmLine => {
+    const powerKg = spec.nominalPowerKw * kgPerKw;
+    const hw = hardwareTermsFor(spec.id, scenario);
+    const massKg = hw?.massKg;
+    const coolingKg =
+      hw?.coolingKw !== undefined
+        ? kwToWatts(hw.coolingKw) * management.esmCoolingKgPerW.value
+        : undefined;
+    const crewTimeKg =
+      hw?.crewHoursPerYear !== undefined
+        ? perYearToPerDay(hw.crewHoursPerYear) * durationDays * management.esmCrewTimeKgPerCrewHour.value
+        : undefined;
+
+    return {
+      system: spec.id,
+      powerKw: spec.nominalPowerKw,
+      powerKg,
+      massKg,
+      coolingKg,
+      crewTimeKg,
+      equivalentKg: powerKg + (massKg ?? 0) + (coolingKg ?? 0) + (crewTimeKg ?? 0),
+      fullySourced: massKg !== undefined && coolingKg !== undefined && crewTimeKg !== undefined,
+    };
+  });
 
   const habitatVolumeKg = scenario.initial.habitatVolumeM3 * management.esmTransitVolumeKgPerM3.value;
   const batteryMassKg =
@@ -128,13 +210,13 @@ export function scenarioEsmBreakdown(
   const reactorMassKg =
     scenario.initial.fissionReactorKwe > 0 ? power.fissionSurfacePowerMassKg.value : 0;
 
-  const powerKg = perSystem.reduce((sum, line) => sum + line.equivalentKg, 0);
+  const perSystemKg = perSystem.reduce((sum, line) => sum + line.equivalentKg, 0);
 
   return {
     perSystem,
     habitatVolumeKg,
     batteryMassKg,
     reactorMassKg,
-    totalKg: powerKg + habitatVolumeKg + batteryMassKg + reactorMassKg,
+    totalKg: perSystemKg + habitatVolumeKg + batteryMassKg + reactorMassKg,
   };
 }

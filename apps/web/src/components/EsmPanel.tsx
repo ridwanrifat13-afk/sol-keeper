@@ -8,9 +8,11 @@ import { esmCadetHeadline, esmIntro, ESM_PARTIAL_DISCLOSURE } from "../dial/esmP
  * The ESM budget — the P1 "one currency" mechanic, as a live readout (M4).
  *
  * Deliberately not interactive: the player cannot yet spend this budget on anything, only
- * see it. A real spend-a-budget mechanic needs a Prepare view and per-system hardware mass
- * data this project does not have sourced yet — see the note on scenarioEsmBreakdown in
- * packages/sim/src/engine/esm.ts for exactly what was researched and why it came up short.
+ * see it. A real spend-a-budget mechanic still needs a Prepare view; the hardware mass,
+ * cooling and crew-time data it would spend against is now sourced for every system except
+ * Life Support (kept out on purpose, to avoid double-counting the five subsystems that
+ * already model real life-support hardware) — see the note on scenarioEsmBreakdown in
+ * packages/sim/src/engine/esm.ts.
  */
 export function EsmPanel() {
   const scenario = useRun((s) => s.scenario);
@@ -36,24 +38,44 @@ export function EsmPanel() {
               <tr>
                 <th scope="col">System</th>
                 <th scope="col">Power</th>
+                <th scope="col">Hardware</th>
+                <th scope="col">Cooling</th>
+                <th scope="col">Crew time</th>
                 <th scope="col">Equivalent mass</th>
               </tr>
             </thead>
             <tbody>
               {breakdown.perSystem.map((line) => (
-                <tr key={line.system}>
-                  <td>{systemLabel(line.system, level)}</td>
+                <tr key={line.system} className={line.fullySourced ? undefined : "esm-partial-row"}>
+                  <td>
+                    {systemLabel(line.system, level)}
+                    {!line.fullySourced && (
+                      <span aria-hidden="true" className="esm-partial-mark">
+                        {" "}
+                        *
+                      </span>
+                    )}
+                  </td>
                   <td>{line.powerKw.toFixed(1)} kW</td>
+                  <td>{line.massKg !== undefined ? `${Math.round(line.massKg)} kg` : "not sourced"}</td>
+                  <td>{line.coolingKg !== undefined ? `${Math.round(line.coolingKg)} kg` : "not sourced"}</td>
+                  <td>{line.crewTimeKg !== undefined ? `${Math.round(line.crewTimeKg)} kg` : "not sourced"}</td>
                   <td>{Math.round(line.equivalentKg)} kg</td>
                 </tr>
               ))}
               <tr>
                 <td>Habitat pressurised volume</td>
                 <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
                 <td>{Math.round(breakdown.habitatVolumeKg)} kg</td>
               </tr>
               <tr>
                 <td>Battery hardware</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
                 <td>—</td>
                 <td>{Math.round(breakdown.batteryMassKg)} kg</td>
               </tr>
@@ -61,11 +83,15 @@ export function EsmPanel() {
                 <tr>
                   <td>Fission reactor (NASA-FSP)</td>
                   <td>—</td>
+                  <td>—</td>
+                  <td>—</td>
+                  <td>—</td>
                   <td>{Math.round(breakdown.reactorMassKg)} kg</td>
                 </tr>
               )}
             </tbody>
           </table>
+          <p className="esm-table-note">* not sourced for every term — see the note below.</p>
 
           <p className="esm-disclosure">{ESM_PARTIAL_DISCLOSURE}</p>
         </>

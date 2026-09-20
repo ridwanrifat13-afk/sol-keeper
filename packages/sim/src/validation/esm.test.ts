@@ -1,16 +1,19 @@
 /**
- * scenarioEsmBreakdown is deliberately partial — see the comment above it in engine/esm.ts
- * for why hardware mass, cooling and crew-time are left out rather than padded with guessed
- * masses. These tests pin the arithmetic for the four terms it does compute, and guard
- * against the two easiest ways that honesty could quietly slip: counting the reactor as a
- * linear rate instead of the one real unit NASA-FSP actually describes, and forgetting that
- * turning the reactor off (fissionReactorKwe: 0) must zero its whole mass line, not scale it.
+ * scenarioEsmBreakdown mixes fully-sourced per-system hardware data (M/C/CT, supplied by
+ * the research team 2026-09) with the systems that still lack it. These tests pin the
+ * arithmetic for both cases, guard the "missing term is not a zero" rule (`lifeSupport` has
+ * no hardware data at all; `waterRecovery` has mass and crew-time but no cooling figure),
+ * and guard against the two easiest ways the reactor line could quietly go wrong: counting
+ * it as a linear rate instead of the one real unit NASA-FSP actually describes, and
+ * forgetting that turning it off (fissionReactorKwe: 0) must zero its whole mass line, not
+ * scale it.
  */
 import { describe, expect, it } from "vitest";
-import { management, power } from "../data/constants.js";
+import { hardwareEsm, management, power } from "../data/constants.js";
 import { equivalentSystemMass, scenarioEsmBreakdown } from "../engine/esm.js";
 import { jezeroOutpost } from "../data/scenarios/jezero.js";
 import type { Scenario } from "../types.js";
+import { hoursToDays, kwToWatts, perYearToPerDay } from "../units.js";
 
 describe("equivalentSystemMass", () => {
   it("sums all five BVAD terms", () => {
@@ -54,14 +57,63 @@ describe("scenarioEsmBreakdown", () => {
     );
   });
 
-  it("each system's equivalent mass is its power times the surface-mid factor", () => {
+  it("every line's power contribution is its power times the surface-mid factor", () => {
     const breakdown = scenarioEsmBreakdown(jezeroOutpost, "surfaceMid");
     for (const line of breakdown.perSystem) {
-      expect(line.equivalentKg).toBeCloseTo(
-        line.powerKw * management.esmSurfacePowerKgPerKwMid.value,
-        6,
-      );
+      expect(line.powerKg).toBeCloseTo(line.powerKw * management.esmSurfacePowerKgPerKwMid.value, 6);
     }
+  });
+
+  it("a system with full sourced hardware data (CO2 scrubber) sums power, mass, cooling and crew-time", () => {
+    const breakdown = scenarioEsmBreakdown(jezeroOutpost, "surfaceMid");
+    const line = breakdown.perSystem.find((l) => l.system === "co2Scrubber");
+    expect(line).toBeDefined();
+    const durationDays = hoursToDays(jezeroOutpost.durationHours);
+    const expectedMassKg = hardwareEsm.co2Scrubber.massKg.value;
+    const expectedCoolingKg =
+      kwToWatts(hardwareEsm.co2Scrubber.coolingKw.value) * management.esmCoolingKgPerW.value;
+    const expectedCrewTimeKg =
+      perYearToPerDay(hardwareEsm.co2Scrubber.crewHoursPerYear.value) *
+      durationDays *
+      management.esmCrewTimeKgPerCrewHour.value;
+
+    expect(line?.massKg).toBeCloseTo(expectedMassKg, 6);
+    expect(line?.coolingKg).toBeCloseTo(expectedCoolingKg, 6);
+    expect(line?.crewTimeKg).toBeCloseTo(expectedCrewTimeKg, 6);
+    expect(line?.fullySourced).toBe(true);
+    expect(line?.equivalentKg).toBeCloseTo(
+      (line?.powerKg ?? 0) + expectedMassKg + expectedCoolingKg + expectedCrewTimeKg,
+      6,
+    );
+  });
+
+  it("lifeSupport has no hardware data at all — its line is power only, never padded to zero", () => {
+    const breakdown = scenarioEsmBreakdown(jezeroOutpost);
+    const line = breakdown.perSystem.find((l) => l.system === "lifeSupport");
+    expect(line).toBeDefined();
+    expect(line?.massKg).toBeUndefined();
+    expect(line?.coolingKg).toBeUndefined();
+    expect(line?.crewTimeKg).toBeUndefined();
+    expect(line?.fullySourced).toBe(false);
+    expect(line?.equivalentKg).toBeCloseTo(line?.powerKg ?? -1, 6);
+  });
+
+  it("waterRecovery has mass and crew-time but no cooling figure, and is not fullySourced", () => {
+    const breakdown = scenarioEsmBreakdown(jezeroOutpost);
+    const line = breakdown.perSystem.find((l) => l.system === "waterRecovery");
+    expect(line?.massKg).toBeCloseTo(hardwareEsm.waterRecovery.massKg.value, 6);
+    expect(line?.coolingKg).toBeUndefined();
+    expect(line?.crewTimeKg).toBeGreaterThan(0);
+    expect(line?.fullySourced).toBe(false);
+  });
+
+  it("greenhouse scales its per-square-metre hardware terms by the scenario's total crop-tray area", () => {
+    const breakdown = scenarioEsmBreakdown(jezeroOutpost);
+    const line = breakdown.perSystem.find((l) => l.system === "greenhouse");
+    const totalAreaM2 = jezeroOutpost.initial.cropTrays.reduce((sum, t) => sum + t.areaM2, 0);
+    expect(totalAreaM2).toBeGreaterThan(0);
+    expect(line?.massKg).toBeCloseTo(hardwareEsm.greenhousePerM2.massKgPerM2.value * totalAreaM2, 6);
+    expect(line?.fullySourced).toBe(true);
   });
 
   it("habitat volume converts through the BVAD transit-volume factor", () => {

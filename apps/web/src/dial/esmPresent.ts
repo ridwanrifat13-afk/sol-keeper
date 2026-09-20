@@ -23,10 +23,10 @@ export function esmIntro(level: DialLevel): string {
     return "Everything that flies to space costs weight. This is roughly how heavy this outpost's equipment is.";
   }
   if (level === "commander") {
-    return "Equivalent System Mass (BVAD): ESM = M + V·Veq + P·Peq + C·Ceq + CT·D·CTeq. Shown here: the V and P terms only — see the note below for why M, C and CT are not yet modelled per system.";
+    return "Equivalent System Mass (BVAD): ESM = M + V·Veq + P·Peq + C·Ceq + CT·D·CTeq. Most systems below carry their full mass, cooling and crew-time terms — see the note below for the one system (Life Support) left out on purpose.";
   }
-  return "Equivalent System Mass converts volume and power into one currency — kilograms — so very different kinds of hardware can be compared on the same scale.";
+  return "Equivalent System Mass converts hardware mass, volume, power, cooling and crew time into one currency — kilograms — so very different kinds of hardware can be compared on the same scale.";
 }
 
 export const ESM_PARTIAL_DISCLOSURE =
-  "Hardware mass, cooling load and crew-time to operate are real BVAD terms too, but no NASA source we've checked states them for these specific systems — so this total only counts pressurised volume and continuous power draw, not the full formula. See Data Sources.";
+  "Life Support has no hardware-mass figure of its own: giving it one on top of the five subsystems already listed here (CO2 scrubber, thermal control, oxygen generator, water recovery, greenhouse) would double-count the same equipment under two names. Water Recovery is missing only its cooling figure — no NASA source we've checked states one. See Data Sources.";
