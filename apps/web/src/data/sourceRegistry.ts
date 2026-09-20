@@ -107,6 +107,7 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
   },
   "MIYAJIMA-LSS": {
     title: "Miyajima, \"Self-Sustainable Life Support System Trade Study for Lunar Farming\"",
+    url: "https://doi.org/10.15011/ijmsa.37.3.370304",
     usedFor:
       "CO2 scrubber, thermal control and oxygen generator hardware mass, cooling load and crew-time (ISS 4BMS / internal TCS / SPE)",
   },
@@ -115,7 +116,8 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     usedFor: "water recovery hardware mass and crew-time",
   },
   "MOXIE-MASS-NASA": {
-    title: "NASA Science / NASA JPL — Perseverance MOXIE instrument",
+    title: "NASA Science — Perseverance Science Instruments",
+    url: "https://science.nasa.gov/mission/mars-2020-perseverance/science-instruments/",
     usedFor: "MOXIE hardware mass",
   },
   "MARS-POWER-ASTRA": {
