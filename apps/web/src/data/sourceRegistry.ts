@@ -112,7 +112,8 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
       "CO2 scrubber, thermal control and oxygen generator hardware mass, cooling load and crew-time (ISS 4BMS / internal TCS / SPE)",
   },
   "MIT-16851-WRS": {
-    title: "MIT 16.851 Satellite Engineering portfolio — ISS Water Recovery System",
+    title: "Richards, MIT 16.851 Satellite Engineering Portfolio — ISS Water Recovery System",
+    url: "https://ocw.mit.edu/courses/16-851-satellite-engineering-fall-2003/1b24b751674a5d7db79cad58eefe2ade_16_851_portfolio.pdf",
     usedFor: "water recovery hardware mass and crew-time",
   },
   "MOXIE-MASS-NASA": {

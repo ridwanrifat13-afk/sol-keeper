@@ -845,7 +845,7 @@ export const hardwareEsm = {
       unit: "kg",
       source: "MIT-16851-WRS",
       confidence: "measured",
-      note: "ISS Water Recovery System (WRS), corroborated against NASA NTRS documentation of the same hardware — exact NTRS accession still pending from the research team.",
+      note: "ISS Water Recovery System (WRS), from the \"ESM for ISS Water Recovery System\" table (Mass 638 kg, Volume 0.5 m^3, Power 0.99 kW, Crew Time 8.0 ch/y) — the same table's 0.99 kW figure lines up with this system's own nominalPowerKw in the Jezero scenario (0.9 kW), an independent cross-check.",
     }),
     crewHoursPerYear: c({
       value: 8.0,
