@@ -6,10 +6,13 @@ import { PowerPriorities } from "../../components/PowerPriorities.js";
 import { EventFeed } from "../../components/EventFeed.js";
 import { CrewPanel } from "../../components/CrewPanel.js";
 import { DialSwitch } from "../../components/DialSwitch.js";
+import { ScenarioSwitch } from "../../components/ScenarioSwitch.js";
+import { EsmPanel } from "../../components/EsmPanel.js";
 import { STATUS } from "../../components/status.js";
 import { statusWord } from "../../dial/statusWords.js";
 import { survivalModeLabel } from "../../dial/labels.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
+import { durationLabel } from "../../dial/missionTime.js";
 import { survivalModes, type SurvivalMode } from "@sol-keeper/sim";
 
 const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
@@ -41,11 +44,13 @@ export function OperateView() {
           <h1>Sol Keeper</h1>
           <p className="mission-site">
             {scenario.site.name} · {scenario.body === "mars" ? "Mars" : "Moon"} ·{" "}
-            {scenario.durationSols} sols · {summary.livingCrew}/{state.crew.length} crew
+            {durationLabel(scenario.durationHours, scenario.body)} · {summary.livingCrew}/{state.crew.length} crew
           </p>
         </div>
         <RunStatusBadge />
       </header>
+
+      <ScenarioSwitch />
 
       <DialSwitch />
 
@@ -166,6 +171,8 @@ export function OperateView() {
         <PowerPriorities />
         <CrewPanel />
       </div>
+
+      <EsmPanel />
 
       <EventFeed />
 

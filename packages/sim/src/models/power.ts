@@ -32,7 +32,7 @@ export function powerStage(ctx: TickContext): void {
     scenario.initial.solarArrayAreaM2,
     state.environment.irradianceWPerM2,
   );
-  const fissionKw = state.systems.powerDistribution.operational
+  const fissionKw = (state.systems.powerDistribution?.operational ?? false)
     ? scenario.initial.fissionReactorKwe
     : 0;
   p.generationKw = solarKw + fissionKw;
@@ -97,14 +97,20 @@ export function powerStage(ctx: TickContext): void {
     // Each shed system is an effect of the brownout, so the debrief can walk down to it.
     // When the brownout is unchanged from last hour there is nothing new to attribute.
     if (brownout !== undefined) {
+      // Looked up from `wanted` (systems that actually exist and wanted power this hour)
+      // rather than re-indexed by id, since `state.systems` is a partial map and every id
+      // in `shed` came from iterating it in the first place — this lookup can't miss.
+      const byId = new Map(wanted.map((s) => [s.id, s] as const));
       log.because(brownout, () => {
         for (const id of shed) {
+          const sys = byId.get(id);
+          if (sys === undefined) continue;
           log.log({
             kind: "resource",
             severity: "warning",
             code: "power.systemShed",
             system: id,
-            data: { system: id, powerKw: round(state.systems[id].nominalPowerKw) },
+            data: { system: id, powerKw: round(sys.nominalPowerKw) },
           });
         }
       });

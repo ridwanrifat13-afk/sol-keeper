@@ -66,7 +66,7 @@ export function foodStage(ctx: TickContext): void {
 
   // Crops only grow when the greenhouse is lit.
   const greenhouse = state.systems.greenhouse;
-  const lit = greenhouse.operational && greenhouse.poweredThisHour;
+  const lit = greenhouse !== undefined && greenhouse.operational && greenhouse.poweredThisHour;
   for (const tray of f.trays) {
     if (!lit) continue;
     tray.lightHours += ctx.dtHours;
@@ -87,7 +87,7 @@ export function foodStage(ctx: TickContext): void {
     }
   }
 
-  if (!lit && greenhouse.operational) {
+  if (!lit && greenhouse !== undefined && greenhouse.operational) {
     log.logEdge({
       kind: "resource",
       severity: "caution",

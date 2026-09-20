@@ -1,6 +1,14 @@
 import { useRun } from "../store/run.js";
 import { useDial } from "../store/dial.js";
 import { systemLabel } from "../dial/labels.js";
+import { systemStatusInfo } from "../dial/systemStatus.js";
+
+const CADET_WORDS: Record<string, string> = {
+  Standby: "Waiting",
+  Powered: "On",
+  Shed: "Off",
+  Failed: "Broken",
+};
 
 /**
  * The load-shed order.
@@ -17,19 +25,18 @@ export function PowerPriorities() {
   const setPriority = useRun((s) => s.setPriority);
   const level = useDial((s) => s.level);
 
-  const ordered = Object.values(systems).sort((a, b) => a.priority - b.priority);
+  const ordered = Object.values(systems)
+    .filter((s) => s !== undefined)
+    .sort((a, b) => a.priority - b.priority);
   // Before the first tick, `poweredThisHour` is just its unset default (false) for every
   // system — no power stage has run to decide it. Reading that default as "Shed" would tell
   // a player that nine systems already lost power on a mission that has not started, right
   // next to a battery gauge honestly reporting "0.0 of 0.0 kW served". Caught by actually
   // opening the built app (see e2e/operate.spec.ts) rather than by a render test, which
-  // never observes the pristine pre-tick frame a real user's first paint does.
+  // never observes the pristine pre-tick frame a real user's first paint does. The same
+  // four-state logic now lives in dial/systemStatus.ts, shared with the Ripple Web, so the
+  // two views can never disagree about what "Shed" means for a given system.
   const missionStarted = hour > 0;
-
-  const words =
-    level === "cadet"
-      ? { standby: "Waiting", powered: "On", shed: "Off", failed: "Broken" }
-      : { standby: "Standby", powered: "Powered", shed: "Shed", failed: "Failed" };
 
   return (
     <section className="panel" aria-labelledby="power-priorities-heading">
@@ -40,17 +47,12 @@ export function PowerPriorities() {
 
       <ol className="priority-list" key={version}>
         {ordered.map((system, index) => {
-          const state = !missionStarted
-            ? { glyph: "○", word: words.standby, cls: "is-standby" }
-            : system.poweredThisHour
-              ? { glyph: "●", word: words.powered, cls: "is-nominal" }
-              : system.operational
-                ? { glyph: "▲", word: words.shed, cls: "is-caution" }
-                : { glyph: "■", word: words.failed, cls: "is-critical" };
+          const info = systemStatusInfo(system, missionStarted);
+          const word = level === "cadet" ? (CADET_WORDS[info.word] ?? info.word) : info.word;
           const name = systemLabel(system.id, level);
 
           return (
-            <li key={system.id} className={`priority-row ${state.cls}`}>
+            <li key={system.id} className={`priority-row ${info.className}`}>
               <span className="priority-rank" aria-hidden="true">
                 {index + 1}
               </span>
@@ -59,7 +61,7 @@ export function PowerPriorities() {
                 <span className="priority-power">{system.nominalPowerKw.toFixed(1)} kW</span>
               </span>
               <span className="priority-state">
-                <span aria-hidden="true">{state.glyph}</span> {state.word}
+                <span aria-hidden="true">{info.glyph}</span> {word}
               </span>
               <span className="priority-actions">
                 <button

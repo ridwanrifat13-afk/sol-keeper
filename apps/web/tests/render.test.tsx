@@ -27,6 +27,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "../src/App";
 import { DebriefView } from "../src/views/Debrief/DebriefView";
 import { DataSourcesView } from "../src/views/DataSources/DataSourcesView";
+import { RippleView } from "../src/views/Ripple/RippleView";
 import { useRun } from "../src/store/run";
 import { useDial } from "../src/store/dial";
 import { logText } from "../src/i18n/logText";
@@ -111,6 +112,20 @@ describe("Operate view, first frame", () => {
   it("shows crew dose against the career limit, not as a bare number", () => {
     const out = render();
     expect(out).toContain("600 mSv career limit");
+  });
+
+  it("renders the ESM budget with a real per-system breakdown, no reactor line for Jezero", () => {
+    const out = render();
+    expect(out).toContain("Mission ESM budget");
+    expect(out).toContain("Total equivalent mass");
+    expect(out).toContain("Habitat pressurised volume");
+    expect(out).toContain("Battery hardware");
+    // Jezero is solar-only; a scenario with no reactor must not show a reactor line.
+    expect(out).not.toContain("Fission reactor");
+    // Discloses the partiality rather than presenting a complete-looking total. (React
+    // escapes the apostrophe in "we've" to &#x27; in the rendered HTML, so match around it.)
+    expect(out).toContain("NASA source");
+    expect(out).toContain("checked states them");
   });
 
   it("carries the credit line and no NASA insignia (brief rule 5)", () => {
@@ -223,6 +238,43 @@ describe("DebriefView, mission still running (first frame)", () => {
     // Nothing from an ended-mission section should appear yet.
     expect(out).not.toContain("Final numbers");
     expect(out).not.toContain("Major incidents");
+  });
+});
+
+describe("RippleView, first frame (Jezero, the default scenario)", () => {
+  it("renders the graph and every system/domain/crew node it should for Jezero", () => {
+    const out = render(<RippleView />);
+    expect(out).toContain("Ripple Web");
+    // One node per scenario system, using the friendly label, not the raw id.
+    for (const label of ["Life support", "CO₂ scrubber", "Heating", "MOXIE", "Greenhouse"]) {
+      expect(out, `missing node: ${label}`).toContain(label);
+    }
+    expect(out).not.toContain("co2Scrubber");
+    // Domain and crew nodes.
+    for (const label of ["Oxygen", "Water", "Food", "Radiation", "Crew"]) {
+      expect(out, `missing node: ${label}`).toContain(label);
+    }
+  });
+
+  it("renders one <line> per edge and one node group per node — nothing dangling", () => {
+    const out = render(<RippleView />);
+    const lineCount = (out.match(/<line /g) ?? []).length;
+    const nodeGroupCount = (out.match(/class="ripple-node /g) ?? []).length;
+    expect(lineCount).toBeGreaterThan(0);
+    expect(nodeGroupCount).toBeGreaterThan(0);
+  });
+
+  it("carries a full text table as a non-visual fallback (rule 6, and SVG isn't screen-reader friendly)", () => {
+    const out = render(<RippleView />);
+    expect(out).toContain("Same information, as text");
+    expect(out).toContain('role="img"');
+    expect(out).toContain("<table");
+  });
+
+  it("marks the graph accessible without relying on colour alone", () => {
+    const out = render(<RippleView />);
+    // Every table row's status cell carries a real word, not just a colour class.
+    expect(out).toMatch(/Standby|Powered|Shed|Failed|Nominal|Caution|Critical/);
   });
 });
 

@@ -68,7 +68,7 @@ const SPECIALIST: TemplateTable = {
   "comms.blackoutStart": "Solar conjunction — no link to Earth for about {durationDays} days.",
   "comms.blackoutEnd": "Link to Earth restored ({oneWayLightSeconds} s each way).",
 
-  "end.missionComplete": "Mission complete: {sols} sols, {crewSurviving} crew home safe.",
+  "end.missionComplete": "Mission complete: {crewSurviving} crew home safe.",
   "end.crewLost": "Mission lost at hour {hour}.",
 };
 
@@ -120,7 +120,7 @@ const CADET: TemplateTable = {
   "comms.blackoutStart": "The Sun is blocking the signal — no messages from Earth for a while.",
   "comms.blackoutEnd": "You can talk to Earth again!",
 
-  "end.missionComplete": "You did it! Everyone made it through {sols} sols safely.",
+  "end.missionComplete": "You did it! Everyone made it home safely.",
   "end.crewLost": "The mission could not continue.",
 };
 
@@ -177,7 +177,7 @@ const COMMANDER: TemplateTable = {
   "comms.blackoutStart": "Solar conjunction blackout, ~{durationDays} d, per the ~780 d synodic cycle.",
   "comms.blackoutEnd": "Link restored, one-way light time {oneWayLightSeconds} s.",
 
-  "end.missionComplete": "Mission complete: {sols} sols elapsed, {crewSurviving} crew surviving.",
+  "end.missionComplete": "Mission complete at hour {hour}: {crewSurviving} crew surviving.",
   "end.crewLost": "Mission terminated: crew complement zero at hour {hour}.",
 };
 

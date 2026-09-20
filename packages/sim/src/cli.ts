@@ -4,15 +4,21 @@
  *
  *   pnpm sim                      30 sols at Jezero, seed 1
  *   pnpm sim -- --seed 7 --sols 10
+ *   pnpm sim -- --scenario first-light
  *
  * This is the one file in packages/sim allowed to touch the platform: it reads argv and
  * writes to stdout, and contains no simulation logic. The purity lint and
  * validation/purity.test.ts both exempt it by name.
+ *
+ * `--sols` still means Mars sols specifically (this CLI predates the Moon scenarios and
+ * summarise() prints everything in sols) — passing it against a Moon scenario runs for that
+ * many Mars-sol-lengths of hours, not lunar days. Fine for a quick debug slice; the web app
+ * is where mission time is shown correctly per body (dial/missionTime.ts).
  */
 import { getScenario } from "./data/scenarios/index.js";
 import { createInitialState } from "./engine/state.js";
 import { run } from "./engine/tick.js";
-import type { LogEntry, Params, SimState } from "./types.js";
+import type { LogEntry, Params, ScenarioId, SimState } from "./types.js";
 import { hoursToSols, solsToHours } from "./units.js";
 
 function arg(name: string, fallback: number): number {
@@ -21,6 +27,12 @@ function arg(name: string, fallback: number): number {
   const raw = process.argv[i + 1];
   const parsed = raw === undefined ? NaN : Number(raw);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function stringArg(name: string, fallback: string): string {
+  const i = process.argv.indexOf(`--${name}`);
+  if (i === -1) return fallback;
+  return process.argv[i + 1] ?? fallback;
 }
 
 function bar(fraction: number, width = 20): string {
@@ -133,16 +145,17 @@ function summarise(state: SimState, params: Params, sols: number): void {
 function main(): void {
   const seed = arg("seed", 1);
   const sols = arg("sols", 30);
+  const scenarioId = stringArg("scenario", "jezero-outpost") as ScenarioId;
+  const scenario = getScenario(scenarioId); // throws with the known-scenario list if wrong
 
   const params: Params = {
-    scenarioId: "jezero-outpost",
+    scenarioId,
     seed,
-    crewSize: 4,
+    crewSize: scenario.crewSize,
     missionStartIso: "2033-03-01",
     difficulty: "standard",
   };
 
-  const scenario = getScenario(params.scenarioId);
   const state = createInitialState(params);
   run(state, params, scenario, Math.ceil(solsToHours(sols)));
   summarise(state, params, sols);

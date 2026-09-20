@@ -26,6 +26,15 @@ export function isruStage(ctx: TickContext): void {
   const { state, log } = ctx;
   const moxie = state.systems.moxie;
 
+  // MOXIE consumes the Martian CO2 atmosphere, which the Moon does not have — a Moon
+  // scenario correctly omits it from its system list entirely, rather than including a
+  // system that could never really fly there, so `moxie` is `undefined` here, not merely
+  // unpowered.
+  if (moxie === undefined) {
+    state.isru.moxieRunning = false;
+    return;
+  }
+
   // Like the electrolyser, MOXIE regulates against the cabin set point rather than running
   // continuously — there is no sense spending power to push the habitat into fire risk.
   const needsOxygen =

@@ -27,12 +27,14 @@ export function atmosphereStage(ctx: TickContext): void {
   a.o2Kg = Math.max(0, a.o2Kg - o2ConsumedKg);
   a.co2Kg += co2ProducedKg;
 
-  // Scrubbing
+  // Scrubbing. A scenario without a co2Scrubber system at all (none exist today, but the
+  // model must not assume one) just accumulates CO2 unchecked, with no "offline" log — a
+  // system that was never fitted was never taken offline.
   const scrubber = state.systems.co2Scrubber;
-  if (scrubber.operational && scrubber.poweredThisHour) {
+  if (scrubber !== undefined && scrubber.operational && scrubber.poweredThisHour) {
     const removedKg = Math.min(a.co2Kg, habitat.co2ScrubberKgPerHour.value * ctx.dtHours);
     a.co2Kg -= removedKg;
-  } else {
+  } else if (scrubber !== undefined) {
     log.logEdge({
       kind: "fault",
       severity: "warning",

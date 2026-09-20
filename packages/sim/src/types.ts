@@ -199,7 +199,14 @@ export interface SimState {
   food: FoodState;
   radiation: RadiationState;
   crew: CrewMember[];
-  systems: Record<SystemId, SystemState>;
+  /**
+   * Partial, not `Record<SystemId, SystemState>`: a scenario lists only the systems it
+   * actually carries (a Moon scenario has no reason to include `moxie`, a Mars-only ISRU
+   * experiment), so any specific system may simply not exist for a given run. Every model
+   * that reads a specific key must check for `undefined` rather than assume completeness —
+   * `buildSystems` in engine/state.ts only ever populates what `scenario.systems` lists.
+   */
+  systems: Partial<Record<SystemId, SystemState>>;
   comms: CommsState;
   isru: IsruState;
   rng: RngState;
@@ -250,7 +257,14 @@ export interface Scenario {
   readonly id: ScenarioId;
   readonly body: Body;
   readonly site: { readonly name: string; readonly latDeg: number; readonly lonDeg: number };
-  readonly durationSols: number;
+  /**
+   * Mission duration in hours — the sim's one true time unit, so nothing downstream needs
+   * to know whether the number came from Mars sols or Earth days. A scenario file converts
+   * explicitly at definition time (brief rule 3); previously this field held `durationSols`
+   * and every reader converted it via the *Mars* sol length regardless of `body`, which
+   * would have quietly run a Moon scenario ~2.7% too long had one existed before this fix.
+   */
+  readonly durationHours: number;
   readonly crewSize: number;
   readonly initial: InitialResources;
   readonly systems: readonly SystemSpec[];

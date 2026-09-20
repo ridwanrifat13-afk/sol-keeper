@@ -1,10 +1,11 @@
-import { causalCascade, directEffects, units, type LogEntry } from "@sol-keeper/sim";
+import { causalCascade, directEffects, type Body, type LogEntry } from "@sol-keeper/sim";
 import { useDial } from "../../store/dial.js";
 import { useRun } from "../../store/run.js";
 import { logText } from "../../i18n/logText.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
 import { crewLossConditions, groupIncidents, majorIncidents, type IncidentGroup } from "../../dial/blackBox.js";
 import type { DialLevel } from "../../dial/types.js";
+import { durationLabel, elapsedValue, timeUnitWord, timestampLabel } from "../../dial/missionTime.js";
 import { statusFromSeverity } from "../../components/status.js";
 
 /**
@@ -18,6 +19,7 @@ const CREW_LOSS_WINDOW_HOURS = 72;
 
 export function DebriefView() {
   const state = useRun((s) => s.state);
+  const body = useRun((s) => s.scenario.body);
   const level = useDial((s) => s.level);
 
   if (state.status === "running") {
@@ -45,8 +47,8 @@ export function DebriefView() {
         <h1>{state.status === "won" ? "Mission complete" : "Mission lost"}</h1>
         <p className="view-hint">
           {state.status === "won"
-            ? `${units.hoursToSols(state.hour).toFixed(1)} sols, ${summary.livingCrew} of ${state.crew.length} crew home safe.`
-            : `Ended at hour ${state.hour} (sol ${units.hoursToSols(state.hour).toFixed(1)}).`}
+            ? `${durationLabel(state.hour, body)}, ${summary.livingCrew} of ${state.crew.length} crew home safe.`
+            : `Ended at hour ${state.hour} (${timestampLabel(state.hour, body)}).`}
         </p>
       </header>
 
@@ -104,7 +106,7 @@ export function DebriefView() {
             <li className="event-empty">No incident on this run triggered a recorded chain.</li>
           )}
           {incidentGroups.map((group) => (
-            <IncidentRow key={`${group.sample.id}-${group.count}`} group={group} log={log} level={level} />
+            <IncidentRow key={`${group.sample.id}-${group.count}`} group={group} log={log} level={level} body={body} />
           ))}
         </ul>
       </section>
@@ -120,7 +122,7 @@ export function DebriefView() {
                   <span className="event-sev">
                     <span aria-hidden="true">{status.glyph}</span> {status.label}
                   </span>
-                  <span className="event-time">Sol {units.hoursToSols(entry.hour).toFixed(2)}</span>
+                  <span className="event-time">{timestampLabel(entry.hour, body)}</span>
                 </div>
                 <p className="event-text">{logText(entry, level)}</p>
               </li>
@@ -149,22 +151,24 @@ function IncidentRow({
   group,
   log,
   level,
+  body,
 }: {
   group: IncidentGroup;
   log: readonly LogEntry[];
   level: DialLevel;
+  body: Body;
 }) {
   const effects = directEffects(log, group.sample.id);
   const cascadeSize = causalCascade(log, group.sample.id).length;
-  const sols =
+  const when =
     group.count > 1
-      ? `Sol ${units.hoursToSols(group.firstHour).toFixed(2)}–${units.hoursToSols(group.lastHour).toFixed(2)}`
-      : `Sol ${units.hoursToSols(group.firstHour).toFixed(2)}`;
+      ? `${timeUnitWord(body)} ${elapsedValue(group.firstHour, body).toFixed(2)}–${elapsedValue(group.lastHour, body).toFixed(2)}`
+      : timestampLabel(group.firstHour, body);
 
   return (
     <li className="incident-row">
       <div className="incident-head">
-        <span className="incident-time">{sols}</span>
+        <span className="incident-time">{when}</span>
         <span className="incident-text">
           {logText(group.sample, level)}
           {group.count > 1 ? ` (recurred ${group.count} times)` : ""}
@@ -206,8 +210,11 @@ function CrewLossReport({
       {groups.length > 0 ? (
         <>
           <p className="panel-hint">
-            Conditions in the {Math.round(CREW_LOSS_WINDOW_HOURS / 24)} sols before — not a
-            proven cause; health declines gradually across several models at once.
+            {/* 72 hours is exactly 3 Earth days regardless of which body the mission is on —
+                a fixed window choice, not derived from either body's day length, so this
+                is the one time span in the app that does not need a Mars/Moon distinction. */}
+            Conditions in the 3 days before — not a proven cause; health declines gradually
+            across several models at once.
           </p>
           <ul className="condition-list">
             {groups.map((group) => (

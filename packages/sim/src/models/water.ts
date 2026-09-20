@@ -30,7 +30,7 @@ export function waterStage(ctx: TickContext): void {
 
   const recovery = state.systems.waterRecovery;
   w.recoveryFraction =
-    recovery.operational && recovery.poweredThisHour
+    recovery !== undefined && recovery.operational && recovery.poweredThisHour
       ? lifeSupport.waterRecoveryFractionBaseline.value
       : 0;
 
@@ -49,7 +49,7 @@ export function waterStage(ctx: TickContext): void {
   const needsOxygen =
     state.atmosphere.o2PartialPressureMmHg < habitat.targetO2PartialPressureMmHg.value;
 
-  if (generator.operational && generator.poweredThisHour && needsOxygen) {
+  if (generator !== undefined && generator.operational && generator.poweredThisHour && needsOxygen) {
     const energyKwh = generator.nominalPowerKw * ctx.dtHours;
     const o2Kg = energyKwh / lifeSupport.electrolysisEnergyKwhPerKgO2Practical.value;
     const waterNeededKg = o2Kg * lifeSupport.electrolysisWaterPerO2KgPerKg.value;
@@ -69,7 +69,7 @@ export function waterStage(ctx: TickContext): void {
     }
   }
 
-  if (!recovery.poweredThisHour && recovery.operational) {
+  if (recovery !== undefined && !recovery.poweredThisHour && recovery.operational) {
     log.logEdge({
       kind: "resource",
       severity: "warning",

@@ -422,3 +422,101 @@ the player still starts directly in Operate.
   a full-page Playwright screenshot, not by any unit test, because nothing about the DOM
   structure was wrong. `.event-list-full` is now bounded and scrollable at 640px, matching
   the pattern the live Operate feed already used at 420px.
+
+## 10. Two Moon scenarios, the ESM readout, and the Ripple Web (M4)
+
+**Two new scenarios, `data/scenarios/firstLight.ts` and `data/scenarios/theLongNight.ts`,**
+put the sim on the Moon for the first time, which surfaced a real architectural bug that the
+single-scenario (Jezero) test suite had no way to catch: `SimState.systems` was typed as
+`Record<SystemId, SystemState>`, a claim that every system id always has a state, when
+`buildSystems()` only ever populated whatever the active scenario actually lists (Moon
+scenarios carry no MOXIE — there is no CO2 atmosphere to consume). The type was a lie that
+happened to go unnoticed because Jezero lists every system there is. Fixed by retyping it
+`Partial<Record<SystemId, SystemState>>` and hardening the eight call sites across
+`isru.ts`, `atmosphere.ts`, `water.ts`, `thermal.ts`, `food.ts`, `power.ts`, and
+`engine/events.ts` that had been indexing into it as if the value could never be `undefined`.
+
+**A second bug, also Moon-specific: `Scenario.durationSols` assumed every scenario runs on
+Mars.** `runScenario()` and every UI date label converted sols to hours via the Mars sol
+length (24.66h) regardless of `scenario.body`, so a Moon mission's stated duration was wrong
+by construction. Renamed the field to `durationHours` — the pipeline's only real clock unit —
+and pushed "how a duration reads to a person" out to `apps/web/src/dial/missionTime.ts`
+(`timeUnitWord`, `durationLabel`, `timestampLabel`), which picks "sol" vs "day" from
+`scenario.body` and is now the only place that wording lives, replacing five components that
+had each hardcoded "Sol {n}".
+
+**Balancing both Moon scenarios surfaced two real physics bugs, not tuning nitpicks — both
+scenarios died at the identical hour regardless of RNG seed**, which is the signature of a
+sizing bug, not bad luck:
+- Lunar-night heater draw had been copied from the Mars-tuned Jezero scenario (1.5kW), wholly
+  inadequate against a real lunar night ambient temperature. Resized both scenarios' thermal
+  control from the actual heat-loss physics (`thermalConductanceKwPerK × ΔT`) — First Light
+  to 7.0kW, The Long Night (colder, longer) to 8.0kW.
+- First Light's battery was sized only to the *critical-path* load, but the power-priority
+  shedding stage is reactive — it only sheds once the current hour's demand exceeds available
+  supply — so a battery sized for less than the *full nominal* load still drains against
+  low-priority systems every hour before they are ever shed. Resized to the real minimum
+  (full demand × night length ÷ depth-of-discharge ≈ 4646kWh) and bumped the solar array from
+  40m² to 100m² so it can recharge that capacity in daylight. The Long Night's initial food
+  stock had the same category of bug (180kg, under the bare 219.5kg four-crew/88.5-day
+  minimum before counting crop harvest) and was raised to 450kg. All three scenarios (Jezero
+  included, as the consistency bar) are pinned at 20/20 seed wins in
+  `validation/moonScenarios.test.ts`, verified by an actual repeated-seed sweep, not trusted
+  arithmetic alone.
+
+**The ESM (Equivalent System Mass) panel was deliberately redesigned mid-build, not seeded
+with placeholders.** The BVAD ESM formula is `M + V·Veq + P·Peq + C·Ceq + CT·D·CTeq` — mass,
+volume, power, cooling, and crew-time, each turned into kg. Nine research passes over BVAD-
+2022, NASA ECLSS documentation, and the MOXIE literature came back without a citable, source-
+backed hardware mass, cooling factor, or crew-time factor for any of the nine per-system
+components (life support, scrubber, thermal control, etc.) — only the volume and power terms
+are fully sourced today. Rather than invent nine placeholder mass guesses (a direct violation
+of rule 1), `engine/esm.ts`'s `scenarioEsmBreakdown()` computes a partial ESM using only the
+sourced V and P terms plus habitat volume, battery mass, and reactor mass, and
+`DataSourcesView` explicitly discloses the omitted M/C/CT terms as not yet modeled rather
+than silently underreporting. This is a real scope cut, not a bug — if BVAD's own equipment
+tables or the ECLSS specs become available, the formula can be completed later without
+changing its shape.
+
+**The Ripple Web (`apps/web/src/ripple/`, `views/Ripple/RippleView.tsx`) is a live
+dependency graph, built to answer "what does shedding this take down with it" *before* a
+player decides, not after** (the Black Box already answers "what did that take down" after
+the fact). `ripple/graph.ts` builds the graph from the same facts the tick pipeline already
+encodes — `SYSTEM_TO_DOMAINS` only draws an edge from a system to a resource domain when a
+model file actually reads that system by name to gate that resource (e.g.
+`oxygenGenerator → [oxygen, water]`, verified by grep against `packages/sim/src/models/`);
+`lifeSupport` and `comms` are leaves because no model reads either by name today. Layout runs
+through `ripple/useForceLayout.ts`, a d3-force simulation run to convergence synchronously
+(`sim.tick(300)`) inside a `useEffect` keyed on a `shapeKey` string (the node/edge id list),
+not on the `nodes`/`edges` arrays themselves — those are new literals every render, which
+would restart the layout every simulated hour instead of only when a scenario switch changes
+the graph's actual shape. `RippleView` reuses `dial/systemStatus.ts` (see below) and
+`dial/resourceSummary.ts` for node status, so the graph and the Operate gauges can never
+disagree about what "shed" or "caution" means for the same system.
+
+Node status logic (`Standby` before a mission starts / `Powered` / `Shed` / `Failed`) had
+been implemented once, inline, inside `PowerPriorities.tsx`; the Ripple Web needed the exact
+same four-state logic for its system nodes, so it was pulled out to a shared
+`dial/systemStatus.ts` (`systemStatusInfo(system, missionStarted)`) rather than reimplemented
+a second time — the alternative risks the two views quietly drifting on what "Shed" means.
+
+### Two more things found by actually looking at the screenshot, not the code
+
+- **Two of the Ripple Web's own Playwright assertions were ambiguous, not the app being
+  wrong**: `getByText("Moon")` matched three elements (the mission subtitle plus two scenario
+  button subtitles containing the substring "Moon"), and `getByRole("cell", { name: "Crew" })`
+  matched both the `"Crew"` label cell and a `"crew"` kind cell in the next column (Playwright
+  role-name matching is case-insensitive by default). Fixed by scoping to `.mission-site` and
+  adding `exact: true`, not by changing the app.
+- **`forceCollide(34)` was barely larger than the largest node's own radius (32), so it kept
+  circles from overlapping but did nothing to protect the text label drawn above each one.**
+  With nodes spaced that tightly, a neighbouring node's later-drawn, opaque circle could paint
+  directly over the tail of an adjacent label — "Power distribution" rendered as "Power
+  distributi" behind the MOXIE node in the first screenshot. Measuring the label's actual
+  SVG `getBBox()` confirmed it never left the viewBox, ruling out edge clipping as the cause
+  before settling on the real one. Fixed by widening the collision radius to 52 (plus a
+  belt-and-suspenders canvas-edge clamp for nodes that settle near x=0 or x=width) and
+  re-verified against a fresh production build — the very first re-run reused a stale
+  `vite preview` server left over from the earlier `pnpm verify`, per Playwright's
+  `reuseExistingServer` default, and silently showed the unfixed layout until that server was
+  killed and rebuilt.

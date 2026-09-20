@@ -142,6 +142,15 @@ export function DataSourcesView() {
           </li>
           <li>DONKI space-weather events are observed near Earth, not at Mars or the Moon.</li>
           <li>Equirectangular map layers stretch visibly near the poles.</li>
+          <li>
+            The Mission ESM budget shows only the volume and power terms of BVAD's Equivalent
+            System Mass formula. Hardware mass, cooling load and crew-time to operate are
+            real terms too, but no NASA source we checked states them for these specific
+            systems — nine research attempts (MOXIE, the ISS Oxygen Generation Assembly, CO2
+            removal, water recovery, thermal control) turned up leads but nothing pinned to a
+            document anyone could open and verify, so those terms are left out rather than
+            filled with a guess.
+          </li>
         </ul>
       </section>
     </div>

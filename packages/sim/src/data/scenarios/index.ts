@@ -1,9 +1,13 @@
 import type { Scenario, ScenarioId } from "../../types.js";
+import { firstLight } from "./firstLight.js";
 import { jezeroOutpost } from "./jezero.js";
+import { theLongNight } from "./theLongNight.js";
 
-/** Every scenario, by id. Moon scenarios ("First Light", "The Long Night") land at M4. */
-export const SCENARIOS: Partial<Record<ScenarioId, Scenario>> = {
+/** Every scenario, by id. */
+export const SCENARIOS: Record<ScenarioId, Scenario> = {
   "jezero-outpost": jezeroOutpost,
+  "first-light": firstLight,
+  "the-long-night": theLongNight,
 };
 
 export function getScenario(id: ScenarioId): Scenario {
@@ -14,4 +18,4 @@ export function getScenario(id: ScenarioId): Scenario {
   return scenario;
 }
 
-export { jezeroOutpost };
+export { firstLight, jezeroOutpost, theLongNight };

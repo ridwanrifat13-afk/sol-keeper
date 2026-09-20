@@ -26,8 +26,8 @@ function buildCrew(size: number) {
   }));
 }
 
-function buildSystems(scenario: Scenario): Record<SystemId, SystemState> {
-  const out = {} as Record<SystemId, SystemState>;
+function buildSystems(scenario: Scenario): Partial<Record<SystemId, SystemState>> {
+  const out: Partial<Record<SystemId, SystemState>> = {};
   for (const spec of scenario.systems) {
     out[spec.id] = {
       id: spec.id,

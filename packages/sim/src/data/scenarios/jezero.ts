@@ -7,12 +7,13 @@
  * Site coordinates match the Jezero reference row in docs/trek_layers.md.
  */
 import type { Scenario } from "../../types.js";
+import { solsToHours } from "../../units.js";
 
 export const jezeroOutpost: Scenario = {
   id: "jezero-outpost",
   body: "mars",
   site: { name: "Jezero Crater", latDeg: 18.4, lonDeg: 77.6 },
-  durationSols: 30,
+  durationHours: Math.ceil(solsToHours(30)),
   crewSize: 4,
 
   initial: {

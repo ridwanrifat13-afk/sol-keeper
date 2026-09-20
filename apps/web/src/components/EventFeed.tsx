@@ -2,7 +2,7 @@ import { useRun } from "../store/run.js";
 import { useDial } from "../store/dial.js";
 import { logText } from "../i18n/logText.js";
 import { statusFromSeverity } from "./status.js";
-import { units } from "@sol-keeper/sim";
+import { timestampLabel } from "../dial/missionTime.js";
 
 const MAX_CARDS = 40;
 
@@ -18,6 +18,7 @@ const CAUSE_PREFIX = { cadet: "why: ", specialist: "because: ", commander: "caus
 export function EventFeed() {
   const version = useRun((s) => s.version);
   const log = useRun((s) => s.state.log);
+  const body = useRun((s) => s.scenario.body);
   const level = useDial((s) => s.level);
 
   const byId = new Map(log.map((e) => [e.id, e]));
@@ -47,9 +48,7 @@ export function EventFeed() {
                 <span className="event-sev">
                   <span aria-hidden="true">{status.glyph}</span> {status.label}
                 </span>
-                <span className="event-time">
-                  Sol {units.hoursToSols(entry.hour).toFixed(2)}
-                </span>
+                <span className="event-time">{timestampLabel(entry.hour, body)}</span>
               </div>
               <p className="event-text">{logText(entry, level)}</p>
               {causes.length > 0 && (

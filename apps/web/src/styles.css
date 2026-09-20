@@ -588,6 +588,18 @@ code {
   flex: 1 1 140px;
 }
 
+/* ---------------------------------------------------------------- scenario switch */
+.scenario-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--gap);
+}
+
+.btn-scenario {
+  flex: 1 1 160px;
+}
+
 /* ---------------------------------------------------------------- view heads (Debrief, Data Sources) */
 .view-head {
   margin-bottom: var(--gap);
@@ -795,4 +807,125 @@ code {
   margin: 4px 0 0;
   font-size: 0.78rem;
   color: var(--text-dim);
+}
+
+/* ---------------------------------------------------------------- ESM budget */
+.esm-cadet-headline {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 6px 0 0;
+}
+
+.esm-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.esm-total-label {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.esm-total-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.esm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+
+.esm-table th {
+  text-align: left;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.esm-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+
+.esm-table td:last-child,
+.esm-table th:last-child {
+  text-align: right;
+}
+
+.esm-disclosure {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------- ripple web */
+.ripple-svg {
+  display: block;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.ripple-edge {
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+
+.ripple-node circle {
+  fill: var(--bg-panel);
+  stroke: var(--status);
+  stroke-width: 3;
+}
+
+.ripple-node-label {
+  fill: var(--text);
+  font-size: 11px;
+}
+
+.ripple-node-glyph {
+  fill: var(--status);
+  font-size: 13px;
+}
+
+.ripple-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ripple-table th {
+  text-align: left;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ripple-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ripple-table td.is-nominal,
+.ripple-table td.is-caution,
+.ripple-table td.is-critical,
+.ripple-table td.is-standby {
+  color: var(--status);
+  font-weight: 600;
 }

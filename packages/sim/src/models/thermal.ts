@@ -27,7 +27,9 @@ export function thermalStage(ctx: TickContext): void {
 
   const heaterSystem = state.systems.thermalControl;
   t.heaterKw =
-    heaterSystem.operational && heaterSystem.poweredThisHour ? heaterSystem.nominalPowerKw : 0;
+    heaterSystem !== undefined && heaterSystem.operational && heaterSystem.poweredThisHour
+      ? heaterSystem.nominalPowerKw
+      : 0;
 
   const netKw = t.crewHeatKw + t.heaterKw - t.lossKw;
 
@@ -35,7 +37,7 @@ export function thermalStage(ctx: TickContext): void {
   const thermalMassKwhPerK = mjToKwh(habitat.thermalMassMjPerK.value);
   t.habitatTempC += (netKw * ctx.dtHours) / thermalMassKwhPerK;
 
-  if (t.heaterKw === 0 && heaterSystem.operational) {
+  if (t.heaterKw === 0 && heaterSystem !== undefined && heaterSystem.operational) {
     log.logEdge({
       kind: "fault",
       severity: "caution",

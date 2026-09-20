@@ -53,7 +53,7 @@ export {
   survivalModes,
 } from "./data/constants.js";
 
-export { SCENARIOS, getScenario, jezeroOutpost } from "./data/scenarios/index.js";
+export { SCENARIOS, firstLight, getScenario, jezeroOutpost, theLongNight } from "./data/scenarios/index.js";
 
 export type { RngState, Stream, StreamName } from "./engine/rng.js";
 export { Rng, createRngState } from "./engine/rng.js";
@@ -68,8 +68,14 @@ export {
 } from "./engine/log.js";
 export { createInitialState } from "./engine/state.js";
 export { PIPELINE, run, tick } from "./engine/tick.js";
-export { equivalentSystemMass } from "./engine/esm.js";
-export type { EsmBreakdown, EsmInputs, PowerInfrastructure } from "./engine/esm.js";
+export { equivalentSystemMass, scenarioEsmBreakdown } from "./engine/esm.js";
+export type {
+  EsmBreakdown,
+  EsmInputs,
+  PowerInfrastructure,
+  ScenarioEsmBreakdown,
+  ScenarioEsmLine,
+} from "./engine/esm.js";
 export {
   contingencyFraction,
   failureRatePerHour,
@@ -91,7 +97,6 @@ import type { Params, SimState } from "./types.js";
 import { getScenario } from "./data/scenarios/index.js";
 import { createInitialState } from "./engine/state.js";
 import { run } from "./engine/tick.js";
-import { solsToHours } from "./units.js";
 
 /** Convenience: build the opening state for a run. */
 export function createRun(params: Params): SimState {
@@ -102,5 +107,5 @@ export function createRun(params: Params): SimState {
 export function runScenario(params: Params, extraHours = 0): SimState {
   const scenario = getScenario(params.scenarioId);
   const state = createInitialState(params);
-  return run(state, params, scenario, Math.ceil(solsToHours(scenario.durationSols)) + extraHours);
+  return run(state, params, scenario, scenario.durationHours + extraHours);
 }

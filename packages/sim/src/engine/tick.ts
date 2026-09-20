@@ -18,7 +18,6 @@ import { radiationStage } from "../models/radiation.js";
 import { thermalStage } from "../models/thermal.js";
 import { waterStage } from "../models/water.js";
 import type { Params, Scenario, SimState } from "../types.js";
-import { solsToHours } from "../units.js";
 import type { Stage, TickContext } from "./context.js";
 import { hazardsAndFailuresStage } from "./events.js";
 import { EventLogger } from "./log.js";
@@ -64,19 +63,17 @@ export function endConditionsStage(ctx: TickContext): void {
     return;
   }
 
-  const durationHours = solsToHours(scenario.durationSols);
-  if (state.hour >= durationHours) {
+  if (state.hour >= scenario.durationHours) {
     state.status = "won";
     state.endReasonCode = "end.missionComplete";
     log.log({
       kind: "milestone",
       severity: "info",
       code: "end.missionComplete",
-      data: {
-        sols: scenario.durationSols,
-        hours: Math.round(durationHours),
-        crewSurviving: living.length,
-      },
+      // Duration is deliberately not restated here in sols or days: that word choice
+      // depends on `scenario.body`, which is a presentation concern (brief rule 4), and the
+      // Debrief header already states it correctly per body from `scenario.durationHours`.
+      data: { hour: state.hour, crewSurviving: living.length },
     });
   }
 }

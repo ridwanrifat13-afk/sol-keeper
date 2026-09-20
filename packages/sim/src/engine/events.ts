@@ -64,11 +64,15 @@ function applyHazard(
     }
 
     case "pumpFailure": {
+      // The RNG draw happens unconditionally, whether or not the chosen target exists in
+      // this scenario, so a scripted pumpFailure still advances the "hazards" stream the
+      // same way on every scenario — determinism does not depend on which systems a
+      // scenario happens to carry.
       const target: SystemId = rng.stream("hazards").chance(0.5)
         ? "waterRecovery"
         : "thermalControl";
       const system = state.systems[target];
-      if (system.operational) {
+      if (system !== undefined && system.operational) {
         system.operational = false;
         log.because(cause, () => {
           log.log({

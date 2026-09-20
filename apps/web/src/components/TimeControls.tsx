@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { SPEEDS, useRun, type Speed } from "../store/run.js";
 import { units } from "@sol-keeper/sim";
+import { timestampLabel } from "../dial/missionTime.js";
 
 const SPEED_LABELS: Record<Speed, string> = {
   paused: "Paused",
@@ -19,6 +20,7 @@ export function TimeControls() {
   const speed = useRun((s) => s.speed);
   const status = useRun((s) => s.state.status);
   const hour = useRun((s) => s.state.hour);
+  const body = useRun((s) => s.scenario.body);
   const step = useRun((s) => s.step);
   const setSpeed = useRun((s) => s.setSpeed);
   const reset = useRun((s) => s.reset);
@@ -35,12 +37,15 @@ export function TimeControls() {
   }, [speed, status, step]);
 
   const running = status === "running";
-  const sol = units.hoursToSols(hour);
+  // A Mars sol (24.6597 h) is the wrong unit to jump by on the Moon; there a big-step means
+  // one Earth day (24 h), matching what "+1 day" actually says.
+  const bigStepHours = body === "mars" ? Math.round(units.SOL_HOURS) : 24;
+  const bigStepLabel = body === "mars" ? "+1 sol" : "+1 day";
 
   return (
     <div className="time-controls">
       <div className="clock">
-        <span className="clock-sol">Sol {sol.toFixed(2)}</span>
+        <span className="clock-sol">{timestampLabel(hour, body)}</span>
         <span className="clock-hour">hour {hour}</span>
       </div>
 
@@ -70,10 +75,10 @@ export function TimeControls() {
           className="btn"
           disabled={!running}
           onClick={() => {
-            step(Math.round(units.SOL_HOURS));
+            step(bigStepHours);
           }}
         >
-          +1 sol
+          {bigStepLabel}
         </button>
         <button type="button" className="btn btn-quiet" onClick={() => { reset(); }}>
           Restart

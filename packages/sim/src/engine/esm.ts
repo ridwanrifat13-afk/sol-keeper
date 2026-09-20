@@ -11,7 +11,8 @@
  * were zero placeholders until the 2026-09 verification pass supplied the standard NASA
  * values, so ESM totals from before that date are lower than they should be.
  */
-import { management } from "../data/constants.js";
+import { management, power } from "../data/constants.js";
+import type { Scenario, SystemId } from "../types.js";
 import { kwToWatts } from "../units.js";
 
 export interface EsmInputs {
@@ -72,5 +73,68 @@ export function equivalentSystemMass(
     coolingKg,
     crewTimeKg,
     totalKg: inputs.massKg + volumeKg + powerKg + coolingKg + crewTimeKg,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Scenario-level ESM: the "live readout" the Operate view shows during a run.
+// ---------------------------------------------------------------------------
+
+/**
+ * `equivalentSystemMass` above needs each system's own hardware mass, volume, cooling load
+ * and crew-time to operate — real numbers, but ones no source in docs/DATA_SOURCES.md
+ * currently states for these specific systems. Nine individual research attempts (MOXIE,
+ * the ISS Oxygen Generation Assembly, CO2 removal, water recovery, thermal control) turned
+ * up leads but nothing pinned to a document anyone could actually open and check, so per
+ * rule 1 this stays undone rather than shipping nine invented "placeholder" masses.
+ *
+ * What *is* fully sourced today: each system's continuous power draw (already tracked, for
+ * the power-priority simulation), the habitat's pressurised volume, the battery's specific
+ * energy, and the fission reactor's own stated mass. Those four route straight through the
+ * BVAD equivalency factors above with nothing invented, so the readout uses only them —
+ * a real, honest partial ESM, not a complete one padded out with guesses.
+ */
+export interface ScenarioEsmLine {
+  readonly system: SystemId;
+  readonly powerKw: number;
+  readonly equivalentKg: number;
+}
+
+export interface ScenarioEsmBreakdown {
+  readonly perSystem: readonly ScenarioEsmLine[];
+  readonly habitatVolumeKg: number;
+  readonly batteryMassKg: number;
+  readonly reactorMassKg: number;
+  readonly totalKg: number;
+}
+
+export function scenarioEsmBreakdown(
+  scenario: Scenario,
+  powerInfrastructure: PowerInfrastructure = "surfaceMid",
+): ScenarioEsmBreakdown {
+  const kgPerKw = powerEquivalencyKgPerKw(powerInfrastructure);
+
+  const perSystem = scenario.systems.map((spec) => ({
+    system: spec.id,
+    powerKw: spec.nominalPowerKw,
+    equivalentKg: spec.nominalPowerKw * kgPerKw,
+  }));
+
+  const habitatVolumeKg = scenario.initial.habitatVolumeM3 * management.esmTransitVolumeKgPerM3.value;
+  const batteryMassKg =
+    (scenario.initial.batteryCapacityKwh * 1000) / power.batterySpecificEnergyWhPerKg.value;
+  // The fission reactor is a real, discrete NASA-FSP unit at a stated mass, not a rate — a
+  // scenario either carries the whole reactor or none of it, so this is not a linear scale.
+  const reactorMassKg =
+    scenario.initial.fissionReactorKwe > 0 ? power.fissionSurfacePowerMassKg.value : 0;
+
+  const powerKg = perSystem.reduce((sum, line) => sum + line.equivalentKg, 0);
+
+  return {
+    perSystem,
+    habitatVolumeKg,
+    batteryMassKg,
+    reactorMassKg,
+    totalKg: powerKg + habitatVolumeKg + batteryMassKg + reactorMassKg,
   };
 }
