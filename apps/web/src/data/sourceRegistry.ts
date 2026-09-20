@@ -126,7 +126,8 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     usedFor: "power distribution hardware mass",
   },
   "SPACECRAFT-SUBSYS-NTRS": {
-    title: "NASA Technical Reports Server — spacecraft subsystem mass table",
+    title: "NASA CR-189186 — TT&C RF Communications Mass and Power (Table 6-1)",
+    url: "https://ntrs.nasa.gov/api/citations/19920019663/downloads/19920019663.pdf",
     usedFor: "communications hardware mass",
   },
   STOICHIOMETRY: {

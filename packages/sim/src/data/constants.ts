@@ -876,11 +876,11 @@ export const hardwareEsm = {
   },
   comms: {
     massKg: c({
-      value: 61.0,
+      value: 18,
       unit: "kg",
       source: "SPACECRAFT-SUBSYS-NTRS",
       confidence: "measured",
-      note: "NASA Technical Reports Server spacecraft-subsystem mass table.",
+      note: "NASA CR-189186, Table 6-1 (TT&C RF Communications Mass and Power) gives S-Band/SGLS TT&C hardware — 2 omni antennas, 2 telemetry transmitters, 2 command receivers, waveguide/coax and misc — as 18 kg total, 28 W. C-Band (17 kg) and Ku-Band (16 kg) options in the same table were not used; S-Band/SGLS is the more conventional TT&C baseline. This replaces an earlier 61.0 kg figure the research team supplied without a confirmed citation — once the actual table was located and read (not just cited by title), it did not contain that number at any frequency band, and 18 kg is what the real source states.",
     }),
   },
   /** BVAD's plant-growth ESM factor, stated per square metre of crop-tray area. */
