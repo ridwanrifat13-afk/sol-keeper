@@ -1,0 +1,78 @@
+{
+  "source": "snapshot",
+  "fetchedAt": "2026-09-20T15:26:01.260Z",
+  "items": [
+    {
+      "nasaId": "Artemis Logo Color Positive RGB-July 2021",
+      "title": "Artemis Logo RGB",
+      "thumbUrl": "https://images-assets.nasa.gov/image/Artemis Logo Color Positive RGB-July 2021/Artemis Logo Color Positive RGB-July 2021~thumb.jpg",
+      "credit": "HQ"
+    },
+    {
+      "nasaId": "Artemis Logo Black RGB-July 2021",
+      "title": "Artemis Logo Black RGB",
+      "thumbUrl": "https://images-assets.nasa.gov/image/Artemis Logo Black RGB-July 2021/Artemis Logo Black RGB-July 2021~thumb.jpg",
+      "credit": "HQ"
+    },
+    {
+      "nasaId": "Artemis Logo White RGB-July 2021",
+      "title": "Artemis Logo White RGB-July 2021",
+      "thumbUrl": "https://images-assets.nasa.gov/image/Artemis Logo White RGB-July 2021/Artemis Logo White RGB-July 2021~thumb.jpg",
+      "credit": "HQ"
+    },
+    {
+      "nasaId": "Artemis II second poster_11x17_300ppi_CMYK_Right",
+      "title": "Artemis II Poster - 11 x 17",
+      "thumbUrl": "https://images-assets.nasa.gov/image/Artemis II second poster_11x17_300ppi_CMYK_Right/Artemis II second poster_11x17_300ppi_CMYK_Right~thumb.jpg",
+      "credit": "HQ"
+    },
+    {
+      "nasaId": "KSC-04012026-Artemis II_Launch-1",
+      "title": "Artemis II Launch ",
+      "thumbUrl": "https://images-assets.nasa.gov/image/KSC-04012026-Artemis II_Launch-1/KSC-04012026-Artemis II_Launch-1~thumb.jpg",
+      "credit": "KSC"
+    },
+    {
+      "nasaId": "KSC-04012026-Artemis II_Launch-4",
+      "title": "Artemis II Launch ",
+      "thumbUrl": "https://images-assets.nasa.gov/image/KSC-04012026-Artemis II_Launch-4/KSC-04012026-Artemis II_Launch-4~thumb.jpg",
+      "credit": "KSC"
+    },
+    {
+      "nasaId": "KSC-04012026-Artemis II_Launch-5",
+      "title": "Artemis II Launch ",
+      "thumbUrl": "https://images-assets.nasa.gov/image/KSC-04012026-Artemis II_Launch-5/KSC-04012026-Artemis II_Launch-5~thumb.jpg",
+      "credit": "KSC"
+    },
+    {
+      "nasaId": "KSC-04012026-Artemis II_Launch-3",
+      "title": "Artemis II Launch ",
+      "thumbUrl": "https://images-assets.nasa.gov/image/KSC-04012026-Artemis II_Launch-3/KSC-04012026-Artemis II_Launch-3~thumb.jpg",
+      "credit": "KSC"
+    },
+    {
+      "nasaId": "KSC-04012026-Artemis II_Launch-2",
+      "title": "Artemis II Launch ",
+      "thumbUrl": "https://images-assets.nasa.gov/image/KSC-04012026-Artemis II_Launch-2/KSC-04012026-Artemis II_Launch-2~thumb.jpg",
+      "credit": "KSC"
+    },
+    {
+      "nasaId": "KSC-04012026-Artemis II_Launch-6",
+      "title": "Artemis II Launch ",
+      "thumbUrl": "https://images-assets.nasa.gov/image/KSC-04012026-Artemis II_Launch-6/KSC-04012026-Artemis II_Launch-6~thumb.jpg",
+      "credit": "KSC"
+    },
+    {
+      "nasaId": "ArtemisII  second poster_11x17_300ppi_CMYK_Left",
+      "title": "Artemis II  Poster 11x17",
+      "thumbUrl": "https://images-assets.nasa.gov/image/ArtemisII  second poster_11x17_300ppi_CMYK_Left/ArtemisII  second poster_11x17_300ppi_CMYK_Left~thumb.jpg",
+      "credit": "HQ"
+    },
+    {
+      "nasaId": "KSC-01172026-Artemis II_Rollout-4",
+      "title": "KSC-01172026-Artemis II_Rollout-4",
+      "thumbUrl": "https://images-assets.nasa.gov/image/KSC-01172026-Artemis II_Rollout-4/KSC-01172026-Artemis II_Rollout-4~thumb.jpg",
+      "credit": "MSFC"
+    }
+  ]
+}

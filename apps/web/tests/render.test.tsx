@@ -28,6 +28,7 @@ import { App } from "../src/App";
 import { DebriefView } from "../src/views/Debrief/DebriefView";
 import { DataSourcesView } from "../src/views/DataSources/DataSourcesView";
 import { RippleView } from "../src/views/Ripple/RippleView";
+import { LiveSkyView } from "../src/views/LiveSky/LiveSkyView";
 import { useRun } from "../src/store/run";
 import { useDial } from "../src/store/dial";
 import { logText } from "../src/i18n/logText";
@@ -174,9 +175,11 @@ describe("accessibility: status is never carried by colour alone (brief rule 6)"
 });
 
 describe("App shell: tab nav and Reality Dial, first frame", () => {
-  it("renders three tabs with Operate active by default", () => {
+  it("renders every tab with Operate active by default", () => {
     const out = render();
     expect(out).toContain("Operate");
+    expect(out).toContain("Ripple Web");
+    expect(out).toContain("Live Sky");
     expect(out).toContain("Debrief");
     expect(out).toContain("Data Sources");
     // aria-current="page" is only present on the active tab's button.
@@ -277,6 +280,25 @@ describe("RippleView, first frame (Jezero, the default scenario)", () => {
     const out = render(<RippleView />);
     // Every table row's status cell carries a real word, not just a colour class.
     expect(out).toMatch(/Standby|Powered|Shed|Failed|Nominal|Caution|Critical/);
+  });
+});
+
+/**
+ * LiveSkyView's data hooks fetch inside a useEffect, which — like every store mutation in
+ * this file — never runs during renderToString (see the note at the top). So this can only
+ * assert the pristine pre-fetch frame: headings present, and both provenance badges reading
+ * "Loading…" rather than a stale or fabricated "Live"/"Snapshot" claim before any fetch has
+ * actually settled. The live-then-snapshot-fallback behaviour itself is proven against a
+ * real browser in e2e/liveSky.spec.ts.
+ */
+describe("LiveSkyView, first frame", () => {
+  it("renders both panels with a real heading, and neither claims data it hasn't fetched yet", () => {
+    const out = render(<LiveSkyView />);
+    expect(out).toContain("Live Sky");
+    expect(out).toContain("Distance to Earth");
+    expect(out).toContain("Recent solar activity");
+    expect((out.match(/Loading…/g) ?? []).length).toBe(2);
+    expect(out).not.toMatch(/is-live|is-snapshot|is-historical/);
   });
 });
 

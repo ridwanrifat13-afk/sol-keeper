@@ -1,0 +1,78 @@
+{
+  "source": "snapshot",
+  "fetchedAt": "2026-09-20T15:26:01.258Z",
+  "items": [
+    {
+      "nasaId": "PIA24176",
+      "title": "Engineers Lower MOXIE into Perseverance",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA24176/PIA24176~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA26041",
+      "title": "The Sound of MOXIE at Work on Mars",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA26041/PIA26041~thumb.jpg",
+      "credit": "NASA/JPL-Caltech/CNES/IRAP"
+    },
+    {
+      "nasaId": "PIA24203",
+      "title": "MOXIE All Tucked In",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA24203/PIA24203~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA24201",
+      "title": "MOXIE Twin During Testing",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA24201/PIA24201~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA24202",
+      "title": "MOXIE Shakes it UP",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA24202/PIA24202~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA20761",
+      "title": "Mars 2020 MOXIE Laboratory and Principal Investigator",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA20761/PIA20761~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA23154",
+      "title": "This Is One Mars Rover With MOXIE",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA23154/PIA23154~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA24177",
+      "title": "Components of MOXIE (Illustration)",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA24177/PIA24177~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA24100",
+      "title": "X-ray Image of 3D-Printed MOXIE Part",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA24100/PIA24100~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA24171",
+      "title": "Close-up of 3D printed MOXIE Heat Exchanger",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA24171/PIA24171~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA23312",
+      "title": "In the Belly of the Mars 2020 Beast",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA23312/PIA23312~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA24046",
+      "title": "A Microphone for Mars",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA24046/PIA24046~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    }
+  ]
+}

@@ -532,12 +532,28 @@ code {
 }
 
 /* ---------------------------------------------------------------- tab nav */
+.app-head-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .tab-nav {
   display: flex;
   gap: 4px;
   margin-bottom: var(--gap);
   border-bottom: 1px solid var(--line);
   overflow-x: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.language-switch {
+  display: flex;
+  gap: 4px;
+  padding-top: 4px;
 }
 
 .tab-button {
@@ -938,4 +954,78 @@ code {
 .ripple-table td.is-standby {
   color: var(--status);
   font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- live sky (M5) */
+.panel-head-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.provenance-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.provenance-badge.is-live {
+  color: var(--nominal);
+}
+
+.provenance-badge.is-snapshot,
+.provenance-badge.is-loading {
+  color: var(--text-dim);
+}
+
+.provenance-badge.is-historical {
+  color: var(--caution);
+}
+
+.live-sky-distance {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 6px 0 4px;
+}
+
+.live-sky-empty {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.live-sky-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.live-sky-event {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.live-sky-event-type {
+  font-weight: 600;
+}
+
+.live-sky-event-time,
+.live-sky-event-class {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.live-sky-event-link {
+  margin-left: auto;
+  font-size: 0.78rem;
 }

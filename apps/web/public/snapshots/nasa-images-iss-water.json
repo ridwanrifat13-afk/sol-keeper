@@ -1,0 +1,78 @@
+{
+  "source": "snapshot",
+  "fetchedAt": "2026-09-20T15:26:01.258Z",
+  "items": [
+    {
+      "nasaId": "0102168",
+      "title": "International Space Station (ISS)",
+      "thumbUrl": "https://images-assets.nasa.gov/image/0102168/0102168~thumb.jpg",
+      "credit": "MSFC"
+    },
+    {
+      "nasaId": "0100909",
+      "title": "International Space Station (ISS)",
+      "thumbUrl": "https://images-assets.nasa.gov/image/0100909/0100909~thumb.jpg",
+      "credit": "MSFC"
+    },
+    {
+      "nasaId": "0102167",
+      "title": "International Space Station (ISS)",
+      "thumbUrl": "https://images-assets.nasa.gov/image/0102167/0102167~thumb.jpg",
+      "credit": "MSFC"
+    },
+    {
+      "nasaId": "iss065e333421",
+      "title": "JEM Water Recovery System (JWRS) Gas Trap and Bypass Line Installaiton",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss065e333421/iss065e333421~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "iss065e333427",
+      "title": "JEM Water Recovery System (JWRS) Gas Trap and Bypass Line Installaiton",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss065e333427/iss065e333427~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "iss069e088358",
+      "title": "iss069e088358",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss069e088358/iss069e088358~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "iss044e088112",
+      "title": "Mogensen in Cupola",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss044e088112/iss044e088112~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "iss044e086800",
+      "title": "AQUAMEMBRANE",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss044e086800/iss044e086800~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "jsc2023e055874",
+      "title": "jsc2023e055874",
+      "thumbUrl": "https://images-assets.nasa.gov/image/jsc2023e055874/jsc2023e055874~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "iss061e050296",
+      "title": "iss061e050296",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss061e050296/iss061e050296~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "0101377",
+      "title": "International Space Station (ISS)",
+      "thumbUrl": "https://images-assets.nasa.gov/image/0101377/0101377~thumb.jpg",
+      "credit": "MSFC"
+    },
+    {
+      "nasaId": "iss018e009353",
+      "title": "ISS Expedition 18 Fincke works with Water Recovery System (WRS)",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss018e009353/iss018e009353~thumb.jpg",
+      "credit": "JSC"
+    }
+  ]
+}

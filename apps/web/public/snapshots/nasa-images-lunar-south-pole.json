@@ -1,0 +1,78 @@
+{
+  "source": "snapshot",
+  "fetchedAt": "2026-09-20T15:26:01.261Z",
+  "items": [
+    {
+      "nasaId": "PIA13523",
+      "title": "The Lunar South Pole",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA13523/PIA13523~thumb.jpg",
+      "credit": "NASA/GSFC/Arizona State University"
+    },
+    {
+      "nasaId": "PIA12905",
+      "title": "Lunar South Pole - Out of the Shadows",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA12905/PIA12905~thumb.jpg",
+      "credit": "NASA/GSFC/Arizona State University"
+    },
+    {
+      "nasaId": "PIA00001",
+      "title": "South Pole Region of the Moon as Seen by Clementine",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA00001/PIA00001~thumb.jpg",
+      "credit": "NASA/JPL/USGS"
+    },
+    {
+      "nasaId": "jsc2025e075711",
+      "title": "Carbothermal Reduction Demonstration (CaRD) Project Testing",
+      "thumbUrl": "https://images-assets.nasa.gov/image/jsc2025e075711/jsc2025e075711~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "PIA00002",
+      "title": "North Pole Region of the Moon as Seen by Clementine",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA00002/PIA00002~thumb.jpg",
+      "credit": "NASA/JPL/USGS"
+    },
+    {
+      "nasaId": "art002e009283",
+      "title": "Ready for a Close Up",
+      "thumbUrl": "https://images-assets.nasa.gov/image/art002e009283/art002e009283~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "ARC-2006-ACD06-0232-001",
+      "title": "ARC-2006-ACD06-0232-001",
+      "thumbUrl": "https://images-assets.nasa.gov/image/ARC-2006-ACD06-0232-001/ARC-2006-ACD06-0232-001~thumb.jpg",
+      "credit": "ARC"
+    },
+    {
+      "nasaId": "ARC-2006-ACD06-0232-005",
+      "title": "ARC-2006-ACD06-0232-005",
+      "thumbUrl": "https://images-assets.nasa.gov/image/ARC-2006-ACD06-0232-005/ARC-2006-ACD06-0232-005~thumb.jpg",
+      "credit": "ARC"
+    },
+    {
+      "nasaId": "ARC-2006-ACD06-0232-004",
+      "title": "ARC-2006-ACD06-0232-004",
+      "thumbUrl": "https://images-assets.nasa.gov/image/ARC-2006-ACD06-0232-004/ARC-2006-ACD06-0232-004~thumb.jpg",
+      "credit": "ARC"
+    },
+    {
+      "nasaId": "ARC-2006-ACD06-0232-003",
+      "title": "ARC-2006-ACD06-0232-003",
+      "thumbUrl": "https://images-assets.nasa.gov/image/ARC-2006-ACD06-0232-003/ARC-2006-ACD06-0232-003~thumb.jpg",
+      "credit": "ARC"
+    },
+    {
+      "nasaId": "ARC-2006-ACD06-0232-002",
+      "title": "ARC-2006-ACD06-0232-002",
+      "thumbUrl": "https://images-assets.nasa.gov/image/ARC-2006-ACD06-0232-002/ARC-2006-ACD06-0232-002~thumb.jpg",
+      "credit": "ARC"
+    },
+    {
+      "nasaId": "jsc2024e025315",
+      "title": "jsc2024e025315",
+      "thumbUrl": "https://images-assets.nasa.gov/image/jsc2024e025315/jsc2024e025315~thumb.jpg",
+      "credit": "JSC"
+    }
+  ]
+}

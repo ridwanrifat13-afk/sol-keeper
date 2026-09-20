@@ -10,7 +10,7 @@
     "build": "pnpm -r build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "pnpm -r typecheck && tsc -p e2e/tsconfig.json --noEmit",
+    "typecheck": "pnpm -r typecheck && tsc -p e2e/tsconfig.json --noEmit && tsc -p scripts/tsconfig.json --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

@@ -1,0 +1,48 @@
+{
+  "tabs": {
+    "nav": "Sol Keeper views",
+    "operate": "Operate",
+    "ripple": "Ripple Web",
+    "liveSky": "Live Sky",
+    "debrief": "Debrief",
+    "dataSources": "Data Sources",
+    "debriefReady": "ready"
+  },
+  "badge": {
+    "loading": "Loading…",
+    "live": "Live",
+    "snapshot": "Snapshot",
+    "snapshotWithDate": "Snapshot ({{date}})",
+    "historical": "Historical event",
+    "historicalWithDate": "Historical event ({{date}})"
+  },
+  "liveSky": {
+    "title": "Live Sky",
+    "hint": "Real data from NASA's own space-weather and navigation feeds — not simulated, and labeled so you always know whether you're looking at this moment or a saved one.",
+    "distanceHeading": "Distance to Earth",
+    "distanceLine": "{{km}} km from Earth to {{body}} right now",
+    "radioDelay": "A radio message takes {{oneWay}} minutes to arrive one way — {{roundTrip}} minutes for mission control to hear a reply.",
+    "distanceLoading": "Loading the current Earth distance…",
+    "bodyMars": "Mars",
+    "bodyMoon": "the Moon",
+    "activityHeading": "Recent solar activity",
+    "hintHistorical": "No solar activity in the live window right now — here's a real storm from NASA's records instead.",
+    "hintLive": "The same real solar flares and storms that could trigger a radiation-shelter call in Operate.",
+    "empty": "No events to show yet.",
+    "nasaRecord": "NASA record ↗"
+  },
+  "spaceWeatherType": {
+    "cadet": {
+      "FLR": "Solar flare",
+      "SEP": "Radiation burst",
+      "CME": "Solar storm cloud",
+      "GST": "Magnetic storm"
+    },
+    "technical": {
+      "FLR": "Solar flare",
+      "SEP": "Solar energetic particle event",
+      "CME": "Coronal mass ejection",
+      "GST": "Geomagnetic storm"
+    }
+  }
+}

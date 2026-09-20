@@ -1,0 +1,78 @@
+{
+  "source": "snapshot",
+  "fetchedAt": "2026-09-20T15:26:01.261Z",
+  "items": [
+    {
+      "nasaId": "PIA04909",
+      "title": "Radiation Environment at Mars and Earth",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA04909/PIA04909~thumb.jpg",
+      "credit": "NASA/JPL/Johnson Space Center"
+    },
+    {
+      "nasaId": "PIA15955",
+      "title": "Radiation Levels on the Way to Mars",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA15955/PIA15955~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA17600",
+      "title": "Radiation Measurements on Mars",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA17600/PIA17600~thumb.jpg",
+      "credit": "NASA/JPL-Caltech/SwRI"
+    },
+    {
+      "nasaId": "PIA13580",
+      "title": "Radiation Assessment Detector for Mars Science Laboratory",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA13580/PIA13580~thumb.jpg",
+      "credit": "NASA/JPL-Caltech/SwRI"
+    },
+    {
+      "nasaId": "PIA16939",
+      "title": "Radiation Measurements During Trip From Earth to Mars",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA16939/PIA16939~thumb.jpg",
+      "credit": "NASA/JPL-Caltech/SwRI"
+    },
+    {
+      "nasaId": "PIA03480",
+      "title": "Estimated Radiation Dosage on Mars",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA03480/PIA03480~thumb.jpg",
+      "credit": "NASA/Jet Propulsion Laboratory/JSC"
+    },
+    {
+      "nasaId": "PIA17601",
+      "title": "Radiation Exposure Comparisons with Mars Trip Calculation",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA17601/PIA17601~thumb.jpg",
+      "credit": "NASA/JPL-Caltech/SwRI"
+    },
+    {
+      "nasaId": "PIA17061",
+      "title": "Comparison of Some Radiation Exposures to Mars-Trip Level ",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA17061/PIA17061~thumb.jpg",
+      "credit": "NASA/JPL-Caltech/SwRI"
+    },
+    {
+      "nasaId": "PIA03479",
+      "title": "Estimated Radiation on Mars, Hits per Cell Nucleus",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA03479/PIA03479~thumb.jpg",
+      "credit": "NASA/Jet Propulsion Laboratory/JSC"
+    },
+    {
+      "nasaId": "PIA16480",
+      "title": "Longer-Term Radiation Variations at Gale Crater",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA16480/PIA16480~thumb.jpg",
+      "credit": "NASA/JPL-Caltech/SwRI"
+    },
+    {
+      "nasaId": "PIA03745",
+      "title": "Odyssey/Marie",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA03745/PIA03745~thumb.jpg",
+      "credit": "NASA/JPL/Johnson Space Center"
+    },
+    {
+      "nasaId": "PIA03470",
+      "title": "Arsia Mons Spiral Cloud",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA03470/PIA03470~thumb.jpg",
+      "credit": "NASA/JPL/MSSS"
+    }
+  ]
+}

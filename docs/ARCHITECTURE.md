@@ -544,3 +544,86 @@ a second time — the alternative risks the two views quietly drifting on what "
   `vite preview` server left over from the earlier `pnpm verify`, per Playwright's
   `reuseExistingServer` default, and silently showed the unfixed layout until that server was
   killed and rebuilt.
+
+## 12. Live Sky: the NASA APIs, snapshots, PWA offline, and i18n (M5)
+
+**Three Vercel Functions now exist** (`apps/web/api/{space-weather,light-time,nasa-images}.ts`),
+each a thin handler over a `server-lib` parser tested against the real saved responses in
+`docs/api-samples/`, not hand-built fixtures. The field-name differences the M0 research
+already documented (DONKI's four event types each name their id/time fields differently;
+Horizons embeds a text ephemeris table inside a JSON `result` field; images-api nests each
+result's metadata under `item.data[0]`, with the thumbnail wherever `links[].rel ===
+"preview"` happens to be) are exactly the kind of thing a parser gets wrong without a real
+sample to check against — `server-lib/{donki,horizons,images}.test.ts` load the actual
+files from `docs/api-samples/` and assert the parsed shape, not a mock.
+
+`server-lib/horizons.ts` reuses `@sol-keeper/sim`'s own `units.auToKm`/`auToLightSeconds`
+rather than re-declaring the AU-to-km and light-speed constants — the same numbers `/api/health`
+already proved resolve inside a Vercel Function, now doing double duty. `server-lib/validate.ts`
+whitelists every query parameter per the brief ("`/api` functions are not open proxies"):
+`days` is a bounded integer, `body` is exactly `mars`/`moon`, `date` must be a real calendar
+date (not just YYYY-MM-DD-shaped — `2026-02-30` is rejected by round-tripping it through
+`Date.UTC`), and `q` for nasa-images is a fixed topic whitelist, never free text. A new
+ESLint rule (`no-restricted-imports` with `allowTypeImports: true` on `apps/web/src/**`)
+makes the brief's "`src/` may only `import type` from `server-lib`" rule a build failure
+instead of a convention, mirroring how rule 2's sim purity is enforced by tooling rather than
+discipline.
+
+**`scripts/fetch-snapshots.ts` calls this project's own `/api/*` endpoints over plain HTTP**
+rather than re-implementing their parsing — a snapshot can then never drift from what the
+live endpoint actually returns, and the script itself never touches `NASA_API_KEY` (the key
+lives only inside the Vercel Function it's calling). It refuses to overwrite
+`space-weather.json` with an empty result: DONKI returning zero events is a real, correct
+"quiet period" response, and blindly refreshing during one would silently destroy a good
+historical fallback for a worse one. The *initial* committed snapshots (`apps/web/public/snapshots/`)
+were generated once from real data without this script and without `NASA_API_KEY`: the two
+keyless endpoints (Horizons, images-api) were curled directly (the brief explicitly permits
+this), and the space-weather snapshot was built from the real May 2024 storm window already
+saved in `docs/api-samples/donki_*_2024-05.json` from the M0 research pass — run through the
+same normalization logic server-lib now ships, not approximated.
+
+**The client's live/snapshot strategy has two shapes**, because DONKI's "empty is normal"
+behaviour doesn't fit the generic case. `data/liveOrSnapshot.ts`'s `useLiveOrSnapshot` hook
+(used for light-time) is a plain race: paint the snapshot the instant it loads, and let a
+live response within 3 s overwrite it — with a `liveWon` guard so a slow snapshot fetch can
+never un-overwrite a live result that already landed. Space weather needed a third outcome
+`data/spaceWeather.ts` calls `"historical"`: DONKI answering live with zero events is not a
+failure (the generic hook has no way to express that), so that case shows the snapshot's real
+event instead of an empty panel and labels it "historical event" — worded differently from
+plain "snapshot" (which means live couldn't be reached at all) so a player never mistakes a
+confirmed quiet period for a network problem. `ProvenanceBadge` renders all four states
+(`loading`/`live`/`snapshot`/`historical`) as glyph plus word, never colour alone (rule 6).
+
+**Live Sky is a new fifth tab**, not folded into Operate, showing the real Earth-distance/
+light-time readout for the mission's own body and a filtered feed of recent solar activity
+(the same DONKI events that could plausibly justify an in-game radiation-shelter call).
+NASA image fact cards share the same endpoint and snapshot machinery but the card UI itself
+stays out of scope here — the brief puts "fact cards" under M6, and M5's own bullet list is
+satisfied by the endpoint, its tests, and a generated snapshot per whitelisted topic, without
+inventing a UI feature ahead of its milestone.
+
+**PWA offline is `vite-plugin-pwa` with `NetworkFirst` on `/api/*`** (an 8 s network timeout
+before falling back to whatever was last cached, and nothing served from that cache is
+treated as fresh for more than a day) and a precache of the built assets plus every
+committed snapshot, so Live Sky and the Operate simulation both still render with the
+network off. This is verified in `e2e/offline.spec.ts` by actually cutting the network in a
+real browser (`context.setOffline(true)`) after waiting for `navigator.serviceWorker.ready`
+— the only way to honestly check "works offline after first load" claims anything, since a
+service worker doesn't exist outside a real browser. The manifest icons
+(`apps/web/public/icons/`) are a plain generated ringed-planet motif, deliberately generic
+per rule 5 (no agency branding of any kind, not even accidentally).
+
+**i18n is real and working, but deliberately partial, disclosed in `i18n/config.ts` itself
+rather than left for someone to discover.** `react-i18next` is wired end-to-end for the app
+shell (tab labels) and the entire Live Sky view, including a persisted language switch
+(`components/LanguageSwitch.tsx`, same "best-effort storage, never blocks render" pattern as
+the Reality Dial's own persistence) — proven in a real browser in `e2e/i18n.spec.ts`, which
+switches to Bangla and asserts the actual rendered Bengali text, not just that a key resolved.
+The rest of the UI (Operate, Ripple Web, Debrief, Data Sources) and the event-log template
+system (`i18n/logText.ts`, which already had its own English-only cadet/specialist/commander
+tables before M5) are not yet migrated to translation keys — a follow-up pass, not a hidden
+gap. The Bangla technical space-weather vocabulary (`spaceWeatherType.technical` in
+`locales/bn.json` — "coronal mass ejection," "solar energetic particle event," and similar)
+is a best-effort translation of genuinely specialized terminology and is flagged in that
+file's own governing comment as needing a fluent speaker's review, the same treatment this
+project already gives an unverified physical constant.

@@ -87,6 +87,27 @@ export default tseslint.config(
     rules: { "no-console": "off" },
   },
   {
+    // apps/web/server-lib holds NASA_API_KEY handling and other server-only code (M5).
+    // src/ may only import its *types* (import type, erased at compile time) — a value
+    // import here would pull server code, and potentially the key-handling branch, into
+    // the client bundle.
+    files: ["apps/web/src/**/*.ts", "apps/web/src/**/*.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/server-lib/*", "**/server-lib"],
+              allowTypeImports: true,
+              message: "src/ may only `import type` from server-lib — never a value import (brief: server code must never reach the client bundle).",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["**/*.test.ts"],
     rules: { "@typescript-eslint/no-non-null-assertion": "off" },
   },
