@@ -13,6 +13,7 @@
     "@sol-keeper/sim": "workspace:*",
     "d3-force": "^3.0.0",
     "i18next": "^26.4.2",
+    "leaflet": "^1.9.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^17.0.14",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@types/d3-force": "^3.0.10",
+    "@types/leaflet": "^1.9.22",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.7.0",

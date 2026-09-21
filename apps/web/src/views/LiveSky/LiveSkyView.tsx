@@ -5,8 +5,10 @@ import { useDial } from "../../store/dial.js";
 import { useLiveOrSnapshot } from "../../data/liveOrSnapshot.js";
 import { useSpaceWeather } from "../../data/spaceWeather.js";
 import { ProvenanceBadge } from "../../components/ProvenanceBadge.js";
+import { FactCardGallery } from "../../components/FactCardGallery.js";
 import { spaceWeatherTypeLabel } from "../../dial/spaceWeatherLabels.js";
 import type { LightTimeResponse } from "../../../server-lib/types.js";
+import type { ImageQueryKey } from "../../../server-lib/validate.js";
 
 const MAX_EVENTS_SHOWN = 8;
 
@@ -14,16 +16,20 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** Which whitelisted image topic fits the current mission body — real fact-card photos,
+ *  chosen by what the player is actually doing rather than a fixed, generic set. */
+function factCardTopicFor(body: "mars" | "moon"): ImageQueryKey {
+  return body === "mars" ? "moxie" : "lunar-south-pole";
+}
+
 /**
- * Live Sky (M5): real recent solar activity from DONKI, and the actual Earth distance /
- * light-time delay for the mission's own body — the two live-data features the brief
- * scopes for this milestone. NASA image fact cards use the same /api/nasa-images
- * endpoint and snapshot pattern, but the card UI itself is M6 scope; this view does not
- * attempt it early.
+ * Live Sky (M5/M6): real recent solar activity from DONKI, the actual Earth distance /
+ * light-time delay for the mission's own body, and — since M6 — "what NASA did" fact
+ * cards using the same /api/nasa-images endpoint and snapshot pattern M5 already built.
  *
- * Both panels follow the same rule: paint the committed snapshot immediately (instant,
- * offline-safe), then upgrade to live data if it answers within 3 s, and always say which
- * one is on screen — never silently.
+ * All three panels follow the same rule: paint the committed snapshot immediately
+ * (instant, offline-safe), then upgrade to live data if it answers within 3 s, and always
+ * say which one is on screen — never silently.
  */
 export function LiveSkyView() {
   const scenario = useRun((s) => s.scenario);
@@ -101,6 +107,11 @@ export function LiveSkyView() {
           </ul>
         )}
       </section>
+
+      <FactCardGallery
+        topic={factCardTopicFor(scenario.body)}
+        heading={scenario.body === "mars" ? "What NASA did: MOXIE" : "What NASA did: the lunar south pole"}
+      />
     </div>
   );
 }

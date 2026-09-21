@@ -627,3 +627,71 @@ gap. The Bangla technical space-weather vocabulary (`spaceWeatherType.technical`
 is a best-effort translation of genuinely specialized terminology and is flagged in that
 file's own governing comment as needing a fluent speaker's review, the same treatment this
 project already gives an unverified physical constant.
+
+## 13. Launch Packing, fact cards, the Trek map, and a Lighthouse pass (M6)
+
+**Launch Packing (`views/LaunchPacking/`) reuses `scenarioEsmBreakdown()` rather than a
+second mass table**, so its per-system hardware mass can never disagree with the ESM panel's
+— both read the same `ScenarioEsmLine[]`, and `line.massKg === undefined` gets the same "not
+sourced" treatment in both places rather than a second, differently-worded disclosure.
+`engine/risk.ts` (TRL-scaled failure rate, phase-dependent required margin, the 5x5 risk
+band) existed since M1 planning but had never been tested until this milestone —
+`validation/risk.test.ts` pins it against the sourced constants directly, including the
+monotonic "margin shrinks toward launch" property that is the screen's whole teaching point.
+The risk-matrix explorer at the bottom is explicitly framed as a teaching tool, not a
+per-system rating: nothing in this project sources a real likelihood/consequence score for
+any system, so the player sets both axes themselves rather than being shown an invented
+"this system's risk is medium."
+
+**Fact cards (`components/FactCardGallery.tsx`) reuse M5's `/api/nasa-images` endpoint and
+snapshot machinery exactly** — the only new code is the card layout itself. Live Sky picks
+the topic contextually (MOXIE for Mars, the lunar south pole for Moon) rather than showing a
+fixed generic set, so the photos actually relate to the mission the player is running. No
+outbound "view on NASA's site" link was added: this project has not independently confirmed
+the public image-library site's detail-page URL pattern, and a guessed link is exactly the
+kind of thing rule 1's spirit extends to even outside physical constants.
+
+**The Trek map (`views/LandingSite/`) is a viewer for the current scenario's real, fixed
+site, not an interactive picker.** The brief's P0 feature list names a landing-site picker as
+part of a Prepare/mission-setup screen, but Prepare has stayed deferred since M0 because no
+milestone through M6 names it, and this project's two scenarios don't let a player choose an
+arbitrary site anyway — building a picker with nothing to pick between would be scope no
+milestone actually asked for. `map/trekLayers.ts` copies its tile URLs, zoom ranges and
+attribution directly from the two rows in `docs/trek_layers.md` marked Status "tested",
+nothing constructed or guessed. Two real bugs surfaced building this, both found by actually
+looking at a screenshot rather than trusting the code:
+- **Leaflet's own module touches `window` at import time**, which crashed every render test
+  the moment `App.tsx` transitively imported this view — not just tests that open this tab.
+  Leaflet's *JS* is now a dynamic `import()` inside the effect (its CSS has no such problem
+  and stays a normal static import); this also means Leaflet's ~150KB only downloads once a
+  player actually opens Landing Site.
+- **The map rendered its chrome (zoom controls, the site marker, attribution) but no tile
+  imagery at all** — the tiles were confirmed loading with real HTTP 200s, so this wasn't a
+  network or URL problem. Inspecting a tile `<img>`'s own `getBoundingClientRect()` showed it
+  positioned well outside the container's visible bounds: Leaflet had measured the container
+  before the browser's layout pass had actually sized it, a well-known Leaflet quirk in
+  dynamically-mounted containers, unrelated to CSS load timing. A `requestAnimationFrame`
+  before `map.invalidateSize()` fixed it — confirmed by re-screenshotting a fully-tiled,
+  correctly-positioned Jezero crater, not by re-reading the code.
+
+**A real Lighthouse run against the production build** (mobile emulation, simulated
+throttling) is what the brief's M6 bullet actually asks for, not a subjective "it feels
+fast" judgment. The first pass scored accessibility 96, best-practices 96, SEO 91,
+performance 99, with three concrete, fixable causes:
+- `.crew-dose-limit` stacked `opacity: 0.8` on top of `.crew-stat`'s already-deliberately-
+  dim `--text-dim` color, pushing contrast below WCAG AA — removing the redundant opacity
+  fixed it outright, since the token was already the correct "de-emphasized" choice.
+- No favicon was ever declared, so every browser silently requested `/favicon.ico`, got a
+  404, and Lighthouse counted it as a browser console error. A `<link rel="icon">` pointing
+  at the existing manifest icon stops the guess-request.
+- No `public/robots.txt` existed, so the SPA rewrite in `vercel.json` served `index.html` for
+  that path too, and Lighthouse tried (and failed) to parse HTML as robots.txt syntax. A
+  real two-line `robots.txt` fixed it; Vercel serves an actual static file at a path before
+  ever considering a rewrite, so this works in production the same way it does locally.
+
+Re-running Lighthouse after those three fixes: accessibility 100, best-practices 100, SEO
+100, performance 99 (unchanged — the two performance points behind 100 are React's own
+runtime overhead and the CSS file's unavoidable render-blocking cost, not something specific
+to this project to fix). `vite-plugin-pwa`'s `injectRegister: "script-defer"` was also
+switched on after Lighthouse flagged the service-worker registration script as render-
+blocking — deferring it costs nothing, since offline support only matters on the *next* load.

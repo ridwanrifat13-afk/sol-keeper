@@ -6,28 +6,42 @@ import { DebriefView } from "./views/Debrief/DebriefView.js";
 import { DataSourcesView } from "./views/DataSources/DataSourcesView.js";
 import { RippleView } from "./views/Ripple/RippleView.js";
 import { LiveSkyView } from "./views/LiveSky/LiveSkyView.js";
+import { LaunchPackingView } from "./views/LaunchPacking/LaunchPackingView.js";
+import { LandingSiteView } from "./views/LandingSite/LandingSiteView.js";
 import { LanguageSwitch } from "./components/LanguageSwitch.js";
 import "./i18n/config.js";
 
-type View = "operate" | "ripple" | "liveSky" | "debrief" | "dataSources";
+type View = "operate" | "ripple" | "liveSky" | "launchPacking" | "landingSite" | "debrief" | "dataSources";
 
-const TAB_IDS: readonly View[] = ["operate", "ripple", "liveSky", "debrief", "dataSources"];
+const TAB_IDS: readonly View[] = [
+  "operate",
+  "ripple",
+  "liveSky",
+  "launchPacking",
+  "landingSite",
+  "debrief",
+  "dataSources",
+];
 const TAB_KEYS: Record<View, string> = {
   operate: "tabs.operate",
   ripple: "tabs.ripple",
   liveSky: "tabs.liveSky",
+  launchPacking: "tabs.launchPacking",
+  landingSite: "tabs.landingSite",
   debrief: "tabs.debrief",
   dataSources: "tabs.dataSources",
 };
 
 /**
- * The app shell. A plain tab switch over local state — five views do not need a routing
+ * The app shell. A plain tab switch over local state — seven views do not need a routing
  * library, and adding one would be a dependency the brief asks to clear first.
  *
  * Prepare (mission setup: crew size, scenario, landing site) is P0 in the brief's feature
- * list but is not named in any milestone through M4, so it stays deferred rather than built
+ * list but is not named in any milestone through M6, so it stays deferred rather than built
  * to fit one. The player starts directly in Operate, as they did at M2, and switches
- * scenario from a control inside Operate itself (ScenarioSwitch) rather than a setup screen.
+ * scenario from a control inside Operate itself (ScenarioSwitch) rather than a setup screen;
+ * Landing Site (M6) is a viewer for the current scenario's real, fixed site, not a picker,
+ * for the same reason.
  *
  * Tab labels and the language switch are the first (M5) i18n-wired part of the UI — see
  * i18n/config.ts for exactly what is and is not translated yet.
@@ -66,6 +80,8 @@ export function App() {
       {view === "operate" && <OperateView />}
       {view === "ripple" && <RippleView />}
       {view === "liveSky" && <LiveSkyView />}
+      {view === "launchPacking" && <LaunchPackingView />}
+      {view === "landingSite" && <LandingSiteView />}
       {view === "debrief" && <DebriefView />}
       {view === "dataSources" && <DataSourcesView />}
     </main>

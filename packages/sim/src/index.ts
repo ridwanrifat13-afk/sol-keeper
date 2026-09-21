@@ -76,6 +76,7 @@ export type {
   ScenarioEsmBreakdown,
   ScenarioEsmLine,
 } from "./engine/esm.js";
+export type { Maturity, ProjectPhase, RiskBand } from "./engine/risk.js";
 export {
   contingencyFraction,
   failureRatePerHour,

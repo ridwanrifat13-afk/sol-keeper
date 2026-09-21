@@ -11,6 +11,11 @@ export default defineConfig({
       // just installs the newest service worker on the next load rather than stalling on
       // a stale cached version indefinitely.
       registerType: "autoUpdate",
+      // `defer` on the injected registration script, not the default plain <script>: a
+      // real Lighthouse mobile run flagged registerSW.js as render-blocking (a real,
+      // measured 300ms cost, not a guess) — registering the service worker a beat later
+      // costs nothing, since offline support only matters on the *next* load anyway.
+      injectRegister: "script-defer",
       manifest: {
         name: "Sol Keeper",
         short_name: "Sol Keeper",

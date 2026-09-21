@@ -447,9 +447,10 @@ code {
   flex-basis: 100%;
 }
 
-.crew-dose-limit {
-  opacity: 0.8;
-}
+/* .crew-dose-limit intentionally carries no styling of its own: it inherits .crew-stat's
+   --text-dim colour, which is already the deliberately de-emphasized token. An earlier
+   `opacity: 0.8` stacked on top of that pushed contrast below WCAG AA — caught by a real
+   Lighthouse accessibility audit, not a visual guess. */
 
 /* ---------------------------------------------------------------- events */
 .event-list {
@@ -1028,4 +1029,123 @@ code {
 .live-sky-event-link {
   margin-left: auto;
   font-size: 0.78rem;
+}
+
+/* ---------------------------------------------------------------- launch packing (M6) */
+.launch-packing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+
+.launch-packing-table th {
+  text-align: left;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.launch-packing-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+
+.launch-packing-table tfoot td {
+  font-weight: 700;
+  border-top: 2px solid var(--line);
+  border-bottom: none;
+}
+
+.risk-matrix-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.risk-matrix-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.risk-matrix-controls select {
+  font: inherit;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+  color: var(--text);
+}
+
+.risk-result {
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--bg-raised);
+}
+
+/* ---------------------------------------------------------------- fact cards (M6) */
+.fact-card-strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+}
+
+.fact-card {
+  flex: 0 0 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fact-card img {
+  width: 160px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.fact-card-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.fact-card-credit {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------- landing site map (M6) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.trek-map {
+  width: 100%;
+  height: 420px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
 }
