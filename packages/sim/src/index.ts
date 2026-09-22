@@ -5,21 +5,25 @@
  * and you get the same final state and the same log, byte for byte.
  */
 export type {
+  ActiveIncident,
   AtmosphereState,
   Body,
   CommsState,
+  CrewCondition,
   CrewLocation,
   CrewMember,
   CropTray,
-  Difficulty,
   EnvironmentState,
   EventId,
   FoodState,
   HazardKind,
   InitialResources,
   IsruState,
+  LegacyDifficulty,
   LogEntry,
   LogKind,
+  MissionDifficulty,
+  MissionGoal,
   Params,
   PowerState,
   RadiationState,
@@ -29,6 +33,7 @@ export type {
   ScriptedEvent,
   Severity,
   SimState,
+  StationId,
   SurvivalMode,
   SystemId,
   SystemSpec,
@@ -36,6 +41,7 @@ export type {
   ThermalState,
   WaterState,
 } from "./types.js";
+export { legacyDifficultyToMissionDifficulty } from "./types.js";
 
 export type { Constant, Confidence, SourceId } from "./data/sources.js";
 export { SOURCE_IDS, isConstant, walkConstants } from "./data/sources.js";
@@ -45,9 +51,12 @@ export {
   environment,
   food,
   habitat,
+  incidents as incidentConstants,
   lifeSupport,
   management,
+  missionDifficulty,
   physics,
+  physiology,
   power,
   radiation,
   survivalModes,
@@ -68,6 +77,19 @@ export {
 } from "./engine/log.js";
 export { createInitialState } from "./engine/state.js";
 export { PIPELINE, run, tick } from "./engine/tick.js";
+export type { NamedStage } from "./engine/tick.js";
+
+export type { IncidentDefinition, IncidentResponse, IncidentTrigger } from "./engine/incidents.js";
+export { INCIDENT_CATALOG, applyResponse, incidentsStage } from "./engine/incidents.js";
+export { SYSTEM_TO_STATION, STATION_IDS, isDoubleCovering, stationCoverer, stationPerformance } from "./engine/stations.js";
+export type { AbortResult } from "./engine/outcome.js";
+export { determineOutcome, inMarsDepartureWindow, requestAbort } from "./engine/outcome.js";
+export { checkGoal } from "./engine/goals.js";
+export type { Bot, BotId } from "./engine/bots.js";
+export { BOTS, getBot, greedyBot, idleBot, prudentBot } from "./engine/bots.js";
+export { runWithBot, tickWithBot } from "./engine/runWithBot.js";
+export type { CombinationResult, SeedOutcome } from "./engine/balance.js";
+export { runCombination } from "./engine/balance.js";
 export { equivalentSystemMass, scenarioEsmBreakdown } from "./engine/esm.js";
 export type {
   EsmBreakdown,
@@ -91,6 +113,8 @@ export { hourlyCrewO2Grams, moxiesPerCrewMember } from "./models/isru.js";
 export { crewHeatKwPerPerson } from "./models/thermal.js";
 export { solarGenerationKw } from "./models/power.js";
 export { sunFactor, dayLengthHours } from "./models/environment.js";
+export { crewCondition, feverMetabolicMultiplier, availableCrewHours, worstCauseCode } from "./models/crew.js";
+export { pio2MmHg, totalPressureMmHg } from "./models/atmosphere.js";
 
 export * as units from "./units.js";
 

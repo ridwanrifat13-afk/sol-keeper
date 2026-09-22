@@ -6,13 +6,30 @@
  */
 import { environment, physics, radiation } from "../data/constants.js";
 import { getScenario } from "../data/scenarios/index.js";
-import type { CropTray, Params, Scenario, SimState, SystemId, SystemState } from "../types.js";
+import { pio2MmHg } from "../models/atmosphere.js";
+import type {
+  CropTray,
+  CrewMember,
+  Params,
+  Scenario,
+  SimState,
+  StationId,
+  SystemId,
+  SystemState,
+} from "../types.js";
 import { auToLightSeconds, partialPressureMmHg } from "../units.js";
 import { createRngState } from "./rng.js";
+import { STATION_IDS } from "./stations.js";
 
 const CREW_NAMES = ["Ayesha", "Diego", "Mei", "Tunde", "Nadia", "Petra"] as const;
 
-function buildCrew(size: number) {
+/**
+ * Primary/backup stations rotate through `STATION_IDS` by crew index — deterministic, no RNG
+ * draw needed. A 2-person crew (First Light) genuinely cannot cover all 5 stations even as a
+ * backup: Incident Command and Mission Command sit unstaffed for that scenario by
+ * construction, not a bug — a smaller crew is supposed to feel thinner.
+ */
+function buildCrew(size: number, startingPio2MmHg: number): CrewMember[] {
   return Array.from({ length: size }, (_, i) => ({
     id: `crew-${i + 1}`,
     name: CREW_NAMES[i % CREW_NAMES.length] ?? `Crew ${i + 1}`,
@@ -23,6 +40,15 @@ function buildCrew(size: number) {
     eventDoseMSv: 0,
     bodyTempC: 37,
     alive: true,
+    hydrationClock: 0,
+    starvationClock: 0,
+    hypothermiaClock: 0,
+    hypoxiaClock: 0,
+    injuryFraction: 0,
+    fatigueFraction: 0,
+    pio2MmHg: startingPio2MmHg,
+    primaryStation: STATION_IDS[i % STATION_IDS.length] as StationId,
+    backupStation: STATION_IDS[(i + 1) % STATION_IDS.length] as StationId,
   }));
 }
 
@@ -64,7 +90,19 @@ export function createInitialState(params: Params): SimState {
   const init = scenario.initial;
 
   const startTempC = 22;
-  const crew = buildCrew(params.crewSize);
+  const initialO2MmHg = partialPressureMmHg(
+    init.o2Kg,
+    physics.molarMassO2GPerMol.value,
+    init.habitatVolumeM3,
+    startTempC,
+  );
+  const initialCo2MmHg = partialPressureMmHg(
+    init.co2Kg,
+    physics.molarMassCo2GPerMol.value,
+    init.habitatVolumeM3,
+    startTempC,
+  );
+  const crew = buildCrew(params.crewSize, pio2MmHg(initialO2MmHg, initialCo2MmHg));
 
   return {
     hour: 0,
@@ -100,18 +138,8 @@ export function createInitialState(params: Params): SimState {
       o2Kg: init.o2Kg,
       co2Kg: init.co2Kg,
       habitatVolumeM3: init.habitatVolumeM3,
-      o2PartialPressureMmHg: partialPressureMmHg(
-        init.o2Kg,
-        physics.molarMassO2GPerMol.value,
-        init.habitatVolumeM3,
-        startTempC,
-      ),
-      co2PartialPressureMmHg: partialPressureMmHg(
-        init.co2Kg,
-        physics.molarMassCo2GPerMol.value,
-        init.habitatVolumeM3,
-        startTempC,
-      ),
+      o2PartialPressureMmHg: initialO2MmHg,
+      co2PartialPressureMmHg: initialCo2MmHg,
     },
 
     water: {
@@ -119,6 +147,7 @@ export function createInitialState(params: Params): SimState {
       wasteKg: 0,
       recoveryFraction: 0, // set by the water model on the first tick
       cumulativeLossKg: 0,
+      intakeFraction: 1,
     },
 
     food: {
@@ -126,6 +155,7 @@ export function createInitialState(params: Params): SimState {
       mode: "nominal",
       trays: buildTrays(scenario),
       cumulativeHarvestKg: 0,
+      intakeFraction: 1,
     },
 
     radiation: {
@@ -136,6 +166,7 @@ export function createInitialState(params: Params): SimState {
 
     crew,
     systems: buildSystems(scenario),
+    activeIncidents: [],
 
     comms: {
       oneWayLightSeconds:

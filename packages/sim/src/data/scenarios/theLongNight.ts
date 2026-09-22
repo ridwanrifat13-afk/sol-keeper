@@ -19,6 +19,8 @@ export const theLongNight: Scenario = {
   id: "the-long-night",
   body: "moon",
   site: { name: "Shackleton Ridge", latDeg: -88.5, lonDeg: 129.0 },
+  primaryGoal: { id: "surviveFullDurationNoLoss", briefKey: "scenario.theLongNight.goal.primary" },
+  stretchGoal: { id: "noSystemLeftFailed", briefKey: "scenario.theLongNight.goal.stretch" },
   durationHours: 2124,
   crewSize: 4,
 

@@ -1,17 +1,21 @@
 /**
- * Stage 8 — crew health, morale and available crew-hours.
+ * Stage 10 (Phase 2) — per-crew physiology and the condition ladder.
  *
- * Health responds to the things the other models produce: cold, bad air, thirst, hunger and
- * accumulated dose. Each penalty logs its own cause code so the debrief can attribute a
- * death to a power decision made days earlier rather than to "bad luck".
+ * Phase 1 tracked one soft `healthFraction` scalar nudged by small tuned deltas — nothing
+ * was a hard deadline, and the mission always succeeded. `docs/INCIDENTS_AND_THRESHOLDS.md`
+ * gives real, sourced anchors for four lethal clocks (thirst, hunger, cold, hypoxia); this
+ * stage advances each one every hour and reduces them to a single `crewCondition()` per
+ * member — nominal/impaired/critical/lost — that Station rules (engine/stations.ts) and the
+ * outcome state machine (engine/outcome.ts) both read.
+ *
+ * `healthFraction` is kept, not removed: the Ripple Web and existing UI read it as a quick
+ * 0-1 summary, so it's now *derived* from the condition ladder rather than driving it.
  */
-import {
-  crew as crewConstants,
-  radiation as radConstants,
-  survivalModes,
-} from "../data/constants.js";
+import { crew as crewConstants, physiology, radiation as radConstants, survivalModes } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
-import { clamp } from "../units.js";
+import type { CrewCondition, CrewMember } from "../types.js";
+import { clamp, hoursToDays } from "../units.js";
+import { pio2MmHg } from "./atmosphere.js";
 
 /** Metabolic rate multiplier for a raised body temperature (OCHMO TB-047). */
 export function feverMetabolicMultiplier(bodyTempC: number): number {
@@ -26,21 +30,121 @@ export function availableCrewHours(ctx: TickContext): number {
     .reduce((sum, c) => sum + ctx.dtHours * c.healthFraction * (0.5 + 0.5 * c.moraleFraction), 0);
 }
 
+/** g(T) in survivalHoursAir(T) = 12h x kAir x g(T) — linear between the floor at freezing
+ *  and 1.0 at the immersion anchor's own reference temperature, per docs/INCIDENTS_AND_THRESHOLDS.md
+ *  S1.5 ("a cabin at or below freezing converges toward the immersion figure"). */
+function hypothermiaAirG(habitatTempC: number): number {
+  const refTempC = physiology.hypothermiaImmersionRefTempC.value;
+  const floor = physiology.hypothermiaAirGFloorFraction.value;
+  if (habitatTempC <= 0) return floor;
+  const t = clamp(habitatTempC / refTempC, 0, 1);
+  return floor + (1 - floor) * t;
+}
+
+/** The worst rung across every clock/threshold this member currently has. Pure and total:
+ *  callers (Station rules, the outcome state machine, the UI) never need to know which
+ *  specific clock is responsible, only how bad it is right now. */
+export function crewCondition(member: CrewMember): CrewCondition {
+  if (!member.alive) return "lost";
+
+  const stages: CrewCondition[] = [];
+
+  stages.push(fractionStage(member.hydrationClock, physiology.hydrationImpairedFraction.value, physiology.hydrationCriticalFraction.value));
+  stages.push(fractionStage(member.starvationClock, physiology.starvationImpairedFraction.value, physiology.starvationCriticalFraction.value));
+  stages.push(fractionStage(member.hypothermiaClock, physiology.hypothermiaImpairedFraction.value, physiology.hypothermiaCriticalFraction.value));
+
+  if (member.hypoxiaClock >= 1) stages.push("lost");
+  else if (member.pio2MmHg < physiology.pio2CriticalMmHg.value) stages.push("critical");
+  else if (member.pio2MmHg < physiology.pio2HypoxiaLowerLimitMmHg.value) stages.push("impaired");
+  else stages.push("nominal");
+
+  if (member.eventDoseMSv >= radConstants.arsLethalMSv.value) stages.push("lost");
+  else if (member.eventDoseMSv >= radConstants.arsSevereMSv.value) stages.push("critical");
+  else if (member.eventDoseMSv >= radConstants.arsOnsetMSv.value) stages.push("impaired");
+
+  // Fatigue is a performance modifier, never independently lethal — capped at impaired.
+  if (member.fatigueFraction >= 0.5) stages.push("impaired");
+
+  if (member.injuryFraction >= 0.75) stages.push("critical");
+  else if (member.injuryFraction >= 0.3) stages.push("impaired");
+
+  return worstOf(stages);
+}
+
+const CONDITION_RANK: Record<CrewCondition, number> = { nominal: 0, impaired: 1, critical: 2, lost: 3 };
+function worstOf(stages: readonly CrewCondition[]): CrewCondition {
+  return stages.reduce((worst, s) => (CONDITION_RANK[s] > CONDITION_RANK[worst] ? s : worst), "nominal" as CrewCondition);
+}
+function fractionStage(clock: number, impairedAt: number, criticalAt: number): CrewCondition {
+  if (clock >= 1) return "lost";
+  if (clock >= criticalAt) return "critical";
+  if (clock >= impairedAt) return "impaired";
+  return "nominal";
+}
+
+/** healthFraction is now a *display* summary derived from the condition ladder, not the
+ *  other way around — kept for the Ripple Web and any UI that still reads a single 0-1
+ *  number, but crewCondition() is the real model. */
+function healthFractionFor(member: CrewMember, condition: CrewCondition): number {
+  const worstClock = Math.max(member.hydrationClock, member.starvationClock, member.hypothermiaClock, member.hypoxiaClock);
+  const base = clamp(1 - worstClock, 0, 1);
+  return condition === "lost" ? 0 : base;
+}
+
 export function crewStage(ctx: TickContext): void {
   const { state, log } = ctx;
   const mode = survivalModes[state.food.mode];
+  const dtDays = hoursToDays(ctx.dtHours);
+
+  const pio2 = pio2MmHg(state.atmosphere.o2PartialPressureMmHg, state.atmosphere.co2PartialPressureMmHg);
 
   for (const member of state.crew) {
     if (!member.alive) continue;
 
-    let healthDelta = 0.0006 * ctx.dtHours; // slow natural recovery
+    member.pio2MmHg = pio2;
     let moraleDelta = -0.0002 * ctx.dtHours; // slow natural drift downwards
 
-    // Cold cabin
-    const targetTempC = mode.habitatTempC.value;
-    if (state.thermal.habitatTempC < targetTempC - 5) {
-      const deficit = targetTempC - state.thermal.habitatTempC;
-      healthDelta -= 0.002 * deficit * ctx.dtHours;
+    // --- Hydration clock (docs/INCIDENTS_AND_THRESHOLDS.md S1.3) ---
+    const fEnv = state.thermal.habitatTempC > 25 ? physiology.thirstFEnvHeatFactor.value : 1.0;
+    const fWork = member.location === "eva" ? physiology.thirstFWorkEvaFactor.value : 1.0;
+    const survivalHours = clamp(
+      physiology.thirstSurvivalIdealHours.value * fEnv * fWork,
+      physiology.thirstSurvivalFloorHours.value,
+      physiology.thirstSurvivalIdealHours.value,
+    );
+    const hydrationRate = Math.max(0, 1 - state.water.intakeFraction) / survivalHours;
+    member.hydrationClock = clamp(member.hydrationClock + ctx.dtHours * hydrationRate, 0, 1);
+
+    // --- Starvation clock (S1.4): energy-deficit integrator, not a simple clock. ---
+    const requiredKcal = mode.kcalPerCrewDay.value;
+    const intakeKcal = requiredKcal * state.food.intakeFraction;
+    const deficitKcal = Math.max(0, requiredKcal - intakeKcal);
+    // Metabolic adaptation after sustained restriction (disclosed simplification: ramped
+    // against the clock's own progress rather than a separate elapsed-time tracker, since a
+    // severe deficit's clock rises too fast for the literal "two weeks" to matter, and a
+    // mild deficit's clock rise IS a reasonable proxy for how long restriction has lasted).
+    const adaptation = clamp(member.starvationClock / 0.3, 0, 1) * physiology.starvationAdaptationMaxFraction.value;
+    const effectiveDeficitKcal = deficitKcal * (1 - adaptation);
+    member.starvationClock = clamp(
+      member.starvationClock + (dtDays * effectiveDeficitKcal) / physiology.starvationLethalDeficitKcal.value,
+      0,
+      1,
+    );
+
+    // --- Hypothermia clock (S1.5): cabin-cold path only. The suit/EVA immersion-anchor path
+    // applies via a specific incident's effect (engine/incidents.ts), not every EVA hour —
+    // a real suit has its own thermal control; this models a *failure* of it, not its
+    // absence. Cabin-cool (15-22 degC) is a comfort/morale penalty only, no lethality. ---
+    if (state.thermal.habitatTempC < 15) {
+      const survivalHoursAir = clamp(
+        physiology.hypothermiaImmersion4CHours.value *
+          physiology.hypothermiaAirFactorKAir.value *
+          hypothermiaAirG(state.thermal.habitatTempC),
+        physiology.hypothermiaImmersion4CHours.value,
+        480,
+      );
+      member.hypothermiaClock = clamp(member.hypothermiaClock + ctx.dtHours / survivalHoursAir, 0, 1);
+    } else if (state.thermal.habitatTempC < mode.habitatTempC.value - 5) {
       moraleDelta -= 0.001 * ctx.dtHours;
       log.logEdge({
         kind: "crew",
@@ -50,58 +154,65 @@ export function crewStage(ctx: TickContext): void {
       });
     }
 
-    // Carbon dioxide above the mode's limit
+    // --- Hypoxia clock (S1.1): time-at-critical-PIO2. Recovers once back above critical. ---
+    if (pio2 < physiology.pio2CriticalMmHg.value) {
+      member.hypoxiaClock = clamp(member.hypoxiaClock + ctx.dtHours / physiology.hypoxiaCriticalToLostHours.value, 0, 1);
+    } else {
+      member.hypoxiaClock = clamp(member.hypoxiaClock - ctx.dtHours / physiology.hypoxiaCriticalToLostHours.value, 0, 1);
+    }
+
+    // CO2 above the mode's limit still raises body temperature and, past the IDLH figure,
+    // is an immediate hazard in its own right (logged; the acute-CO2 failure mode is the
+    // fever/heat path already modelled below plus this warning).
     const co2Limit = mode.co2LimitMmHg.value;
     if (state.atmosphere.co2PartialPressureMmHg > co2Limit) {
       const excess = state.atmosphere.co2PartialPressureMmHg - co2Limit;
-      healthDelta -= 0.004 * excess * ctx.dtHours;
       member.bodyTempC += 0.002 * excess * ctx.dtHours;
     }
-
-    // Hypoxia
-    if (state.atmosphere.o2PartialPressureMmHg < 120) {
-      healthDelta -= 0.01 * ctx.dtHours;
-    }
-
-    // Thirst and hunger
-    if (state.water.potableKg <= 0) {
-      healthDelta -= 0.03 * ctx.dtHours;
+    if (state.atmosphere.co2PartialPressureMmHg >= physiology.co2ImmediatelyDangerousMmHg.value) {
       log.logEdge({
         kind: "crew",
         severity: "critical",
-        code: "crew.noWater",
-        data: { crew: member.name },
+        code: "crew.co2Idlh",
+        data: { crew: member.name, co2MmHg: round(state.atmosphere.co2PartialPressureMmHg) },
       });
     }
-    if (state.food.storedDryMassKg <= 0) {
-      healthDelta -= 0.008 * ctx.dtHours;
-      moraleDelta -= 0.002 * ctx.dtHours;
-    }
 
-    // Rationing costs morale even when it keeps everyone alive.
-    if (state.food.mode === "mode1") moraleDelta -= 0.0008 * ctx.dtHours;
-    if (state.food.mode === "mode2") moraleDelta -= 0.002 * ctx.dtHours;
+    // Fatigue: rises while covering a second station (engine/stations.ts), decays at rest.
+    // Computed by whoever calls crewStage's caller today has no station context yet in M7's
+    // engine-only scope beyond what stations.ts itself derives per-tick from primary/backup
+    // assignment — read there rather than duplicated here.
 
-    // Accumulated dose
-    const doseFraction = member.cumulativeDoseMSv / radConstants.careerLimitMSv.value;
-    if (doseFraction > 0.5) {
-      healthDelta -= 0.0015 * (doseFraction - 0.5) * ctx.dtHours;
-    }
-
-    member.healthFraction = clamp(member.healthFraction + healthDelta, 0, 1);
-    member.moraleFraction = clamp(member.moraleFraction + moraleDelta, 0, 1);
     member.bodyTempC = clamp(member.bodyTempC - 0.01 * ctx.dtHours, 36.5, 42);
+    member.moraleFraction = clamp(member.moraleFraction + moraleDelta, 0, 1);
 
-    if (member.healthFraction <= 0) {
+    const condition = crewCondition(member);
+    member.healthFraction = healthFractionFor(member, condition);
+
+    if (condition === "lost" && member.alive) {
       member.alive = false;
+      const cause = worstCauseCode(member);
       log.log({
         kind: "crew",
         severity: "critical",
-        code: "crew.lost",
+        code: cause,
         data: { crew: member.name, hour: state.hour },
       });
     }
   }
+}
+
+/** Which clock actually pushed this member to `lost`, for the Black Box — "someone died" is
+ *  not an explanation; "died of thirst at hour 412" is. Exported for
+ *  validation/physiology.test.ts, which pins each failure mode to its own cause code rather
+ *  than trusting "the run ended somehow" (docs/INCIDENTS_AND_THRESHOLDS.md S5). */
+export function worstCauseCode(member: CrewMember): string {
+  if (member.eventDoseMSv >= radConstants.arsLethalMSv.value) return "crew.lost.radiation";
+  if (member.hypoxiaClock >= 1) return "crew.lost.hypoxia";
+  if (member.hydrationClock >= 1) return "crew.lost.thirst";
+  if (member.starvationClock >= 1) return "crew.lost.starvation";
+  if (member.hypothermiaClock >= 1) return "crew.lost.hypothermia";
+  return "crew.lost";
 }
 
 const round = (x: number): number => Math.round(x * 100) / 100;

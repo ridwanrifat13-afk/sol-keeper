@@ -79,6 +79,32 @@ Directory is `apps/web`; `packages/sim` is consumed as a built workspace package
 - Allowed APIs: DONKI, JPL Horizons, NASA Image and Video Library, Moon/Mars Trek WMTS.
   Do **not** use Mars Rover Photos, APOD, NeoWs, or EPIC.
 
+## Reality Dial Depth vs. Mission Difficulty vs. Station (Phase 2)
+
+Three separate concepts that must never be conflated — a Phase 1 field (`Difficulty`, values
+`"cadet"|"standard"|"commander"`) collided in *name* with the Reality Dial's own values
+(`"cadet"|"commander"`) while meaning something unrelated, and that collision is exactly why
+the field went unread for six milestones before M7 renamed and rewired it.
+
+- **Reality Dial Depth** (`apps/web/src/dial/types.ts`'s `DialLevel`:
+  `"cadet"|"specialist"|"commander"`) is presentation only — which of three log-text tables
+  (`apps/web/src/i18n/logText.ts`) and vocabulary level a player sees. It never changes a
+  single number the simulation computes.
+- **Mission Difficulty** (`packages/sim/src/types.ts`'s `MissionDifficulty`:
+  `"training"|"nominal"|"flightRated"`) is scenario parameters only —
+  `packages/sim/src/data/constants.ts`'s `missionDifficulty` group scales the incident
+  trigger rate, the TRL-based system-failure rate, and incident warning time. It never
+  touches a physics constant (crew, radiation, food, water, thermal groups stay untouched) —
+  mechanically checkable by which constants group a difficulty multiplier is allowed to read
+  from. `legacyDifficultyToMissionDifficulty()` maps a stale Phase 1 value
+  (`cadet→training`, `standard→nominal`, `commander→flightRated`) for save/URL
+  compatibility.
+- **Station** (`packages/sim/src/types.ts`'s `StationId`: `"power"|"lifeSupport"|"comms"
+  |"incidentCommand"|"missionCommand"`) is a crew role, brand new in M7 — which crew member
+  covers which operational responsibility (`engine/stations.ts`), degrading with that
+  member's `CrewCondition` and driving incident-response effectiveness. Unrelated to either
+  of the above.
+
 ## Conventions
 
 - TypeScript strict, plus `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`.

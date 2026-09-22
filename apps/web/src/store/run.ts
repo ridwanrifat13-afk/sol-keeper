@@ -30,7 +30,7 @@ const DEFAULT_PARAMS: Params = {
   seed: 1,
   crewSize: 4,
   missionStartIso: "2033-03-01",
-  difficulty: "standard",
+  difficulty: "nominal",
 };
 
 interface RunStore {

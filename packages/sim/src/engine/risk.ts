@@ -8,12 +8,17 @@
 import { management } from "../data/constants.js";
 import { clamp } from "../units.js";
 
-/** Hourly probability that a system with the given TRL suffers a failure. */
-export function failureRatePerHour(trl: number): number {
+/**
+ * Hourly probability that a system with the given TRL suffers a failure.
+ * `difficultyMultiplier` is Mission Difficulty's `failureRateMultiplier` (Phase 2 brief) —
+ * the one physics-adjacent number a difficulty preset is allowed to touch, and only as a
+ * multiplier on top of the TRL curve, never a replacement for it.
+ */
+export function failureRatePerHour(trl: number, difficultyMultiplier = 1): number {
   const level = clamp(Math.round(trl), 1, 9);
   const base = management.trlBaseFailureRatePerHour.value;
   const penalty = management.trlFailureRatePenaltyPerLevel.value;
-  return base * Math.pow(penalty, 9 - level);
+  return base * Math.pow(penalty, 9 - level) * difficultyMultiplier;
 }
 
 /** Mass contingency fraction required at a given design maturity. */

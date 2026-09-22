@@ -4,7 +4,7 @@
  * synthetic entry could hide a mismatch with what the engine actually records.
  */
 import { describe, expect, it } from "vitest";
-import { createInitialState, getScenario, run, type Params } from "@sol-keeper/sim";
+import { createInitialState, getScenario, prudentBot, runWithBot, type Params } from "@sol-keeper/sim";
 import { crewLossConditions, groupIncidents, majorIncidents } from "../src/dial/blackBox";
 
 const params: Params = {
@@ -12,14 +12,20 @@ const params: Params = {
   seed: 1,
   crewSize: 4,
   missionStartIso: "2033-03-01",
-  difficulty: "standard",
+  difficulty: "nominal",
 };
 
+// Phase 2 (M7) made unattended play mostly lethal by design (validation/balance.test.ts
+// asserts the actual idleBot pass rates) — a bare, no-decision `run()` no longer reliably
+// reaches this scenario's scripted dust storm at hour 200, which these tests actually exist
+// to check the *grouping* mechanics of. `prudentBot` (survives ~100% of Jezero at Nominal,
+// per the balance harness) is what lets the run actually get there, the same way
+// validation/moonScenarios.test.ts switched its own resource-sizing checks to it.
 function play(seed: number, hours: number) {
   const p = { ...params, seed };
   const scenario = getScenario(p.scenarioId);
   const state = createInitialState(p);
-  return run(state, p, scenario, hours);
+  return runWithBot(state, p, scenario, hours, prudentBot);
 }
 
 describe("majorIncidents", () => {

@@ -8,7 +8,9 @@
  */
 import { crew as crewConstants, habitat, lifeSupport } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
-import { perDayToPerHour } from "../units.js";
+import { clamp, perDayToPerHour } from "../units.js";
+
+const clamp01 = (x: number): number => clamp(x, 0, 1);
 
 /**
  * Water lost over a mission, given the recovery fraction. Pure arithmetic, exported so the
@@ -38,6 +40,13 @@ export function waterStage(ctx: TickContext): void {
     living * perDayToPerHour(crewConstants.waterUseTotalKgPerCrewDay.value) * ctx.dtHours;
   const recoveredKg = usedKg * w.recoveryFraction;
   const lostKg = usedKg - recoveredKg;
+
+  // The crew's actual intake this hour may fall short of `usedKg` if the tank plus recovery
+  // can't cover it — the hydration clock (crewStage) needs to know that shortfall, not just
+  // the tank level afterward, which alone can't distinguish "ran dry this hour" from
+  // "already dry and stayed dry".
+  const actuallyAvailableKg = w.potableKg + recoveredKg;
+  w.intakeFraction = usedKg > 0 ? clamp01(actuallyAvailableKg / usedKg) : 1;
 
   w.potableKg = Math.max(0, w.potableKg - usedKg + recoveredKg);
   w.cumulativeLossKg += lostKg;

@@ -9,6 +9,7 @@
  * Every hazard logs a root event, and everything it triggers is logged inside that event's
  * cause scope, so the Black Box can walk from "crop tray died" back to "dust storm".
  */
+import { missionDifficulty } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
 import type { EventId, HazardKind, ScriptedEvent, SystemId } from "../types.js";
 import { failureRatePerHour } from "./risk.js";
@@ -167,7 +168,8 @@ export function hazardsAndFailuresStage(ctx: TickContext): void {
       continue;
     }
 
-    if (stream.chance(failureRatePerHour(system.trl) * ctx.dtHours)) {
+    const difficultyMultiplier = missionDifficulty[ctx.params.difficulty].failureRateMultiplier.value;
+    if (stream.chance(failureRatePerHour(system.trl, difficultyMultiplier) * ctx.dtHours)) {
       system.operational = false;
       log.log({
         kind: "fault",

@@ -54,7 +54,11 @@ export function foodStage(ctx: TickContext): void {
   const eatenKg = living * perDayToPerHour(rationKgPerCrewDay(f.mode)) * ctx.dtHours;
   if (eatenKg <= f.storedDryMassKg) {
     f.storedDryMassKg -= eatenKg;
+    f.intakeFraction = 1;
   } else {
+    // The starvation clock (crewStage) needs to know this hour's actual ration, not just
+    // that stores hit zero — see WaterState.intakeFraction for the same reasoning.
+    f.intakeFraction = eatenKg > 0 ? clamp(f.storedDryMassKg / eatenKg, 0, 1) : 1;
     f.storedDryMassKg = 0;
     log.logEdge({
       kind: "crew",

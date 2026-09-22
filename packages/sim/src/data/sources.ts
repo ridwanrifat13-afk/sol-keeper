@@ -43,6 +43,26 @@ export const SOURCE_IDS = [
   // per-kilometre cable masses and a stated crew separation distance, so the power
   // distribution mass is now derived from quoted numbers rather than asserted.
   "RUCKER-2015-SURFACE-POWER",
+  // Phase 2 (M7): physiology lethality thresholds and their anchors, from
+  // docs/INCIDENTS_AND_THRESHOLDS.md, which already did the primary-source legwork.
+  "NASA-SPACEBIO-1975",
+  "NASA-NUTRITION-2015",
+  "NASA-HYPOTHERMIA-2008",
+  "NASA-ORION-FS",
+  "NASA-SP-4030",
+  // Named by docs/INCIDENTS_AND_THRESHOLDS.md but not yet a document this project has
+  // opened and read (unlike OCHMO-TB003/TB047, which were): kept distinct from those so a
+  // constant citing one is honest about not being independently verified yet.
+  "OCHMO-TB004",
+  "HRP-ARS",
+  // The five incidents the Phase 2 brief names without a source of its own, pending the
+  // team supplying one per incident (brief: "Add each to DATA_SOURCES.md as unverified").
+  "INC-DEPRESS-MIR97-PENDING",
+  "INC-O2TANK-APOLLO13-PENDING",
+  "INC-COOLANT-MS22-PENDING",
+  "INC-SPE-1972-PENDING",
+  "INC-SCRUBBER-ISS-PENDING",
+  "INC-DUSTSTORM2018-PENDING",
 ] as const;
 
 export type SourceId = (typeof SOURCE_IDS)[number];

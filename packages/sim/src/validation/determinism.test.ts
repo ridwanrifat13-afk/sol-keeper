@@ -16,7 +16,7 @@ const params: Params = {
   seed: 12345,
   crewSize: 4,
   missionStartIso: "2033-03-01",
-  difficulty: "standard",
+  difficulty: "nominal",
 };
 
 function play(p: Params, sols: number) {

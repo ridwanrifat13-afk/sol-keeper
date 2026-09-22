@@ -226,13 +226,16 @@ describe("DataSourcesView, first frame", () => {
     }
   });
 
-  it("states the unsourced count plainly — now zero, and said so rather than hidden", () => {
+  it("states the unsourced count plainly, whether zero or not", () => {
     const out = render(<DataSourcesView />);
-    expect(out).toContain("Still unsourced (0)");
-    expect(out).toContain("Every number this simulation runs on is backed by a NASA source");
-    // The section must render at zero, not disappear: "everything is sourced" is the
-    // strongest claim this screen makes and it would otherwise become invisible.
-    expect(out).not.toContain("habitat.targetO2PartialPressureMmHg");
+    // Phase 1 (M6) reached zero placeholders; Phase 2 (M7) deliberately reopens ten —
+    // real NASA-cited physiology/radiation thresholds and incident magnitudes the team has
+    // not yet supplied documents for (docs/PHASE2_BRIEF.md's own "placeholder, not a guess"
+    // rule) — so this screen honestly shows a nonzero count again rather than claiming a
+    // false "fully sourced" the way it briefly could after M6.
+    expect(out).toContain("Still unsourced (10)");
+    expect(out).toContain("Every value below is a placeholder");
+    expect(out).toContain("radiation.arsLethalMSv");
   });
 
   it("discloses that fire risk is deliberately not modelled, and why", () => {
@@ -368,7 +371,13 @@ describe("the view's data sources respond to the running simulation", () => {
     useRun.getState().step(200);
 
     const state = useRun.getState().state;
-    expect(state.hour).toBe(200);
+    // Phase 2 (M7): an incident can now end the mission before the requested 200 hours — a
+    // real, intended outcome (validation/balance.test.ts asserts the actual pass rates), not
+    // a bug this UI smoke test should assume away. What must still hold is that time moved
+    // forward at all and stopped only because the run really ended.
+    expect(state.hour).toBeGreaterThan(0);
+    expect(state.hour).toBeLessThanOrEqual(200);
+    if (state.hour < 200) expect(state.status).not.toBe("running");
     expect(state.log.length).toBeGreaterThan(0);
     // Every entry the feed will render must have English text, not a raw code.
     for (const entry of state.log.slice(0, 50)) {

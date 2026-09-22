@@ -1,4 +1,4 @@
-import { causalCascade, directEffects, type Body, type LogEntry } from "@sol-keeper/sim";
+import { causalCascade, directEffects, type Body, type LogEntry, type RunStatus } from "@sol-keeper/sim";
 import { useDial } from "../../store/dial.js";
 import { useRun } from "../../store/run.js";
 import { logText } from "../../i18n/logText.js";
@@ -7,6 +7,7 @@ import { crewLossConditions, groupIncidents, majorIncidents, type IncidentGroup 
 import type { DialLevel } from "../../dial/types.js";
 import { durationLabel, elapsedValue, timeUnitWord, timestampLabel } from "../../dial/missionTime.js";
 import { statusFromSeverity } from "../../components/status.js";
+import { crewLossHeadline } from "../../dial/crewLoss.js";
 
 /**
  * The Black Box debrief — what happened, and what an entry actually caused.
@@ -39,17 +40,15 @@ export function DebriefView() {
   const log = state.log;
   const incidents = majorIncidents(log);
   const incidentGroups = groupIncidents(incidents, log);
-  const crewLosses = log.filter((e) => e.code === "crew.lost");
+  const crewLosses = log.filter((e) => e.code === "crew.lost" || e.code.startsWith("crew.lost."));
+
+  const headline = outcomeHeadline(state.status, state.hour, body, summary.livingCrew, state.crew.length);
 
   return (
     <div className="debrief">
       <header className="view-head">
-        <h1>{state.status === "won" ? "Mission complete" : "Mission lost"}</h1>
-        <p className="view-hint">
-          {state.status === "won"
-            ? `${durationLabel(state.hour, body)}, ${summary.livingCrew} of ${state.crew.length} crew home safe.`
-            : `Ended at hour ${state.hour} (${timestampLabel(state.hour, body)}).`}
-        </p>
+        <h1>{headline.title}</h1>
+        <p className="view-hint">{headline.subtitle}</p>
       </header>
 
       <section className="panel" aria-labelledby="final-numbers-heading">
@@ -134,6 +133,45 @@ export function DebriefView() {
   );
 }
 
+/**
+ * Debrief headline text for the four real Phase 2 outcomes (Phase 1 only had "won"/"lost").
+ * Hardcoded English, same as the rest of this view (config.ts already discloses that Debrief
+ * is not yet migrated to i18next translation keys) — a pre-existing gap this function does
+ * not close, flagged again in the M7 milestone summary rather than silently left undocumented.
+ */
+function outcomeHeadline(
+  status: RunStatus,
+  hour: number,
+  body: Body,
+  livingCrew: number,
+  crewSize: number,
+): { title: string; subtitle: string } {
+  switch (status) {
+    case "success":
+      return {
+        title: "Mission complete",
+        subtitle: `${durationLabel(hour, body)}, ${livingCrew} of ${crewSize} crew home safe.`,
+      };
+    case "partial":
+      return {
+        title: "Mission ended — goal not met",
+        subtitle: `Crew safe, but the mission's goal was missed. Ended at hour ${hour} (${timestampLabel(hour, body)}).`,
+      };
+    case "abort":
+      return {
+        title: "Mission aborted",
+        subtitle: `The crew chose to abort. Ended at hour ${hour} (${timestampLabel(hour, body)}).`,
+      };
+    case "loss":
+      return {
+        title: "Mission lost",
+        subtitle: `Ended at hour ${hour} (${timestampLabel(hour, body)}).`,
+      };
+    case "running":
+      return { title: "Debrief", subtitle: "" };
+  }
+}
+
 function formatValue(value: number, text: { unit: string; decimals: number }): string {
   return `${value.toFixed(text.decimals)} ${text.unit}`.trim();
 }
@@ -206,7 +244,9 @@ function CrewLossReport({
 
   return (
     <div className="crew-loss-report">
-      <p className="crew-loss-headline">{logText(entry, level)}</p>
+      <p className="crew-loss-headline">
+        {crewLossHeadline(typeof entry.data["crew"] === "string" ? entry.data["crew"] : "Crew member", level)}
+      </p>
       {groups.length > 0 ? (
         <>
           <p className="panel-hint">

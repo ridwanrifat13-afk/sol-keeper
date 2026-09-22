@@ -18,11 +18,24 @@
  *     sized only for the *critical* path still drains on low-priority systems before the
  *     sim ever sheds them, leaving too little for the critical path in the night's second
  *     half. Jezero-outpost winning all 20 test seeds passively established the bar these two
- *     scenarios are held to; they were re-sized until they cleared it too.
+ *     scenarios were held to when they were sized (Phase 1).
+ *
+ *     Phase 2's M7 makes *unattended* play (`run()` with no strategy at all — every incident
+ *     resolves to its own worst "nobody decided" default) deliberately, mostly lethal by
+ *     design (the same real trigger rate and consequences validation/balance.test.ts's
+ *     idleBot measures at well under 5% success on Nominal) — a bare `run()` can no longer
+ *     be this file's resource-sizing check. The describe block below now plays each scenario
+ *     with `prudentBot` instead: a real, skilled strategy that answers every incident well,
+ *     which is what actually isolates "is the *initial resource envelope* (battery, food,
+ *     water) adequate" from "did anyone answer the incidents" — the same bug class (the
+ *     thermalControl copy-paste above) would still show up as prudentBot losing almost
+ *     every seed, since no amount of good incident-handling fixes an undersized battery.
  */
 import { describe, expect, it } from "vitest";
 import { createInitialState } from "../engine/state.js";
 import { run } from "../engine/tick.js";
+import { prudentBot } from "../engine/bots.js";
+import { runWithBot } from "../engine/runWithBot.js";
 import { firstLight, jezeroOutpost, theLongNight } from "../data/scenarios/index.js";
 import type { Params } from "../types.js";
 
@@ -33,10 +46,24 @@ function play(scenarioId: Params["scenarioId"], seed: number) {
     seed,
     crewSize: scenario.crewSize,
     missionStartIso: "2033-01-01",
-    difficulty: "standard",
+    difficulty: "nominal",
   };
   const state = createInitialState(params);
   run(state, params, scenario, scenario.durationHours);
+  return state;
+}
+
+function playWithPrudentBot(scenarioId: Params["scenarioId"], seed: number) {
+  const scenario = scenarioId === "first-light" ? firstLight : scenarioId === "the-long-night" ? theLongNight : jezeroOutpost;
+  const params: Params = {
+    scenarioId,
+    seed,
+    crewSize: scenario.crewSize,
+    missionStartIso: "2033-01-01",
+    difficulty: "nominal",
+  };
+  const state = createInitialState(params);
+  runWithBot(state, params, scenario, scenario.durationHours, prudentBot);
   return state;
 }
 
@@ -57,28 +84,33 @@ describe("Moon scenarios carry no Mars-only systems", () => {
   });
 });
 
-describe("Moon scenarios are winnable passively, across a real spread of seeds", () => {
-  it("First Light survives a full day-night-day cycle on 20/20 seeds", () => {
+describe("Moon scenarios' resource sizing holds up under real physiology (Phase 2)", () => {
+  // See the file header for why this now plays with prudentBot rather than a bare `run()` —
+  // validation/balance.test.ts is the file that asserts idleBot's (deliberately harsh)
+  // unattended pass rates; this block isolates resource sizing from incident-handling skill.
+  it("First Light survives a full day-night-day cycle on most seeds, well played", () => {
+    let successes = 0;
     for (let seed = 1; seed <= 20; seed++) {
-      const state = play("first-light", seed);
-      expect(state.status, `seed ${seed} ended ${state.status}`).toBe("won");
-      expect(state.crew.every((c) => c.alive)).toBe(true);
+      if (playWithPrudentBot("first-light", seed).status === "success") successes++;
     }
+    expect(successes).toBeGreaterThanOrEqual(15);
   });
 
-  it("The Long Night survives three lunar cycles on 20/20 seeds", () => {
+  it("The Long Night survives three lunar cycles on most seeds, well played", () => {
+    let successes = 0;
     for (let seed = 1; seed <= 20; seed++) {
-      const state = play("the-long-night", seed);
-      expect(state.status, `seed ${seed} ended ${state.status}`).toBe("won");
-      expect(state.crew.every((c) => c.alive)).toBe(true);
+      if (playWithPrudentBot("the-long-night", seed).status === "success") successes++;
     }
+    expect(successes).toBeGreaterThanOrEqual(15);
   });
 
-  it("matches jezero-outpost's own standard: passively winnable across seeds", () => {
+  it("matches jezero-outpost's own standard: still reliably survivable when well played", () => {
     // The bar both Moon scenarios are held to, established independently of them.
+    let successes = 0;
     for (let seed = 1; seed <= 10; seed++) {
-      expect(play("jezero-outpost", seed).status).toBe("won");
+      if (playWithPrudentBot("jezero-outpost", seed).status === "success") successes++;
     }
+    expect(successes).toBeGreaterThanOrEqual(8);
   });
 });
 

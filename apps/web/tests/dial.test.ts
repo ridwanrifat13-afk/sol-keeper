@@ -145,7 +145,7 @@ describe("dial/resourceSummary — the Reality Dial never changes what state a r
       seed: 7,
       crewSize: 4,
       missionStartIso: "2033-03-01",
-      difficulty: "standard",
+      difficulty: "nominal",
     };
     const scenario = getScenario(params.scenarioId);
     const state = createInitialState(params);
@@ -168,7 +168,7 @@ describe("dial/resourceSummary — the Reality Dial never changes what state a r
       seed: 7,
       crewSize: 4,
       missionStartIso: "2033-03-01",
-      difficulty: "standard",
+      difficulty: "nominal",
     };
     const state = createInitialState(params);
     const summaries = DIAL_LEVELS.map((level) => buildResourceSummary(state, level));

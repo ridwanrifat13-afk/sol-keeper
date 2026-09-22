@@ -20,7 +20,9 @@ import { waterStage } from "../models/water.js";
 import type { Params, Scenario, SimState } from "../types.js";
 import type { Stage, TickContext } from "./context.js";
 import { hazardsAndFailuresStage } from "./events.js";
+import { incidentsStage } from "./incidents.js";
 import { EventLogger } from "./log.js";
+import { determineOutcome } from "./outcome.js";
 import { Rng } from "./rng.js";
 
 export interface NamedStage {
@@ -28,7 +30,10 @@ export interface NamedStage {
   readonly run: Stage;
 }
 
-/** The pipeline. Order is load-bearing; changing it changes every saved run. */
+/** The pipeline. Order is load-bearing; changing it changes every saved run. `incidents`
+ *  sits after `hazardsAndFailures` so a stochastic system failure can be the trigger an
+ *  incident checks for the same hour it happens, and `endConditions` (now `determineOutcome`,
+ *  engine/outcome.ts) stays last so every stage's consequences are visible to it. */
 export const PIPELINE: readonly NamedStage[] = [
   { name: "environment", run: environmentStage },
   { name: "power", run: powerStage },
@@ -41,42 +46,9 @@ export const PIPELINE: readonly NamedStage[] = [
   { name: "comms", run: commsStage },
   { name: "crew", run: crewStage },
   { name: "hazardsAndFailures", run: hazardsAndFailuresStage },
-  { name: "endConditions", run: endConditionsStage },
+  { name: "incidents", run: incidentsStage },
+  { name: "endConditions", run: determineOutcome },
 ];
-
-/** Stage 10 — has the run finished, and how. */
-export function endConditionsStage(ctx: TickContext): void {
-  const { state, scenario, log } = ctx;
-  if (state.status !== "running") return;
-
-  const living = state.crew.filter((c) => c.alive);
-
-  if (living.length === 0) {
-    state.status = "lost";
-    state.endReasonCode = "end.crewLost";
-    log.log({
-      kind: "milestone",
-      severity: "critical",
-      code: "end.crewLost",
-      data: { hour: state.hour },
-    });
-    return;
-  }
-
-  if (state.hour >= scenario.durationHours) {
-    state.status = "won";
-    state.endReasonCode = "end.missionComplete";
-    log.log({
-      kind: "milestone",
-      severity: "info",
-      code: "end.missionComplete",
-      // Duration is deliberately not restated here in sols or days: that word choice
-      // depends on `scenario.body`, which is a presentation concern (brief rule 4), and the
-      // Debrief header already states it correctly per body from `scenario.durationHours`.
-      data: { hour: state.hour, crewSurviving: living.length },
-    });
-  }
-}
 
 /**
  * Advances the state by one hour, in place.

@@ -144,4 +144,60 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     title: "Sol Keeper gameplay tuning — not a NASA source",
     usedFor: "shielding curves, thermal conductance, failure rates, crop photoperiod, cell efficiency",
   },
+  "NASA-SPACEBIO-1975": {
+    title: "Space Biology and Medicine — human survival limits without water (NTRS 19760019741)",
+    url: "https://ntrs.nasa.gov/citations/19760019741",
+    usedFor: "thirst clock: ~336 h ideal survival without water, 6 h floor under harsh conditions",
+  },
+  "NASA-NUTRITION-2015": {
+    title: "Nutritional Biochemistry of Spaceflight (NTRS 20150000512)",
+    url: "https://ntrs.nasa.gov/citations/20150000512",
+    usedFor: "starvation clock: total-starvation deficit bound, metabolic adaptation to sustained restriction",
+  },
+  "NASA-HYPOTHERMIA-2008": {
+    title: "Human survival time in cold water/air (NTRS 20080014194)",
+    url: "https://ntrs.nasa.gov/citations/20080014194",
+    usedFor: "hypothermia clock: 4.4°C immersion/raft survival anchors, the air-vs-water conversion factor",
+  },
+  "NASA-ORION-FS": {
+    title: "Orion spacecraft overview fact sheet",
+    url: "https://www.nasa.gov/wp-content/uploads/2015/06/orion_quick_facts.pdf",
+    usedFor: "lunar return transit time (Artemis I actual, and the planned range)",
+  },
+  "NASA-SP-4030": {
+    title: "NASA SP-4030, Wagner Award history documenting the Mir fire, February 1997",
+    usedFor: "Mir fire incident: ~14-minute burn duration (a disputed 90-second figure also exists)",
+  },
+  "OCHMO-TB004": {
+    title: "NASA OCHMO Carbon Dioxide (CO2) Technical Brief (TB-004) — not yet independently verified",
+    usedFor: "TODO: CO2 immediately-dangerous-to-life-or-health threshold (~30.4 mmHg / 4%)",
+  },
+  "HRP-ARS": {
+    title: "NASA Human Research Program — Acute Radiation Syndrome thresholds — not yet independently verified",
+    usedFor: "TODO: onset/severe/lethal acute dose bands used by the outcome state machine",
+  },
+  "INC-DEPRESS-MIR97-PENDING": {
+    title: "Progress–Mir collision and depressurization, June 1997 — source pending",
+    usedFor: "TODO: cabin pressure loss rate for the depress-mir97 incident",
+  },
+  "INC-O2TANK-APOLLO13-PENDING": {
+    title: "Apollo 13 oxygen tank failure, 1970 — source pending",
+    usedFor: "TODO: fraction of O2 supply lost for the o2tank-apollo13 incident",
+  },
+  "INC-COOLANT-MS22-PENDING": {
+    title: "Soyuz MS-22 coolant leak, December 2022 — source pending",
+    usedFor: "TODO: thermal-control capacity loss rate for the coolant-ms22 incident",
+  },
+  "INC-SPE-1972-PENDING": {
+    title: "August 1972 solar particle event — source pending",
+    usedFor: "TODO: dose magnitude relative to the design-reference SPE for the spe-1972 incident",
+  },
+  "INC-SCRUBBER-ISS-PENDING": {
+    title: "ISS CO2 scrubber (CDRA) recurring failures — source pending",
+    usedFor: "TODO: post-incident failure-rate multiplier for the scrubber-iss incident",
+  },
+  "INC-DUSTSTORM2018-PENDING": {
+    title: "2018 Mars global dust storm — source pending",
+    usedFor: "TODO: severity of the 2018 storm relative to the modelled ordinary dust-storm hazard",
+  },
 };

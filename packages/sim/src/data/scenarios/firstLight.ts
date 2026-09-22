@@ -18,6 +18,8 @@ export const firstLight: Scenario = {
   id: "first-light",
   body: "moon",
   site: { name: "Shackleton Ridge", latDeg: -88.5, lonDeg: 129.0 },
+  primaryGoal: { id: "surviveFullDurationNoLoss", briefKey: "scenario.firstLight.goal.primary" },
+  stretchGoal: { id: "noSystemLeftFailed", briefKey: "scenario.firstLight.goal.stretch" },
   durationHours: 750,
   crewSize: 2,
 

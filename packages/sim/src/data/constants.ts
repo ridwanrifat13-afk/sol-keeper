@@ -219,6 +219,13 @@ export const lifeSupport = {
 
 /** Crop production. */
 export const food = {
+  // --- prudentBot rationing thresholds (Phase 2, engine/bots.ts) — gameplay tuning, not a
+  // physiological figure: how many days of food-at-current-ration count as "thin margin"
+  // before the bot proactively rations down, and how many count as "safe" before it eases
+  // back off. Deliberately asymmetric (recover only once well clear of the down threshold)
+  // so the bot does not oscillate mode every tick near a single boundary.
+  rationDownAtDaysRemaining: c({ value: 10, unit: "days", source: "GAME-DESIGN", confidence: "tuned" }),
+  rationRecoverAtDaysRemaining: c({ value: 25, unit: "days", source: "GAME-DESIGN", confidence: "tuned" }),
   cropCycleDaysLettuce: c({
     value: 29,
     unit: "days",
@@ -369,6 +376,32 @@ export const radiation = {
     source: "GAME-DESIGN",
     confidence: "tuned",
     note: "Fraction of GCR dose that shielding cannot remove, from secondary production.",
+  }),
+
+  // --- Acute Radiation Syndrome (docs/INCIDENTS_AND_THRESHOLDS.md S1.6). Named [HRP-ARS] by
+  // that document; this project has not yet located and read the specific NASA Human
+  // Research Program document behind it, unlike OCHMO-RAD above — placeholder, not measured,
+  // until it is.
+  arsOnsetMSv: c({
+    value: 100,
+    unit: "mSv",
+    source: "HRP-ARS",
+    confidence: "placeholder",
+    note: "TODO: 0.1-0.2 Gy acute dose, ARS onset threshold (CDC: mild symptoms from 0.3 Gy). Compared directly against eventDoseMSv, the same disclosed mSv-vs-Gy simplification solarParticleEvent30DayLimitMGyEq already uses.",
+  }),
+  arsSevereMSv: c({
+    value: 2000,
+    unit: "mSv",
+    source: "HRP-ARS",
+    confidence: "placeholder",
+    note: "TODO: ~2 Gy, ~5% lethality without care, minor blood-system damage begins 0.5-1 Gy.",
+  }),
+  arsLethalMSv: c({
+    value: 3250,
+    unit: "mSv",
+    source: "HRP-ARS",
+    confidence: "placeholder",
+    note: "TODO: ~3.25 Gy, ~50% mortality within 60 days without care. Crossing this during a single event is treated as fatal at the moment it's crossed — real ARS mortality is probabilistic and plays out over days to weeks, not instantly, which is a disclosed simplification at the same level of abstraction healthFraction<=0 already uses elsewhere in this model.",
   }),
 } as const;
 
@@ -550,6 +583,13 @@ export const environment = {
     unit: "days",
     source: "NSSDC-FACTS",
     confidence: "measured",
+  }),
+  marsDepartureWindowDays: c({
+    value: 60,
+    unit: "days",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Width of the low-delta-v departure window at the start of each marsConjunctionPeriodDays cycle (Phase 2 ABORT gating). No sourced figure gives an exact window width; 60 days is a placeholder-grade estimate disclosed as tuned, not a claimed trajectory-analysis result.",
   }),
 } as const;
 
@@ -960,6 +1000,278 @@ export const habitat = {
   }),
 } as const;
 
+/**
+ * Phase 2 (M7) lethality thresholds. `docs/INCIDENTS_AND_THRESHOLDS.md` is the primary
+ * research artifact behind this whole group — every note below names the section it
+ * implements, so a value can be checked against that document's own math, not just this
+ * file's paraphrase of it.
+ */
+export const physiology = {
+  // --- Oxygen: PIO2 (S1.1, OCHMO-TB-003) ---
+  pio2NormoxiaLowMmHg: c({
+    value: 145,
+    unit: "mmHg",
+    source: "OCHMO-TB003",
+    confidence: "measured",
+    note: "PIO2 (inspired O2 partial pressure, not cabin ppO2) normoxia band lower bound.",
+  }),
+  pio2NormoxiaHighMmHg: c({ value: 155, unit: "mmHg", source: "OCHMO-TB003", confidence: "measured" }),
+  pio2HypoxiaLowerLimitMmHg: c({
+    value: 127,
+    unit: "mmHg",
+    source: "OCHMO-TB003",
+    confidence: "measured",
+    note: "Below this: mild hypoxia (impaired). Performance penalty grows as PIO2 falls further.",
+  }),
+  pio2CriticalMmHg: c({
+    value: 100,
+    unit: "mmHg",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Below this: critical. S1.1 states the impaired-to-unconscious boundary has no single NASA number; 100 mmHg PIO2 gives the critical band real width above the also-tuned hypoxiaCriticalToLostHours clock.",
+  }),
+  pio2HyperoxiaIndefiniteMmHg: c({ value: 356, unit: "mmHg", source: "OCHMO-TB003", confidence: "measured" }),
+  pio2HyperoxiaShortTermMmHg: c({ value: 791, unit: "mmHg", source: "OCHMO-TB003", confidence: "measured" }),
+  cabinPressureLowPsia: c({ value: 5.0, unit: "psia", source: "OCHMO-TB003", confidence: "measured" }),
+  cabinPressureHighPsia: c({ value: 15.0, unit: "psia", source: "OCHMO-TB003", confidence: "measured" }),
+  minDiluentFraction: c({ value: 0.3, unit: "fraction", source: "OCHMO-TB003", confidence: "measured" }),
+  waterVapourPressureBodyMmHg: c({
+    value: 47,
+    unit: "mmHg",
+    source: "OCHMO-TB003",
+    confidence: "derived",
+    note: "Standard respiratory physiology (water-vapour partial pressure at core body temperature). Used by the same document's own conversion: PIO2 = (P_total - 47) x FO2.",
+  }),
+  diluentGasPressureMmHg: c({
+    value: 599,
+    unit: "mmHg",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "The sim tracks only O2 and CO2 partial pressure, not a full nitrogen mass balance (the same gap the M6 fire-risk disclosure names). This holds diluent gas at a fixed partial pressure — real ECLSS systems regulate it to a roughly fixed set point rather than letting it drift — so totalPressureMmHg = o2 + co2 + this, and FO2 = o2/total. Chosen so nominal cabin conditions (160 mmHg O2, ~1 mmHg CO2) land near the 760 mmHg sea-level total pressure already used for the O2 set point. Disclosed on Data Sources as a simplification.",
+  }),
+  hypoxiaCriticalToLostHours: c({
+    value: 2,
+    unit: "h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Time sustained below pio2CriticalMmHg before unconsciousness/death. S1.1 states this step explicitly has no NASA number.",
+  }),
+
+  // --- Carbon dioxide (S1.2) ---
+  co2ImmediatelyDangerousMmHg: c({
+    value: 30.4,
+    unit: "mmHg",
+    source: "OCHMO-TB004",
+    confidence: "placeholder",
+    note: "TODO: OCHMO-TB-004 is named by docs/INCIDENTS_AND_THRESHOLDS.md S1.2 but this project has not independently located and read it yet (unlike TB-003/TB-047, which were). 30.4 mmHg (~4%, IDLH) is the stated figure; treat as unverified until the document itself is opened.",
+  }),
+
+  // --- Thirst (S1.3, NASA-SPACEBIO-1975 / NTRS 19760019741) ---
+  thirstSurvivalIdealHours: c({
+    value: 336,
+    unit: "h",
+    source: "NASA-SPACEBIO-1975",
+    confidence: "measured",
+    note: "~14 days survival without water under ideal (18-22 degC cabin, rest) conditions.",
+  }),
+  thirstSurvivalFloorHours: c({
+    value: 6,
+    unit: "h",
+    source: "NASA-SPACEBIO-1975",
+    confidence: "measured",
+    note: "Source states death 'within hours' under highly unfavourable conditions; 6 h is the clock's clamp floor.",
+  }),
+  thirstFEnvHeatFactor: c({
+    value: 0.5,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "fEnv multiplier for a hot/low-humidity cabin, in survivalHours = 336 x fEnv x fWork (S1.3). The source gives the 336h/6h anchors, not this curve's intermediate shape; calibrated with thirstFWorkEvaFactor so EVA-in-heat approaches the 6h floor — see docs/BALANCE.md.",
+  }),
+  thirstFWorkEvaFactor: c({
+    value: 0.35,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "fWork multiplier during EVA/heavy work. See thirstFEnvHeatFactor.",
+  }),
+
+  // --- Hunger (S1.4, NASA-NUTRITION-2015 / NTRS 20150000512) ---
+  starvationLethalDeficitKcal: c({
+    value: 216_000,
+    unit: "kcal",
+    source: "NASA-NUTRITION-2015",
+    confidence: "derived",
+    note: "60 days x 3600 kcal/day nominal requirement — the source's total-starvation upper survival bound, expressed as an accumulated deficit. Labeled 'measured-projection' by the source itself, not a physiological constant.",
+  }),
+  starvationAdaptationMaxFraction: c({
+    value: 0.15,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Metabolic adaptation reduces required intake by up to this much after two weeks of restriction, reconciling the source's two anchors (60-day total starvation; 1000 kcal/day survivable 'potentially beyond 4-6 months'). See docs/BALANCE.md.",
+  }),
+
+  // --- Cold (S1.5, NASA-HYPOTHERMIA-2008 / NTRS 20080014194) ---
+  hypothermiaImmersion4CHours: c({
+    value: 12,
+    unit: "h",
+    source: "NASA-HYPOTHERMIA-2008",
+    confidence: "measured",
+    note: "Water immersion at 4.4 degC (40 degF) in a suit alone. Used directly for the suit/EVA thermal-failure path — never scaled by kAir — since that is where the source's own conditions actually apply.",
+  }),
+  hypothermiaRaft4CHours: c({
+    value: 22,
+    unit: "h",
+    source: "NASA-HYPOTHERMIA-2008",
+    confidence: "measured",
+    note: "Life raft at 4.4 degC water and rain, in the suit.",
+  }),
+  hypothermiaAirFactorKAir: c({
+    value: 10,
+    unit: "multiplier",
+    source: "NASA-HYPOTHERMIA-2008",
+    confidence: "derived",
+    note: "Converts the water-immersion anchor to a cabin-air cold path: survivalHoursAir(T) = 12h x kAir x g(T), g(4.4 degC)=1. Air removes body heat roughly an order of magnitude slower than water at the same temperature (conduction/convection); the source itself states this order-of-magnitude factor, so it is attributed to the document rather than to GAME-DESIGN even though it is not a simple arithmetic derivation. The single most important derived number in the cold model — see docs/BALANCE.md.",
+  }),
+  hypothermiaImmersionRefTempC: c({
+    value: 4.4,
+    unit: "degC",
+    source: "NASA-HYPOTHERMIA-2008",
+    confidence: "measured",
+    note: "The water temperature the 12h/22h immersion anchors were measured at (40 degF). g(T) in survivalHoursAir(T) is anchored to 1.0 here.",
+  }),
+  hypothermiaAirGFloorFraction: c({
+    value: 0.1,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "g(T) at or below freezing, so survivalHoursAir converges toward the 12h immersion figure itself as the doc requires ('a cabin at or below freezing converges toward the immersion figure'), rather than a fresh, unrelated number.",
+  }),
+
+  // --- Condition-ladder stage boundaries, as fractions of each clock (0=fine, 1=lost).
+  // The doc states these numbers itself, per clock, explicitly labelled tuned (S1.3/1.4/1.5).
+  hydrationImpairedFraction: c({ value: 0.2, unit: "fraction", source: "GAME-DESIGN", confidence: "tuned" }),
+  hydrationCriticalFraction: c({ value: 0.55, unit: "fraction", source: "GAME-DESIGN", confidence: "tuned" }),
+  starvationImpairedFraction: c({ value: 0.25, unit: "fraction", source: "GAME-DESIGN", confidence: "tuned" }),
+  starvationCriticalFraction: c({ value: 0.6, unit: "fraction", source: "GAME-DESIGN", confidence: "tuned" }),
+  hypothermiaImpairedFraction: c({ value: 0.2, unit: "fraction", source: "GAME-DESIGN", confidence: "tuned" }),
+  hypothermiaCriticalFraction: c({ value: 0.55, unit: "fraction", source: "GAME-DESIGN", confidence: "tuned" }),
+
+  // --- Abort timing (S1.9, NASA-ORION-FS) ---
+  lunarReturnTransitNominalDays: c({
+    value: 6,
+    unit: "d",
+    source: "NASA-ORION-FS",
+    confidence: "measured",
+    note: "Artemis I actual return-transit phase (flight days 20-26).",
+  }),
+  lunarReturnTransitRangeLowDays: c({
+    value: 9,
+    unit: "d",
+    source: "NASA-ORION-FS",
+    confidence: "measured",
+    note: "Planned lunar return transit range, per the Orion overview fact sheet; the game uses the 6-day Artemis-I figure and keeps this range available for harder difficulty presets.",
+  }),
+  lunarReturnTransitRangeHighDays: c({ value: 19, unit: "d", source: "NASA-ORION-FS", confidence: "measured" }),
+} as const;
+
+/**
+ * Historical incident analogues (Phase 2 brief, engine/incidents.ts). One sourced incident
+ * so far; the other six are the brief's own explicit instruction — "add to DATA_SOURCES.md
+ * as unverified... use placeholders for numbers, never invent them" — until the team
+ * supplies documents for each.
+ */
+export const incidents = {
+  // Shared base per-hour trigger chance for every "componentRisk" incident (fire-mir97,
+  // depress-mir97, o2tank-apollo13, coolant-ms22, scrubber-iss) before Mission Difficulty's
+  // own incidentRateMultiplier is applied. Tuned during M7 balance passes, not measured:
+  // deliberately independent of engine/risk.ts's TRL-based system-reliability rate (Phase 1
+  // tuned that one for a game where nothing was meant to be lethal — reusing it here made
+  // every one of these five incidents fire only about once every 20+ missions). See
+  // docs/BALANCE.md for the resulting pass-rate distribution this value produces.
+  componentRiskBaseChancePerHour: c({
+    value: 0.0045,
+    unit: "1/h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+  }),
+  mirFireDurationMinutes: c({
+    value: 14,
+    unit: "min",
+    source: "NASA-SP-4030",
+    confidence: "measured",
+    note: "Mir fire, February 1997. A documented alternative figure of 90 seconds exists and is historically disputed; shown in the in-game fact card as a real example of uncertainty even in flown history.",
+  }),
+  depressMir97LeakRateKgPerHour: c({
+    value: 1,
+    unit: "kg/h",
+    source: "INC-DEPRESS-MIR97-PENDING",
+    confidence: "placeholder",
+    note: "TODO: Progress-Mir collision and depressurization, June 1997. Team to supply a source for cabin pressure loss rate.",
+  }),
+  o2TankFailureLossFraction: c({
+    value: 0.5,
+    unit: "fraction",
+    source: "INC-O2TANK-APOLLO13-PENDING",
+    confidence: "placeholder",
+    note: "TODO: Apollo 13 oxygen tank failure, 1970. Team to supply a source for the fraction of O2 supply lost.",
+  }),
+  coolantLeakMs22RateFraction: c({
+    value: 0.3,
+    unit: "fraction/h",
+    source: "INC-COOLANT-MS22-PENDING",
+    confidence: "placeholder",
+    note: "TODO: Soyuz MS-22 coolant leak, December 2022. Team to supply a source for thermal-control capacity loss rate.",
+  }),
+  spe1972DoseMultiplier: c({
+    value: 1500,
+    unit: "multiplier",
+    source: "INC-SPE-1972-PENDING",
+    confidence: "placeholder",
+    note: "TODO: August 1972 solar particle event, one of the largest on record and considered potentially lethal to an unshielded crew in some historical estimates. Team to supply a source for its dose magnitude relative to a design-reference SPE (radiationStage already models a x40 multiplier for a generic SPE; this incident should exceed it substantially — a small multiplier over Mars's tiny ambient rate landed far below even the placeholder ARS onset threshold during M7 balance tuning, i.e. not dangerous at all, which is not credible for the actual 1972 event).",
+  }),
+  scrubberIssFailureRateMultiplier: c({
+    value: 3,
+    unit: "multiplier",
+    source: "INC-SCRUBBER-ISS-PENDING",
+    confidence: "placeholder",
+    note: "TODO: ISS CO2 scrubber (CDRA) recurring failures. Team to supply a source for how much more failure-prone a scrubber is post-incident versus its base TRL-scaled rate.",
+  }),
+  duststorm2018ObscurationSpikeFraction: c({
+    value: 0.15,
+    unit: "fraction",
+    source: "INC-DUSTSTORM2018-PENDING",
+    confidence: "placeholder",
+    note: "TODO: 2018 Mars global dust storm (the one that ended Opportunity). power.dustLossPerSolFraction (NSSDC-FACTS) already drives the ordinary storm hazard's per-hour obscuration buildup; this is the extra one-time spike standing in for that storm's unusually severe, near-global opacity. Team to supply a source for how much more severe 2018 was than a typical modelled storm.",
+  }),
+} as const;
+
+/**
+ * Mission Difficulty presets (Phase 2 brief): scenario parameters only, never physics.
+ * Every value here is a multiplier applied to something already sourced elsewhere
+ * (failureRatePerHour's TRL penalty, an incident's own warningTimeHours) — never a second
+ * copy of a physical constant, so there is exactly one place a "physics" value could leak
+ * into a difficulty preset by mistake, and it isn't here.
+ */
+export const missionDifficulty = {
+  training: {
+    incidentRateMultiplier: c({ value: 0.5, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
+    failureRateMultiplier: c({ value: 0.5, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
+    warningTimeMultiplier: c({ value: 1.5, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
+  },
+  nominal: {
+    incidentRateMultiplier: c({ value: 1.0, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
+    failureRateMultiplier: c({ value: 1.0, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
+    warningTimeMultiplier: c({ value: 1.0, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
+  },
+  flightRated: {
+    incidentRateMultiplier: c({ value: 3.2, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
+    failureRateMultiplier: c({ value: 2.2, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
+    warningTimeMultiplier: c({ value: 0.6, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
+  },
+} as const;
+
 /** The whole tree, for the source-coverage and placeholder-reporting tests. */
 export const CONSTANTS = {
   crew,
@@ -972,4 +1284,7 @@ export const CONSTANTS = {
   physics,
   management,
   habitat,
+  physiology,
+  incidents,
+  missionDifficulty,
 } as const;

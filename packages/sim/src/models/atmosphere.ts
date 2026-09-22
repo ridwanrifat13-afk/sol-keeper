@@ -5,13 +5,39 @@
  * power. Partial pressures come from the ideal gas law rather than a lookup, so the
  * Commander level of the Reality Dial can show the actual equation.
  */
-import { crew as crewConstants, habitat, physics, survivalModes } from "../data/constants.js";
+import { crew as crewConstants, habitat, physics, physiology, survivalModes } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
 import { partialPressureMmHg, perDayToPerHour } from "../units.js";
 
 /** The CO2 partial-pressure limit for the currently selected rationing mode. */
 export function co2LimitMmHg(mode: keyof typeof survivalModes): number {
   return survivalModes[mode].co2LimitMmHg.value;
+}
+
+/**
+ * Cabin total pressure, under the fixed-diluent-gas simplification
+ * (`physiology.diluentGasPressureMmHg` — see its own note for why). The sim tracks only O2
+ * and CO2 partial pressure, not a full nitrogen mass balance.
+ */
+export function totalPressureMmHg(o2MmHg: number, co2MmHg: number): number {
+  return o2MmHg + co2MmHg + physiology.diluentGasPressureMmHg.value;
+}
+
+/**
+ * Inspired O2 partial pressure (PIO2), the quantity every hypoxia/hyperoxia threshold in
+ * `docs/INCIDENTS_AND_THRESHOLDS.md` S1.1 is actually stated in — not cabin ppO2. OCHMO-TB-003's
+ * own formula: PIO2 = (P_total - 47 mmHg) x FO2, where 47 mmHg is water-vapour pressure at
+ * body temperature and FO2 is the cabin's O2 mole fraction. Algebraically identical to
+ * `ppO2 - 47 x FO2` since `ppO2 = P_total x FO2` by definition — a cabin can sit above the
+ * mild-hypoxia ppO2 line and still be hypoxic once this correction is applied, which is
+ * exactly why every physiology check must go through this function rather than reading
+ * `o2PartialPressureMmHg` directly.
+ */
+export function pio2MmHg(o2MmHg: number, co2MmHg: number): number {
+  const total = totalPressureMmHg(o2MmHg, co2MmHg);
+  if (total <= 0) return 0;
+  const fo2 = o2MmHg / total;
+  return o2MmHg - physiology.waterVapourPressureBodyMmHg.value * fo2;
 }
 
 export function atmosphereStage(ctx: TickContext): void {

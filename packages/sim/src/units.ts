@@ -68,6 +68,9 @@ export function partialPressureMmHg(
 export const celsiusToKelvin = (c: number): number => c + 273.15;
 export const kelvinToCelsius = (k: number): number => k - 273.15;
 
+/** 1 atm = 14.696 psia = 760 mmHg exactly (definitional), so this ratio is exact too. */
+export const psiaToMmHg = (psia: number): number => psia * (760 / 14.696);
+
 /** Solar irradiance at distance r, by inverse square from the value at 1 AU. */
 export const irradianceAtAu = (solarConstantWPerM2: number, distanceAu: number): number =>
   solarConstantWPerM2 / (distanceAu * distanceAu);

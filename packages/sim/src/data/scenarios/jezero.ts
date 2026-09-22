@@ -13,6 +13,8 @@ export const jezeroOutpost: Scenario = {
   id: "jezero-outpost",
   body: "mars",
   site: { name: "Jezero Crater", latDeg: 18.4, lonDeg: 77.6 },
+  primaryGoal: { id: "surviveWithDoseUnderLimit", briefKey: "scenario.jezero.goal.primary" },
+  stretchGoal: { id: "harvestAllCropTrays", briefKey: "scenario.jezero.goal.stretch" },
   durationHours: Math.ceil(solsToHours(30)),
   crewSize: 4,
 

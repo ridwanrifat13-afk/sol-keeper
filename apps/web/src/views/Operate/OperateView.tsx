@@ -13,7 +13,7 @@ import { statusWord } from "../../dial/statusWords.js";
 import { survivalModeLabel } from "../../dial/labels.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
 import { durationLabel } from "../../dial/missionTime.js";
-import { survivalModes, type SurvivalMode } from "@sol-keeper/sim";
+import { survivalModes, type RunStatus, type SurvivalMode } from "@sol-keeper/sim";
 
 const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
 
@@ -194,12 +194,7 @@ function RunStatusBadge() {
   const status = useRun((s) => s.state.status);
   const reason = useRun((s) => s.state.endReasonCode);
 
-  const presentation =
-    status === "running"
-      ? { glyph: "●", word: "Running", cls: "is-nominal" }
-      : status === "won"
-        ? { glyph: "★", word: "Mission complete", cls: "is-nominal" }
-        : { glyph: "■", word: "Mission lost", cls: "is-critical" };
+  const presentation = RUN_STATUS_PRESENTATION[status];
 
   return (
     <div className={`run-badge ${presentation.cls}`} role="status">
@@ -212,3 +207,12 @@ function RunStatusBadge() {
     </div>
   );
 }
+
+/** Icon + word + colour class per outcome — never colour alone (brief rule 6). */
+const RUN_STATUS_PRESENTATION: Record<RunStatus, { glyph: string; word: string; cls: string }> = {
+  running: { glyph: "●", word: "Running", cls: "is-nominal" },
+  success: { glyph: "★", word: "Mission complete", cls: "is-nominal" },
+  partial: { glyph: "▲", word: "Mission ended — goal not met", cls: "is-caution" },
+  abort: { glyph: "◆", word: "Mission aborted", cls: "is-caution" },
+  loss: { glyph: "■", word: "Mission lost", cls: "is-critical" },
+};
