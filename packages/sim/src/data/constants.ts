@@ -867,11 +867,11 @@ export const hardwareEsm = {
   },
   powerDistribution: {
     massKg: c({
-      value: 800,
+      value: 1250,
       unit: "kg",
-      source: "MARS-POWER-ASTRA",
-      confidence: "measured",
-      note: "NASA ASTRA Mars surface power-architecture study.",
+      source: "RUCKER-2015-SURFACE-POWER",
+      confidence: "derived",
+      note: "1 km of low-voltage DC cable (1,100 kg/km) plus one inverter/junction box (150 kg). Every term is quoted from Rucker's study: it assumes 1,100 kg/km for low-voltage cable (a 1,028-1,349 kg/km range), about 150 kg for the inverter/junction box, and states the power unit sits 'at least one kilometer from the crew habitat' for crew radiation separation — so the cable run length is the study's own figure, not a chosen one. Replaces an earlier 800 kg that the research team supplied without a citation and that no located NASA document states at any cable length; the high-voltage option in the same study would instead be 60 kg/km + 150 kg = 210 kg, which is the trade the paper exists to make.",
     }),
   },
   comms: {
@@ -947,16 +947,9 @@ export const habitat = {
     unit: "mmHg",
     min: 140,
     max: 180,
-    source: "BVAD-2022",
-    confidence: "placeholder",
-    note: "TODO: source the habitat atmosphere set point from the BVAD atmosphere tables. 160 mmHg is the sea-level-equivalent oxygen partial pressure. Oxygen generation regulates against this, so an unsourced value here changes how much power and water making oxygen costs.",
-  }),
-  fireRiskO2PartialPressureMmHg: c({
-    value: 200,
-    unit: "mmHg",
-    source: "BVAD-2022",
-    confidence: "placeholder",
-    note: "TODO: source the upper oxygen limit. Enriched atmospheres burn readily; above this the sim warns.",
+    source: "OCHMO-TB003",
+    confidence: "derived",
+    note: "Sea-level-equivalent oxygen partial pressure, the normoxic reference point oxygen generation regulates against. OCHMO-TB-003 Rev A states sea-level total pressure as 1 ATM = 760 mmHg = 14.7 psia and sea-level composition as 20.95% oxygen (760 x 0.2095 = 159.2 mmHg), and separately that ISS cabin pressure 'is typically maintained at 14.7 psia with 21% O2, which is equivalent to sea level' (760 x 0.21 = 159.6). 160 is that figure rounded. Resolved 2026-09; was a placeholder.",
   }),
   waterWallShieldingGPerCm2PerKg: c({
     value: 0.0025,

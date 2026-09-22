@@ -70,8 +70,9 @@ test.describe("Tab navigation", () => {
     await page.getByRole("button", { name: "Data Sources" }).click();
 
     await expect(page.getByText("BVAD-2022")).toBeVisible();
-    await expect(page.getByText("Still unsourced")).toBeVisible();
-    await expect(page.getByText("habitat.targetO2PartialPressureMmHg")).toBeVisible();
+    // Every constant is now sourced, and the screen says so rather than hiding the section.
+    await expect(page.getByText("Still unsourced (0)")).toBeVisible();
+    await expect(page.getByText(/Every number this simulation runs on is backed/)).toBeVisible();
   });
 });
 

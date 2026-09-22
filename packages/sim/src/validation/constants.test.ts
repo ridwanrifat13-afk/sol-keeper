@@ -63,12 +63,15 @@ describe("constants registry (brief rule 1)", () => {
       .sort();
 
     // Update this list deliberately when a placeholder is sourced or a new one is added.
-    // The 2026-09 verification pass cleared four of the original six. The two that remain
-    // are the habitat oxygen set points, which that pass did not cover.
-    expect(placeholders).toEqual([
-      "habitat.fireRiskO2PartialPressureMmHg",
-      "habitat.targetO2PartialPressureMmHg",
-    ]);
+    // As of the 2026-09 sourcing passes there are none left: the original six were cleared
+    // in stages, the habitat oxygen set point last (derived from OCHMO-TB-003's stated
+    // sea-level composition), and the unused fire-risk ppO2 constant was deleted outright
+    // rather than sourced — see the note in data/constants.ts and the Data Sources screen
+    // for why a fixed partial-pressure flammability threshold is the wrong quantity.
+    //
+    // An empty list is a claim worth defending, not a formality: if a future constant
+    // lands as "placeholder" without being declared here, this test fails loudly.
+    expect(placeholders).toEqual([]);
   });
 
   it("every placeholder carries a TODO explaining what is missing", () => {

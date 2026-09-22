@@ -108,23 +108,34 @@ export function DataSourcesView() {
         </ul>
       </section>
 
-      {openPlaceholders.length > 0 && (
-        <section className="panel" aria-labelledby="placeholders-heading">
-          <h2 id="placeholders-heading">Still unsourced ({openPlaceholders.length})</h2>
+      {/* Rendered whether or not any placeholders remain. An empty list is the stronger
+          statement of the two, and hiding the section at zero would make "everything is
+          sourced" invisible exactly when it becomes true. */}
+      <section className="panel" aria-labelledby="placeholders-heading">
+        <h2 id="placeholders-heading">Still unsourced ({openPlaceholders.length})</h2>
+        {openPlaceholders.length === 0 ? (
           <p className="panel-hint">
-            Every value below is a placeholder: it is not yet backed by a checked NASA source,
-            and the brief requires that to stay visible rather than quietly guessed.
+            None. Every number this simulation runs on is backed by a NASA source listed
+            above — no value is a quiet guess. Where a figure is derived by arithmetic, or
+            tuned for playability rather than measured, it says so in its own entry.
           </p>
-          <ul className="placeholder-list">
-            {openPlaceholders.map((p) => (
-              <li key={p.path} className="placeholder-row">
-                <code>{p.path}</code>
-                {p.note !== undefined && <p className="placeholder-note">{p.note}</p>}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+        ) : (
+          <>
+            <p className="panel-hint">
+              Every value below is a placeholder: it is not yet backed by a checked NASA source,
+              and the brief requires that to stay visible rather than quietly guessed.
+            </p>
+            <ul className="placeholder-list">
+              {openPlaceholders.map((p) => (
+                <li key={p.path} className="placeholder-row">
+                  <code>{p.path}</code>
+                  {p.note !== undefined && <p className="placeholder-note">{p.note}</p>}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
 
       <section className="panel" aria-labelledby="simplifications-heading">
         <h2 id="simplifications-heading">Game simplifications</h2>
@@ -142,6 +153,14 @@ export function DataSourcesView() {
           </li>
           <li>DONKI space-weather events are observed near Earth, not at Mars or the Moon.</li>
           <li>Equirectangular map layers stretch visibly near the poles.</li>
+          <li>
+            Fire risk from an oxygen-rich cabin is not modelled. NASA's guidance is that
+            flammability tracks oxygen <em>concentration</em> and total pressure, not oxygen
+            partial pressure alone — and this simulation tracks only O₂ and CO₂ partial
+            pressures, with no nitrogen or total-pressure model, so it has no honest way to
+            compute a concentration. Rather than threshold on the wrong quantity, it doesn't
+            claim to model fire at all.
+          </li>
           <li>
             The Mission ESM budget now carries hardware mass, cooling load and crew-time for
             every system except Life Support, which is intentionally left without its own

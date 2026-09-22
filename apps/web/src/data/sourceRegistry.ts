@@ -34,6 +34,11 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     url: "https://www.nasa.gov/wp-content/uploads/2024/07/ochmo-tb-047-crew-survivability.pdf",
     usedFor: "survival modes (kcal, water, temperature, CO₂), fever metabolic increase",
   },
+  "OCHMO-TB003": {
+    title: "NASA OCHMO Habitable Atmosphere Technical Brief (TB-003 Rev A)",
+    url: "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-003-habitable-atmosphere.pdf",
+    usedFor: "habitat oxygen set point (160 mmHg sea-level-equivalent ppO₂)",
+  },
   "ICES-2017": {
     title: "Resupply mass for life support (ICES-2017-87)",
     url: "https://ntrs.nasa.gov/api/citations/20170010337/downloads/20170010337.pdf",
@@ -121,9 +126,10 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     url: "https://science.nasa.gov/mission/mars-2020-perseverance/science-instruments/",
     usedFor: "MOXIE hardware mass",
   },
-  "MARS-POWER-ASTRA": {
-    title: "NASA ASTRA Technology Roadmaps — Mars surface power-distribution architecture",
-    usedFor: "power distribution hardware mass",
+  "RUCKER-2015-SURFACE-POWER": {
+    title: "Rucker, \"Integrated Surface Power Strategy for Mars\" (NASA JSC)",
+    url: "https://ntrs.nasa.gov/api/citations/20150000526/downloads/20150000526.pdf",
+    usedFor: "power distribution hardware mass (1 km of cable plus an inverter/junction box)",
   },
   "SPACECRAFT-SUBSYS-NTRS": {
     title: "NASA CR-189186 — TT&C RF Communications Mass and Power (Table 6-1)",

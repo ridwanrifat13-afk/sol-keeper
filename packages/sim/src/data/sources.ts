@@ -10,6 +10,7 @@ export const SOURCE_IDS = [
   "BVAD-2022",
   "OCHMO-RAD",
   "OCHMO-TB047",
+  "OCHMO-TB003",
   "ICES-2017",
   // Margins and contingency. Three specific documents, replacing the earlier vague
   // "NTRS-MARGINS" entry: Ames for margin by review milestone, GSFC for the
@@ -36,8 +37,12 @@ export const SOURCE_IDS = [
   "MIYAJIMA-LSS",
   "MIT-16851-WRS",
   "MOXIE-MASS-NASA",
-  "MARS-POWER-ASTRA",
   "SPACECRAFT-SUBSYS-NTRS",
+  // Replaces the earlier "MARS-POWER-ASTRA" entry, which named a document nobody could
+  // find and a figure (800 kg) that no located source stated. Rucker's study gives real
+  // per-kilometre cable masses and a stated crew separation distance, so the power
+  // distribution mass is now derived from quoted numbers rather than asserted.
+  "RUCKER-2015-SURFACE-POWER",
 ] as const;
 
 export type SourceId = (typeof SOURCE_IDS)[number];

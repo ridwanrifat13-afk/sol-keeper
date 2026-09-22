@@ -226,11 +226,19 @@ describe("DataSourcesView, first frame", () => {
     }
   });
 
-  it("discloses the two open placeholders by name", () => {
+  it("states the unsourced count plainly — now zero, and said so rather than hidden", () => {
     const out = render(<DataSourcesView />);
-    expect(out).toContain("Still unsourced");
-    expect(out).toContain("habitat.targetO2PartialPressureMmHg");
-    expect(out).toContain("habitat.fireRiskO2PartialPressureMmHg");
+    expect(out).toContain("Still unsourced (0)");
+    expect(out).toContain("Every number this simulation runs on is backed by a NASA source");
+    // The section must render at zero, not disappear: "everything is sourced" is the
+    // strongest claim this screen makes and it would otherwise become invisible.
+    expect(out).not.toContain("habitat.targetO2PartialPressureMmHg");
+  });
+
+  it("discloses that fire risk is deliberately not modelled, and why", () => {
+    const out = render(<DataSourcesView />);
+    expect(out).toContain("Fire risk from an oxygen-rich cabin is not modelled");
+    expect(out).toContain("concentration");
   });
 
   it("discloses the SPE unit simplification rather than staying silent about it", () => {
