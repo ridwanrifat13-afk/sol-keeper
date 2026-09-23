@@ -135,6 +135,35 @@ explains every LOSS and ABORT.
   must be implemented as specified there, including the PIO2 conversion helper, the three
   separate cold paths, and the per-path cause-of-death tests in Part 5.
 
+# M7.5 — Balance correction (before M8)
+1. Audit bot fairness: list every engine value prudentBot reads. Any value a human player
+   cannot see at the moment of decision must be hidden from the bots (sensor lag, warning
+   false-alarm rate, delayed Mission Control advice, crew-hour execution latency).
+   Re-run the harness and report the new numbers BEFORE tuning anything.
+2. Add residual cost to every incident response: consumed spares, crew-hours, added wear
+   (shortened MTBF), or dose. No response may restore the prior state.
+3. Add incident coupling: degraded state raises the probability and severity of the next
+   incident; improvised repairs shorten component life; storms drive EVAs which drive dose
+   and fatigue.
+4. Redefine Flight-Rated SUCCESS to require mission goals met (science returned, career
+   dose within limits, outpost operable at handover), not survival alone. Survival without
+   goals = PARTIAL.
+5. Reframe componentRiskBaseChancePerHour as MTBF hours per component (realistic band
+   2,000–20,000 h, TRL- and wear-scaled). The current 0.0045/h implies a 222-hour MTBF,
+   which no flight hardware resembles.
+6. Reclassify spe1972DoseMultiplier as "derived", with this note: Moon baseline
+   1.37 mSv/day × 1500 ≈ 86 mSv/h ≈ 0.5 Gy over 6 h, matching the measured statement that
+   a large unshielded SPE delivers >0.5 Gy over several hours [HRP-ARS].
+7. Attach existing source IDs to the reopened placeholders: CO2 IDLH 30.4 mmHg
+   [CO2-REVIEW-2026], ARS 0.1–0.2 / 2 / 3.25 Gy [HRP-ARS], dust tau 10.8 / 22 Wh [MER-TAU],
+   Mir fire 14 min [NASA-SP-4030].
+8. For the remaining incident magnitudes (Spektr leak rate, Apollo 13 CO2 rise, MS-22
+   temperature rise), mark them "tuned" and record in DATA_SOURCES.md the MEASURED OUTCOME
+   each is anchored to, not an invented rate.
+9. Re-run 200 seeds × scenario × difficulty and update docs/BALANCE.md. Report which of
+   steps 1–5 moved the Flight-Rated prudentBot rate, and by how much.
+Push and run `vercel build` first. Stop after step 1's report and after step 9.
+
 ## M8 — Agency: sol loop, station consoles, decisions, briefing, onboarding
 - Core loop: Sol Planning (paused, station by station) → run the sol (1× / 4× / 16×) →
   auto-pause on any incident or threshold crossing → Decision Card at the owning station →

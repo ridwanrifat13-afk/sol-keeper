@@ -11,9 +11,16 @@
  * reorder power priority or manually reassign a station the way the plan's prose sketch
  * described; unstaffed-station coverage still happens automatically through the primary
  * -> backup fallback (engine/stations.ts). What a bot *can* actually act on with today's
- * mutable state — rationing (`food.mode`), pre-emptive shelter (`crew.location`), and
- * incident response choice — is enough to produce three genuinely different outcomes, which
- * is what this file demonstrates.
+ * mutable state — rationing (`food.mode`) and incident response choice — is enough to
+ * produce three genuinely different outcomes, which is what this file demonstrates.
+ *
+ * M7.5 §1 fairness audit: every value each bot reads is either a gauge a player already sees
+ * (current food stock and ration mode, an incident's declared response menu and its stated
+ * crew-hours/spares cost) or state only visible once an incident has actually triggered.
+ * The one violation found and removed: prudentBot used to read `scenario.scripted` directly
+ * to shelter the crew a fixed number of hours *before* a scripted solar particle event —
+ * knowledge of the future schedule no player has. It now only reacts once the event's own
+ * incident actually triggers, the same single hour of warning every strategy gets.
  */
 import { food as foodConstants } from "../data/constants.js";
 import { rationKgPerCrewDay } from "../models/food.js";
@@ -72,17 +79,18 @@ export const greedyBot: Bot = {
   },
 };
 
-/** How many hours ahead of a scripted solar particle event the prudent bot moves the crew
- *  into the storm shelter — long enough to matter, short enough that it is clearly a
- *  deliberate anticipation rather than "crew just happens to live in the shelter". */
-const SPE_SHELTER_LEAD_HOURS = 6;
-
-/** Rations down proactively when the food margin is thin, shelters the crew ahead of a
- *  scripted solar particle event using its own lead time, and — when an incident forces a
- *  decision — always picks the most thorough (highest-cost, non-default) response: this
- *  catalog's own design makes the priciest response the most effective one, so "spend the
- *  resources" is a real, meaningful choice this bot makes differently from greedy's
- *  short-termism, not a shortcut to a target win rate. */
+/**
+ * Rations down proactively when the food margin is thin (a gauge any player already sees),
+ * and — when an incident forces a decision — always picks the most thorough (highest-cost,
+ * non-default) response: this catalog's own design makes the priciest response the most
+ * effective one, so "spend the resources" is a real, meaningful choice this bot makes
+ * differently from greedy's short-termism, not a shortcut to a target win rate.
+ *
+ * Does NOT pre-emptively shelter ahead of a solar particle event — see M7.5 §1's fairness
+ * audit below. It still shelters the crew the moment one actually starts, via the normal
+ * `chooseIncidentResponse` path once spe-1972 triggers (the incident's own 1-hour warning is
+ * all any strategy gets), which is exactly what a real, attentive player could do too.
+ */
 export const prudentBot: Bot = {
   id: "prudent",
   planHour: (ctx) => {
@@ -94,18 +102,6 @@ export const prudentBot: Bot = {
       state.food.mode = nextStricterMode(currentMode);
     } else if (daysRemaining > foodConstants.rationRecoverAtDaysRemaining.value) {
       state.food.mode = nextLooserMode(currentMode);
-    }
-
-    const upcomingSpe = ctx.scenario.scripted.find(
-      (e) =>
-        e.hazard === "solarParticleEvent" &&
-        e.atHour - state.hour > 0 &&
-        e.atHour - state.hour <= SPE_SHELTER_LEAD_HOURS,
-    );
-    if (upcomingSpe !== undefined) {
-      for (const member of state.crew) {
-        if (member.alive) member.location = "stormShelter";
-      }
     }
   },
   chooseIncidentResponse: (_ctx, _incident, definition) => {

@@ -6,7 +6,7 @@ the same harness `validation/balance.test.ts` asserts the brief's pass/fail targ
 regenerate it after any change that could move the distribution below, rather than editing
 the numbers directly.
 
-150 seeds per row, computed in 3874 ms.
+150 seeds per row, computed in 4083 ms.
 
 ## Brief targets
 
