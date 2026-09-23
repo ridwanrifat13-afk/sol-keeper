@@ -20,6 +20,9 @@ export const firstLight: Scenario = {
   site: { name: "Shackleton Ridge", latDeg: -88.5, lonDeg: 129.0 },
   primaryGoal: { id: "surviveFullDurationNoLoss", briefKey: "scenario.firstLight.goal.primary" },
   stretchGoal: { id: "noSystemLeftFailed", briefKey: "scenario.firstLight.goal.stretch" },
+  // Science still accrues here (harvest, comms uptime — no MOXIE on the Moon), it just isn't
+  // this scenario's own win condition.
+  scienceTargetPoints: 0,
   durationHours: 750,
   crewSize: 2,
 
@@ -56,6 +59,18 @@ export const firstLight: Scenario = {
     { id: "powerDistribution", trl: 9, nominalPowerKw: 0.1, priority: 0, spares: 2 },
     { id: "lifeSupport", trl: 8, nominalPowerKw: 0.4, priority: 1, spares: 2 },
     { id: "co2Scrubber", trl: 8, nominalPowerKw: 0.6, priority: 2, spares: 1 },
+    // spares: 1, deliberately less than patchHull's declared sparesCost: 2 (M7.8 Part C.6,
+    // reversing an M7.7 change; docs/M7.8_DIAGNOSIS.md has the data). M7.7 bumped this to 2 to
+    // make patchHull reliably affordable, reasoning an improvised gamble shouldn't be the only
+    // option; measured afterward, that wasn't the real problem — even fully funded, patchHull
+    // (6 crew-hours) is a genuinely worse choice than sealModule (2 crew-hours, the permanent
+    // ~50% solar-array loss, NASA-SMA-MIR-COLLISION) against depress-mir97's own fast kill
+    // clock: greedyBot, which always takes sealModule, already clears idleBot's floor by a
+    // wide margin here (26.7-53.3% vs 0-20%) via the existing automatic load-shedding alone —
+    // sealModule needs no new survivability mechanic. Only 1 spare keeps First Light forcing
+    // the brief's intended "spend real resources you don't have, or accept the permanent loss"
+    // choice (Station rules); The Long Night keeps 2, so at least one scenario still lets a
+    // well-stocked crew afford patchHull outright.
     { id: "thermalControl", trl: 8, nominalPowerKw: 7.0, priority: 3, spares: 1 },
     { id: "oxygenGenerator", trl: 7, nominalPowerKw: 1.0, priority: 4, spares: 1 },
     { id: "waterRecovery", trl: 7, nominalPowerKw: 0.5, priority: 5, spares: 1 },

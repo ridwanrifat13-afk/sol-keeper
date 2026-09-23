@@ -4,7 +4,7 @@
  * Everything produced here is plain, serialisable data — no class instances, no closures —
  * so `structuredClone(state)` is a complete save and two runs can be deep-equal compared.
  */
-import { environment, physics, radiation } from "../data/constants.js";
+import { crew as crewConstants, environment, physics, radiation } from "../data/constants.js";
 import { getScenario } from "../data/scenarios/index.js";
 import { pio2MmHg } from "../models/atmosphere.js";
 import type {
@@ -64,6 +64,7 @@ function buildSystems(scenario: Scenario): Partial<Record<SystemId, SystemState>
       operational: true,
       spares: spec.spares,
       poweredThisHour: false,
+      efficiencyPenaltyFraction: 0,
     };
   }
   return out;
@@ -185,6 +186,18 @@ export function createInitialState(params: Params): SimState {
       moxieO2ProducedKg: 0,
       electrolysisO2ProducedKg: 0,
     },
+
+    science: { points: 0 },
+
+    // Day 0's budget, computed the same way engine/crewHours.ts recomputes it at every later
+    // day boundary — health/morale both start at 1, so the full pooled figure applies here
+    // directly rather than needing a TickContext this function doesn't have yet.
+    crewHours: {
+      budgetTodayHours: params.crewSize * crewConstants.dailyAssignableWorkHoursPerCrew.value,
+      spentTodayHours: 0,
+      queue: [],
+    },
+    crewActivityFraction: 1,
 
     rng: createRngState(params.seed),
     log: [],

@@ -233,6 +233,10 @@ export interface CrewMember {
   /** Last computed inspired O2 partial pressure, mmHg — stored for the UI/debrief, not just
    *  derived on demand, so a Black Box entry can show the number that actually triggered it. */
   pio2MmHg: number;
+  /** M7.7 §6: the hour this member's `crewCondition()` most recently became "critical",
+   *  cleared the moment it improves. Lets `shouldConsiderAbort` (engine/outcome.ts) read a
+   *  real sustained-duration signal ("critical for N hours") instead of a same-instant check. */
+  criticalSinceHour?: number;
 
   readonly primaryStation: StationId;
   readonly backupStation: StationId;
@@ -248,6 +252,11 @@ export interface SystemState {
   operational: boolean;
   spares: number;
   poweredThisHour: boolean;
+  /** M7.7 §2: permanent output/capacity penalty from an improvised repair (spares ran out,
+   *  the fix used something else). 0 = full rated capacity. Monotonically non-decreasing —
+   *  mirrors AtmosphereState.scrubberEfficiencyFraction's "no free undo" pattern, generalised
+   *  to any system instead of one hardcoded case. */
+  efficiencyPenaltyFraction: number;
 }
 
 export interface CommsState {
@@ -262,6 +271,41 @@ export interface IsruState {
   moxieO2ProducedKg: number;
   /** Oxygen split out of stored water by the electrolyser. Costs power *and* water. */
   electrolysisO2ProducedKg: number;
+}
+
+/** M7.7 §3: a small, real accumulator for "science objectives completed" — jezero-outpost's
+ *  new primaryGoal reads it (engine/goals.ts). Fed by crop harvests, MOXIE output and comms
+ *  uptime (models/food.ts, isru.ts, comms.ts), matching the Station rules' own mention of
+ *  "science data return" living under Communications. */
+export interface ScienceState {
+  points: number;
+}
+
+/** M7.7 §1: the real, pooled, per-day crew-hours budget every incident response and repair
+ *  now actually draws from — replacing the declared-but-never-enforced `crewHoursCost`
+ *  fields M7.6's audit found. One pool across the living crew (a disclosed simplification;
+ *  real NASA planning is per-crew-member), reset each 24-Earth-hour day boundary. */
+export interface CrewHoursState {
+  budgetTodayHours: number;
+  spentTodayHours: number;
+  queue: QueuedWork[];
+}
+
+/**
+ * A response whose full cost didn't fit in the day it was chosen — plain data (brief rule 2:
+ * no function fields in state), referencing its response by id the same way `ActiveIncident`
+ * references its `IncidentDefinition`. Paid down FIFO from each new day's budget
+ * (engine/crewHours.ts); once `hoursRemaining` reaches 0 the referenced response's `effect`
+ * actually runs — "work slips to the next sol" made real and visible in the Black Box.
+ */
+export interface QueuedWork {
+  readonly id: string;
+  readonly incidentId: string;
+  readonly definitionId: string;
+  readonly responseId: string;
+  readonly totalHours: number;
+  hoursRemaining: number;
+  readonly queuedAtHour: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -298,6 +342,14 @@ export interface SimState {
   systems: Partial<Record<SystemId, SystemState>>;
   comms: CommsState;
   isru: IsruState;
+  science: ScienceState;
+  crewHours: CrewHoursState;
+  /** M7.7 §7: a temporary, global multiplier on crew metabolic output (CO2 production,
+   *  body heat) — 1 = normal. The o2tank-apollo13 incident's `rationActivity` response is
+   *  the one thing that changes it today, restored to 1 once that incident resolves. A
+   *  disclosed simplification: real activity reduction would be per-crew-member, not fleet
+   *  wide. */
+  crewActivityFraction: number;
   /** Incidents in flight or resolved this run. Plain, serialisable records only — the
    *  catalog they reference (definitions, responses, effect functions) lives in
    *  engine/incidents.ts, alongside Scenario itself, never inside SimState. */
@@ -307,6 +359,10 @@ export interface SimState {
   status: RunStatus;
   /** Set when status leaves "running"; an i18n code, not prose. */
   endReasonCode?: string;
+  /** M7.7 §4: whether `scenario.stretchGoal` was also met, computed once alongside the
+   *  primary goal in engine/outcome.ts's `determineOutcome`. Reporting only — never changes
+   *  `status` itself, which stays the brief's own four outcomes. */
+  stretchGoalMet?: boolean;
 }
 
 /**
@@ -321,6 +377,12 @@ export interface ActiveIncident {
   readonly cause: EventId;
   resolvedAtHour?: number;
   chosenResponseId?: string;
+  /** M7.7 §2: the hour the owning station actually noticed this incident — `undefined` means
+   *  still undetected. The incident's own `physicsEffect`/`ongoingEffect` run either way (the
+   *  physical process doesn't care if anyone's looking); only response availability and the
+   *  `warningTimeHours` countdown wait for detection. An unstaffed owning station may never
+   *  detect it automatically. */
+  detectedAtHour?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -367,7 +429,7 @@ export interface InitialResources {
  */
 export interface MissionGoal {
   readonly id:
-    | "surviveWithDoseUnderLimit"
+    | "missionGoalsMet"
     | "harvestAllCropTrays"
     | "surviveFullDurationNoLoss"
     | "noSystemLeftFailed";
@@ -395,4 +457,8 @@ export interface Scenario {
   readonly scripted: readonly ScriptedEvent[];
   /** i18n key for the mission briefing shown in the Prepare view. */
   readonly briefingKey: string;
+  /** M7.7 §3/§4: the science-points threshold `"missionGoalsMet"` requires. 0 on scenarios
+   *  whose goal doesn't read it (science still accrues everywhere science.ts's hooks fire,
+   *  it just isn't a win condition there). */
+  readonly scienceTargetPoints: number;
 }

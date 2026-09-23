@@ -6,7 +6,7 @@ the same harness `validation/balance.test.ts` asserts the brief's pass/fail targ
 regenerate it after any change that could move the distribution below, rather than editing
 the numbers directly.
 
-150 seeds per row, computed in 8200 ms.
+150 seeds per row, computed in 9723 ms.
 
 ## Brief targets
 
@@ -25,33 +25,33 @@ idleBot/greedyBot, not a skilled bot).
 
 | Scenario | Difficulty | Bot | Success | success | partial | abort | loss | Causes seen |
 |---|---|---|---|---|---|---|---|---|
-| jezero-outpost | training | idle | 21.3% | 32 | 0 | 0 | 118 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
-| jezero-outpost | training | greedy | 27.3% | 41 | 0 | 0 | 109 | end.crewLost, crew.lost.hypothermia, end.missionComplete |
-| jezero-outpost | training | prudent | 99.3% | 149 | 0 | 0 | 1 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
-| jezero-outpost | nominal | idle | 0.7% | 1 | 0 | 0 | 149 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
-| jezero-outpost | nominal | greedy | 1.3% | 2 | 0 | 0 | 148 | end.crewLost, crew.lost.hypothermia, end.missionComplete |
-| jezero-outpost | nominal | prudent | 99.3% | 149 | 0 | 0 | 1 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
+| jezero-outpost | training | idle | 18.7% | 28 | 0 | 0 | 122 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
+| jezero-outpost | training | greedy | 61.3% | 92 | 0 | 0 | 58 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
+| jezero-outpost | training | prudent | 100.0% | 150 | 0 | 0 | 0 | end.missionComplete |
+| jezero-outpost | nominal | idle | 5.3% | 8 | 0 | 0 | 142 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
+| jezero-outpost | nominal | greedy | 23.3% | 35 | 0 | 0 | 115 | end.crewLost, crew.lost.hypothermia, end.missionComplete, crew.lost.hypoxia |
+| jezero-outpost | nominal | prudent | 100.0% | 150 | 0 | 0 | 0 | end.missionComplete |
 | jezero-outpost | flightRated | idle | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypoxia |
-| jezero-outpost | flightRated | greedy | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypothermia |
-| jezero-outpost | flightRated | prudent | 98.7% | 148 | 0 | 0 | 2 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
-| first-light | training | idle | 18.0% | 27 | 0 | 0 | 123 | end.crewLost, crew.lost.hypoxia, end.missionComplete, crew.lost.hypothermia |
-| first-light | training | greedy | 88.7% | 133 | 0 | 0 | 17 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
-| first-light | training | prudent | 88.7% | 133 | 0 | 0 | 17 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
-| first-light | nominal | idle | 0.7% | 1 | 0 | 0 | 149 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
-| first-light | nominal | greedy | 89.3% | 134 | 0 | 0 | 16 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
-| first-light | nominal | prudent | 89.3% | 134 | 0 | 0 | 16 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
+| jezero-outpost | flightRated | greedy | 18.0% | 27 | 0 | 0 | 123 | end.crewLost, crew.lost.hypothermia, end.missionComplete, crew.lost.hypoxia |
+| jezero-outpost | flightRated | prudent | 98.7% | 148 | 0 | 0 | 2 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
+| first-light | training | idle | 20.0% | 30 | 0 | 0 | 120 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
+| first-light | training | greedy | 53.3% | 80 | 0 | 0 | 70 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
+| first-light | training | prudent | 54.0% | 81 | 0 | 0 | 69 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
+| first-light | nominal | idle | 4.7% | 7 | 0 | 0 | 143 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
+| first-light | nominal | greedy | 40.7% | 61 | 0 | 0 | 89 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
+| first-light | nominal | prudent | 38.7% | 58 | 0 | 0 | 92 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
 | first-light | flightRated | idle | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypoxia |
-| first-light | flightRated | greedy | 90.0% | 135 | 0 | 0 | 15 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
-| first-light | flightRated | prudent | 90.0% | 135 | 0 | 0 | 15 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
-| the-long-night | training | idle | 1.3% | 2 | 0 | 0 | 148 | end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia, end.missionComplete |
-| the-long-night | training | greedy | 100.0% | 150 | 0 | 0 | 0 | end.missionComplete |
-| the-long-night | training | prudent | 100.0% | 150 | 0 | 0 | 0 | end.missionComplete |
+| first-light | flightRated | greedy | 32.0% | 48 | 0 | 0 | 102 | end.crewLost, crew.lost.hypoxia, end.missionComplete, crew.lost.hypothermia |
+| first-light | flightRated | prudent | 32.7% | 49 | 0 | 0 | 101 | end.crewLost, crew.lost.hypoxia, end.missionComplete, crew.lost.hypothermia |
+| the-long-night | training | idle | 1.3% | 2 | 0 | 0 | 148 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
+| the-long-night | training | greedy | 99.3% | 149 | 0 | 0 | 1 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
+| the-long-night | training | prudent | 95.3% | 143 | 0 | 0 | 7 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
 | the-long-night | nominal | idle | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypoxia |
-| the-long-night | nominal | greedy | 100.0% | 150 | 0 | 0 | 0 | end.missionComplete |
-| the-long-night | nominal | prudent | 100.0% | 150 | 0 | 0 | 0 | end.missionComplete |
+| the-long-night | nominal | greedy | 98.7% | 148 | 0 | 0 | 2 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
+| the-long-night | nominal | prudent | 90.7% | 136 | 0 | 0 | 14 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
 | the-long-night | flightRated | idle | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypoxia |
-| the-long-night | flightRated | greedy | 98.0% | 147 | 0 | 0 | 3 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
-| the-long-night | flightRated | prudent | 98.0% | 147 | 0 | 0 | 3 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
+| the-long-night | flightRated | greedy | 97.3% | 146 | 0 | 0 | 4 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
+| the-long-night | flightRated | prudent | 84.7% | 127 | 0 | 0 | 23 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
 
 ## Failure causes observed across every idleBot/greedyBot seed
 

@@ -216,6 +216,118 @@ Output: docs/DECISION_AUDIT.md. STOP and report before making changes.
     rate against the 40–60% target. Report which change moved it and by how much.
 Do not tune any hazard rate until A–D are done.
 
+# M7.7 — Make scarcity real (blocks C and D)
+
+## 1. Crew-hours become a real budget (the core fix)
+- Every crew member has a daily crew-hour budget from constants: sleep, personal time,
+  exercise, and NASA's 5-day workweek with 2 days off [BVAD-2022] come out first; what
+  remains is assignable.
+- Deduct crewHoursCost for EVERY action that declares it: repairs, EVAs, farming,
+  science, cleaning, ISRU, incident responses. If insufficient hours remain, the option is
+  UNAVAILABLE or must displace other work — surface that in the Decision Card.
+- Work queued beyond the day's budget slips to the next sol. Slippage is how a small fault
+  becomes a cascade, and it must be visible in the Black Box.
+- Overtime is allowed but raises fatigue, which lowers repair success and raises error
+  rates. No free labour anywhere.
+
+## 2. Spares become real everywhere
+- Enforce sparesCost on EVERY response that declares one, not one of three. Audit all
+  responses for undeclared consumption.
+- Spares are finite, set at Launch Packing, and cannot be manufactured (unless a scenario
+  grants a printer, which then costs power and crew-hours).
+- If spares are exhausted, repairs use improvisation: lower success probability, and a
+  permanent efficiency penalty on the repaired component (see Apollo 13's degraded
+  scrubber in docs/INCIDENT_MAGNITUDES.md).
+
+## 3. Wire the Station model into the simulation (it has zero callers today)
+- stationPerformance must gate: incident-response success probability, repair duration,
+  detection delay for new faults, and decision quality aids at the relevant station.
+- availableCrewHours must be the SAME budget as item 1 — one source of truth, not two.
+- stationCoverer: a crew member covering two stations gets the documented fatigue penalty
+  and reduced performance at both.
+- Crew condition (impaired / critical) must reduce their station's performance, per the
+  brief's Station rule. Add a test: an impaired Power officer measurably worsens outcomes
+  versus a nominal one on the same seed.
+
+## 4. Remove the hardcoded outcome
+- jezero-outpost primaryGoal currently returns true unconditionally. Replace with real
+  criteria: science objectives completed, crew career dose within limits, outpost operable
+  at handover, all crew alive.
+- Wire Scenario.stretchGoal into scoring (it is read nowhere).
+- This unblocks M7.5 step 4: on Flight-Rated, survival without goals = PARTIAL, not SUCCESS.
+
+## 5. Kill or justify the three magic numbers in events.ts
+- The 15%/hour auto-repair must go. Nothing should repair itself regardless of the chosen
+  response — it silently erases the consequence the decision was supposed to create.
+  Replace with crew-performed repair that costs crew-hours and spares and can fail.
+- For the other two: either source them, derive them from something measured, or reclassify
+  them as "tuned" with a note in BALANCE.md. No unexplained constants in events.ts.
+
+## 6. Make ABORT reachable
+- Define explicit abort criteria and expose ABORT as a Mission Command decision whenever
+  they are met: crew critical with no repair path, consumables below the margin needed to
+  reach the next resupply, cumulative dose approaching the 600 mSv limit, or habitat
+  integrity lost.
+- Moon: about 6 days transit [NASA-ORION-FS]. Mars: only at a departure window
+  (~780-day synodic period) — the player must feel the wait.
+- Teach the bots to abort: prudentBot aborts when survival probability falls below a
+  threshold; greedyBot aborts too late; idleBot never aborts. Add a test asserting ABORT
+  occurs in at least one seed per scenario.
+- Scoring: a timely abort that saves the crew scores PARTIAL and beats LOSS. Surviving is
+  a legitimate win condition, and that is a real lesson in mission design.
+
+## 7. Fix the cosmetic decision
+- o2tank-apollo13's rationActivity must write real state: reduced crew metabolic rate and
+  CO2 production, at the cost of crew-hours available for work. Then re-run C's
+  counterfactual test on it.
+
+## 8. Re-baseline and report
+- Re-run 200 seeds × scenario × difficulty for all bots. Expect large movement; prudentBot
+  was ranking options by a price that was never charged.
+- Report: new outcome distributions, how often options became UNAVAILABLE due to crew-hours
+  or spares, ABORT frequency, and how often work slipped to the next sol.
+- Only then proceed to M7.6 part C (counterfactual tests, worstChoiceBot) and part D
+  (residual costs for the last four incidents).
+- Do not tune any hazard rate until after C and D.
+
+# M7.8 — Diagnose before tuning
+
+## A. Explain the First Light inversion (report only, no changes)
+1. For seeds where greedyBot succeeds and prudentBot fails, produce a decision-level diff:
+   where the strategies diverged, what each spent, and the Black Box cause of prudent's
+   failure. Classify each loss: (a) prudent spent crew-hours on work that never paid off
+   within 30 sols; (b) prudent sheltered/deferred on warnings a 2-person crew cannot
+   afford; (c) prudent hoarded spares it never used; (d) something else.
+2. Same analysis for Flight-Rated at 13%: is prudentBot failing on resources, dose, goals,
+   or crew loss? Give the distribution of failure causes, not just the rate.
+3. State plainly whether prudentBot's strategy is wrong for short missions, or the
+   scenarios are mistuned. Do not change scenario parameters in this step.
+
+## B. Fix the strategy if that is the finding
+4. prudentBot should adapt to mission duration: preventive work and margin-hoarding pay off
+   over hundreds of sols and may be actively wrong over 30. Make its policy duration-aware,
+   and document the policy in docs/BALANCE.md so it is not a black box.
+5. Re-run and report before any scenario tuning.
+
+## C. Re-examine two M7.7 fixes
+6. sealModule survivability: with the ~50% power loss, is there a decision path that
+   survives (load shedding, reduced activity, abort)? If not, add one — the Mir cost is
+   correct and must be survivable through good play, not only avoidable. Then reconsider
+   whether Jezero/First Light should carry 1 thermalControl spare rather than 2, so at least
+   one scenario forces living with an unaffordable option. Report the trade, do not decide
+   alone.
+7. Jezero primaryGoal: restore mission-accomplishment criteria — science objectives returned
+   and crew career dose within limits — alongside survival, while keeping the
+   every-system-operational clause removed. Survival alone should score PARTIAL on
+   Flight-Rated, per M7.5 step 4.
+
+## D. Only then
+8. Tune scenario parameters (starting margins, incident frequency, warning time) to reach
+   the targets. Tuned constants only; never "measured" ones. Log every change in BALANCE.md
+   with its before/after effect.
+9. Proceed to M7.6 C (counterfactual tests, worstChoiceBot) and D (residual costs for
+   fire-mir97, spe-1972, duststorm-2018, scrubber-iss).
+
 ## M8 — Agency: sol loop, station consoles, decisions, briefing, onboarding
 - Core loop: Sol Planning (paused, station by station) → run the sol (1× / 4× / 16×) →
   auto-pause on any incident or threshold crossing → Decision Card at the owning station →

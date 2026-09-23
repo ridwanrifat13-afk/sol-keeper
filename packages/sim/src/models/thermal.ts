@@ -19,7 +19,9 @@ export function thermalStage(ctx: TickContext): void {
   const t = state.thermal;
 
   const living = state.crew.filter((c) => c.alive).length;
-  t.crewHeatKw = living * crewHeatKwPerPerson();
+  // M7.7 §7: reduced by o2tank-apollo13's rationActivity response — a real "reduced crew
+  // metabolic rate" (1 = normal).
+  t.crewHeatKw = living * crewHeatKwPerPerson() * state.crewActivityFraction;
 
   // Heat leaking to or from the outside, proportional to the temperature difference — this
   // term flows *in* whenever the environment is hotter than the cabin (lunar daytime reaches

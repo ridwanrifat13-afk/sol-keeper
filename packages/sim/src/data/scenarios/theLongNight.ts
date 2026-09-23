@@ -21,6 +21,7 @@ export const theLongNight: Scenario = {
   site: { name: "Shackleton Ridge", latDeg: -88.5, lonDeg: 129.0 },
   primaryGoal: { id: "surviveFullDurationNoLoss", briefKey: "scenario.theLongNight.goal.primary" },
   stretchGoal: { id: "noSystemLeftFailed", briefKey: "scenario.theLongNight.goal.stretch" },
+  scienceTargetPoints: 0,
   durationHours: 2124,
   crewSize: 4,
 
@@ -54,7 +55,17 @@ export const theLongNight: Scenario = {
     // needs 0.035 kW/K x 200 K =~ 7 kW of heater alone (Jezero's Mars night never gets
     // remotely that cold). The 40 kWe reactor has room to spare for it — that headroom is
     // the whole point of bringing one.
-    { id: "thermalControl", trl: 8, nominalPowerKw: 8.0, priority: 3, spares: 2 },
+    //
+    // spares: 3, not 2 (M7.8 Part C, found while diagnosing First Light's inversion,
+    // docs/M7.8_DIAGNOSIS.md): 2 covers depress-mir97's patchHull response outright — the
+    // deliberate "afford it here" case Jezero/First Light no longer offer — but this scenario
+    // also carries a scripted pumpFailure that can hit thermalControl again later. Spending
+    // patchHull's full 2 spares (even on a success — `resolveResponseAttempt` deducts them
+    // before the roll) left nothing for an ordinary `attemptRepair` of that later failure,
+    // which needs `spares > 0`, turning "we could afford the clean fix" into "and now
+    // thermalControl is unrepairable for the rest of the mission" — a hidden trap, not the
+    // intended trade-off. 3 covers both: patchHull once, plus one ordinary repair after.
+    { id: "thermalControl", trl: 8, nominalPowerKw: 8.0, priority: 3, spares: 3 },
     { id: "oxygenGenerator", trl: 7, nominalPowerKw: 2.0, priority: 4, spares: 2 },
     { id: "waterRecovery", trl: 7, nominalPowerKw: 0.9, priority: 5, spares: 2 },
     { id: "comms", trl: 9, nominalPowerKw: 0.5, priority: 6, spares: 1 },

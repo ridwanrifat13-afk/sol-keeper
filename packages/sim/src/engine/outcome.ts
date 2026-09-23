@@ -6,11 +6,25 @@
  * the automatic exits only. `requestAbort` is a separate, explicit action a player or bot
  * calls — abort is something *chosen*, never something the tick loop decides on its own.
  */
-import { environment, physiology, radiation as radConstants } from "../data/constants.js";
+import {
+  abort as abortConstants,
+  crew as crewConstants,
+  environment,
+  physiology,
+  radiation as radConstants,
+} from "../data/constants.js";
+import { rationKgPerCrewDay } from "../models/food.js";
 import type { CrewMember } from "../types.js";
-import { daysToHours } from "../units.js";
+import { daysToHours, perDayToPerHour } from "../units.js";
 import type { TickContext } from "./context.js";
 import { checkGoal } from "./goals.js";
+
+/** M7.7 §4: computed once whenever a run actually ends, whatever the outcome — "wired into
+ *  scoring" without inventing a fifth `RunStatus`. Worth knowing even on a LOSS or ABORT
+ *  (did they get the crops in before it went wrong?), not just on SUCCESS. */
+function finalizeStretchGoal(ctx: TickContext): void {
+  ctx.state.stretchGoalMet = checkGoal(ctx.scenario.stretchGoal, ctx.state, ctx.scenario);
+}
 
 export function determineOutcome(ctx: TickContext): void {
   const { state, scenario, log } = ctx;
@@ -27,6 +41,7 @@ export function determineOutcome(ctx: TickContext): void {
       code: "end.crewLost",
       data: { hour: state.hour },
     });
+    finalizeStretchGoal(ctx);
     return;
   }
 
@@ -50,11 +65,12 @@ export function determineOutcome(ctx: TickContext): void {
         limitMSv: radConstants.careerLimitMSv.value,
       },
     });
+    finalizeStretchGoal(ctx);
     return;
   }
 
   if (state.hour >= scenario.durationHours) {
-    const goalMet = checkGoal(scenario.primaryGoal, state);
+    const goalMet = checkGoal(scenario.primaryGoal, state, scenario);
     state.status = goalMet ? "success" : "partial";
     state.endReasonCode = goalMet ? "end.missionComplete" : "end.goalMissed";
     log.log({
@@ -65,7 +81,59 @@ export function determineOutcome(ctx: TickContext): void {
       // brief rule 4) — kept from Phase 1's identical comment on this exact point.
       data: { hour: state.hour, crewSurviving: living.length },
     });
+    finalizeStretchGoal(ctx);
   }
+}
+
+/**
+ * M7.7 §6: the abort signal every bot's `planHour` can check — a pure read, never itself
+ * ends the run (only `requestAbort` does that, an explicit action, same as before). Any one
+ * of: dose approaching the career limit, a crew member critical for a sustained stretch with
+ * no incident actively addressing it ("no repair path"), or a consumable projected to run
+ * out before the mission's own duration at the current rate.
+ */
+export function shouldConsiderAbort(ctx: TickContext): { readonly reasonCode: string } | undefined {
+  const { state, scenario } = ctx;
+
+  const doseThresholdMSv = radConstants.careerLimitMSv.value * abortConstants.doseFractionOfCareerLimit.value;
+  if (state.crew.some((c) => c.alive && c.cumulativeDoseMSv >= doseThresholdMSv)) {
+    return { reasonCode: "abort.signal.doseApproachingLimit" };
+  }
+
+  // "No repair path": critical for a sustained stretch (models/crew.ts's crewStage stamps
+  // criticalSinceHour the moment crewCondition() first reads "critical", clears it the
+  // moment it improves) while nothing is actively being worked to address it.
+  const anyIncidentInFlight = state.activeIncidents.some((i) => i.resolvedAtHour === undefined);
+  const sustainedCritical = state.crew.some(
+    (c) =>
+      c.alive &&
+      c.criticalSinceHour !== undefined &&
+      state.hour - c.criticalSinceHour >= abortConstants.crewCriticalSustainedHours.value,
+  );
+  if (!anyIncidentInFlight && sustainedCritical) {
+    return { reasonCode: "abort.signal.crewCriticalNoRepairPath" };
+  }
+
+  // A consumable projected to run dry before the mission's own scheduled duration, at its
+  // current draw rate — "consumables below the margin needed to reach the end of the plan".
+  // Water and food each have a real per-crew-day rate already used elsewhere (models/water.ts,
+  // food.ts); O2 is covered indirectly (a genuine O2 shortfall shows up as hypoxia, which the
+  // sustained-critical check above already catches) so it is not double-counted here.
+  const living = state.crew.filter((c) => c.alive).length;
+  const hoursRemaining = scenario.durationHours - state.hour;
+  if (living > 0 && hoursRemaining > 0) {
+    const waterKgPerHour = living * perDayToPerHour(crewConstants.waterUseTotalKgPerCrewDay.value);
+    const waterHoursLeft = waterKgPerHour > 0 ? state.water.potableKg / waterKgPerHour : Infinity;
+
+    const foodKgPerHour = living * perDayToPerHour(rationKgPerCrewDay(state.food.mode));
+    const foodHoursLeft = foodKgPerHour > 0 ? state.food.storedDryMassKg / foodKgPerHour : Infinity;
+
+    if (waterHoursLeft < hoursRemaining || foodHoursLeft < hoursRemaining) {
+      return { reasonCode: "abort.signal.consumablesShortOfDuration" };
+    }
+  }
+
+  return undefined;
 }
 
 export interface AbortResult {

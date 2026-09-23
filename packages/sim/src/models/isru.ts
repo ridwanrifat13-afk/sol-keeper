@@ -8,7 +8,7 @@
  * Perseverance mission, while one crew member breathes 840 g every day. It takes about
  * 2.9 MOXIEs running at peak just to keep one person alive.
  */
-import { crew as crewConstants, habitat, lifeSupport } from "../data/constants.js";
+import { crew as crewConstants, habitat, lifeSupport, science as scienceConstants } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
 import { gramsToKg, kgToGrams, perDayToPerHour } from "../units.js";
 
@@ -50,6 +50,8 @@ export function isruStage(ctx: TickContext): void {
 
   state.atmosphere.o2Kg += producedKg;
   state.isru.moxieO2ProducedKg += producedKg;
+  // M7.7 §3: ISRU is one of the Station rules' own named science sources.
+  state.science.points += producedKg * scienceConstants.pointsPerMoxieProducedKg.value;
 
   // Log the first time the outpost passes the real MOXIE's whole-mission total.
   const totalG = state.isru.moxieO2ProducedKg * 1000;

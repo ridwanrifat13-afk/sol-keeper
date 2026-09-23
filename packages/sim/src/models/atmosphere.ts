@@ -45,10 +45,19 @@ export function atmosphereStage(ctx: TickContext): void {
   const a = state.atmosphere;
   const living = state.crew.filter((c) => c.alive).length;
 
+  // M7.7 §7: o2tank-apollo13's rationActivity response is the one thing that reduces this
+  // from 1 — a real "reduced crew metabolic rate" this hour, not the cosmetic no-op it used
+  // to be (docs/DECISION_AUDIT.md).
   const o2ConsumedKg =
-    living * perDayToPerHour(crewConstants.o2ConsumptionKgPerCrewDay.value) * ctx.dtHours;
+    living *
+    perDayToPerHour(crewConstants.o2ConsumptionKgPerCrewDay.value) *
+    state.crewActivityFraction *
+    ctx.dtHours;
   const co2ProducedKg =
-    living * perDayToPerHour(crewConstants.co2ProductionKgPerCrewDay.value) * ctx.dtHours;
+    living *
+    perDayToPerHour(crewConstants.co2ProductionKgPerCrewDay.value) *
+    state.crewActivityFraction *
+    ctx.dtHours;
 
   a.o2Kg = Math.max(0, a.o2Kg - o2ConsumedKg);
   a.co2Kg += co2ProducedKg;
@@ -60,7 +69,10 @@ export function atmosphereStage(ctx: TickContext): void {
   if (scrubber !== undefined && scrubber.operational && scrubber.poweredThisHour) {
     // scrubberEfficiencyFraction is the M7.5 o2tank-apollo13 residual cost — an improvised
     // fix is never as good as the original hardware, permanently, once applied.
-    const capacityKgPerHour = habitat.co2ScrubberKgPerHour.value * a.scrubberEfficiencyFraction;
+    // efficiencyPenaltyFraction (M7.7 §2) is the general "spares ran out, improvised" penalty
+    // any repair can leave — both stack, since they model genuinely different degradations.
+    const capacityKgPerHour =
+      habitat.co2ScrubberKgPerHour.value * a.scrubberEfficiencyFraction * (1 - scrubber.efficiencyPenaltyFraction);
     const removedKg = Math.min(a.co2Kg, capacityKgPerHour * ctx.dtHours);
     a.co2Kg -= removedKg;
   } else if (scrubber !== undefined) {

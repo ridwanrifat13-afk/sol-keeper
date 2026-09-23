@@ -163,9 +163,14 @@ describe("every incident resolves, explicitly or by default", () => {
     const incident = state.activeIncidents.find((i) => i.definitionId === "coolant-ms22");
     expect(incident?.resolvedAtHour).toBeUndefined();
 
-    for (let i = 0; i < 4; i++) {
+    // M7.7 §2: the warning window's own countdown starts at detection, not trigger — detection
+    // is itself a per-hour roll (a floor chance even through an unstaffed station), so tick
+    // generously past both: near-certain to detect within a handful of hours, then 3 more for
+    // coolant-ms22's own warningTimeHours once detected.
+    for (let i = 0; i < 60; i++) {
       const ctx = tickOnce(state);
       incidentsStage(ctx);
+      if (incident?.resolvedAtHour !== undefined) break;
     }
 
     expect(incident?.resolvedAtHour).toBeDefined();

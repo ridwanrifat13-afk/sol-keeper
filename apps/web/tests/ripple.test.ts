@@ -83,6 +83,7 @@ describe("systemStatusInfo", () => {
     nominalPowerKw: 1.2,
     priority: 2,
     spares: 1,
+    efficiencyPenaltyFraction: 0,
   };
 
   it("reads Standby before the mission starts, regardless of the system's own flags", () => {

@@ -23,11 +23,26 @@ export function feverMetabolicMultiplier(bodyTempC: number): number {
   return 1 + excess * crewConstants.feverMetabolicIncreasePerDegC.value;
 }
 
-/** Crew-hours available this tick, scaled by health and morale. */
+/**
+ * M7.7 §1/§3: the real daily crew-hours budget — living crew count x the BVAD-2022 planetary
+ * -surface assignable-work figure (physiology... no, `crew.dailyAssignableWorkHoursPerCrew`),
+ * scaled down by average health and morale, floored at BVAD's own stated sustainable minimum
+ * (never letting a badly degraded crew's budget collapse toward zero). `engine/crewHours.ts`
+ * calls this at every day boundary — the one place this number is computed, per
+ * docs/DECISION_AUDIT.md's finding that a second, unused copy of "available crew hours"
+ * already existed here without ever being wired to anything.
+ */
 export function availableCrewHours(ctx: TickContext): number {
-  return ctx.state.crew
-    .filter((c) => c.alive)
-    .reduce((sum, c) => sum + ctx.dtHours * c.healthFraction * (0.5 + 0.5 * c.moraleFraction), 0);
+  const living = ctx.state.crew.filter((c) => c.alive);
+  if (living.length === 0) return 0;
+
+  const avgHealth = living.reduce((sum, c) => sum + c.healthFraction, 0) / living.length;
+  const avgMorale = living.reduce((sum, c) => sum + c.moraleFraction, 0) / living.length;
+  const scale = clamp(0.5 + 0.5 * avgHealth, 0, 1) * clamp(0.5 + 0.5 * avgMorale, 0, 1);
+
+  const raw = living.length * crewConstants.dailyAssignableWorkHoursPerCrew.value * scale;
+  const floor = living.length * crewConstants.minSustainedAssignableWorkHoursPerCrew.value;
+  return Math.max(floor, raw);
 }
 
 /** g(T) in survivalHoursAir(T) = 12h x kAir x g(T) — linear between the floor at freezing
@@ -212,6 +227,14 @@ export function crewStage(ctx: TickContext): void {
 
     const condition = crewCondition(member);
     member.healthFraction = healthFractionFor(member, condition);
+
+    // M7.7 §6: stamp when "critical" starts, clear the moment it improves — the sustained
+    // -duration signal engine/outcome.ts's shouldConsiderAbort reads for "no repair path".
+    if (condition === "critical") {
+      member.criticalSinceHour ??= state.hour;
+    } else {
+      delete member.criticalSinceHour;
+    }
 
     if (condition === "lost" && member.alive) {
       member.alive = false;

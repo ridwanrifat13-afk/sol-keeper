@@ -9,10 +9,13 @@
  * Every hazard logs a root event, and everything it triggers is logged inside that event's
  * cause scope, so the Black Box can walk from "crop tray died" back to "dust storm".
  */
-import { missionDifficulty } from "../data/constants.js";
+import { management, missionDifficulty } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
+import { crewCondition } from "../models/crew.js";
 import type { EventId, HazardKind, ScriptedEvent, SystemId } from "../types.js";
+import { clamp } from "../units.js";
 import { failureRatePerHour } from "./risk.js";
+import { SYSTEM_TO_STATION, stationPerformance } from "./stations.js";
 
 /** Scenario hazards whose window covers the current hour. */
 export function activeScriptedEvents(ctx: TickContext): ScriptedEvent[] {
@@ -69,7 +72,7 @@ function applyHazard(
       // this scenario, so a scripted pumpFailure still advances the "hazards" stream the
       // same way on every scenario — determinism does not depend on which systems a
       // scenario happens to carry.
-      const target: SystemId = rng.stream("hazards").chance(0.5)
+      const target: SystemId = rng.stream("hazards").chance(management.pumpFailureTargetCoinFlip.value)
         ? "waterRecovery"
         : "thermalControl";
       const system = state.systems[target];
@@ -91,7 +94,11 @@ function applyHazard(
     case "cropBlight": {
       log.because(cause, () => {
         for (const tray of state.food.trays) {
-          const loss = magnitude * ctx.rng.stream("crops").range(0.5, 1);
+          const loss =
+            magnitude *
+            ctx.rng
+              .stream("crops")
+              .range(management.cropBlightDamageMinFraction.value, management.cropBlightDamageMaxFraction.value);
           tray.healthFraction = Math.max(0, tray.healthFraction - loss);
           log.log({
             kind: "hazard",
@@ -153,18 +160,7 @@ export function hazardsAndFailuresStage(ctx: TickContext): void {
   const stream = rng.stream("failures");
   for (const system of Object.values(state.systems)) {
     if (!system.operational) {
-      // A spare can be fitted, costing crew time we bill in a later milestone.
-      if (system.spares > 0 && stream.chance(0.15)) {
-        system.spares -= 1;
-        system.operational = true;
-        log.log({
-          kind: "milestone",
-          severity: "info",
-          code: "system.repaired",
-          system: system.id,
-          data: { system: system.id, sparesRemaining: system.spares },
-        });
-      }
+      attemptRepair(ctx, system.id);
       continue;
     }
 
@@ -179,6 +175,55 @@ export function hazardsAndFailuresStage(ctx: TickContext): void {
         data: { system: system.id, trl: system.trl, spares: system.spares },
       });
     }
+  }
+}
+
+/**
+ * M7.7 §5: replaces the old flat, unconditional 15%/hour auto-repair
+ * (docs/DECISION_AUDIT.md: decision-independent, able to silently undo an incident's
+ * consequence regardless of which response was chosen). A real crew action now: costs a real
+ * spare and a real slice of the day's crew-hours budget (skipped entirely if either is
+ * unavailable — no free labour, no free spares), and succeeds at a TRL- and station
+ * -performance-scaled rate instead of a flat number. Same hour, not queued: unlike an
+ * incident response, an ordinary repair attempt is one bounded action, not a multi-day
+ * project.
+ */
+function attemptRepair(ctx: TickContext, systemId: SystemId): void {
+  const { state, log } = ctx;
+  const system = state.systems[systemId];
+  if (system === undefined || system.operational || system.spares <= 0) return;
+
+  const remainingToday = state.crewHours.budgetTodayHours - state.crewHours.spentTodayHours;
+  if (remainingToday < management.repairAttemptCrewHours.value) return;
+  state.crewHours.spentTodayHours += management.repairAttemptCrewHours.value;
+
+  const station = SYSTEM_TO_STATION[systemId];
+  const performance = station !== undefined ? stationPerformance(ctx, station, crewCondition) : 0;
+  const trlSuccessFraction = clamp(
+    management.repairSuccessBaseFraction.value + (system.trl - 1) * management.repairSuccessPerTrlLevel.value,
+    0,
+    0.95,
+  );
+  const successChance = trlSuccessFraction * performance;
+
+  if (ctx.rng.stream("responses").chance(successChance)) {
+    system.spares -= 1;
+    system.operational = true;
+    log.log({
+      kind: "milestone",
+      severity: "info",
+      code: "system.repaired",
+      system: system.id,
+      data: { system: system.id, sparesRemaining: system.spares },
+    });
+  } else {
+    log.logEdge({
+      kind: "fault",
+      severity: "caution",
+      code: "system.repairAttemptFailed",
+      system: system.id,
+      data: { system: system.id },
+    });
   }
 }
 

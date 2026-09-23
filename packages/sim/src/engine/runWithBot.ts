@@ -44,8 +44,13 @@ export function tickWithBot(state: SimState, params: Params, scenario: Scenario,
     stage.run(ctx);
   }
 
+  // M7.7 §2: only a *detected* incident is offered to the bot at all (an undetected one is
+  // still evolving via ongoingEffect, just not yet noticed), and only once — `chosenResponseId`
+  // being set means a decision is already in flight (resolved, queued, or a failed attempt
+  // cleared it back to undefined for a genuine retry), not that it's necessarily finished yet.
   for (const incident of state.activeIncidents) {
-    if (incident.resolvedAtHour !== undefined) continue;
+    if (incident.detectedAtHour === undefined) continue;
+    if (incident.chosenResponseId !== undefined) continue;
     const definition = INCIDENT_CATALOG.find((d) => d.id === incident.definitionId);
     if (definition === undefined) continue;
     const responseId = bot.chooseIncidentResponse(ctx, incident, definition);

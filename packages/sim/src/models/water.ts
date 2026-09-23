@@ -31,9 +31,11 @@ export function waterStage(ctx: TickContext): void {
   const living = state.crew.filter((c) => c.alive).length;
 
   const recovery = state.systems.waterRecovery;
+  // M7.7 §2: an improvised (spares-short) repair leaves a permanent efficiencyPenaltyFraction
+  // on the repaired system — consumed here as the recovery loop's own output cut.
   w.recoveryFraction =
     recovery !== undefined && recovery.operational && recovery.poweredThisHour
-      ? lifeSupport.waterRecoveryFractionBaseline.value
+      ? lifeSupport.waterRecoveryFractionBaseline.value * (1 - recovery.efficiencyPenaltyFraction)
       : 0;
 
   const usedKg =
@@ -60,7 +62,9 @@ export function waterStage(ctx: TickContext): void {
 
   if (generator !== undefined && generator.operational && generator.poweredThisHour && needsOxygen) {
     const energyKwh = generator.nominalPowerKw * ctx.dtHours;
-    const o2Kg = energyKwh / lifeSupport.electrolysisEnergyKwhPerKgO2Practical.value;
+    const o2Kg =
+      (energyKwh / lifeSupport.electrolysisEnergyKwhPerKgO2Practical.value) *
+      (1 - generator.efficiencyPenaltyFraction);
     const waterNeededKg = o2Kg * lifeSupport.electrolysisWaterPerO2KgPerKg.value;
 
     if (waterNeededKg <= w.potableKg) {

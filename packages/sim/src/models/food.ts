@@ -6,7 +6,7 @@
  * later as a missed harvest. That delay is the point — it is what the Black Box exists to
  * make visible.
  */
-import { food as foodConstants, physics, survivalModes } from "../data/constants.js";
+import { food as foodConstants, physics, science as scienceConstants, survivalModes } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
 import type { CropTray } from "../types.js";
 import { clamp, daysToHours, perDayToPerHour } from "../units.js";
@@ -81,6 +81,8 @@ export function foodStage(ctx: TickContext): void {
       f.storedDryMassKg += harvestKg;
       f.cumulativeHarvestKg += harvestKg;
       tray.lightHours = 0;
+      // M7.7 §3: crop biology is one of the Station rules' own named science sources.
+      state.science.points += harvestKg * scienceConstants.pointsPerHarvestKg.value;
       log.log({
         kind: "milestone",
         severity: "info",

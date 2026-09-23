@@ -10,6 +10,7 @@
  * Command decision, same as any other repair. Incident Command and Mission Command own no
  * `SystemId` directly — they own decisions and crew, not hardware.
  */
+import { management } from "../data/constants.js";
 import type { CrewCondition, CrewMember, StationId, SystemId } from "../types.js";
 import type { TickContext } from "./context.js";
 
@@ -64,10 +65,11 @@ const CONDITION_PERFORMANCE: Record<CrewCondition, number> = {
 const FATIGUE_PENALTY_AT_FULL = 0.25;
 
 /**
- * 1.0 fully staffed and nominal, degrading with the coverer's condition and fatigue, 0 if
- * unstaffed. Feeds repair success probability (engine/incidents.ts) and, per-station rather
- * than as one pooled number, `availableCrewHours` (models/crew.ts) — the mechanism that
- * makes crew loss *felt* in gameplay, not just logged.
+ * 1.0 fully staffed and nominal, degrading with the coverer's condition and fatigue, or a
+ * further-penalised ad hoc stand-in if nobody is assigned to the station at all. Feeds
+ * repair/response success probability and effective duration (engine/incidents.ts) and,
+ * per-station rather than as one pooled number, `availableCrewHours` (models/crew.ts) — the
+ * mechanism that makes crew loss *felt* in gameplay, not just logged.
  */
 export function stationPerformance(
   ctx: TickContext,
@@ -75,9 +77,24 @@ export function stationPerformance(
   condition: (member: CrewMember) => CrewCondition,
 ): number {
   const coverer = stationCoverer(ctx, station);
-  if (coverer === undefined) return 0;
+  if (coverer !== undefined) {
+    const base = CONDITION_PERFORMANCE[condition(coverer)];
+    const fatiguePenalty = isDoubleCovering(ctx, coverer) ? coverer.fatigueFraction * FATIGUE_PENALTY_AT_FULL : 0;
+    return Math.max(0, base - fatiguePenalty);
+  }
 
-  const base = CONDITION_PERFORMANCE[condition(coverer)];
-  const fatiguePenalty = isDoubleCovering(ctx, coverer) ? coverer.fatigueFraction * FATIGUE_PENALTY_AT_FULL : 0;
-  return Math.max(0, base - fatiguePenalty);
+  // Nobody is assigned primary or backup for this station at all — either a crew too small
+  // to cover all five roles (First Light's 2-person roster never assigns Incident Command or
+  // Mission Command to begin with) or everyone who was has since died. That is not the same
+  // as "nobody can respond": any surviving crew member still fights a fire or patches a leak
+  // without a station badge, just less effectively than someone actually assigned there.
+  const living = ctx.state.crew.filter((c) => c.alive);
+  if (living.length === 0) return 0;
+  const best = living.reduce((a, b) =>
+    CONDITION_PERFORMANCE[condition(b)] > CONDITION_PERFORMANCE[condition(a)] ? b : a,
+  );
+  return Math.max(
+    0,
+    CONDITION_PERFORMANCE[condition(best)] * management.unassignedStationEmergencyPerformanceFraction.value,
+  );
 }

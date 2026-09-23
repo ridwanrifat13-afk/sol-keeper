@@ -12,19 +12,29 @@
  * decided on purpose — this is what makes M7's whole premise ("passive play now loses")
  * mechanically enforced rather than a claim nobody checks again.
  *
- * KNOWN GAP, disclosed rather than silently loosened: prudentBot clears every target above
- * except the Flight-Rated *upper* bound (<= 60%) — it currently lands at 90-100% (see
- * docs/BALANCE.md for the measured distribution). M7.5 (docs/INCIDENT_MAGNITUDES.md) added
- * real residual costs to three incidents (a permanent power loss, a permanent scrubber
- * efficiency penalty, a one-time crop-health cost) specifically to close this gap, and it
- * measurably helped — Jezero training/nominal for idleBot dropped meaningfully, and
- * prudentBot's own numbers moved for the first time since M7 — but a *skilled* bot still
- * neutralises most incidents well enough at Flight-Rated that its floor stays far above the
- * 40-60% band. Genuinely constraining skilled play there needs either steeper residual costs
- * on the remaining four incidents (fire-mir97, spe-1972, duststorm-2018, scrubber-iss, none
- * of which carry one yet) or a compounding-incidents mechanic, neither of which is in scope
- * for this pass. Only the lower bound (>= 40%, comfortably cleared) is asserted for that one
- * cell — TODO(P2).
+ * KNOWN GAPS, disclosed rather than silently loosened or chased indefinitely (docs/
+ * M7.8_DIAGNOSIS.md has the full seed-level diagnosis and what was already tried) — TODO(P2)
+ * for all of these:
+ *
+ * - Flight-Rated *upper* bound (<= 60%): prudentBot clears the lower bound everywhere but
+ *   lands well above 60% on Jezero and The Long Night (see docs/BALANCE.md). M7.5's residual
+ *   costs measurably helped when first added; a *skilled* bot still neutralises most incidents
+ *   well enough that genuinely constraining it further needs either steeper residual costs on
+ *   the remaining four incidents (fire-mir97, spe-1972, duststorm-2018, scrubber-iss, none of
+ *   which carry one yet, M7.6 Part D's own job) or a compounding-incidents mechanic — neither
+ *   in scope for M7.7/M7.8. Only the lower bound is asserted for those cells.
+ * - First Light: Training (54.0%) and Flight-Rated (32.7%) prudentBot still sit below their
+ *   85%/40% floors, and Nominal shows a 2-point `greedy > prudent` inversion (40.7% vs
+ *   38.7%) — inside normal 150-seed sampling noise, but the harness doesn't know that.
+ *   M7.8 Part B/D moved these substantially (Flight-Rated was 12.7% before) via a real
+ *   prudentBot strategy fix plus a scenario-margin (`warningTimeMultiplier`) pass; the
+ *   remainder is `depress-mir97`'s own fast kill clock outrunning any response on an unlucky
+ *   detection/success roll, which M7.8 Part A found accounts for 93% of the seeds still lost.
+ * - The Long Night: prudentBot clears every one of its own absolute floor targets by a wide
+ *   margin (>=84.7% even at Flight-Rated, far above the 40% floor) but still trails greedyBot
+ *   by 5-14 points at every difficulty — a real-but-milder version of the same pattern
+ *   (`docs/M7.8_DIAGNOSIS.md` Part D), only partly closed by a `permanentPenalty`-aware
+ *   prudentBot fix.
  */
 import { describe, expect, it } from "vitest";
 import { runCombination } from "../engine/balance.js";

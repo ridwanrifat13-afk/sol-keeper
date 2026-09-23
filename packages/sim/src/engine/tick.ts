@@ -19,6 +19,7 @@ import { thermalStage } from "../models/thermal.js";
 import { waterStage } from "../models/water.js";
 import type { Params, Scenario, SimState } from "../types.js";
 import type { Stage, TickContext } from "./context.js";
+import { crewHoursStage } from "./crewHours.js";
 import { hazardsAndFailuresStage } from "./events.js";
 import { incidentsStage } from "./incidents.js";
 import { EventLogger } from "./log.js";
@@ -30,11 +31,15 @@ export interface NamedStage {
   readonly run: Stage;
 }
 
-/** The pipeline. Order is load-bearing; changing it changes every saved run. `incidents`
- *  sits after `hazardsAndFailures` so a stochastic system failure can be the trigger an
- *  incident checks for the same hour it happens, and `endConditions` (now `determineOutcome`,
- *  engine/outcome.ts) stays last so every stage's consequences are visible to it. */
+/** The pipeline. Order is load-bearing; changing it changes every saved run. `crewHours`
+ *  (M7.7 §1) runs first so a day-boundary budget reset and queued-work completion are both
+ *  visible to everything else that hour, including a response's effect landing exactly when
+ *  its queue empties. `incidents` sits after `hazardsAndFailures` so a stochastic system
+ *  failure can be the trigger an incident checks for the same hour it happens, and
+ *  `endConditions` (now `determineOutcome`, engine/outcome.ts) stays last so every stage's
+ *  consequences are visible to it. */
 export const PIPELINE: readonly NamedStage[] = [
+  { name: "crewHours", run: crewHoursStage },
   { name: "environment", run: environmentStage },
   { name: "power", run: powerStage },
   { name: "thermal", run: thermalStage },

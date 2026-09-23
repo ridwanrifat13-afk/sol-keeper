@@ -16,10 +16,11 @@
  * (engine/runWithBot.ts) via the exported `applyResponse`, never by the pipeline itself —
  * that keeps `tick()`'s own signature exactly as it was in Phase 1.
  */
-import { incidents as incidentConstants, missionDifficulty, physics } from "../data/constants.js";
+import { incidents as incidentConstants, management, missionDifficulty, physics } from "../data/constants.js";
 import type { SourceId } from "../data/sources.js";
+import { crewCondition } from "../models/crew.js";
 import { effectiveShieldingGPerCm2, speTransmission } from "../models/radiation.js";
-import type { ActiveIncident, CrewMember, SimState, StationId, SystemId } from "../types.js";
+import type { ActiveIncident, CrewMember, QueuedWork, SimState, StationId, SystemId } from "../types.js";
 import {
   chokedOrificeEffectiveVelocityMPerS,
   chokedOrificeLeakTimeConstantHours,
@@ -27,6 +28,7 @@ import {
   massKgForPartialPressureMmHg,
 } from "../units.js";
 import type { TickContext } from "./context.js";
+import { stationPerformance } from "./stations.js";
 
 export interface IncidentResponse {
   readonly id: string;
@@ -35,6 +37,10 @@ export interface IncidentResponse {
   readonly effect: (ctx: TickContext, incident: ActiveIncident) => void;
   readonly crewHoursCost?: number;
   readonly sparesCost?: number;
+  /** M7.7 §2: which system's spares `sparesCost` actually draws from — required whenever
+   *  `sparesCost` is set (docs/DECISION_AUDIT.md found declared costs going completely
+   *  unenforced; this is what makes them real). */
+  readonly sparesFromSystem?: SystemId;
   /** M7.5: true when this response does NOT address the incident's root physical cause, so
    *  `ongoingEffect` keeps running hour after hour even once "resolved" — the leak keeps
    *  leaking, the CO2 keeps rising. Omitted (false) means this response stops it. Without
@@ -43,6 +49,13 @@ export interface IncidentResponse {
    *  a real physical process lets it keep getting worse, not that it politely stops once the
    *  warning window lapses. */
   readonly leavesOngoing?: boolean;
+  /** M7.8 Part B: true when this response's `effect` unconditionally applies a permanent
+   *  degradation to shared state (`o2tank-apollo13`'s `improviseAdapter` — a real M7.5
+   *  residual cost, not a probabilistic improvised-repair penalty; that one already shows up
+   *  through spares-shortfall detection). Declared, visible information a real Decision Card
+   *  would show ("this component never runs at full capacity again"), so `prudentBot` can
+   *  weigh it against how much mission is actually left — see its own note on why. */
+  readonly permanentPenalty?: boolean;
 }
 
 export type IncidentTrigger =
@@ -117,6 +130,7 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         id: "fight",
         i18nKey: "incident.fire-mir97.response.fight",
         sparesCost: 1,
+        sparesFromSystem: "powerDistribution",
         crewHoursCost: 4,
         effect: (ctx) => {
           const target = mostInjured(ctx.state);
@@ -187,6 +201,7 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         id: "sealModule",
         i18nKey: "incident.depress-mir97.response.sealModule",
         crewHoursCost: 2,
+        permanentPenalty: true,
         effect: (ctx) => {
           ctx.state.power.arrayAreaLossM2 +=
             ctx.scenario.initial.solarArrayAreaM2 * incidentConstants.depressMir97SealedModulePowerLossFraction.value;
@@ -198,6 +213,7 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         id: "patchHull",
         i18nKey: "incident.depress-mir97.response.patchHull",
         sparesCost: 2,
+        sparesFromSystem: "thermalControl",
         crewHoursCost: 6,
         effect: () => {},
       },
@@ -249,6 +265,8 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         id: "improviseAdapter",
         i18nKey: "incident.o2tank-apollo13.response.improviseAdapter",
         sparesCost: 1,
+        sparesFromSystem: "co2Scrubber",
+        permanentPenalty: true,
         crewHoursCost: 3,
         effect: (ctx, incident) => {
           const { state } = ctx;
@@ -271,11 +289,21 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         },
       },
       {
+        // M7.7 §7: fixes docs/DECISION_AUDIT.md's one confirmed cosmetic decision — this used
+        // to write the same nothing as "noResponse" below. Now a real, lasting trade-off:
+        // less CO2/heat from the crew, less crew-hours available for everything else.
         id: "rationActivity",
         i18nKey: "incident.o2tank-apollo13.response.rationActivity",
         crewHoursCost: 1,
         leavesOngoing: true,
-        effect: () => {},
+        effect: (ctx) => {
+          ctx.state.crewActivityFraction = clamp(
+            ctx.state.crewActivityFraction - incidentConstants.rationActivityMetabolicReductionFraction.value,
+            0.4,
+            1,
+          );
+          ctx.state.crewHours.spentTodayHours += incidentConstants.rationActivityCrewHoursPenaltyHours.value;
+        },
       },
       {
         id: "noResponse",
@@ -485,6 +513,7 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         id: "swapCartridge",
         i18nKey: "incident.scrubber-iss.response.swapCartridge",
         sparesCost: 1,
+        sparesFromSystem: "co2Scrubber",
         crewHoursCost: 2,
         effect: (ctx) => {
           const system = ctx.state.systems.co2Scrubber;
@@ -534,11 +563,15 @@ function scaledWarningTimeHours(ctx: TickContext, def: IncidentDefinition): numb
   return def.warningTimeHours * missionDifficulty[ctx.params.difficulty].warningTimeMultiplier.value;
 }
 
-/** M7.5: whether `def.ongoingEffect` should still run for `incident` this hour — before any
- *  decision, or after one that left the root cause unaddressed (`leavesOngoing`). */
+/** M7.7 §1/§2: whether `def.ongoingEffect` should still run for `incident` this hour — keyed
+ *  off `resolvedAtHour`, not `chosenResponseId`: a response can be *chosen* (queued, still
+ *  being worked, or a failed attempt) without the incident actually being resolved yet, and
+ *  the physical process doesn't care whether anyone's decided anything, only whether it's
+ *  actually been fixed. Once genuinely resolved, `leavesOngoing` still governs whether the
+ *  chosen response addressed the root cause at all. */
 function shouldRunOngoingEffect(def: IncidentDefinition, incident: ActiveIncident): boolean {
   if (def.ongoingEffect === undefined) return false;
-  if (incident.chosenResponseId === undefined) return true;
+  if (incident.resolvedAtHour === undefined) return true;
   const response = def.responses.find((r) => r.id === incident.chosenResponseId);
   return response?.leavesOngoing === true;
 }
@@ -551,20 +584,11 @@ function responseById(def: IncidentDefinition, responseId: string): IncidentResp
   return found;
 }
 
-/**
- * Resolves an active incident with a chosen response: applies its effect, spends the crew
- * time it costs, and marks it resolved. Exported so a `DecisionStrategy`'s caller
- * (engine/bots.ts's driver today, a real player's Decision Card in M8) can call it directly
- * — `incidentsStage` itself only calls this for the *default* response, once the warning
- * window lapses with nobody having decided.
- */
-export function applyResponse(
-  ctx: TickContext,
-  def: IncidentDefinition,
-  incident: ActiveIncident,
-  responseId: string,
-): void {
-  const response = responseById(def, responseId);
+/** Nobody decided — felt identically whether that's an idle bot or a player who never opened
+ *  the Decision Card. Unconditional, no crew-hours/spares cost, no success roll: there was no
+ *  attempt to charge for or that could fail. `incidentsStage` is the only caller. */
+function applyDefaultResponse(ctx: TickContext, def: IncidentDefinition, incident: ActiveIncident): void {
+  const response = responseById(def, def.defaultResponseId);
   incident.chosenResponseId = response.id;
   incident.resolvedAtHour = ctx.state.hour;
   ctx.log.because(incident.cause, () => {
@@ -574,6 +598,175 @@ export function applyResponse(
       severity: "info",
       code: `incident.${def.id}.resolved`,
       data: { response: response.id },
+    });
+  });
+}
+
+/**
+ * M7.7 §2: the actual attempt — spares (if the response declares `sparesCost`, drawn from
+ * `sparesFromSystem`; a shortfall doesn't block the attempt, it worsens the odds and, on a
+ * success anyway, leaves a permanent `efficiencyPenaltyFraction` on that system — the
+ * improvisation cost docs/INCIDENT_MAGNITUDES.md's pattern calls for) and a real success roll
+ * from `stationPerformance`. On failure, spares/crew-hours already spent stay spent, the
+ * effect does not apply, and `chosenResponseId` is cleared so the incident is eligible for
+ * another attempt — or, past the warning window, the default. Exported so
+ * `engine/crewHours.ts` can call it the moment a queued response's hours finish paying down;
+ * `applyResponse` below calls it directly when a response's cost fits the same hour.
+ */
+export function resolveResponseAttempt(
+  ctx: TickContext,
+  def: IncidentDefinition,
+  incident: ActiveIncident,
+  responseId: string,
+): void {
+  const response = responseById(def, responseId);
+  const { state, log } = ctx;
+
+  const performance = stationPerformance(ctx, def.station, crewCondition);
+
+  let sparesShortfall = false;
+  if (response.sparesCost !== undefined && response.sparesCost > 0 && response.sparesFromSystem !== undefined) {
+    const system = state.systems[response.sparesFromSystem];
+    const available = system?.spares ?? 0;
+    sparesShortfall = available < response.sparesCost;
+    if (system !== undefined) {
+      system.spares = Math.max(0, available - Math.min(response.sparesCost, available));
+    }
+  }
+
+  const successChance = clamp(
+    sparesShortfall ? performance * management.improvisedRepairPenaltyFraction.value : performance,
+    0,
+    1,
+  );
+  const succeeded = ctx.rng.stream("responses").chance(successChance);
+
+  if (succeeded) {
+    incident.chosenResponseId = response.id;
+    incident.resolvedAtHour = state.hour;
+    log.because(incident.cause, () => {
+      response.effect(ctx, incident);
+      if (sparesShortfall && response.sparesFromSystem !== undefined) {
+        const system = state.systems[response.sparesFromSystem];
+        if (system !== undefined) {
+          system.efficiencyPenaltyFraction =
+            1 - (1 - system.efficiencyPenaltyFraction) * (1 - management.improvisedRepairEfficiencyPenaltyFraction.value);
+        }
+      }
+      log.log({
+        kind: "decision",
+        severity: "info",
+        code: `incident.${def.id}.resolved`,
+        data: { response: response.id, improvised: sparesShortfall ? 1 : 0 },
+      });
+    });
+  } else {
+    delete incident.chosenResponseId;
+    log.because(incident.cause, () => {
+      log.log({
+        kind: "decision",
+        severity: "warning",
+        code: `incident.${def.id}.responseFailed`,
+        data: { response: response.id },
+      });
+    });
+  }
+}
+
+/**
+ * M7.7 §1: the entry point a `DecisionStrategy` (engine/bots.ts today, a real player's
+ * Decision Card in M8) calls once to act on an incident. A response's *effective* cost is
+ * its declared `crewHoursCost` divided by the owning station's current performance. If that
+ * fits what's left of today's crew-hours budget, resolution happens now
+ * (`resolveResponseAttempt`); otherwise the remainder is queued (`engine/crewHours.ts` pays
+ * it down FIFO from each later day's budget) — "work slips to the next sol," made real.
+ *
+ * A station with performance exactly 0 (nobody covers it — either the primary and backup are
+ * both dead, or, First Light's 2-crew roster, that station was never staffed to begin with,
+ * engine/stations.ts) cannot even *start* a response that costs real crew time, let alone
+ * finish it. An earlier version queued it anyway with a capped-near-infinite `hoursRemaining`
+ * — found empirically to be worse than doing nothing: setting `chosenResponseId` immediately
+ * permanently blocked `incidentsStage`'s own "nobody decided" default-response fallback,
+ * while the queued item could never actually pay down (its own crew-hours budget is 0 on an
+ * unstaffed station), so the incident's ongoing effect ran unanswered for the rest of the
+ * mission. Rejecting the attempt outright and leaving `chosenResponseId` unset instead lets
+ * that same fallback fire once the (detection-anchored) warning window lapses — the honest
+ * consequence of genuinely having nobody to send, not a silent permanent trap.
+ */
+/** M7.8 Part B: whether `responseId` would resolve THIS hour if chosen now — fits the day's
+ *  remaining crew-hours budget through `def.station`'s current performance — rather than
+ *  being queued into tomorrow's payoff (`engine/crewHours.ts`) or rejected outright as
+ *  impossible. Exported so `bots.ts`'s `prudentBot` can prefer an option that will actually
+ *  be *done* this hour over a costlier one that would sit unresolved while a fast-killing
+ *  incident's own ongoing effect keeps running — the same "will this be UNAVAILABLE or
+ *  displace other work" fact M7.7 §1 says a real Decision Card must surface to a player, not
+ *  a hidden engine internal. Pure: reads state, changes nothing. */
+export function wouldResolveThisHour(ctx: TickContext, def: IncidentDefinition, responseId: string): boolean {
+  const response = responseById(def, responseId);
+  const { state } = ctx;
+  const performance = stationPerformance(ctx, def.station, crewCondition);
+  const declaredHours = response.crewHoursCost ?? 0;
+  if (performance === 0 && declaredHours > 0) return false;
+  const effectiveHours = performance > 0 ? declaredHours / performance : 0;
+  const remainingToday = Math.max(0, state.crewHours.budgetTodayHours - state.crewHours.spentTodayHours);
+  return effectiveHours <= remainingToday;
+}
+
+export function applyResponse(
+  ctx: TickContext,
+  def: IncidentDefinition,
+  incident: ActiveIncident,
+  responseId: string,
+): void {
+  const response = responseById(def, responseId);
+  const { state } = ctx;
+
+  const performance = stationPerformance(ctx, def.station, crewCondition);
+  const declaredHours = response.crewHoursCost ?? 0;
+
+  if (performance === 0 && declaredHours > 0) {
+    ctx.log.because(incident.cause, () => {
+      ctx.log.log({
+        kind: "decision",
+        severity: "warning",
+        code: `incident.${def.id}.responseImpossible`,
+        data: { response: response.id },
+      });
+    });
+    return;
+  }
+
+  const effectiveHours = performance > 0 ? declaredHours / performance : 0;
+
+  const remainingToday = Math.max(0, state.crewHours.budgetTodayHours - state.crewHours.spentTodayHours);
+
+  if (effectiveHours <= remainingToday) {
+    state.crewHours.spentTodayHours += effectiveHours;
+    resolveResponseAttempt(ctx, def, incident, responseId);
+    return;
+  }
+
+  const paidNow = remainingToday;
+  state.crewHours.spentTodayHours += paidNow;
+  incident.chosenResponseId = response.id;
+
+  const queued: QueuedWork = {
+    id: `${incident.id}-${response.id}-${state.hour}`,
+    incidentId: incident.id,
+    definitionId: def.id,
+    responseId: response.id,
+    totalHours: effectiveHours,
+    hoursRemaining: effectiveHours - paidNow,
+    queuedAtHour: state.hour,
+  };
+  state.crewHours.queue.push(queued);
+
+  ctx.log.because(incident.cause, () => {
+    ctx.log.log({
+      kind: "decision",
+      severity: "info",
+      code: `incident.${def.id}.queued`,
+      data: { response: response.id, hoursRemaining: round(queued.hoursRemaining) },
     });
   });
 }
@@ -600,25 +793,48 @@ export function incidentsStage(ctx: TickContext): void {
     log.because(cause, () => def.physicsEffect(ctx));
   }
 
-  // M7.5: the physical process an incident models keeps evolving hour after hour for as
-  // long as nobody has actually addressed its root cause — see `leavesOngoing` above. Runs
-  // for brand-new incidents too (the trigger hour gets its first hour of exposure, same as
-  // physicsEffect always has).
+  // M7.7 §2: detection delay — the incident's own physics run either way (below); only
+  // whether the crew has *noticed* it, and can therefore respond at all, waits on this roll.
+  // A staffed station detects faster, but even an unstaffed one (performance 0 — Incident
+  // Command and Mission Command own no hardware and can go unstaffed by design on a small
+  // crew, engine/stations.ts) still has automaticDetectionFloorChancePerHour: a real
+  // caution-and-warning system notices a fire or a leak on its own.
+  for (const incident of state.activeIncidents) {
+    if (incident.detectedAtHour !== undefined) continue;
+    const def = INCIDENT_CATALOG.find((d) => d.id === incident.definitionId);
+    if (def === undefined) continue;
+    const performance = stationPerformance(ctx, def.station, crewCondition);
+    const stationDetectChance =
+      performance > 0 ? 1 / Math.max(1, management.incidentDetectionBaseDelayHours.value / performance) : 0;
+    const detectChance = Math.max(stationDetectChance, management.automaticDetectionFloorChancePerHour.value);
+    if (ctx.rng.stream("incidents").chance(detectChance)) {
+      incident.detectedAtHour = state.hour;
+      log.because(incident.cause, () => {
+        log.log({ kind: "decision", severity: "info", code: `incident.${def.id}.detected`, data: {} });
+      });
+    }
+  }
+
+  // M7.5/§2: the physical process an incident models keeps evolving hour after hour for as
+  // long as it hasn't actually been fixed — see `shouldRunOngoingEffect` above. Runs for
+  // brand-new incidents too (the trigger hour gets its first hour of exposure, same as
+  // physicsEffect always has), detected or not.
   for (const incident of state.activeIncidents) {
     const def = INCIDENT_CATALOG.find((d) => d.id === incident.definitionId);
     if (def === undefined || !shouldRunOngoingEffect(def, incident)) continue;
     log.because(incident.cause, () => def.ongoingEffect?.(ctx, incident));
   }
 
-  // The "nobody decided" consequence: felt identically whether that's an idle bot or a
-  // player who never opened the Decision Card, and identical to what a bot could have
-  // chosen deliberately — the deadline itself is the mechanism, not a special case.
+  // The "nobody decided" consequence, once detected and the warning window (counted from
+  // detection, not trigger) has lapsed with no decision in flight — a queued or already
+  // -resolved response is left alone, only a genuinely undecided incident gets the default.
   for (const incident of state.activeIncidents) {
-    if (incident.resolvedAtHour !== undefined) continue;
+    if (incident.detectedAtHour === undefined) continue;
+    if (incident.chosenResponseId !== undefined) continue;
     const def = INCIDENT_CATALOG.find((d) => d.id === incident.definitionId);
     if (def === undefined) continue;
-    if (state.hour - incident.triggeredAtHour < scaledWarningTimeHours(ctx, def)) continue;
+    if (state.hour - incident.detectedAtHour < scaledWarningTimeHours(ctx, def)) continue;
 
-    applyResponse(ctx, def, incident, def.defaultResponseId);
+    applyDefaultResponse(ctx, def, incident);
   }
 }

@@ -65,6 +65,42 @@ export const crew = {
     source: "BVAD-2022",
     confidence: "measured",
   }),
+  // --- M7.7 §1: the real, pooled crew-hours budget (docs/DECISION_AUDIT.md found
+  // crewHoursCost was declared everywhere and enforced nowhere). Read directly from the
+  // BVAD-2022 PDF, section 3.3.4 "Crewtime Estimates", Table 3-28: "Assuming the exercise
+  // time is 0.5 CM-h/d shorter due to working against gravity [than in orbit], a crewmember
+  // will have 69.7 CM-h/wk of VST [Variably-Scheduled Time] ... on a planetary surface" —
+  // the surface figure, not the orbital 67.2 CM-h/wk one, since every Sol Keeper scenario is
+  // a surface habitat. VST is explicitly "available for either maintaining the life support
+  // system or for other activities" — the assignable-work pool this budget models.
+  dailyAssignableWorkHoursPerCrew: c({
+    value: 69.7 / 7,
+    unit: "CM-h/CM-d",
+    source: "BVAD-2022",
+    confidence: "derived",
+    note: "69.7 CM-h/wk (planetary surface VST, BVAD-2022 section 3.3.4 Table 3-28) / 7 days = 9.957 CM-h/CM-d.",
+  }),
+  minSustainedAssignableWorkHoursPerCrew: c({
+    value: 50 / 7,
+    unit: "CM-h/CM-d",
+    source: "BVAD-2022",
+    confidence: "derived",
+    note: "\"Minimally, a crewmember might be expected to work at least 50 CM-h/wk\" (BVAD-2022, same section) — the floor a badly degraded crew (low health/morale) can still be scaled down to, never below.",
+  }),
+  overtimeCeilingFractionOfAverage: c({
+    value: 1.1,
+    unit: "fraction",
+    source: "BVAD-2022",
+    confidence: "measured",
+    note: "\"The maximum available VST might be 10% greater than the average values but, based on Skylab experience, this rate can only be maintained for periods of 28 days or less.\" Working above this fraction of the daily budget is what the overtime-fatigue mechanic actually penalises.",
+  }),
+  overtimeFatiguePerHourAboveCeiling: c({
+    value: 0.03,
+    unit: "fraction/h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "fatigueFraction gained per crew-hour worked beyond overtimeCeilingFractionOfAverage's threshold. No NASA figure quantifies fatigue accrual this precisely; the 28-day sustainability window above is the real anchor for *when* overtime becomes a problem, this is how fast the game feels it.",
+  }),
 } as const;
 
 /**
@@ -814,6 +850,95 @@ export const management = {
     confidence: "tuned",
     note: "Lower TRL buys better performance at the cost of reliability (brief: TRL 1-9).",
   }),
+  // --- M7.7 §5: replaces the old flat, unconditional 15%/hour auto-repair
+  // (docs/DECISION_AUDIT.md flagged it as decision-independent and able to silently undo an
+  // incident's consequence). Same TRL-scaled shape as the failure-rate curve above, mirrored
+  // rather than opposed: a lower-TRL system is both more likely to break and harder to fix
+  // well, same as it is more fragile above.
+  repairAttemptCrewHours: c({
+    value: 2,
+    unit: "CM-h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Crew-hours a single repair attempt costs, spent whether or not it succeeds — same hour, not queued (an ordinary repair is one action, not a multi-day project, unlike an incident response).",
+  }),
+  repairSuccessBaseFraction: c({
+    value: 0.35,
+    unit: "fraction at TRL 1",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+  }),
+  repairSuccessPerTrlLevel: c({
+    value: 0.075,
+    unit: "fraction/level",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "successFraction = repairSuccessBaseFraction + (trl-1) x this, clamped to 0.95 — a TRL-9 system's repair succeeds ~95% of an attempt, a TRL-1 one ~35%, both further scaled by stationPerformance.",
+  }),
+  improvisedRepairPenaltyFraction: c({
+    value: 0.5,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Success-probability multiplier when spares are insufficient and the crew improvises instead (docs/INCIDENT_MAGNITUDES.md's own pattern for a degraded, not-as-good-as-original fix).",
+  }),
+  improvisedRepairEfficiencyPenaltyFraction: c({
+    value: 0.15,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Permanent SystemState.efficiencyPenaltyFraction applied when an improvised (spares-short) repair still succeeds — the system works again, just not at full rated capacity, ever again this run.",
+  }),
+  incidentDetectionBaseDelayHours: c({
+    value: 1,
+    unit: "h at stationPerformance=1",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "M7.7 §2: an incident's owning station rolls chance(1 / max(1, this / stationPerformance)) each hour post-trigger until detected, on top of automaticDetectionFloorChancePerHour below. A fully-staffed, nominal station detects almost immediately.",
+  }),
+  automaticDetectionFloorChancePerHour: c({
+    value: 0.35,
+    unit: "1/h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "A real spacecraft's caution-and-warning system (smoke/fire alarms, pressure-loss alarms) notices a fire or a hull leak whether or not a specific crew member is dedicated to watching for it — station staffing should make detection *faster*, not the only way it can happen at all. Without this floor, a scenario whose crew is too small to staff an incident's owning station (Incident Command and Mission Command own no hardware and can go unstaffed by design on a 2-person crew, engine/stations.ts) made that incident permanently undetectable — found empirically: First Light's depress-mir97 killed crew in every affected seed with zero chance to ever respond.",
+  }),
+  // --- M7.7 §5: the other two events.ts literals docs/DECISION_AUDIT.md found unsourced,
+  // relocated with their existing values unchanged (not retuned).
+  pumpFailureTargetCoinFlip: c({
+    value: 0.5,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Which of waterRecovery/thermalControl a scripted pumpFailure hits — an arbitrary 50/50, no decision can influence it.",
+  }),
+  cropBlightDamageMinFraction: c({
+    value: 0.5,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+  }),
+  cropBlightDamageMaxFraction: c({
+    value: 1,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "cropBlight damage = magnitude x range(cropBlightDamageMinFraction, cropBlightDamageMaxFraction).",
+  }),
+  unassignedStationEmergencyPerformanceFraction: c({
+    value: 0.5,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "engine/stations.ts's stationPerformance: when a station has nobody at all assigned as primary or backup (First Light's 2-person roster structurally cannot cover Incident Command or Mission Command, engine/stations.ts) or its assigned coverers have all died, the best-conditioned surviving crew member still responds as an ad hoc stand-in, at this further penalty on top of their own condition — a real crew of any size keeps fighting a fire or patching a leak, nobody needs a station badge to try to save their own life. Found necessary empirically: without any fallback, a hard-0 performance made every Incident-Command-owned incident (depress-mir97 chief among them) mathematically unwinnable on First Light regardless of bot skill, since no response through that station could ever succeed or even be attempted.",
+  }),
+  longMissionRemainingHours: c({
+    value: 1000,
+    unit: "h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "engine/bots.ts's prudentBot: above this much mission time still remaining, a response flagged permanentPenalty (a never-recovers degradation, not a probabilistic improvised-repair one) is avoided in favor of a real non-permanent alternative when one exists. Found necessary empirically (docs/M7.8_DIAGNOSIS.md): on The Long Night (2124h, roughly 3x First Light/Jezero's own ~720-750h), o2tank-apollo13's improviseAdapter permanently degrades co2Scrubber efficiency — a cost that compounds for however much mission remains, and on this scenario specifically that's most of it, unlike the shorter missions it was tuned against. 1000h sits below Long Night's own duration and above the two short scenarios', so it targets the one case the cost actually behaves differently on.",
+  }),
 } as const;
 
 /**
@@ -1320,6 +1445,22 @@ export const incidents = {
     confidence: "tuned",
     note: "The improvised adapter isn't as good as the original hardware — docs/INCIDENT_MAGNITUDES.md: \"the adapter degrades scrubber efficiency slightly for the rest of the mission.\" No figure was published for how much; this is the residual cost of choosing the good response, not a free fix.",
   }),
+  // --- M7.7 §7: o2tank-apollo13's rationActivity, fixing docs/DECISION_AUDIT.md's one
+  // confirmed cosmetic decision (it wrote the same nothing as the incident's own default).
+  rationActivityMetabolicReductionFraction: c({
+    value: 0.3,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Real, lasting reduction to crewActivityFraction (models/atmosphere.ts's CO2 production term, models/thermal.ts's crewHeatKw) once chosen — \"reduced crew metabolic rate and CO2 production\", the brief's own words.",
+  }),
+  rationActivityCrewHoursPenaltyHours: c({
+    value: 4,
+    unit: "CM-h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "One-time cost to the day's remaining crew-hours budget — \"at the cost of crew-hours available for work.\"",
+  }),
   // --- M7.5: coolant-ms22 (docs/INCIDENT_MAGNITUDES.md #3). Roscosmos/NASA statements via
   // news agencies, not a primary NASA document — labelled measured-reported.
   ms22CabinPeakTempC: c({
@@ -1398,18 +1539,68 @@ export const missionDifficulty = {
   training: {
     incidentRateMultiplier: c({ value: 0.5, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
     failureRateMultiplier: c({ value: 0.5, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
-    warningTimeMultiplier: c({ value: 1.5, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
+    // 1.5 -> 3.0 (M7.8 Part D, docs/M7.8_DIAGNOSIS.md): depress-mir97's own base
+    // warningTimeHours (1) is already at the gentle end of its derived hole-diameter range
+    // (constants.depressMir97HoleDiameterMm's own note — 8mm, not the 12mm worked example),
+    // so its severity isn't the right lever. Measured: with detection delay (M7.7 §2) eating
+    // into the *scaled* window before a decision can even be offered, 64 of 69 (93%) of First
+    // Light Training's remaining prudentBot losses were this single incident's own kill clock
+    // outrunning any response, regardless of which one was chosen — the brief's own "warning
+    // time" lever, not a hazard rate.
+    warningTimeMultiplier: c({ value: 3.0, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
   },
   nominal: {
     incidentRateMultiplier: c({ value: 1.0, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
     failureRateMultiplier: c({ value: 1.0, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
-    warningTimeMultiplier: c({ value: 1.0, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
+    // 1.0 -> 2.0, same reasoning as training above — see its own note.
+    warningTimeMultiplier: c({ value: 2.0, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
   },
   flightRated: {
     incidentRateMultiplier: c({ value: 3.2, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
     failureRateMultiplier: c({ value: 2.2, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
     warningTimeMultiplier: c({ value: 0.6, unit: "multiplier", source: "GAME-DESIGN", confidence: "tuned" }),
   },
+} as const;
+
+/**
+ * M7.7 §3: science-points accrual rates. All tuned — no NASA document states a "points"
+ * value for anything; what's real is which activities the Station rules name as
+ * science-generating (crop biology, ISRU, and "science data return" under Communications)
+ * and that jezero-outpost's real primaryGoal (engine/goals.ts) now actually requires them.
+ */
+export const science = {
+  pointsPerHarvestKg: c({ value: 2, unit: "points/kg", source: "GAME-DESIGN", confidence: "tuned" }),
+  pointsPerMoxieProducedKg: c({ value: 5, unit: "points/kg", source: "GAME-DESIGN", confidence: "tuned" }),
+  pointsPerCommsUptimeHour: c({
+    value: 0.5,
+    unit: "points/h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Accrues while comms is operational, powered, and not in a blackout — routine science downlink, not a data-volume model.",
+  }),
+} as const;
+
+/**
+ * M7.7 §6: abort criteria. All tuned thresholds — the brief names the *kinds* of signal
+ * (crew critical with no repair path, consumables short of the mission's own duration,
+ * dose approaching the career limit, habitat integrity lost) but no NASA document states
+ * game-numeric trigger points for any of them.
+ */
+export const abort = {
+  doseFractionOfCareerLimit: c({
+    value: 0.9,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Any crew member's cumulativeDoseMSv crossing this fraction of radiation.careerLimitMSv is an abort signal — before the hard PARTIAL-ending threshold at 1.0, giving a bot/player room to act.",
+  }),
+  crewCriticalSustainedHours: c({
+    value: 12,
+    unit: "h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "A crew member continuously at CrewCondition \"critical\" for this long, with no incident actively being worked to address it, is the game's stand-in for \"no repair path\".",
+  }),
 } as const;
 
 /** The whole tree, for the source-coverage and placeholder-reporting tests. */
@@ -1427,4 +1618,6 @@ export const CONSTANTS = {
   physiology,
   incidents,
   missionDifficulty,
+  science,
+  abort,
 } as const;

@@ -24,7 +24,7 @@ export interface RngState {
 }
 
 /** Stream names used by the models. Kept as a union so a typo cannot silently fork a stream. */
-export type StreamName = "failures" | "weather" | "hazards" | "crew" | "crops" | "incidents";
+export type StreamName = "failures" | "weather" | "hazards" | "crew" | "crops" | "incidents" | "responses";
 
 export function createRngState(seed: number): RngState {
   return { seed, streams: {} };
