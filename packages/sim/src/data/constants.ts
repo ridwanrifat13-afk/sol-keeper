@@ -647,6 +647,29 @@ export const physics = {
     confidence: "derived",
     note: "3600 kcal/CM-day (OCHMO TB-047 nominal) divided by 0.62 kg/CM-day (BVAD dry food mass). Derived rather than assumed so that eating at the nominal rate consumes exactly the BVAD ration — a round 4000 kcal/kg would have the crew eating 0.9 kg/day, 45% more than the document says, and would have silently broken the 2.7 t food validation the moment rationing was wired up.",
   }),
+  // --- M7.5: choked (sonic) orifice flow, for the depress-mir97 incident's leak-decay
+  // physics (docs/INCIDENT_MAGNITUDES.md #1). Standard textbook values for dry air, not
+  // specific to this incident.
+  molarMassAirGPerMol: c({
+    value: 28.97,
+    unit: "g/mol",
+    source: "STOICHIOMETRY",
+    confidence: "measured",
+  }),
+  specificHeatRatioAir: c({
+    value: 1.4,
+    unit: "dimensionless",
+    source: "STOICHIOMETRY",
+    confidence: "measured",
+    note: "Cp/Cv for a diatomic gas (air is ~99% N2 + O2) at moderate temperature.",
+  }),
+  dischargeCoefficientSharpOrifice: c({
+    value: 0.6,
+    unit: "dimensionless",
+    source: "STOICHIOMETRY",
+    confidence: "measured",
+    note: "Standard fluid-dynamics discharge coefficient (Cd) for flow through a sharp-edged circular orifice — the textbook value docs/INCIDENT_MAGNITUDES.md's own choked-flow derivation uses, not fitted to this specific incident.",
+  }),
 } as const;
 
 /** Systems-engineering parameters used by the ESM budget and risk model (P1/P2). */
@@ -1158,6 +1181,29 @@ export const physiology = {
   hypothermiaImpairedFraction: c({ value: 0.2, unit: "fraction", source: "GAME-DESIGN", confidence: "tuned" }),
   hypothermiaCriticalFraction: c({ value: 0.55, unit: "fraction", source: "GAME-DESIGN", confidence: "tuned" }),
 
+  // --- Heat stress / wet-bulb (M7.5, docs/INCIDENT_MAGNITUDES.md #3): "ADD A WET-BULB CHECK
+  // to the thermal model... this gives heat a failure path of its own, mirroring the cold
+  // path." A standing model addition, not exclusive to the coolant-ms22 incident that
+  // surfaced the sourced threshold — any sustained cabin overheat (a jammed heater, a bad
+  // thermal-control repair) now degrades crew the same way. Capped at "critical", never
+  // "lost": no sourced heat-death timeline exists the way NASA-HYPOTHERMIA-2008 gives cold
+  // (12h/22h immersion anchors) — inventing one would violate brief rule 1, so heat stress is
+  // scoped honestly to "makes stations perform worse", same treatment as fatigue and injury.
+  heatStressWetBulbTempC: c({
+    value: 31,
+    unit: "degC",
+    source: "NSF-MS22",
+    confidence: "measured",
+    note: "measured-reported: the crewed MS-22 thermal-abort criteria's descent-module limit at ~95% relative humidity (the wet-bulb limit, where sweating stops shedding heat), per NASASpaceflight's reporting. The sim assumes near-95% RH in a sealed, crewed habitat rather than tracking humidity as its own state — a disclosed simplification.",
+  }),
+  heatStressCriticalToImpairedHours: c({
+    value: 4,
+    unit: "h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Time sustained above heatStressWetBulbTempC before heat stress reaches its capped 'critical' ceiling — no sourced timeline exists (see the group comment above), so this mirrors hypoxiaCriticalToLostHours's own treatment of an unsourced time-at-threshold step.",
+  }),
+
   // --- Abort timing (S1.9, NASA-ORION-FS) ---
   lunarReturnTransitNominalDays: c({
     value: 6,
@@ -1203,26 +1249,120 @@ export const incidents = {
     confidence: "measured",
     note: "Mir fire, February 1997. A documented alternative figure of 90 seconds exists and is historically disputed; shown in the in-game fact card as a real example of uncertainty even in flown history.",
   }),
-  depressMir97LeakRateKgPerHour: c({
-    value: 1,
-    unit: "kg/h",
-    source: "INC-DEPRESS-MIR97-PENDING",
-    confidence: "placeholder",
-    note: "TODO: Progress-Mir collision and depressurization, June 1997. Team to supply a source for cabin pressure loss rate.",
+  // --- M7.5: depress-mir97 (docs/INCIDENT_MAGNITUDES.md #1). No leak rate or pressure curve
+  // was ever published for the real Progress-Mir/Spektr collision, so the rate is DERIVED
+  // from choked (sonic) orifice flow physics — physics.molarMassAirGPerMol,
+  // physics.specificHeatRatioAir, physics.dischargeCoefficientSharpOrifice — plus the one
+  // measured quantity that was published (Spektr's volume), not invented.
+  depressMir97SpektrVolumeM3: c({
+    value: 62,
+    unit: "m^3",
+    source: "NASA-SHUTTLE-MIR",
+    confidence: "measured",
+    url: "https://spaceflight.nasa.gov/history/shuttle-mir/spacecraft/s-mir-spektr-main.htm",
+    note: "Spektr's pressurised volume. Used as the leak-physics worked example's V; the sim itself scales the leak by the current scenario's whole habitatVolumeM3 (no sub-module architecture exists), a disclosed simplification.",
   }),
-  o2TankFailureLossFraction: c({
+  depressMir97HoleDiameterMm: c({
+    value: 8,
+    unit: "mm",
+    min: 8,
+    max: 12,
+    source: "NASA-SMA-MIR-COLLISION",
+    confidence: "derived",
+    note: "No hole size was published for the real event; docs/INCIDENT_MAGNITUDES.md's own derived range is 8-12 mm (its own worked example used 10 mm). This sim uses the small end: at the 1-hour tick resolution, one full hour of undiminished exposure always elapses before any response can apply (the smallest non-zero warning window this engine can represent), which is already a coarser approximation of the addendum's own \"20-40 minutes of game time\" decision window than a sub-hour tick would give. Choosing 10 mm on top of that coarseness made the smallest scenario (First Light, 120 m^3) lose ~25% of cabin O2 in that one unavoidable hour — a single incident regularly deciding the mission on its own rather than compounding with the others the way M7.5 intends. 8 mm keeps the leak genuinely severe (~15-20% in that hour, scenario-dependent) without letting the tick-resolution coarseness alone determine the outcome.",
+  }),
+  depressMir97SealedModulePowerLossFraction: c({
     value: 0.5,
     unit: "fraction",
-    source: "INC-O2TANK-APOLLO13-PENDING",
-    confidence: "placeholder",
-    note: "TODO: Apollo 13 oxygen tank failure, 1970. Team to supply a source for the fraction of O2 supply lost.",
+    source: "NASA-SMA-MIR-COLLISION",
+    confidence: "measured",
+    note: "\"Sealing Spektr cost about half of Mir's power, because Spektr's arrays were isolated with it.\" The model for M7.5's residual-cost principle: the good response (seal the module) permanently loses this fraction of generation capacity, not a free fix.",
   }),
-  coolantLeakMs22RateFraction: c({
-    value: 0.3,
-    unit: "fraction/h",
-    source: "INC-COOLANT-MS22-PENDING",
-    confidence: "placeholder",
-    note: "TODO: Soyuz MS-22 coolant leak, December 2022. Team to supply a source for thermal-control capacity loss rate.",
+  // --- M7.5: o2tank-apollo13, reframed as a CO2-rise incident (docs/INCIDENT_MAGNITUDES.md
+  // #2) — the real crew-threatening consequence of the LM lifeboat scenario was CO2 buildup
+  // from running 3 crew on a 2-crew scrubber, not oxygen loss. Figures come from crew
+  // debrief and accident-review-board material reported secondhand (labelled
+  // "measured-reported" in each note rather than a separate confidence tier), not a primary
+  // NASA document — upgrade if the Apollo 13 Mission Report ECS section turns up the same
+  // numbers directly.
+  apollo13ScrubberCapacityFractionDuringIncident: c({
+    value: 1 / 3,
+    unit: "fraction",
+    source: "A13-CO2",
+    confidence: "derived",
+    note: "The LM's LiOH canisters were sized for 2 crew for 2 days but carried 3 crew for ~4 days — roughly 3x the design demand, i.e. ~1/3 of needed capacity available.",
+  }),
+  apollo13PeakCo2MmHg: c({
+    value: 15,
+    unit: "mmHg",
+    source: "A13-CO2",
+    confidence: "measured",
+    note: "measured-reported: Jack Swigert's crew-debrief recollection of the ppCO2 reading at the worst point, not a primary instrument record.",
+  }),
+  apollo13HoursToPeakCo2: c({
+    value: 36,
+    unit: "h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "docs/INCIDENT_MAGNITUDES.md's own calibration target (\"tune ONLY the cabin volume and mixing efficiency so the curve reaches 15 mmHg at about 36 h\"), reconciling A13-CO2's qualitative timeline (\"began to threaten the crew after about a day and a half\") with the specific peak reading above — a tuning choice traceable to that source, not GAME-DESIGN's own invention, but attributed here per the brief's rule that every 'tuned' confidence value cites GAME-DESIGN.",
+  }),
+  apollo13PostFixCo2MmHg: c({
+    value: 2,
+    unit: "mmHg",
+    source: "A13-CO2",
+    confidence: "measured",
+    note: "measured-reported: the accident review board's reported ppCO2 after the improvised adapter, stayed below this for the rest of the return.",
+  }),
+  apollo13ScrubberDegradationAfterFixFraction: c({
+    value: 0.1,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "The improvised adapter isn't as good as the original hardware — docs/INCIDENT_MAGNITUDES.md: \"the adapter degrades scrubber efficiency slightly for the rest of the mission.\" No figure was published for how much; this is the residual cost of choosing the good response, not a free fix.",
+  }),
+  // --- M7.5: coolant-ms22 (docs/INCIDENT_MAGNITUDES.md #3). Roscosmos/NASA statements via
+  // news agencies, not a primary NASA document — labelled measured-reported.
+  ms22CabinPeakTempC: c({
+    value: 30,
+    unit: "degC",
+    source: "MS22-THERMAL",
+    confidence: "measured",
+    note: "measured-reported: crew habitation module temperature after the leak, per Roscosmos statements reported by TASS. Roscosmos explicitly denied reports of 50 degC — a useful negative bound.",
+  }),
+  ms22EquipmentBayPeakTempC: c({
+    value: 40,
+    unit: "degC",
+    source: "MS22-THERMAL",
+    confidence: "measured",
+    note: "measured-reported: instrumentation/equipment compartment peak, same source. The sim has no separate equipment-bay temperature state; this is used as a fixed +10 degC offset over cabin temperature, a disclosed simplification.",
+  }),
+  ms22HoursToStabilize: c({
+    value: 24,
+    unit: "h",
+    source: "MS22-THERMAL",
+    confidence: "measured",
+    note: "measured-reported: \"most of the coolant had leaked out within a day\"; temperatures stabilised at ~30 degC after ground teams powered down spacecraft systems.",
+  }),
+  ms22EquipmentBayFailureTempC: c({
+    value: 40,
+    unit: "degC",
+    source: "NSF-MS22",
+    confidence: "measured",
+    note: "measured-reported: service-module abort criterion.",
+  }),
+  ms22ComputerFailureTempC: c({
+    value: 45,
+    unit: "degC",
+    source: "NSF-MS22",
+    confidence: "measured",
+    note: "measured-reported: main-computer abort criterion.",
+  }),
+  ms22CropHealthLossFromShedLoad: c({
+    value: 0.15,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "docs/INCIDENT_MAGNITUDES.md's residual cost for the only real MS-22 mitigation (shedding load): \"crops lose light\" while non-essential systems are off. No figure was published; this is the game's stand-in cost, not a free fix.",
   }),
   spe1972DoseMultiplier: c({
     value: 1500,

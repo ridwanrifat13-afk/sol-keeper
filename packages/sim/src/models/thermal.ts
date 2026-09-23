@@ -5,7 +5,7 @@
  * makes up the difference when it has power. Losing the heater during a brownout is the
  * classic cascade this model exists to produce.
  */
-import { crew as crewConstants, habitat } from "../data/constants.js";
+import { crew as crewConstants, habitat, survivalModes } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
 import { mjPerDayToWatts, mjToKwh, wattsToKw } from "../units.js";
 
@@ -21,23 +21,45 @@ export function thermalStage(ctx: TickContext): void {
   const living = state.crew.filter((c) => c.alive).length;
   t.crewHeatKw = living * crewHeatKwPerPerson();
 
-  // Heat leaking to the outside, proportional to the temperature difference.
+  // Heat leaking to or from the outside, proportional to the temperature difference — this
+  // term flows *in* whenever the environment is hotter than the cabin (lunar daytime reaches
+  // ~117 degC), which is physically correct for passive conduction but is exactly why active
+  // cooling below can't be skipped: conduction alone has no way to reject heat once the
+  // outside is the hotter side.
   t.lossKw =
     habitat.thermalConductanceKwPerK.value * (t.habitatTempC - state.environment.outsideTempC);
 
-  const heaterSystem = state.systems.thermalControl;
-  t.heaterKw =
-    heaterSystem !== undefined && heaterSystem.operational && heaterSystem.poweredThisHour
-      ? heaterSystem.nominalPowerKw
+  // thermalControl is one bidirectional system, not a heater-only one: a real ECLSS thermal
+  // loop both heats (below the survival mode's comfort target) and actively cools via a
+  // radiator (above it), each bounded by the same rated capacity. Before this, the heater ran
+  // at full nominal power whenever merely powered, regardless of whether heating was even
+  // needed, and nothing ever ran the other direction — during lunar daytime that combination
+  // added heat with nothing to remove it, an unbounded runaway with no incident involved.
+  const thermalControl = state.systems.thermalControl;
+  const capacityKw =
+    thermalControl !== undefined && thermalControl.operational && thermalControl.poweredThisHour
+      ? thermalControl.nominalPowerKw
       : 0;
+  const comfortTempC = survivalModes[state.food.mode].habitatTempC.value;
 
-  const netKw = t.crewHeatKw + t.heaterKw - t.lossKw;
+  if (capacityKw > 0 && t.habitatTempC < comfortTempC) {
+    t.heaterKw = capacityKw;
+    t.radiatorKw = 0;
+  } else if (capacityKw > 0 && t.habitatTempC > comfortTempC) {
+    t.heaterKw = 0;
+    t.radiatorKw = capacityKw;
+  } else {
+    t.heaterKw = 0;
+    t.radiatorKw = 0;
+  }
+
+  const netKw = t.crewHeatKw + t.heaterKw - t.radiatorKw - t.lossKw;
 
   // dT = energy / thermal mass. Thermal mass is stored in MJ/K, energy arrives in kWh.
   const thermalMassKwhPerK = mjToKwh(habitat.thermalMassMjPerK.value);
   t.habitatTempC += (netKw * ctx.dtHours) / thermalMassKwhPerK;
 
-  if (t.heaterKw === 0 && heaterSystem !== undefined && heaterSystem.operational) {
+  if (t.heaterKw === 0 && t.habitatTempC < comfortTempC && thermalControl !== undefined && thermalControl.operational) {
     log.logEdge({
       kind: "fault",
       severity: "caution",

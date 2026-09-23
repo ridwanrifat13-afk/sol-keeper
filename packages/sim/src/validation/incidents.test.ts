@@ -82,18 +82,18 @@ describe("every incident in the catalog is reachable", () => {
     expect(state.atmosphere.o2Kg).toBeLessThan(before);
   });
 
-  it("o2tank-apollo13 triggers eventually and ruptures the O2 supply", () => {
+  it("o2tank-apollo13 triggers eventually and raises cabin CO2 (M7.5: reframed as the LM lifeboat's real threat)", () => {
     const state = freshState();
-    const before = state.atmosphere.o2Kg;
+    const before = state.atmosphere.co2Kg;
     runUntilTriggered(state, "o2tank-apollo13");
-    expect(state.atmosphere.o2Kg).toBeLessThan(before);
+    expect(state.atmosphere.co2Kg).toBeGreaterThan(before);
   });
 
-  it("coolant-ms22 triggers eventually and drops the cabin temperature", () => {
+  it("coolant-ms22 triggers eventually and drives the cabin toward its documented heat peak", () => {
     const state = freshState();
     const before = state.thermal.habitatTempC;
     runUntilTriggered(state, "coolant-ms22");
-    expect(state.thermal.habitatTempC).toBeLessThan(before);
+    expect(state.thermal.habitatTempC).toBeGreaterThan(before);
   });
 
   it("scrubber-iss triggers eventually, costs it a spare, and takes it offline", () => {

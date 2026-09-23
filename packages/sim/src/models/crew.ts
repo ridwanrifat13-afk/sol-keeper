@@ -68,6 +68,12 @@ export function crewCondition(member: CrewMember): CrewCondition {
   if (member.injuryFraction >= 0.75) stages.push("critical");
   else if (member.injuryFraction >= 0.3) stages.push("impaired");
 
+  // Heat stress (M7.5, docs/INCIDENT_MAGNITUDES.md #3) — capped at "critical", never "lost":
+  // no sourced heat-death timeline exists the way cold has one, so this is scoped honestly
+  // to "makes stations perform worse" rather than inventing a lethal threshold.
+  if (member.heatStressClock >= 1) stages.push("critical");
+  else if (member.heatStressClock > 0) stages.push("impaired");
+
   return worstOf(stages);
 }
 
@@ -152,6 +158,24 @@ export function crewStage(ctx: TickContext): void {
         code: "crew.cold",
         data: { crew: member.name, habitatTempC: round(state.thermal.habitatTempC) },
       });
+    }
+
+    // --- Heat-stress clock (M7.5, docs/INCIDENT_MAGNITUDES.md #3): "ADD A WET-BULB CHECK to
+    // the thermal model... mirroring the cold path." Recovers once back below the threshold,
+    // same as hypoxia does — this is a standing thermal check, not exclusive to any one
+    // incident, since a jammed heater or a bad repair can overheat the cabin too.
+    if (state.thermal.habitatTempC > physiology.heatStressWetBulbTempC.value) {
+      member.heatStressClock = clamp(
+        member.heatStressClock + ctx.dtHours / physiology.heatStressCriticalToImpairedHours.value,
+        0,
+        1,
+      );
+    } else {
+      member.heatStressClock = clamp(
+        member.heatStressClock - ctx.dtHours / physiology.heatStressCriticalToImpairedHours.value,
+        0,
+        1,
+      );
     }
 
     // --- Hypoxia clock (S1.1): time-at-critical-PIO2. Recovers once back above critical. ---

@@ -16,11 +16,16 @@
  * (engine/runWithBot.ts) via the exported `applyResponse`, never by the pipeline itself —
  * that keeps `tick()`'s own signature exactly as it was in Phase 1.
  */
-import { incidents as incidentConstants, missionDifficulty } from "../data/constants.js";
+import { incidents as incidentConstants, missionDifficulty, physics } from "../data/constants.js";
 import type { SourceId } from "../data/sources.js";
 import { effectiveShieldingGPerCm2, speTransmission } from "../models/radiation.js";
 import type { ActiveIncident, CrewMember, SimState, StationId, SystemId } from "../types.js";
-import { clamp } from "../units.js";
+import {
+  chokedOrificeEffectiveVelocityMPerS,
+  chokedOrificeLeakTimeConstantHours,
+  clamp,
+  massKgForPartialPressureMmHg,
+} from "../units.js";
 import type { TickContext } from "./context.js";
 
 export interface IncidentResponse {
@@ -30,6 +35,14 @@ export interface IncidentResponse {
   readonly effect: (ctx: TickContext, incident: ActiveIncident) => void;
   readonly crewHoursCost?: number;
   readonly sparesCost?: number;
+  /** M7.5: true when this response does NOT address the incident's root physical cause, so
+   *  `ongoingEffect` keeps running hour after hour even once "resolved" — the leak keeps
+   *  leaking, the CO2 keeps rising. Omitted (false) means this response stops it. Without
+   *  this, "resolved" and "fixed" would be the same thing, which is exactly wrong for a
+   *  default/do-nothing response: docs/INCIDENT_MAGNITUDES.md's whole point is that ignoring
+   *  a real physical process lets it keep getting worse, not that it politely stops once the
+   *  warning window lapses. */
+  readonly leavesOngoing?: boolean;
 }
 
 export type IncidentTrigger =
@@ -52,6 +65,11 @@ export interface IncidentDefinition {
   readonly warningTimeHours: number;
   /** Applied once, the hour the incident triggers — not a per-hour ongoing effect. */
   readonly physicsEffect: (ctx: TickContext) => void;
+  /** M7.5: applied every hour the incident is active and its chosen (or not yet chosen)
+   *  response has `leavesOngoing` — the physical process this incident models continuing to
+   *  evolve on its own (docs/INCIDENT_MAGNITUDES.md's choked-flow leak, CO2 rise, and
+   *  first-order-lag heat-rise curves). Optional: most incidents are still a one-time hit. */
+  readonly ongoingEffect?: (ctx: TickContext, incident: ActiveIncident) => void;
   readonly responses: readonly IncidentResponse[];
   readonly defaultResponseId: string;
   /** i18n key for the 3-depth incident description. */
@@ -131,7 +149,7 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
   {
     id: "depress-mir97",
     analogue: "Progress–Mir collision and depressurization, June 1997",
-    sourceId: "INC-DEPRESS-MIR97-PENDING",
+    sourceId: "NASA-SMA-MIR-COLLISION",
     station: "incidentCommand",
     // No hull/structural SystemId exists in this sim; thermalControl is the closest hardware
     // proxy available and is otherwise unused by any other incident — a disclosed judgment
@@ -139,40 +157,55 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
     trigger: { kind: "componentRisk", system: "thermalControl", baseChancePerHour: incidentConstants.componentRiskBaseChancePerHour.value },
     warningTimeHours: 1,
     physicsEffect: (ctx) => {
-      const lostKg = incidentConstants.depressMir97LeakRateKgPerHour.value * 2;
-      ctx.state.atmosphere.o2Kg = Math.max(0, ctx.state.atmosphere.o2Kg - lostKg);
-      ctx.log.log({
-        kind: "hazard",
-        severity: "critical",
-        code: "incident.depress-mir97.leaking",
-        data: { lostKg: round(lostKg) },
-      });
+      ctx.log.log({ kind: "hazard", severity: "critical", code: "incident.depress-mir97.leaking", data: {} });
+    },
+    // M7.5, docs/INCIDENT_MAGNITUDES.md #1: no leak rate was ever published, so it is DERIVED
+    // from choked (sonic) orifice flow rather than invented. `habitatVolumeM3` stands in for
+    // the leaking module's own volume (no sub-module architecture exists in this sim — a
+    // disclosed simplification; the doc's own worked example uses Spektr's 62 m^3 directly).
+    ongoingEffect: (ctx) => {
+      const { state } = ctx;
+      const effectiveVelocityMPerS = chokedOrificeEffectiveVelocityMPerS(
+        state.thermal.habitatTempC,
+        physics.specificHeatRatioAir.value,
+        physics.molarMassAirGPerMol.value,
+      );
+      const tauHours = chokedOrificeLeakTimeConstantHours(
+        state.atmosphere.habitatVolumeM3,
+        incidentConstants.depressMir97HoleDiameterMm.value,
+        physics.dischargeCoefficientSharpOrifice.value,
+        effectiveVelocityMPerS,
+      );
+      state.atmosphere.o2Kg *= Math.exp(-ctx.dtHours / tauHours);
     },
     responses: [
       {
-        id: "patchHull",
-        i18nKey: "incident.depress-mir97.response.patchHull",
-        sparesCost: 1,
-        crewHoursCost: 3,
+        // The real, historically accurate response — and M7.5's model case for "no free
+        // fix": stops the leak completely, but permanently costs the arrays that went down
+        // with the sealed module (docs/INCIDENT_MAGNITUDES.md: "sealing Spektr cost about
+        // half of Mir's power").
+        id: "sealModule",
+        i18nKey: "incident.depress-mir97.response.sealModule",
+        crewHoursCost: 2,
         effect: (ctx) => {
-          ctx.state.atmosphere.o2Kg += incidentConstants.depressMir97LeakRateKgPerHour.value;
+          ctx.state.power.arrayAreaLossM2 +=
+            ctx.scenario.initial.solarArrayAreaM2 * incidentConstants.depressMir97SealedModulePowerLossFraction.value;
         },
       },
       {
-        id: "sealAndShelter",
-        i18nKey: "incident.depress-mir97.response.sealAndShelter",
-        crewHoursCost: 1,
+        // A costlier alternative that avoids the permanent power loss entirely — the real
+        // trade-off M7.5 asks for: spend a lot of resources now, or lose capability forever.
+        id: "patchHull",
+        i18nKey: "incident.depress-mir97.response.patchHull",
+        sparesCost: 2,
+        crewHoursCost: 6,
         effect: () => {},
       },
       {
         id: "ignoreLeak",
         i18nKey: "incident.depress-mir97.response.ignoreLeak",
-        effect: (ctx) => {
-          ctx.state.atmosphere.o2Kg = Math.max(
-            0,
-            ctx.state.atmosphere.o2Kg - incidentConstants.depressMir97LeakRateKgPerHour.value * 8,
-          );
-        },
+        leavesOngoing: true,
+        effect: () => {},
       },
     ],
     defaultResponseId: "ignoreLeak",
@@ -180,44 +213,75 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
   },
 
   {
+    // Reframed by M7.5 (docs/INCIDENT_MAGNITUDES.md #2): the real crew-threatening
+    // consequence of the LM lifeboat scenario was CO2 buildup from running 3 crew on a
+    // 2-crew scrubber, not oxygen loss — a more historically accurate incident than M7's
+    // original "O2 rupture" framing.
     id: "o2tank-apollo13",
-    analogue: "Apollo 13 oxygen tank failure, 1970",
-    sourceId: "INC-O2TANK-APOLLO13-PENDING",
+    analogue: "Apollo 13 oxygen tank failure, 1970 (CO2 buildup in the LM lifeboat)",
+    sourceId: "A13-CO2",
     station: "lifeSupport",
     trigger: { kind: "componentRisk", system: "oxygenGenerator", baseChancePerHour: incidentConstants.componentRiskBaseChancePerHour.value },
     warningTimeHours: 2,
     physicsEffect: (ctx) => {
-      const before = ctx.state.atmosphere.o2Kg;
-      ctx.state.atmosphere.o2Kg = before * (1 - incidentConstants.o2TankFailureLossFraction.value);
-      ctx.log.log({
-        kind: "hazard",
-        severity: "critical",
-        code: "incident.o2tank-apollo13.rupture",
-        data: { lostKg: round(before - ctx.state.atmosphere.o2Kg) },
-      });
+      ctx.log.log({ kind: "hazard", severity: "critical", code: "incident.o2tank-apollo13.rupture", data: {} });
+    },
+    // Linear rise calibrated to the addendum's own two anchors: reaches apollo13PeakCo2MmHg
+    // at apollo13HoursToPeakCo2 (the historical "worst point"), uncapped while unaddressed —
+    // real crew debrief timeline ("began to threaten the crew after about a day and a half"),
+    // not a saturating curve, since the excess CO2 production rate was roughly constant.
+    ongoingEffect: (ctx) => {
+      const { state } = ctx;
+      const ratePerHour = incidentConstants.apollo13PeakCo2MmHg.value / incidentConstants.apollo13HoursToPeakCo2.value;
+      const extraKg = massKgForPartialPressureMmHg(
+        ratePerHour * ctx.dtHours,
+        physics.molarMassCo2GPerMol.value,
+        state.atmosphere.habitatVolumeM3,
+        state.thermal.habitatTempC,
+      );
+      state.atmosphere.co2Kg += extraKg;
     },
     responses: [
       {
-        id: "switchToBackup",
-        i18nKey: "incident.o2tank-apollo13.response.switchToBackup",
+        // The real fix — stops the rise and brings CO2 back down toward the documented
+        // post-fix level, but the improvised adapter is never as good as the original
+        // hardware: a permanent scrubber efficiency penalty, M7.5's residual cost.
+        id: "improviseAdapter",
+        i18nKey: "incident.o2tank-apollo13.response.improviseAdapter",
         sparesCost: 1,
-        crewHoursCost: 2,
-        effect: (ctx) => {
-          ctx.state.atmosphere.o2Kg *= 1.5;
+        crewHoursCost: 3,
+        effect: (ctx, incident) => {
+          const { state } = ctx;
+          // Bring the incident's own contribution down to the documented post-fix residual
+          // (not to zero — "stayed below 2 mmHg", not "returned to nothing"), computed from
+          // elapsed hours rather than tracked state, since the rise rate is deterministic.
+          const ratePerHour = incidentConstants.apollo13PeakCo2MmHg.value / incidentConstants.apollo13HoursToPeakCo2.value;
+          const addedSoFarMmHg = ratePerHour * (state.hour - incident.triggeredAtHour);
+          const excessMmHg = Math.max(0, addedSoFarMmHg - incidentConstants.apollo13PostFixCo2MmHg.value);
+          const excessKg = massKgForPartialPressureMmHg(
+            excessMmHg,
+            physics.molarMassCo2GPerMol.value,
+            state.atmosphere.habitatVolumeM3,
+            state.thermal.habitatTempC,
+          );
+          state.atmosphere.co2Kg = Math.max(0, state.atmosphere.co2Kg - excessKg);
+          // The improvised adapter is never as good as the original hardware — permanent,
+          // M7.5's residual cost for the good response, not a free fix.
+          state.atmosphere.scrubberEfficiencyFraction *= 1 - incidentConstants.apollo13ScrubberDegradationAfterFixFraction.value;
         },
       },
       {
-        id: "rationO2",
-        i18nKey: "incident.o2tank-apollo13.response.rationO2",
+        id: "rationActivity",
+        i18nKey: "incident.o2tank-apollo13.response.rationActivity",
         crewHoursCost: 1,
+        leavesOngoing: true,
         effect: () => {},
       },
       {
         id: "noResponse",
         i18nKey: "incident.o2tank-apollo13.response.noResponse",
-        effect: (ctx) => {
-          ctx.state.atmosphere.o2Kg *= 0.5;
-        },
+        leavesOngoing: true,
+        effect: () => {},
       },
     ],
     defaultResponseId: "noResponse",
@@ -227,51 +291,70 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
   {
     id: "coolant-ms22",
     analogue: "Soyuz MS-22 coolant leak, December 2022",
-    sourceId: "INC-COOLANT-MS22-PENDING",
+    sourceId: "MS22-THERMAL",
     station: "incidentCommand",
     trigger: { kind: "componentRisk", system: "waterRecovery", baseChancePerHour: incidentConstants.componentRiskBaseChancePerHour.value },
     warningTimeHours: 3,
-    // A failed coolant loop stops regulating cabin temperature at all, so it drifts toward
-    // the (very cold, airless-body) exterior rather than overheating — the same lethal
-    // cold path models/crew.ts already tracks for a thermalControl failure, reused here
-    // rather than a separate, untracked hyperthermia mechanic this sim has no model for.
     physicsEffect: (ctx) => {
-      const dropC = incidentConstants.coolantLeakMs22RateFraction.value * 20;
-      ctx.state.thermal.habitatTempC -= dropC;
-      ctx.log.log({
-        kind: "hazard",
-        severity: "warning",
-        code: "incident.coolant-ms22.overheating",
-        data: { riseC: round(dropC) },
-      });
+      ctx.log.log({ kind: "hazard", severity: "warning", code: "incident.coolant-ms22.overheating", data: {} });
+    },
+    // M7.5, docs/INCIDENT_MAGNITUDES.md #3: a failed coolant loop stops rejecting heat, so
+    // the cabin approaches its documented peak (30 degC) on a first-order lag reaching
+    // ms22HoursToStabilize's own time constant — real reported figures, not overheating
+    // without bound. The equipment bay (measured +10 degC over cabin) has no separate state
+    // in this sim; it is read as a fixed offset wherever the incident's own thresholds need it.
+    ongoingEffect: (ctx) => {
+      const { state } = ctx;
+      const target = incidentConstants.ms22CabinPeakTempC.value;
+      const lag = ctx.dtHours / incidentConstants.ms22HoursToStabilize.value;
+      state.thermal.habitatTempC += (target - state.thermal.habitatTempC) * lag;
+
+      const bayTempC = state.thermal.habitatTempC + (incidentConstants.ms22EquipmentBayPeakTempC.value - target);
+      if (bayTempC >= incidentConstants.ms22EquipmentBayFailureTempC.value) {
+        // Equipment strain from sustained bay heat — a real consequence proxy, since this sim
+        // has no dedicated "electronics" system; comms hardware is the closest bay-mounted
+        // equipment it tracks.
+        ctx.log.logEdge({
+          kind: "fault",
+          severity: "warning",
+          code: "incident.coolant-ms22.equipmentStrain",
+          system: "comms",
+          data: { bayTempC: Math.round(bayTempC) },
+        });
+      }
     },
     responses: [
       {
-        id: "reroute",
-        i18nKey: "incident.coolant-ms22.response.reroute",
-        sparesCost: 1,
-        crewHoursCost: 3,
+        // The only real mitigation NASA/Roscosmos actually used — and M7.5's other residual
+        // -cost model case: shedding load cools the cabin back down immediately, but costs
+        // real capability while the fault persists (docs/INCIDENT_MAGNITUDES.md: "science
+        // stops, ISRU stops, comms windows are missed, and crops lose light").
+        id: "shedLoad",
+        i18nKey: "incident.coolant-ms22.response.shedLoad",
+        crewHoursCost: 6,
         effect: (ctx) => {
-          ctx.state.thermal.habitatTempC += 6;
+          // A bounded, physically modest correction (not an absolute reset to a fixed
+          // value) — now that thermalStage has a real thermostat (see its own comment on
+          // the M7.5-surfaced runaway bug), habitatTempC is never wildly out of range, so
+          // shedding load only needs to undo roughly this incident's own contribution.
+          ctx.state.thermal.habitatTempC -= 8;
+          for (const tray of ctx.state.food.trays) {
+            tray.healthFraction = clamp(
+              tray.healthFraction - incidentConstants.ms22CropHealthLossFromShedLoad.value,
+              0,
+              1,
+            );
+          }
         },
       },
       {
-        id: "ventHeat",
-        i18nKey: "incident.coolant-ms22.response.ventHeat",
-        crewHoursCost: 1,
-        effect: (ctx) => {
-          ctx.state.thermal.habitatTempC += 2;
-        },
-      },
-      {
-        id: "noResponse",
-        i18nKey: "incident.coolant-ms22.response.noResponse",
-        effect: (ctx) => {
-          ctx.state.thermal.habitatTempC -= 10;
-        },
+        id: "rideItOut",
+        i18nKey: "incident.coolant-ms22.response.rideItOut",
+        leavesOngoing: true,
+        effect: () => {},
       },
     ],
-    defaultResponseId: "noResponse",
+    defaultResponseId: "rideItOut",
     briefKey: "incident.coolant-ms22.brief",
   },
 
@@ -451,6 +534,15 @@ function scaledWarningTimeHours(ctx: TickContext, def: IncidentDefinition): numb
   return def.warningTimeHours * missionDifficulty[ctx.params.difficulty].warningTimeMultiplier.value;
 }
 
+/** M7.5: whether `def.ongoingEffect` should still run for `incident` this hour — before any
+ *  decision, or after one that left the root cause unaddressed (`leavesOngoing`). */
+function shouldRunOngoingEffect(def: IncidentDefinition, incident: ActiveIncident): boolean {
+  if (def.ongoingEffect === undefined) return false;
+  if (incident.chosenResponseId === undefined) return true;
+  const response = def.responses.find((r) => r.id === incident.chosenResponseId);
+  return response?.leavesOngoing === true;
+}
+
 function responseById(def: IncidentDefinition, responseId: string): IncidentResponse {
   const found = def.responses.find((r) => r.id === responseId);
   if (found === undefined) {
@@ -506,6 +598,16 @@ export function incidentsStage(ctx: TickContext): void {
     };
     state.activeIncidents.push(incident);
     log.because(cause, () => def.physicsEffect(ctx));
+  }
+
+  // M7.5: the physical process an incident models keeps evolving hour after hour for as
+  // long as nobody has actually addressed its root cause — see `leavesOngoing` above. Runs
+  // for brand-new incidents too (the trigger hour gets its first hour of exposure, same as
+  // physicsEffect always has).
+  for (const incident of state.activeIncidents) {
+    const def = INCIDENT_CATALOG.find((d) => d.id === incident.definitionId);
+    if (def === undefined || !shouldRunOngoingEffect(def, incident)) continue;
+    log.because(incident.cause, () => def.ongoingEffect?.(ctx, incident));
   }
 
   // The "nobody decided" consequence: felt identically whether that's an idle bot or a

@@ -228,12 +228,14 @@ describe("DataSourcesView, first frame", () => {
 
   it("states the unsourced count plainly, whether zero or not", () => {
     const out = render(<DataSourcesView />);
-    // Phase 1 (M6) reached zero placeholders; Phase 2 (M7) deliberately reopens ten —
-    // real NASA-cited physiology/radiation thresholds and incident magnitudes the team has
-    // not yet supplied documents for (docs/PHASE2_BRIEF.md's own "placeholder, not a guess"
-    // rule) — so this screen honestly shows a nonzero count again rather than claiming a
-    // false "fully sourced" the way it briefly could after M6.
-    expect(out).toContain("Still unsourced (10)");
+    // Phase 1 (M6) reached zero placeholders; Phase 2's M7 reopened ten — real
+    // NASA-cited physiology/radiation thresholds and incident magnitudes the team had not
+    // yet supplied documents for (docs/PHASE2_BRIEF.md's own "placeholder, not a guess"
+    // rule). M7.5's addendum (docs/INCIDENT_MAGNITUDES.md) then closed three of those
+    // (depress-mir97, o2tank-apollo13, coolant-ms22) with published/derived values, leaving
+    // seven — this screen honestly shows a nonzero count rather than claiming a false
+    // "fully sourced" the way it briefly could after M6.
+    expect(out).toContain("Still unsourced (7)");
     expect(out).toContain("Every value below is a placeholder");
     expect(out).toContain("radiation.arsLethalMSv");
   });

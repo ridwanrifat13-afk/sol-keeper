@@ -25,6 +25,7 @@ function member(overrides: Partial<CrewMember> = {}): CrewMember {
     hypoxiaClock: 0,
     injuryFraction: 0,
     fatigueFraction: 0,
+    heatStressClock: 0,
     pio2MmHg: physiology.pio2NormoxiaLowMmHg.value,
     primaryStation: "lifeSupport",
     backupStation: "power",

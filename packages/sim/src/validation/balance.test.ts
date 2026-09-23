@@ -13,14 +13,18 @@
  * mechanically enforced rather than a claim nobody checks again.
  *
  * KNOWN GAP, disclosed rather than silently loosened: prudentBot clears every target above
- * except the Flight-Rated *upper* bound (<= 60%) — it currently lands far above it (see
- * docs/BALANCE.md for the measured distribution). prudentBot's strategy fully or near-fully
- * neutralises most incidents it responds to (by design — a skilled response should work),
- * so raising Flight-Rated's incident rate hurts idleBot without meaningfully touching
- * prudentBot; genuinely constraining a *skilled* bot at the hardest difficulty needs either
- * incident responses that leave unavoidable residual cost even when chosen well, or a
- * compounding-incidents mechanic, neither of which is in scope for this pass. Only the
- * lower bound (>= 40%, trivially cleared) is asserted for that one cell — TODO(P2).
+ * except the Flight-Rated *upper* bound (<= 60%) — it currently lands at 90-100% (see
+ * docs/BALANCE.md for the measured distribution). M7.5 (docs/INCIDENT_MAGNITUDES.md) added
+ * real residual costs to three incidents (a permanent power loss, a permanent scrubber
+ * efficiency penalty, a one-time crop-health cost) specifically to close this gap, and it
+ * measurably helped — Jezero training/nominal for idleBot dropped meaningfully, and
+ * prudentBot's own numbers moved for the first time since M7 — but a *skilled* bot still
+ * neutralises most incidents well enough at Flight-Rated that its floor stays far above the
+ * 40-60% band. Genuinely constraining skilled play there needs either steeper residual costs
+ * on the remaining four incidents (fire-mir97, spe-1972, duststorm-2018, scrubber-iss, none
+ * of which carry one yet) or a compounding-incidents mechanic, neither of which is in scope
+ * for this pass. Only the lower bound (>= 40%, comfortably cleared) is asserted for that one
+ * cell — TODO(P2).
  */
 import { describe, expect, it } from "vitest";
 import { runCombination } from "../engine/balance.js";

@@ -46,6 +46,7 @@ function buildCrew(size: number, startingPio2MmHg: number): CrewMember[] {
     hypoxiaClock: 0,
     injuryFraction: 0,
     fatigueFraction: 0,
+    heatStressClock: 0,
     pio2MmHg: startingPio2MmHg,
     primaryStation: STATION_IDS[i % STATION_IDS.length] as StationId,
     backupStation: STATION_IDS[(i + 1) % STATION_IDS.length] as StationId,
@@ -125,11 +126,13 @@ export function createInitialState(params: Params): SimState {
       batteryEnergyKwh: init.batteryEnergyKwh,
       batteryCapacityKwh: init.batteryCapacityKwh,
       shedSystems: [],
+      arrayAreaLossM2: 0,
     },
 
     thermal: {
       habitatTempC: startTempC,
       heaterKw: 0,
+      radiatorKw: 0,
       crewHeatKw: 0,
       lossKw: 0,
     },
@@ -140,6 +143,7 @@ export function createInitialState(params: Params): SimState {
       habitatVolumeM3: init.habitatVolumeM3,
       o2PartialPressureMmHg: initialO2MmHg,
       co2PartialPressureMmHg: initialCo2MmHg,
+      scrubberEfficiencyFraction: 1,
     },
 
     water: {

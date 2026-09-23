@@ -64,16 +64,14 @@ describe("constants registry (brief rule 1)", () => {
 
     // Update this list deliberately when a placeholder is sourced or a new one is added.
     // The 2026-09 sourcing passes cleared every Phase 1 placeholder (see git history for
-    // that empty list). M7 (Phase 2) reopens ten: the CO2 IDLH threshold, the acute
-    // radiation syndrome thresholds, and one magnitude number per not-yet-sourced incident
-    // (the two incidents already grounded in a real historical document — fire-mir97,
-    // NASA-SP-4030 — need no placeholder). Each carries a TODO note naming exactly what the
-    // team needs to supply; see docs/DATA_SOURCES.md for the matching "unverified" rows.
+    // that empty list). M7 (Phase 2) reopened ten: the CO2 IDLH threshold, the acute
+    // radiation syndrome thresholds, and one magnitude number per not-yet-sourced incident.
+    // M7.5's addendum (docs/INCIDENT_MAGNITUDES.md) then closed three of those (depress-mir97,
+    // o2tank-apollo13, coolant-ms22) with published/derived values, leaving seven. Each
+    // remaining placeholder carries a TODO note naming exactly what the team needs to
+    // supply; see docs/DATA_SOURCES.md for the matching "unverified" rows.
     expect(placeholders).toEqual([
-      "incidents.coolantLeakMs22RateFraction",
-      "incidents.depressMir97LeakRateKgPerHour",
       "incidents.duststorm2018ObscurationSpikeFraction",
-      "incidents.o2TankFailureLossFraction",
       "incidents.scrubberIssFailureRateMultiplier",
       "incidents.spe1972DoseMultiplier",
       "physiology.co2ImmediatelyDangerousMmHg",

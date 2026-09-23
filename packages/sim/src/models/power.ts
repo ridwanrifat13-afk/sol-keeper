@@ -28,10 +28,11 @@ export function powerStage(ctx: TickContext): void {
   const p = state.power;
 
   // --- generation -------------------------------------------------------
-  const solarKw = solarGenerationKw(
-    scenario.initial.solarArrayAreaM2,
-    state.environment.irradianceWPerM2,
-  );
+  // arrayAreaLossM2 is the M7.5 depress-mir97 residual cost (sealing a leaking module takes
+  // its arrays with it) — permanent, never recovered, clamped so a scenario carrying no
+  // solar array at all (The Long Night's reactor-only design) can't go negative.
+  const effectiveArrayAreaM2 = Math.max(0, scenario.initial.solarArrayAreaM2 - state.power.arrayAreaLossM2);
+  const solarKw = solarGenerationKw(effectiveArrayAreaM2, state.environment.irradianceWPerM2);
   const fissionKw = (state.systems.powerDistribution?.operational ?? false)
     ? scenario.initial.fissionReactorKwe
     : 0;

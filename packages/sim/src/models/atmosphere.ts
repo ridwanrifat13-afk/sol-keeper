@@ -58,7 +58,10 @@ export function atmosphereStage(ctx: TickContext): void {
   // system that was never fitted was never taken offline.
   const scrubber = state.systems.co2Scrubber;
   if (scrubber !== undefined && scrubber.operational && scrubber.poweredThisHour) {
-    const removedKg = Math.min(a.co2Kg, habitat.co2ScrubberKgPerHour.value * ctx.dtHours);
+    // scrubberEfficiencyFraction is the M7.5 o2tank-apollo13 residual cost — an improvised
+    // fix is never as good as the original hardware, permanently, once applied.
+    const capacityKgPerHour = habitat.co2ScrubberKgPerHour.value * a.scrubberEfficiencyFraction;
+    const removedKg = Math.min(a.co2Kg, capacityKgPerHour * ctx.dtHours);
     a.co2Kg -= removedKg;
   } else if (scrubber !== undefined) {
     log.logEdge({

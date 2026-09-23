@@ -68,6 +68,55 @@ export function partialPressureMmHg(
 export const celsiusToKelvin = (c: number): number => c + 273.15;
 export const kelvinToCelsius = (k: number): number => k - 273.15;
 
+/** Inverse of `partialPressureMmHg`: the gas mass a fixed volume holds at a target partial
+ *  pressure. Used to translate a desired mmHg-per-hour rise (docs/INCIDENT_MAGNITUDES.md's
+ *  Apollo 13 CO2 curve) into the kg increment `atmosphereStage` actually tracks. */
+export function massKgForPartialPressureMmHg(
+  mmHg: number,
+  molarMassGPerMol: number,
+  volumeM3: number,
+  temperatureC: number,
+): number {
+  if (volumeM3 <= 0) return 0;
+  const pascals = mmHg * physics.pascalsPerMmHg.value;
+  const kelvin = celsiusToKelvin(temperatureC);
+  const moles = (pascals * volumeM3) / (physics.universalGasConstantJPerMolK.value * kelvin);
+  return gramsToKg(moles * molarMassGPerMol);
+}
+
+/**
+ * Choked (sonic) orifice flow — the effective exit velocity of a gas escaping through a hole
+ * once the pressure ratio across it is large enough that flow chokes (holds while the cabin
+ * is far above vacuum, which is the whole regime a habitat leak matters in).
+ * docs/INCIDENT_MAGNITUDES.md #1's own derivation for the depress-mir97 incident:
+ *   v_eff = sqrt(gamma . R_specific . T) . (2/(gamma+1))^((gamma+1)/(2(gamma-1)))
+ * `R_specific` (J/(kg K)) is the universal gas constant divided by the gas's molar mass, not
+ * the universal constant itself — the formula is dimensionally a velocity only that way.
+ */
+export function chokedOrificeEffectiveVelocityMPerS(
+  temperatureC: number,
+  specificHeatRatio: number,
+  molarMassGPerMol: number,
+): number {
+  const kelvin = celsiusToKelvin(temperatureC);
+  const specificGasConstant = physics.universalGasConstantJPerMolK.value / gramsToKg(molarMassGPerMol);
+  const criticalFlowFactor = Math.pow(2 / (specificHeatRatio + 1), (specificHeatRatio + 1) / (2 * (specificHeatRatio - 1)));
+  return Math.sqrt(specificHeatRatio * specificGasConstant * kelvin) * criticalFlowFactor;
+}
+
+/** Exponential-decay time constant for a choked leak: tau = V / (Cd . A . v_eff). Returned in
+ *  hours (the sim's own tick unit) rather than seconds. */
+export function chokedOrificeLeakTimeConstantHours(
+  volumeM3: number,
+  holeDiameterMm: number,
+  dischargeCoefficient: number,
+  effectiveVelocityMPerS: number,
+): number {
+  const holeAreaM2 = Math.PI * Math.pow(holeDiameterMm / 1000 / 2, 2);
+  const tauSeconds = volumeM3 / (dischargeCoefficient * holeAreaM2 * effectiveVelocityMPerS);
+  return tauSeconds / SECONDS_PER_HOUR;
+}
+
 /** 1 atm = 14.696 psia = 760 mmHg exactly (definitional), so this ratio is exact too. */
 export const psiaToMmHg = (psia: number): number => psia * (760 / 14.696);
 

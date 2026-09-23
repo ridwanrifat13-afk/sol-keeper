@@ -176,17 +176,29 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     title: "NASA Human Research Program — Acute Radiation Syndrome thresholds — not yet independently verified",
     usedFor: "TODO: onset/severe/lethal acute dose bands used by the outcome state machine",
   },
-  "INC-DEPRESS-MIR97-PENDING": {
-    title: "Progress–Mir collision and depressurization, June 1997 — source pending",
-    usedFor: "TODO: cabin pressure loss rate for the depress-mir97 incident",
+  "NASA-SMA-MIR-COLLISION": {
+    title: "NASA Shuttle-Mir history: the Progress-Mir collision and depressurization, June 1997",
+    usedFor: "Sealing Spektr cost about half of Mir's power (arrays isolated with it) — the depress-mir97 incident's residual cost",
   },
-  "INC-O2TANK-APOLLO13-PENDING": {
-    title: "Apollo 13 oxygen tank failure, 1970 — source pending",
-    usedFor: "TODO: fraction of O2 supply lost for the o2tank-apollo13 incident",
+  "NASA-SHUTTLE-MIR": {
+    title: "NASA Shuttle-Mir spacecraft history — Spektr module page",
+    url: "https://spaceflight.nasa.gov/history/shuttle-mir/spacecraft/s-mir-spektr-main.htm",
+    usedFor: "Spektr's pressurised volume (62 m³) for the depress-mir97 incident's choked-flow leak model",
   },
-  "INC-COOLANT-MS22-PENDING": {
-    title: "Soyuz MS-22 coolant leak, December 2022 — source pending",
-    usedFor: "TODO: thermal-control capacity loss rate for the coolant-ms22 incident",
+  "A13-CO2": {
+    title: "Apollo 13 CO2 partial pressure account (crew debrief + accident review board, via Universe Today)",
+    url: "https://www.universetoday.com/articles/13-things-that-saved-apollo-13-part-10-duct-tape",
+    usedFor: "measured-reported: 15 mmHg peak ppCO2, below 2 mmHg after the fix — the o2tank-apollo13 incident's CO2-rise model",
+  },
+  "MS22-THERMAL": {
+    title: "Soyuz MS-22 coolant leak thermal reporting (Roscosmos statements via TASS), December 2022",
+    url: "https://tass.com/science/1552657",
+    usedFor: "measured-reported: cabin ~30°C, equipment bay ~40°C peak — the coolant-ms22 incident's heat-rise model",
+  },
+  "NSF-MS22": {
+    title: "NASASpaceflight reporting on the post-MS-22 crewed thermal-abort criteria, March 2023",
+    url: "https://www.nasaspaceflight.com/2023/03/soyuz-ms-22-return/",
+    usedFor: "measured-reported: wet-bulb heat-stress threshold (31°C at ~95% RH) and equipment failure limits",
   },
   "INC-SPE-1972-PENDING": {
     title: "August 1972 solar particle event — source pending",

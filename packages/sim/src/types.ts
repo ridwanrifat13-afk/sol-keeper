@@ -125,11 +125,22 @@ export interface PowerState {
   batteryCapacityKwh: number;
   /** Systems shed this hour, in the order they were shed. */
   shedSystems: SystemId[];
+  /** Permanent solar array area lost to a sealed-off module (M7.5's depress-mir97 residual
+   *  cost, docs/INCIDENT_MAGNITUDES.md #1 — "sealing Spektr cost about half of Mir's power").
+   *  Monotonically non-decreasing: there is no in-game way to recover a sealed module. */
+  arrayAreaLossM2: number;
 }
 
 export interface ThermalState {
   habitatTempC: number;
   heaterKw: number;
+  /** Active cooling (radiator-loop) power this hour — thermalControl run in reverse, bounded
+   *  by the same rated capacity as heating. Fixes a real gap `thermalStage` had until M7.5
+   *  surfaced it: with no cooling term at all, a hot environment (lunar daytime,
+   *  outsideTempC ~117 degC) had heat flowing in with nothing to reject it, and the
+   *  always-on heater made a bad situation worse — an unbounded thermal runaway not caused
+   *  by any incident. */
+  radiatorKw: number;
   crewHeatKw: number;
   lossKw: number;
 }
@@ -140,6 +151,11 @@ export interface AtmosphereState {
   habitatVolumeM3: number;
   o2PartialPressureMmHg: number;
   co2PartialPressureMmHg: number;
+  /** Permanent CO2 scrubber efficiency multiplier, 1 = full rated capacity. M7.5's
+   *  o2tank-apollo13 residual cost (docs/INCIDENT_MAGNITUDES.md #2): the improvised fix that
+   *  stops the incident's CO2 rise is not as good as the original hardware. Monotonically
+   *  non-increasing — there is no in-game way to restore lost efficiency. */
+  scrubberEfficiencyFraction: number;
 }
 
 export interface WaterState {
@@ -210,6 +226,10 @@ export interface CrewMember {
   injuryFraction: number;
   /** Rises while this member is covering a second station (Station rules); decays at rest. */
   fatigueFraction: number;
+  /** Heat-stress clock (M7.5, docs/INCIDENT_MAGNITUDES.md #3 — the wet-bulb check "mirroring
+   *  the cold path"). Capped at "critical" in crewCondition(): no sourced heat-death timeline
+   *  exists the way NASA-HYPOTHERMIA-2008 gives cold, so this never reaches "lost". */
+  heatStressClock: number;
   /** Last computed inspired O2 partial pressure, mmHg — stored for the UI/debrief, not just
    *  derived on demand, so a Black Box entry can show the number that actually triggered it. */
   pio2MmHg: number;
