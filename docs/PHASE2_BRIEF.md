@@ -164,6 +164,58 @@ explains every LOSS and ABORT.
    steps 1–5 moved the Flight-Rated prudentBot rate, and by how much.
 Push and run `vercel build` first. Stop after step 1's report and after step 9.
 
+# M7.6 — Prove decision-dependence, then finish residual costs
+
+## A. Audit for hardcoded or decision-independent outcomes (report only, no fixes yet)
+1. Grep the engine for: literal success/failure rates, probability constants applied
+   directly to outcomes, any scenario or difficulty field that biases the OUTCOME rather
+   than the physics, Math.random, Date.now, and any RNG not the injected seeded one.
+2. Trace the outcome state machine: list every state variable SUCCESS / PARTIAL / ABORT /
+   LOSS is computed from, and for each one, name the decisions that can change it.
+   Report any outcome input that NO decision can influence.
+3. For each response option in the incident catalog, list which state variables it writes.
+   Flag every option that writes nothing, or writes only variables that no failure path or
+   outcome criterion reads. These are cosmetic decisions.
+Output: docs/DECISION_AUDIT.md. STOP and report before making changes.
+
+## B. Explain the identical success counts (this is the priority)
+4. For First Light and The Long Night, compare greedyBot and prudentBot SEED BY SEED, not
+   in aggregate: outcome per seed, failure cause per seed, and a hash of final state.
+   Report which of these holds:
+   (a) both 200/200 — scenario saturation, so those scenarios are too easy;
+   (b) counts equal but per-seed outcomes differ — coincidence, harmless;
+   (c) per-seed outcomes identical — DECISIONS DO NOT REACH THE OUTCOME. Treat as a
+       release-blocking bug and find the disconnect.
+   Do not proceed to C until this is answered.
+
+## C. Decision-sensitivity tests (permanent, in CI)
+5. Counterfactual test: for each incident and each response option, run a seed to the
+   decision point, branch, take each option, and assert the final state hashes differ.
+   Any option that produces no divergence fails the test.
+6. Add worstChoiceBot: acts on every decision but always picks the worst valid option.
+   Assert a strict ordering on every scenario and difficulty:
+   idleBot ≤ worstChoiceBot < greedyBot < prudentBot. Equality between worstChoiceBot and
+   prudentBot fails the build.
+7. Add a decision-coverage report to docs/BALANCE.md: for each option, how often bots chose
+   it and its measured effect on the outcome distribution.
+
+## D. Residual costs for the last four incidents (see docs/INCIDENT_MAGNITUDES.md pattern)
+8. INC-FIRE-MIR97: consumes extinguishers and respirator cartridges permanently; smoke
+   degrades air quality and crew performance for a recovery period (the Mir crew wore masks
+   for over 36 hours); damaged equipment stays damaged; cleanup costs crew-hours.
+9. INC-SPE-1972: dose is inherently permanent — verify cumulative career dose never resets
+   and counts toward the 600 mSv mission-failure criterion. Sheltering costs crew-hours,
+   halts science and EVA, and interrupts crop light. Electronics take a degradation roll.
+10. INC-DUSTSTORM-2018: dust accumulation on arrays is PERMANENT and cumulative (InSight
+    declined over years; cleaning is not free). Cleaning EVAs cost crew-hours and dose.
+    Deep battery discharge cycles permanently reduce usable capacity.
+11. INC-SCRUBBER-ISS: a repaired bed runs at reduced capacity for the rest of the mission;
+    spares are consumed; cumulative CO2 exposure above 3 mmHg is tracked and carries
+    lasting performance cost, not just momentary.
+12. Re-run 200 seeds × scenario × difficulty and report the new Flight-Rated prudentBot
+    rate against the 40–60% target. Report which change moved it and by how much.
+Do not tune any hazard rate until A–D are done.
+
 ## M8 — Agency: sol loop, station consoles, decisions, briefing, onboarding
 - Core loop: Sol Planning (paused, station by station) → run the sol (1× / 4× / 16×) →
   auto-pause on any incident or threshold crossing → Decision Card at the owning station →
