@@ -35,7 +35,7 @@ export const jezeroOutpost: Scenario = {
     batteryEnergyKwh: 150,
     batteryCapacityKwh: 200,
     habitatVolumeM3: 200,
-    solarArrayAreaM2: 320,
+    solarArrayAreaM2: 380,
     fissionReactorKwe: 0,
     shieldingGPerCm2: 10,
     cropTrays: [

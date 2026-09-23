@@ -79,3 +79,84 @@ export function runCombination(
     causesSeen,
   };
 }
+
+export interface DecisionCoverageEntry {
+  readonly incidentId: string;
+  readonly responseId: string;
+  /** Attempts, not unique decisions: a response chosen, failed, and chosen again on retry
+   *  counts twice — a decision-level "how often did a bot ever reach for this" figure, not a
+   *  strict per-incident-occurrence one. */
+  readonly timesChosen: number;
+  /** Of the runs that chose this response at least once, the fraction that ended in
+   *  `RunStatus === "success"` — M7.6 Part C.7's "measured effect on the outcome
+   *  distribution". Not causation (a response chosen only in already-favourable runs would
+   *  read high without being the reason why), a correlation the debrief-era reader still
+   *  needs disclosed as such. */
+  readonly successRateWhenChosen: number;
+}
+
+/**
+ * M7.6 Part C.7: for each incident response `bots` ever actually chose across `seeds` seeds
+ * each, how often, and the fraction of those runs that ended in SUCCESS. Scans
+ * `incident.<id>.resolved`/`.responseFailed` log entries (engine/incidents.ts) rather than
+ * tracking choices separately, so this can never drift from what a run's own Black Box
+ * already records as ground truth.
+ */
+export function decisionCoverage(
+  scenarioId: ScenarioId,
+  difficulties: readonly MissionDifficulty[],
+  bots: readonly Bot[],
+  seeds: number,
+): readonly DecisionCoverageEntry[] {
+  const scenario = SCENARIOS[scenarioId];
+  const tally = new Map<string, { chosen: number; succeeded: number }>();
+  const responseCodePattern = /^incident\.([a-z0-9-]+)\.(resolved|responseFailed)$/;
+
+  for (const difficulty of difficulties) {
+    for (const bot of bots) {
+      for (let seed = 1; seed <= seeds; seed++) {
+        const params = {
+          scenarioId,
+          seed,
+          crewSize: scenario.crewSize,
+          missionStartIso: "2033-01-01",
+          difficulty,
+        };
+        const state = createInitialState(params);
+        runWithBot(state, params, scenario, scenario.durationHours, bot);
+
+        const chosenThisRun = new Set<string>();
+        for (const entry of state.log) {
+          const match = responseCodePattern.exec(entry.code);
+          if (match === null) continue;
+          const incidentId = match[1] as string;
+          const responseId = entry.data["response"];
+          if (typeof responseId !== "string") continue;
+          const key = `${incidentId} ${responseId}`;
+          const rec = tally.get(key) ?? { chosen: 0, succeeded: 0 };
+          rec.chosen += 1;
+          tally.set(key, rec);
+          chosenThisRun.add(key);
+        }
+        if (state.status === "success") {
+          for (const key of chosenThisRun) {
+            const rec = tally.get(key);
+            if (rec !== undefined) rec.succeeded += 1;
+          }
+        }
+      }
+    }
+  }
+
+  return [...tally.entries()]
+    .map(([key, rec]) => {
+      const [incidentId, responseId] = key.split(" ") as [string, string];
+      return {
+        incidentId,
+        responseId,
+        timesChosen: rec.chosen,
+        successRateWhenChosen: rec.succeeded / rec.chosen,
+      };
+    })
+    .sort((a, b) => a.incidentId.localeCompare(b.incidentId) || a.responseId.localeCompare(b.responseId));
+}

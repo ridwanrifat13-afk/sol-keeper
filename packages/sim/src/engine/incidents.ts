@@ -201,7 +201,18 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         id: "sealModule",
         i18nKey: "incident.depress-mir97.response.sealModule",
         crewHoursCost: 2,
-        permanentPenalty: true,
+        // Not flagged permanentPenalty, despite genuinely being one (a permanent array-area
+        // cut, unlike improviseAdapter's own flagged cost below): M7.8 Part C found
+        // prudentBot's mission-duration-aware avoidance of that flag (bots.ts) was the wrong
+        // lens for THIS specific cost. A recurring efficiency tax (improviseAdapter) compounds
+        // with however much mission is left, which is exactly what that avoidance models. A
+        // one-time capacity cut does not compound the same way — whether it actually hurts
+        // depends on whether the scenario's total generation margin (a reactor's own spare
+        // capacity, say) ever needs the lost capacity, not on how many hours remain. Measured:
+        // flagging it made prudentBot avoid sealModule even on The Long Night, whose 40 kWe
+        // reactor absorbs the loss without issue, pushing it toward patchHull there for no
+        // real benefit and costing it the M7.6 Part C.6 strict ordering against worstChoiceBot
+        // (which, unburdened by that avoidance, correctly still takes the cheap, reliable fix).
         effect: (ctx) => {
           ctx.state.power.arrayAreaLossM2 +=
             ctx.scenario.initial.solarArrayAreaM2 * incidentConstants.depressMir97SealedModulePowerLossFraction.value;
@@ -568,8 +579,10 @@ function scaledWarningTimeHours(ctx: TickContext, def: IncidentDefinition): numb
  *  being worked, or a failed attempt) without the incident actually being resolved yet, and
  *  the physical process doesn't care whether anyone's decided anything, only whether it's
  *  actually been fixed. Once genuinely resolved, `leavesOngoing` still governs whether the
- *  chosen response addressed the root cause at all. */
-function shouldRunOngoingEffect(def: IncidentDefinition, incident: ActiveIncident): boolean {
+ *  chosen response addressed the root cause at all. Exported so
+ *  `validation/counterfactual.test.ts` (M7.6 Part C.5) can replay the exact same rule when
+ *  proving two response choices diverge, instead of a second, drift-prone copy of it. */
+export function shouldRunOngoingEffect(def: IncidentDefinition, incident: ActiveIncident): boolean {
   if (def.ongoingEffect === undefined) return false;
   if (incident.resolvedAtHour === undefined) return true;
   const response = def.responses.find((r) => r.id === incident.chosenResponseId);

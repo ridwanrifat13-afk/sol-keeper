@@ -28,7 +28,7 @@ import type { ActiveIncident, SurvivalMode } from "../types.js";
 import type { TickContext } from "./context.js";
 import { wouldResolveThisHour, type IncidentDefinition, type IncidentResponse } from "./incidents.js";
 
-export type BotId = "idle" | "greedy" | "prudent";
+export type BotId = "idle" | "greedy" | "prudent" | "worst";
 
 export interface Bot {
   readonly id: BotId;
@@ -156,6 +156,47 @@ export const prudentBot: Bot = {
   },
 };
 
+/**
+ * M7.6 Part C.6: acts on every decision, unlike idleBot — but seeks out the exact three traps
+ * M7.8 found and taught prudentBot to avoid (docs/M7.8_DIAGNOSIS.md), using the same visible,
+ * fair information prudentBot itself reads to dodge them: prefers a spares-shortfall gamble
+ * over a fully-stocked option, prefers a response that will NOT complete this hour (queues
+ * into tomorrow's payoff while a fast-killing incident's own effect keeps running) over one
+ * that will, and prefers a `permanentPenalty` response over a real non-permanent alternative
+ * regardless of how much mission is left. Among whatever that leaves, picks the priciest —
+ * still "does something," just always the costliest way to do it worst.
+ *
+ * An earlier version was simply "always priciest, no filters" (literally prudentBot's own
+ * heuristic before M7.8's fixes) and measurably did NOT satisfy `worstChoiceBot < greedyBot`
+ * everywhere: on Jezero, blindly attempting depress-mir97's patchHull (an improvised gamble
+ * there) sometimes lands its full fix and no permanent power loss, occasionally beating
+ * greedy's guaranteed-but-permanent sealModule outright. Deliberately seeking bad odds finds
+ * a strategy that is reliably worse, not just usually more expensive.
+ */
+export const worstChoiceBot: Bot = {
+  id: "worst",
+  chooseIncidentResponse: (ctx, _incident, definition) => {
+    const eligible = definition.responses.filter((r) => r.id !== definition.defaultResponseId);
+    const pool = eligible.length > 0 ? eligible : definition.responses;
+
+    const shortfall = pool.filter((r) => {
+      if (r.sparesCost === undefined || r.sparesCost <= 0 || r.sparesFromSystem === undefined) return false;
+      return (ctx.state.systems[r.sparesFromSystem]?.spares ?? 0) < r.sparesCost;
+    });
+    const gambledPool = shortfall.length > 0 ? shortfall : pool;
+
+    const queuesLater = gambledPool.filter((r) => !wouldResolveThisHour(ctx, definition, r.id));
+    const timedPool = queuesLater.length > 0 ? queuesLater : gambledPool;
+
+    const permanent = timedPool.filter((r) => r.permanentPenalty === true);
+    const finalPool = permanent.length > 0 ? permanent : timedPool;
+
+    return finalPool
+      .reduce((worst, r) => (totalCost(r) > totalCost(worst) ? r : worst), finalPool[0] as IncidentResponse)
+      .id;
+  },
+};
+
 function nextStricterMode(mode: SurvivalMode): SurvivalMode {
   if (mode === "nominal") return "mode1";
   return "mode2";
@@ -166,7 +207,7 @@ function nextLooserMode(mode: SurvivalMode): SurvivalMode {
   return "nominal";
 }
 
-export const BOTS: readonly Bot[] = [idleBot, greedyBot, prudentBot];
+export const BOTS: readonly Bot[] = [idleBot, worstChoiceBot, greedyBot, prudentBot];
 
 export function getBot(id: BotId): Bot {
   const bot = BOTS.find((b) => b.id === id);

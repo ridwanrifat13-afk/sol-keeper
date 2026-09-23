@@ -18,7 +18,9 @@ import { fileURLToPath } from "node:url";
 // directly rather than through a specifier only apps/web can resolve.
 import {
   runCombination,
+  decisionCoverage,
   idleBot,
+  worstChoiceBot,
   greedyBot,
   prudentBot,
   type Bot,
@@ -29,7 +31,7 @@ import {
 const SEEDS = 150;
 const SCENARIOS: readonly ScenarioId[] = ["jezero-outpost", "first-light", "the-long-night"];
 const DIFFICULTIES: readonly MissionDifficulty[] = ["training", "nominal", "flightRated"];
-const BOTS: readonly Bot[] = [idleBot, greedyBot, prudentBot];
+const BOTS: readonly Bot[] = [idleBot, worstChoiceBot, greedyBot, prudentBot];
 
 const OUT_PATH = fileURLToPath(new URL("../docs/BALANCE.md", import.meta.url));
 
@@ -40,6 +42,7 @@ function pct(x: number): string {
 async function main(): Promise<void> {
   const rows: string[] = [];
   const allCauses = new Set<string>();
+  const coverageSections: string[] = [];
   const t0 = Date.now();
 
   for (const scenarioId of SCENARIOS) {
@@ -53,6 +56,15 @@ async function main(): Promise<void> {
         );
       }
     }
+
+    // M7.6 Part C.7: aggregated across all difficulties and bots for this scenario, so the
+    // table stays a readable size — how often each incident response was ever chosen and the
+    // fraction of runs that chose it that went on to succeed.
+    const coverage = decisionCoverage(scenarioId, DIFFICULTIES, BOTS, SEEDS);
+    const coverageRows = coverage
+      .map((e) => `| ${e.incidentId} | ${e.responseId} | ${e.timesChosen} | ${pct(e.successRateWhenChosen)} |`)
+      .join("\n");
+    coverageSections.push(`### ${scenarioId}\n\n| Incident | Response | Times chosen | Success rate when chosen |\n|---|---|---|---|\n${coverageRows}`);
   }
 
   const md = `# Balance report
@@ -87,6 +99,17 @@ ${rows.join("\n")}
 ## Failure causes observed across every idleBot/greedyBot seed
 
 ${[...allCauses].sort().map((c) => `- \`${c}\``).join("\n")}
+
+## Decision coverage (M7.6 Part C.7)
+
+For each incident, how often every bot combined ever chose each response (across all three
+difficulties, ${SEEDS} seeds each) and the fraction of those runs that went on to SUCCEED.
+Correlation, not causation — a response chosen only in already-favourable runs would read
+high without being the reason why (see \`DecisionCoverageEntry\`'s own doc comment,
+packages/sim/src/engine/balance.ts) — read alongside the outcome table above, not in place
+of it.
+
+${coverageSections.join("\n\n")}
 `;
 
   await writeFile(OUT_PATH, md, "utf8");

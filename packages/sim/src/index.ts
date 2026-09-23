@@ -86,10 +86,10 @@ export type { AbortResult } from "./engine/outcome.js";
 export { determineOutcome, inMarsDepartureWindow, requestAbort } from "./engine/outcome.js";
 export { checkGoal } from "./engine/goals.js";
 export type { Bot, BotId } from "./engine/bots.js";
-export { BOTS, getBot, greedyBot, idleBot, prudentBot } from "./engine/bots.js";
+export { BOTS, getBot, greedyBot, idleBot, prudentBot, worstChoiceBot } from "./engine/bots.js";
 export { runWithBot, tickWithBot } from "./engine/runWithBot.js";
-export type { CombinationResult, SeedOutcome } from "./engine/balance.js";
-export { runCombination } from "./engine/balance.js";
+export type { CombinationResult, DecisionCoverageEntry, SeedOutcome } from "./engine/balance.js";
+export { decisionCoverage, runCombination } from "./engine/balance.js";
 export { equivalentSystemMass, scenarioEsmBreakdown } from "./engine/esm.js";
 export type {
   EsmBreakdown,

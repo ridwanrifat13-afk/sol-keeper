@@ -188,31 +188,34 @@ Output: docs/DECISION_AUDIT.md. STOP and report before making changes.
        release-blocking bug and find the disconnect.
    Do not proceed to C until this is answered.
 
-## C. Decision-sensitivity tests (permanent, in CI)
-5. Counterfactual test: for each incident and each response option, run a seed to the
+## C. Decision-sensitivity proof (do this before any further tuning)
+5. Counterfactual test: for every incident and every response option, run a seed to the
    decision point, branch, take each option, and assert the final state hashes differ.
-   Any option that produces no divergence fails the test.
-6. Add worstChoiceBot: acts on every decision but always picks the worst valid option.
-   Assert a strict ordering on every scenario and difficulty:
-   idleBot ≤ worstChoiceBot < greedyBot < prudentBot. Equality between worstChoiceBot and
-   prudentBot fails the build.
-7. Add a decision-coverage report to docs/BALANCE.md: for each option, how often bots chose
-   it and its measured effect on the outcome distribution.
+   Any option producing no divergence fails the test. This is the release-blocking one.
+6. Add worstChoiceBot: acts on every decision, always picks the worst valid option.
+   Assert idleBot ≤ worstChoiceBot < greedyBot on every scenario and difficulty.
+   Note: do NOT assert greedyBot < prudentBot globally — The Long Night and First Light
+   show that aggression is correct on short, fixed-deadline missions. Assert the ordering
+   per scenario, from measured behaviour, and document why it differs.
+7. Decision-coverage report in docs/BALANCE.md: for each option, how often bots chose it
+   and its measured effect on the outcome distribution.
+8. Then M7.6 Part D (residual costs for fire-mir97, spe-1972, duststorm-2018,
+   scrubber-iss), then tuning.
 
 ## D. Residual costs for the last four incidents (see docs/INCIDENT_MAGNITUDES.md pattern)
-8. INC-FIRE-MIR97: consumes extinguishers and respirator cartridges permanently; smoke
+9. INC-FIRE-MIR97: consumes extinguishers and respirator cartridges permanently; smoke
    degrades air quality and crew performance for a recovery period (the Mir crew wore masks
    for over 36 hours); damaged equipment stays damaged; cleanup costs crew-hours.
-9. INC-SPE-1972: dose is inherently permanent — verify cumulative career dose never resets
+10. INC-SPE-1972: dose is inherently permanent — verify cumulative career dose never resets
    and counts toward the 600 mSv mission-failure criterion. Sheltering costs crew-hours,
    halts science and EVA, and interrupts crop light. Electronics take a degradation roll.
-10. INC-DUSTSTORM-2018: dust accumulation on arrays is PERMANENT and cumulative (InSight
+11. INC-DUSTSTORM-2018: dust accumulation on arrays is PERMANENT and cumulative (InSight
     declined over years; cleaning is not free). Cleaning EVAs cost crew-hours and dose.
     Deep battery discharge cycles permanently reduce usable capacity.
-11. INC-SCRUBBER-ISS: a repaired bed runs at reduced capacity for the rest of the mission;
+12. INC-SCRUBBER-ISS: a repaired bed runs at reduced capacity for the rest of the mission;
     spares are consumed; cumulative CO2 exposure above 3 mmHg is tracked and carries
     lasting performance cost, not just momentary.
-12. Re-run 200 seeds × scenario × difficulty and report the new Flight-Rated prudentBot
+13. Re-run 200 seeds × scenario × difficulty and report the new Flight-Rated prudentBot
     rate against the 40–60% target. Report which change moved it and by how much.
 Do not tune any hazard rate until A–D are done.
 
