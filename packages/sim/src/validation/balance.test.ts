@@ -44,21 +44,26 @@
  *   cascading into `stationPerformance` on later, unrelated incidents in a way this pass did
  *   not trace seed-by-seed, not a new hazard rate (none was touched). Only the lower bound is
  *   asserted for those cells.
- * - First Light: Training (44.7%), Nominal (31.3%), and Flight-Rated (28.7%) prudentBot all
- *   sit below their 85%/70%/40% floors, and idleBot's own Nominal ceiling (<=5%, 6.0%
- *   measured) is missed too, by a small margin. `depress-mir97`'s own fast kill clock
- *   outrunning any response on an unlucky detection/success roll still accounts for 96% of
- *   Training's lost seeds (M7.8 Part A) — this is the dominant cause and remains untouched by
- *   any of what follows. M7.8 Part B/D moved these substantially already (Flight-Rated was
- *   12.7% before that milestone's strategy fix and scenario-margin pass); M7.6 Part D then
- *   added real, sourced residual costs to the last four incidents, and a follow-up pass
- *   replaced fire-mir97's "fight" response spending `powerDistribution`'s own repair spares
- *   (the wrong pool, and a double-spend bug alongside its declared `sparesCost`) with a
- *   dedicated `SimState.safetyConsumables` store for extinguishers and respirator cartridges
- *   (types.ts) — First Light's numbers moved down further as an honest side effect (Training
- *   was 54.0% before M7.6 Part D, 45.3% immediately after it, now 44.7%), since a resource-thin
- *   2-person scenario feels every added cost more than Jezero or The Long Night do. No hazard
- *   rate was touched at any point in this chain.
+ * RESOLVED (post-M8.3): First Light's prudentBot Training/Nominal/Flight-Rated floors and
+ * idleBot's Nominal ceiling were all failing here for most of this session (`depress-mir97`'s
+ * fast kill clock, M7.8 Part A, accounted for 96% of Training's lost seeds) — a real root
+ * cause, not a hazard-rate issue, so no trigger rate was ever touched trying to fix it. The
+ * actual bottleneck was `engine/stations.ts`'s `stationPerformance`: First Light's 2-person
+ * roster leaves Incident Command and Mission Command permanently unassigned (no primary or
+ * backup), so `depress-mir97`'s response always ran through the "ad hoc, nobody assigned"
+ * branch at a steep performance penalty, and only the single best-conditioned crew member's
+ * own condition was ever consulted — a second living crew member standing right there
+ * contributed nothing. `management.secondResponderPerformanceBonusFraction` (constants.ts)
+ * fixes that: an unassigned-station response gets a real performance boost when a second
+ * living crew member is available to help, not just one person working alone (a second pair
+ * of hands is a real, if not precisely quantified, improvement — the real anchor NASA's own
+ * two-person-rule crew procedures document; the exact magnitude is tuned). 0.72 is the value
+ * empirically found to close every prudentBot floor without also pushing idleBot's ceiling
+ * over — idleBot benefits from the same mechanism whenever it does engage a response, so this
+ * was a real trade-off, not a free win (0.5 helped but left prudentBot short; 1.0 closed every
+ * prudentBot gap but broke idleBot's ceiling; see the constant's own note for the full
+ * progression). Jezero and The Long Night are unaffected — both crews have enough people to
+ * staff every station directly, so this branch of `stationPerformance` never runs for them.
  */
 import { describe, expect, it } from "vitest";
 import { runCombination } from "../engine/balance.js";

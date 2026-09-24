@@ -932,6 +932,13 @@ export const management = {
     confidence: "tuned",
     note: "engine/stations.ts's stationPerformance: when a station has nobody at all assigned as primary or backup (First Light's 2-person roster structurally cannot cover Incident Command or Mission Command, engine/stations.ts) or its assigned coverers have all died, the best-conditioned surviving crew member still responds as an ad hoc stand-in, at this further penalty on top of their own condition — a real crew of any size keeps fighting a fire or patching a leak, nobody needs a station badge to try to save their own life. Found necessary empirically: without any fallback, a hard-0 performance made every Incident-Command-owned incident (depress-mir97 chief among them) mathematically unwinnable on First Light regardless of bot skill, since no response through that station could ever succeed or even be attempted.",
   }),
+  secondResponderPerformanceBonusFraction: c({
+    value: 0.72,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "engine/stations.ts's stationPerformance: an unassigned-station ad hoc response (see unassignedStationEmergencyPerformanceFraction above) gets a relative performance boost when a second living crew member is available to help, not just the single best-conditioned one — real NASA crew procedures generally use a two-person rule/buddy system for hazardous contingency operations, the real anchor for the mechanism (a second pair of hands genuinely helps), but no published figure quantifies exactly how much for this sim's own abstracted station model, so the magnitude is tuned (brief rule 1: every 'tuned' confidence value cites GAME-DESIGN as its source, its real-world anchor disclosed here in the note instead). Added specifically because First Light's 2-person roster leaves Incident Command and Mission Command permanently unassigned, so depress-mir97's fast kill clock (docs/M7.8_DIAGNOSIS.md Part A) was outrunning even a skilled bot's only available responder working alone. 0.72 was reached empirically against validation/balance.test.ts's own targets, not picked first-try: 0.5 helped substantially but left prudentBot's Training/Nominal floors on First Light still short; 1.0 closed every prudentBot gap but pushed idleBot's Nominal ceiling (<=5%) over, since idleBot benefits from the same station-performance boost whenever it does engage a response — 0.72 is the value at which both the prudentBot floors and the idleBot ceiling hold simultaneously across all 150 seeds.",
+  }),
   longMissionRemainingHours: c({
     value: 1000,
     unit: "h",
