@@ -49,8 +49,11 @@ function worstStatusRank(state: SimState): number {
   );
 }
 
-/** Real milliseconds per simulated hour at each speed. */
-export const SPEEDS = { paused: 0, slow: 1200, normal: 400, fast: 120 } as const;
+/** Real milliseconds per simulated hour at each speed — a genuine 1x/4x/16x ratio (the
+ *  brief's own literal M8 core-loop labels, M8.5), not just the text saying so: "slow" is
+ *  the 1x baseline, "normal" is exactly a quarter of its interval, "fast" exactly a
+ *  sixteenth. */
+export const SPEEDS = { paused: 0, slow: 1200, normal: 300, fast: 75 } as const;
 export type Speed = keyof typeof SPEEDS;
 
 const DEFAULT_PARAMS: Params = {
@@ -76,10 +79,16 @@ interface RunStore {
    *  `packages/sim/src/engine/crewHours.ts` already uses for its own budget reset, so this
    *  never invents a second "day" concept. */
   phase: "planning" | "running";
+  /** M8.5: the just-completed sol's own hour window, set the instant `step()` crosses a day
+   *  boundary (the same moment `phase` resets to "planning") — `views/SolSummary/
+   *  SolSummaryView.tsx` reads this to show the brief's own "end-of-sol summary" overlay.
+   *  `undefined` once dismissed (dismissSolSummary) or before any sol has ever ended. */
+  justEndedSol: { startHour: number; endHour: number } | undefined;
 
   step: (hours?: number) => void;
   setSpeed: (speed: Speed) => void;
   setPhase: (phase: "planning" | "running") => void;
+  dismissSolSummary: () => void;
   reset: (params?: Partial<Params>) => void;
   setSurvivalMode: (mode: SurvivalMode) => void;
   setPriority: (id: SystemId, direction: -1 | 1) => void;
@@ -111,10 +120,12 @@ export const useRun = create<RunStore>((set, get) => ({
   version: 0,
   speed: "paused",
   phase: "planning",
+  justEndedSol: undefined,
 
   step: (hours = 1) => {
     const { state, params, scenario } = get();
     let autoPaused = false;
+    let justEndedSol: { startHour: number; endHour: number } | undefined;
 
     for (let i = 0; i < hours && state.status === "running"; i++) {
       const previousWorstRank = worstStatusRank(state);
@@ -124,8 +135,13 @@ export const useRun = create<RunStore>((set, get) => ({
 
       simTick(state, params, scenario);
 
+      // A day boundary always halts the clock immediately (Sol Planning locks it, M8.4 Part
+      // A) — crossing more than one in a single step() call would otherwise be possible at
+      // high speed and would silently skip reviewing the sol(s) in between.
       if (state.hour % 24 === 0) {
-        set({ phase: "planning" });
+        justEndedSol = { startHour: state.hour - 24, endHour: state.hour };
+        autoPaused = true;
+        break;
       }
 
       const newlyDetected = state.activeIncidents.some(
@@ -140,6 +156,8 @@ export const useRun = create<RunStore>((set, get) => ({
     set((s) => ({
       version: s.version + 1,
       speed: autoPaused || state.status !== "running" ? "paused" : s.speed,
+      phase: justEndedSol !== undefined ? "planning" : s.phase,
+      justEndedSol: justEndedSol ?? s.justEndedSol,
     }));
   },
 
@@ -151,6 +169,10 @@ export const useRun = create<RunStore>((set, get) => ({
     set({ phase });
   },
 
+  dismissSolSummary: () => {
+    set({ justEndedSol: undefined });
+  },
+
   reset: (overrides = {}) => {
     const params = { ...DEFAULT_PARAMS, ...overrides };
     set({
@@ -160,6 +182,7 @@ export const useRun = create<RunStore>((set, get) => ({
       version: 0,
       speed: "paused",
       phase: "planning",
+      justEndedSol: undefined,
     });
   },
 

@@ -7,7 +7,7 @@ const SPEED_LABELS: Record<Speed, string> = {
   paused: "Paused",
   slow: "1×",
   normal: "4×",
-  fast: "12×",
+  fast: "16×",
 };
 
 /**

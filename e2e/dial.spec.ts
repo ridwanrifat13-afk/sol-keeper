@@ -106,14 +106,21 @@ test.describe("Tab navigation", () => {
  *
  * M8.4 Part A: `step()` also resets `phase` to "planning" at every day boundary, which locks
  * "+1 sol" until "Run the sol" is clicked again (components/TimeControls.tsx) — so that has
- * to be checked before every click here too, not just once at the start.
+ * to be checked before every click here too, not just once at the start. M8.5: `step()` now
+ * halts unconditionally at every day boundary (not just periodically), and the end-of-sol
+ * summary overlay blocks there too, ahead of "Run the sol" reappearing — dismissed the same
+ * way as a Decision Card.
  */
 async function finishMission(page: Page): Promise<void> {
   const solButton = page.getByRole("button", { name: "+1 sol" });
   const runSolButton = page.getByRole("button", { name: "Run the sol" });
+  const continueButton = page.getByRole("button", { name: "Continue to Sol Planning" });
   for (let i = 0; i < 400; i++) {
     while ((await page.locator(".decision-card-response").count()) > 0) {
       await page.locator(".decision-card-response").first().click();
+    }
+    if ((await continueButton.count()) > 0) {
+      await continueButton.click();
     }
     if ((await runSolButton.count()) > 0) {
       await runSolButton.click();
@@ -123,6 +130,9 @@ async function finishMission(page: Page): Promise<void> {
   }
   while ((await page.locator(".decision-card-response").count()) > 0) {
     await page.locator(".decision-card-response").first().click();
+  }
+  if ((await continueButton.count()) > 0) {
+    await continueButton.click();
   }
   await expect(page.locator(".run-badge")).not.toContainText("Running");
 }

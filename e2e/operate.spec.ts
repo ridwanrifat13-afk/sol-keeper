@@ -9,12 +9,24 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
+ * Dismisses the end-of-sol summary if it's blocking (M8.5 — it appears the instant `step()`
+ * crosses a day boundary, before "Run the sol" reappears for the next sol).
+ */
+async function dismissSolSummaryIfShown(page: Page): Promise<void> {
+  const continueButton = page.getByRole("button", { name: "Continue to Sol Planning" });
+  if ((await continueButton.count()) > 0) {
+    await continueButton.click();
+  }
+}
+
+/**
  * Clicks "Run the sol" if Sol Planning currently has the clock locked (M8.4 Part A — the
  * brief's own core loop: the clock does not advance during `phase === "planning"`, which
  * `step()` resets to at every 24-hour day boundary, so this needs checking before every
  * step, not just once).
  */
 async function runSolIfLocked(page: Page): Promise<void> {
+  await dismissSolSummaryIfShown(page);
   const runSolButton = page.getByRole("button", { name: "Run the sol" });
   if ((await runSolButton.count()) > 0) {
     await runSolButton.click();
@@ -24,7 +36,9 @@ async function runSolIfLocked(page: Page): Promise<void> {
 /**
  * Clicks +1 sol `times` times, answering any Decision Card that blocks the way with its
  * first option first — a real player would too, and M8.2's auto-pause means a rapid
- * multi-sol advance can genuinely land on a detected, unresolved incident.
+ * multi-sol advance can genuinely land on a detected, unresolved incident. Also dismisses
+ * the end-of-sol summary (M8.5), which now blocks at every single day boundary since
+ * step() halts there unconditionally.
  */
 async function advanceSol(page: Page, times: number): Promise<void> {
   const solButton = page.getByRole("button", { name: "+1 sol" });

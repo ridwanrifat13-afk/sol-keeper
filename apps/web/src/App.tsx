@@ -12,6 +12,7 @@ import { DataSourcesView } from "./views/DataSources/DataSourcesView.js";
 import { LanguageSwitch } from "./components/LanguageSwitch.js";
 import { TimeControls } from "./components/TimeControls.js";
 import { DecisionCard } from "./components/DecisionCard.js";
+import { SolSummaryView } from "./views/SolSummary/SolSummaryView.js";
 import { DialSwitch } from "./components/DialSwitch.js";
 import { RunStatusBadge } from "./components/RunStatusBadge.js";
 import { EventFeed } from "./components/EventFeed.js";
@@ -55,9 +56,10 @@ const TAB_KEYS: Record<View, string> = {
  *
  * Persistent, always-visible shell (not scoped to any one console): the tab nav, the mission
  * identity line + run-status badge, the Reality Dial switch, the sol clock (`TimeControls`,
- * M8.1), the Decision Card (M8.2), a Data Sources link opening that screen as an overlay
- * rather than consuming one of the seven tabs (still reachable everywhere, per CLAUDE.md rule
- * 5), and one shared mission log (`EventFeed`) rather than one copy per console.
+ * M8.1), the Decision Card (M8.2), the end-of-sol summary (`SolSummaryView`, M8.5), a Data
+ * Sources link opening that screen as an overlay rather than consuming one of the seven tabs
+ * (still reachable everywhere, per CLAUDE.md rule 5), and one shared mission log (`EventFeed`)
+ * rather than one copy per console.
  *
  * Tab labels and the language switch are the first (M5) i18n-wired part of the UI — see
  * i18n/config.ts for exactly what is and is not translated yet.
@@ -126,6 +128,7 @@ export function App() {
       <DialSwitch />
       <TimeControls />
       <DecisionCard />
+      <SolSummaryView />
 
       {view === "power" && <PowerConsole />}
       {view === "lifeSupport" && <LifeSupportConsole />}
