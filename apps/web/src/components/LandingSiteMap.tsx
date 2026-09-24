@@ -1,36 +1,32 @@
 import { useEffect, useRef } from "react";
 import type { Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useRun } from "../../store/run.js";
-import { TREK_LAYERS } from "../../map/trekLayers.js";
+import { useRun } from "../store/run.js";
+import { TREK_LAYERS } from "../map/trekLayers.js";
 
 /**
- * The landing-site map (brief P2/M6). Tile URLs, zoom range and attribution all come from
- * map/trekLayers.ts, itself a direct copy of the two rows in docs/trek_layers.md marked
- * Status "tested" — nothing here constructs or guesses a tile URL.
+ * The landing-site map (M6, folded into Briefing wholesale at M8.6 — see BriefingView.tsx).
+ * Tile URLs, zoom range and attribution all come from map/trekLayers.ts, itself a direct
+ * copy of the two rows in docs/trek_layers.md marked Status "tested" — nothing here
+ * constructs or guesses a tile URL.
  *
  * Both Trek layers are equirectangular (2:1 at zoom 0, not Web Mercator), so the map must
  * use L.CRS.EPSG4326 or the tiles misalign — this is the one thing about this component
  * that isn't optional configuration, it's a correctness requirement docs/trek_layers.md
  * calls out explicitly.
  *
- * This is a viewer for the current scenario's real, fixed site, not an interactive picker:
- * the brief's P0 feature list includes a "landing-site picker" as part of a Prepare/mission-
- * setup screen, but Prepare itself has stayed deferred since M0 because no milestone through
- * M6 names it, and this project's two scenarios (Jezero, Shackleton) don't let a player
- * choose an arbitrary site anyway. Showing where the actual mission site is, on real NASA
- * imagery, is the honest scope here — not a picker with nothing to pick between.
+ * A viewer for the current scenario's real, fixed site, not an interactive picker: the
+ * brief's own interactive landing-site picker is M9's job (mission setup flow), not this
+ * read-only Briefing screen's.
  *
  * Leaflet's *JS* is imported dynamically inside the effect, not at module scope: its own
  * module touches `window` on load (checked by hitting a real `ReferenceError: window is
  * not defined` from apps/web/tests/render.test.tsx, which renders the whole App tree
  * through react-dom/server in Node), and a static import would break every render test
- * that reaches this component, not just ones that actually open this tab. The stylesheet
- * has no such problem (CSS has no `window` reference to trip over) and stays a normal
- * static import. A side benefit: Leaflet's JS only downloads once a player actually opens
- * Landing Site, which helps the brief's low-end-mobile requirement too.
+ * that reaches this component. The stylesheet has no such problem and stays a normal
+ * static import.
  */
-export function LandingSiteView() {
+export function LandingSiteMap() {
   const scenario = useRun((s) => s.scenario);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -95,28 +91,15 @@ export function LandingSiteView() {
   }, [scenario.body, scenario.site.latDeg, scenario.site.lonDeg, scenario.site.name]);
 
   return (
-    <div className="landing-site">
-      <header className="view-head">
-        <h2>Landing Site</h2>
-        <p className="view-hint">
-          {scenario.site.name} on real NASA imagery — equirectangular projection, which
-          stretches visibly near the poles (Shackleton's own map looks wider than it is,
-          exactly as the source data does).
-        </p>
-      </header>
-      <section className="panel" aria-labelledby="map-heading">
-        <h2 id="map-heading" className="visually-hidden">
-          {scenario.site.name} map
-        </h2>
-        {/* A plain container, not role="img": Leaflet renders real interactive controls
-            (zoom buttons, keyboard-pannable tiles) inside it, and role="img" would tell
-            assistive tech to treat all of that as a single static picture and hide it. The
-            coordinates and attribution below are the accessible textual equivalent. */}
-        <div ref={containerRef} className="trek-map" aria-label={`Interactive map of ${scenario.site.name}`} />
-        <p className="panel-hint">
-          {scenario.site.latDeg}°, {scenario.site.lonDeg}° · {TREK_LAYERS[scenario.body].attribution}
-        </p>
-      </section>
-    </div>
+    <>
+      {/* A plain container, not role="img": Leaflet renders real interactive controls
+          (zoom buttons, keyboard-pannable tiles) inside it, and role="img" would tell
+          assistive tech to treat all of that as a single static picture and hide it. The
+          coordinates and attribution below are the accessible textual equivalent. */}
+      <div ref={containerRef} className="trek-map" aria-label={`Interactive map of ${scenario.site.name}`} />
+      <p className="panel-hint">
+        {scenario.site.latDeg}°, {scenario.site.lonDeg}° · {TREK_LAYERS[scenario.body].attribution}
+      </p>
+    </>
   );
 }

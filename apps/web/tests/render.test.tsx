@@ -33,8 +33,6 @@ import { CommsConsole } from "../src/views/Comms/CommsConsole";
 import { IncidentCommandConsole } from "../src/views/IncidentCommand/IncidentCommandConsole";
 import { MissionCommandConsole } from "../src/views/MissionCommand/MissionCommandConsole";
 import { BriefingView } from "../src/views/Briefing/BriefingView";
-import { LaunchPackingView } from "../src/views/LaunchPacking/LaunchPackingView";
-import { LandingSiteView } from "../src/views/LandingSite/LandingSiteView";
 import { useRun } from "../src/store/run";
 import { useDial } from "../src/store/dial";
 import { logText } from "../src/i18n/logText";
@@ -363,44 +361,58 @@ describe("Incident Command console, first frame (Jezero, the default scenario)",
   });
 });
 
-describe("LaunchPackingView, first frame", () => {
-  it("renders every Jezero system with a real TRL and reliability figure", () => {
-    const out = render(<LaunchPackingView />);
-    expect(out).toContain("Launch Packing");
-    for (const label of ["CO₂ scrubber", "Heating", "MOXIE", "Greenhouse"]) {
-      expect(out, `missing system: ${label}`).toContain(label);
-    }
-    // PDR is the default phase; its 20% margin should be visible in the column header.
-    expect(out).toContain("PDR");
-    expect(out).toContain("+20%");
-  });
-
-  it("discloses lifeSupport's missing hardware mass instead of silently omitting it", () => {
-    const out = render(<LaunchPackingView />);
-    expect(out).toContain("not sourced");
-    expect(out).toContain("no sourced hardware mass");
-  });
-
-  it("the risk matrix explorer starts at a real, computed band — never a fixed label", () => {
-    const out = render(<LaunchPackingView />);
-    expect(out).toMatch(/Low risk|Medium risk|High risk/);
-  });
-});
-
 /**
- * Leaflet itself never loads during SSR (it's a dynamic import inside a useEffect — see
- * the note on LandingSiteView), so this can only check the surrounding chrome: the real
- * site name and coordinates, and the real Trek attribution line, all of which come from
- * the scenario and map/trekLayers.ts rather than the map widget itself.
+ * Leaflet itself never loads during SSR (it's a dynamic import inside a useEffect —
+ * components/LandingSiteMap.tsx's own note), so this can only check the surrounding chrome:
+ * the real site name/coordinates/Trek attribution, all of which come from the scenario and
+ * map/trekLayers.ts rather than the map widget itself.
  */
-describe("LandingSiteView, first frame", () => {
-  it("renders the real Jezero site name, coordinates and Trek attribution", () => {
-    const out = render(<LandingSiteView />);
-    expect(out).toContain("Landing Site");
+describe("Briefing view content, first frame (M8.6)", () => {
+  it("lists every crew member with their real primary and backup station", () => {
+    const out = render(<BriefingView />);
+    expect(out).toContain("Crew");
+    // state.ts's own round-robin assignment for Jezero's 4-person crew.
+    expect(out).toContain("Power");
+    expect(out).toContain("backup");
+  });
+
+  it("folds in the landing-site map's surrounding chrome (M8.3's settled navigation)", () => {
+    const out = render(<BriefingView />);
+    expect(out).toContain("Landing site");
     expect(out).toContain("Jezero Crater");
     expect(out).toContain("18.4");
     expect(out).toContain("77.6");
     expect(out).toContain("NASA Ames / USGS Astrogeology Science Center");
+  });
+
+  it("states the real scripted hazard for the current scenario, not a live feed", () => {
+    const out = render(<BriefingView />);
+    expect(out).toContain("What to expect");
+    expect(out).toContain("dust storm");
+  });
+
+  it("renders both real goals, not a placeholder", () => {
+    const out = render(<BriefingView />);
+    expect(out).toContain("Primary goal");
+    expect(out).toContain("Stretch goal");
+    expect(out).toContain("Harvest every crop tray");
+  });
+
+  it("discloses all three real failure outcomes, not just crew loss", () => {
+    const out = render(<BriefingView />);
+    expect(out).toContain("What failure looks like");
+    expect(out).toContain("goal unmet");
+    expect(out).toContain("end the mission early");
+    expect(out).toContain("every crew member is lost");
+  });
+
+  it("shows a real, sourced packed-mass headline, not the interactive Launch Packing explorer", () => {
+    const out = render(<BriefingView />);
+    expect(out).toContain("Packed mass");
+    expect(out).toContain("PDR-phase margin");
+    // The interactive risk-matrix explorer this screen deliberately does not carry forward.
+    expect(out).not.toContain("Risk matrix explorer");
+    expect(out).not.toMatch(/Low risk|Medium risk|High risk/);
   });
 });
 

@@ -227,11 +227,14 @@ test.describe("Life Support console", () => {
 
   test("no NASA logo or insignia is present (brief rule 5)", async ({ page }) => {
     await page.goto("/");
+    await page.getByRole("button", { name: "Life Support" }).click();
 
     await expect(page.getByText("Not affiliated with or endorsed by NASA")).toBeVisible();
+    // Scoped to the Life Support console specifically (this describe block's own subject):
+    // Briefing's own real Trek map tiles are real <img> elements now (M8.6) — checked for the
+    // same rule separately, in e2e/briefing.spec.ts, against what they actually are rather
+    // than assuming the whole app stays imageless forever.
     const images = await page.locator("img").count();
-    // The MVP ships no images at all yet; this fails loudly the day one is added without
-    // review, which is exactly when rule 5 needs re-checking.
     expect(images).toBe(0);
   });
 
