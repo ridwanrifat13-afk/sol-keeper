@@ -1,66 +1,77 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useRun } from "./store/run.js";
-import { OperateView } from "./views/Operate/OperateView.js";
+import { PowerConsole } from "./views/Power/PowerConsole.js";
+import { LifeSupportConsole } from "./views/LifeSupport/LifeSupportConsole.js";
+import { CommsConsole } from "./views/Comms/CommsConsole.js";
+import { IncidentCommandConsole } from "./views/IncidentCommand/IncidentCommandConsole.js";
+import { MissionCommandConsole } from "./views/MissionCommand/MissionCommandConsole.js";
+import { BriefingView } from "./views/Briefing/BriefingView.js";
 import { DebriefView } from "./views/Debrief/DebriefView.js";
 import { DataSourcesView } from "./views/DataSources/DataSourcesView.js";
-import { RippleView } from "./views/Ripple/RippleView.js";
-import { LiveSkyView } from "./views/LiveSky/LiveSkyView.js";
-import { LaunchPackingView } from "./views/LaunchPacking/LaunchPackingView.js";
-import { LandingSiteView } from "./views/LandingSite/LandingSiteView.js";
 import { LanguageSwitch } from "./components/LanguageSwitch.js";
 import { TimeControls } from "./components/TimeControls.js";
 import { DecisionCard } from "./components/DecisionCard.js";
+import { DialSwitch } from "./components/DialSwitch.js";
+import { RunStatusBadge } from "./components/RunStatusBadge.js";
+import { EventFeed } from "./components/EventFeed.js";
+import { durationLabel } from "./dial/missionTime.js";
 import "./i18n/config.js";
 
-type View = "operate" | "ripple" | "liveSky" | "launchPacking" | "landingSite" | "debrief" | "dataSources";
+type View = "power" | "lifeSupport" | "comms" | "incidentCommand" | "missionCommand" | "briefing" | "debrief";
 
 const TAB_IDS: readonly View[] = [
-  "operate",
-  "ripple",
-  "liveSky",
-  "launchPacking",
-  "landingSite",
+  "power",
+  "lifeSupport",
+  "comms",
+  "incidentCommand",
+  "missionCommand",
+  "briefing",
   "debrief",
-  "dataSources",
 ];
 const TAB_KEYS: Record<View, string> = {
-  operate: "tabs.operate",
-  ripple: "tabs.ripple",
-  liveSky: "tabs.liveSky",
-  launchPacking: "tabs.launchPacking",
-  landingSite: "tabs.landingSite",
+  power: "tabs.power",
+  lifeSupport: "tabs.lifeSupport",
+  comms: "tabs.comms",
+  incidentCommand: "tabs.incidentCommand",
+  missionCommand: "tabs.missionCommand",
+  briefing: "tabs.briefing",
   debrief: "tabs.debrief",
-  dataSources: "tabs.dataSources",
 };
 
 /**
- * The app shell. A plain tab switch over local state — seven views do not need a routing
- * library, and adding one would be a dependency the brief asks to clear first.
+ * The app shell (M8.3): the five station consoles plus Briefing and Debrief, replacing
+ * Phase 2 (M2-M7)'s seven-tab IA — still a plain `useState<View>` tab switch, no router (the
+ * brief reaffirms this is not needed for seven destinations; adding one would be a dependency
+ * to clear first). Ripple Web, Live Sky, Launch Packing and Landing Site are no longer their
+ * own tabs: their content folded into the five consoles (Ripple -> Incident Command, Live
+ * Sky's two halves -> Power and Comms) or, for Landing Site/Launch Packing, is deferred to
+ * M8.6's real Briefing content — those two files still exist but are temporarily unreached by
+ * any tab until M8.6 folds them in, a disclosed gap for this sub-part, not a silent one.
  *
- * Prepare (mission setup: crew size, scenario, landing site) is P0 in the brief's feature
- * list but is not named in any milestone through M6, so it stays deferred rather than built
- * to fit one. The player starts directly in Operate, as they did at M2, and switches
- * scenario from a control inside Operate itself (ScenarioSwitch) rather than a setup screen;
- * Landing Site (M6) is a viewer for the current scenario's real, fixed site, not a picker,
- * for the same reason.
+ * A fresh mission (and every `reset()`) now opens on Briefing, not mid-console, so "a new
+ * player makes a first meaningful decision within 60 seconds" starts from the intended entry
+ * point (brief's own M8 kickoff order: Briefing before every mission).
+ *
+ * Persistent, always-visible shell (not scoped to any one console): the tab nav, the mission
+ * identity line + run-status badge, the Reality Dial switch, the sol clock (`TimeControls`,
+ * M8.1), the Decision Card (M8.2), a Data Sources link opening that screen as an overlay
+ * rather than consuming one of the seven tabs (still reachable everywhere, per CLAUDE.md rule
+ * 5), and one shared mission log (`EventFeed`) rather than one copy per console.
  *
  * Tab labels and the language switch are the first (M5) i18n-wired part of the UI — see
  * i18n/config.ts for exactly what is and is not translated yet.
- *
- * M8.1: `TimeControls` renders here, in the always-mounted shell, rather than inside one tab's
- * view — its own tick-interval `useEffect` was previously tied to `OperateView`'s mount
- * lifecycle, so navigating away paused the mission by accident. It still owns the interval
- * itself (mounting/unmounting the whole app stops it, same design, just anchored higher).
- *
- * M8.2: `DecisionCard` renders here too, globally, for the same reason — a Decision Card
- * names its own owning station in the card itself (brief's M8 core loop), so it does not
- * require the player to navigate to any particular tab to see or answer it.
  */
 export function App() {
-  const [view, setView] = useState<View>("operate");
+  const [view, setView] = useState<View>("briefing");
+  const [dataSourcesOpen, setDataSourcesOpen] = useState(false);
   const status = useRun((s) => s.state.status);
+  const scenario = useRun((s) => s.scenario);
+  const crew = useRun((s) => s.state.crew);
+  const version = useRun((s) => s.version);
   const { t } = useTranslation();
+
+  const livingCrew = crew.filter((c) => c.alive).length;
 
   return (
     <main className="app">
@@ -85,19 +96,87 @@ export function App() {
             </button>
           ))}
         </nav>
-        <LanguageSwitch />
+        <div className="app-head-actions">
+          <button
+            type="button"
+            className="btn btn-quiet"
+            aria-haspopup="dialog"
+            aria-expanded={dataSourcesOpen}
+            onClick={() => {
+              setDataSourcesOpen(true);
+            }}
+          >
+            {t("tabs.dataSources")}
+          </button>
+          <LanguageSwitch />
+        </div>
       </div>
 
+      <header className="mission-head" key={version}>
+        <div>
+          <h1>Sol Keeper</h1>
+          <p className="mission-site">
+            {scenario.site.name} · {scenario.body === "mars" ? "Mars" : "Moon"} ·{" "}
+            {durationLabel(scenario.durationHours, scenario.body)} · {livingCrew}/{crew.length} crew
+          </p>
+        </div>
+        <RunStatusBadge />
+      </header>
+
+      <DialSwitch />
       <TimeControls />
       <DecisionCard />
 
-      {view === "operate" && <OperateView />}
-      {view === "ripple" && <RippleView />}
-      {view === "liveSky" && <LiveSkyView />}
-      {view === "launchPacking" && <LaunchPackingView />}
-      {view === "landingSite" && <LandingSiteView />}
+      {view === "power" && <PowerConsole />}
+      {view === "lifeSupport" && <LifeSupportConsole />}
+      {view === "comms" && <CommsConsole />}
+      {view === "incidentCommand" && <IncidentCommandConsole />}
+      {view === "missionCommand" && <MissionCommandConsole />}
+      {view === "briefing" && <BriefingView />}
       {view === "debrief" && <DebriefView />}
-      {view === "dataSources" && <DataSourcesView />}
+
+      <EventFeed />
+
+      <footer className="credits">
+        <p>
+          Every number in this simulation comes from published NASA data. See Data Sources
+          (above) for the full list and what is tuned for gameplay.
+        </p>
+        <p className="credits-fine">
+          Not affiliated with or endorsed by NASA. Data credited to NASA and the cited
+          researchers.
+        </p>
+      </footer>
+
+      {dataSourcesOpen && (
+        <div
+          className="overlay-backdrop"
+          onClick={() => {
+            setDataSourcesOpen(false);
+          }}
+        >
+          <div
+            className="overlay-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("tabs.dataSources")}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <button
+              type="button"
+              className="btn btn-quiet overlay-close"
+              onClick={() => {
+                setDataSourcesOpen(false);
+              }}
+            >
+              Close ✕
+            </button>
+            <DataSourcesView />
+          </div>
+        </div>
+      )}
     </main>
   );
 }

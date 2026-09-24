@@ -59,7 +59,7 @@ export function LaunchPackingView() {
   return (
     <div className="launch-packing">
       <header className="view-head">
-        <h1>Launch Packing</h1>
+        <h2>Launch Packing</h2>
         <p className="view-hint">
           The mass you can actually launch, once technology maturity and design-review margin
           are counted — not just the bare hardware weight.

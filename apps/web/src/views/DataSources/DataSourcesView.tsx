@@ -59,7 +59,7 @@ export function DataSourcesView() {
   return (
     <div className="data-sources">
       <header className="view-head">
-        <h1>Data Sources</h1>
+        <h2>Data Sources</h2>
         <p className="view-hint">
           Every number in Sol Keeper cites one of the sources below. This page is generated
           from the same constants file the simulation runs on — it cannot drift from what the

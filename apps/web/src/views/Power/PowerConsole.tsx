@@ -1,20 +1,18 @@
-import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
-import { useLiveOrSnapshot } from "../../data/liveOrSnapshot.js";
 import { useSpaceWeather } from "../../data/spaceWeather.js";
+import { Gauge } from "../../components/Gauge.js";
+import { PowerPriorities } from "../../components/PowerPriorities.js";
 import { ProvenanceBadge } from "../../components/ProvenanceBadge.js";
 import { FactCardGallery } from "../../components/FactCardGallery.js";
+import { STATUS } from "../../components/status.js";
+import { statusWord } from "../../dial/statusWords.js";
 import { spaceWeatherTypeLabel } from "../../dial/spaceWeatherLabels.js";
-import type { LightTimeResponse } from "../../../server-lib/types.js";
+import { buildResourceSummary } from "../../dial/resourceSummary.js";
 import type { ImageQueryKey } from "../../../server-lib/validate.js";
 
 const MAX_EVENTS_SHOWN = 8;
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 /** Which whitelisted image topic fits the current mission body — real fact-card photos,
  *  chosen by what the player is actually doing rather than a fixed, generic set. */
@@ -23,60 +21,55 @@ function factCardTopicFor(body: "mars" | "moon"): ImageQueryKey {
 }
 
 /**
- * Live Sky (M5/M6): real recent solar activity from DONKI, the actual Earth distance /
- * light-time delay for the mission's own body, and — since M6 — "what NASA did" fact
- * cards using the same /api/nasa-images endpoint and snapshot pattern M5 already built.
- *
- * All three panels follow the same rule: paint the committed snapshot immediately
- * (instant, offline-safe), then upgrade to live data if it answers within 3 s, and always
- * say which one is on screen — never silently.
+ * The Power console (M8.3): battery/generation status, the load-shed priority order, and —
+ * folded in from the old Live Sky tab (M8's settled navigation) — real recent solar activity
+ * from DONKI and "what NASA did" fact cards, since both are Power-relevant space weather.
+ * Live Sky's light-time/distance panel goes to Comms instead (M8.4 Part C), not here.
  */
-export function LiveSkyView() {
+export function PowerConsole() {
+  const version = useRun((s) => s.version);
+  const state = useRun((s) => s.state);
   const scenario = useRun((s) => s.scenario);
   const level = useDial((s) => s.level);
   const { t } = useTranslation();
 
-  const date = useMemo(() => todayIso(), []);
-  const lightTime = useLiveOrSnapshot<LightTimeResponse>(
-    `/snapshots/light-time-${scenario.body}.json`,
-    `/api/light-time?body=${scenario.body}&date=${date}`,
-  );
+  const summary = buildResourceSummary(state, level);
+  const powerServedFraction = state.power.demandKw > 0 ? state.power.servedKw / state.power.demandKw : 1;
   const spaceWeather = useSpaceWeather();
 
-  const bodyWord = t(scenario.body === "mars" ? "liveSky.bodyMars" : "liveSky.bodyMoon");
-  const oneWayMinutes = lightTime.data ? lightTime.data.oneWayLightSeconds / 60 : undefined;
-
   return (
-    <div className="live-sky">
+    <div className="console" key={version}>
       <header className="view-head">
-        <h1>{t("liveSky.title")}</h1>
-        <p className="view-hint">{t("liveSky.hint")}</p>
+        <h2>Power</h2>
+        <p className="view-hint">Generation, storage, the load-shed order, and incoming space weather.</p>
       </header>
 
-      <section className="panel" aria-labelledby="light-time-heading">
-        <div className="panel-head-row">
-          <h2 id="light-time-heading">{t("liveSky.distanceHeading")}</h2>
-          <ProvenanceBadge status={lightTime.status} fetchedAt={lightTime.data?.fetchedAt} />
+      <section className="panel" aria-labelledby="power-resources-heading">
+        <h2 id="power-resources-heading">Battery</h2>
+        <div className="gauge-grid">
+          <Gauge
+            icon="⌁"
+            label="Battery"
+            value={state.power.batteryEnergyKwh}
+            unit={summary.battery.text.unit}
+            decimals={summary.battery.text.decimals}
+            valueText={summary.battery.text.valueText}
+            fraction={summary.battery.fraction}
+            status={summary.battery.status}
+            statusLabel={statusWord(level, summary.battery.status.level, summary.battery.status.label)}
+            detail={summary.battery.text.detail}
+          />
         </div>
-        {lightTime.data ? (
-          <>
-            <p className="live-sky-distance">
-              {t("liveSky.distanceLine", {
-                km: Math.round(lightTime.data.distanceKm).toLocaleString(),
-                body: bodyWord,
-              })}
-            </p>
-            <p className="panel-hint">
-              {t("liveSky.radioDelay", {
-                oneWay: oneWayMinutes !== undefined ? oneWayMinutes.toFixed(1) : "—",
-                roundTrip: oneWayMinutes !== undefined ? (oneWayMinutes * 2).toFixed(1) : "—",
-              })}
-            </p>
-          </>
-        ) : (
-          <p className="panel-hint">{t("liveSky.distanceLoading")}</p>
+
+        {powerServedFraction < 1 && (
+          <p className={`inline-alert ${STATUS.caution.className}`}>
+            <span aria-hidden="true">{STATUS.caution.glyph}</span> Power shortfall:{" "}
+            {state.power.shedSystems.length} system(s) shut down this hour.
+          </p>
         )}
       </section>
+
+      <PowerPriorities />
 
       <section className="panel" aria-labelledby="space-weather-heading">
         <div className="panel-head-row">

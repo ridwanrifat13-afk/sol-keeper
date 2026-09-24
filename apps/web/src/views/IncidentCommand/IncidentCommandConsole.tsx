@@ -30,18 +30,16 @@ function fromPresentation(status: StatusPresentation): NodeStatus {
 }
 
 /**
- * The Ripple Web (P1): a live map of what depends on what, not just a live feed of what
- * already happened. The Debrief's causal cascade (dial/blackBox.ts) shows the chain *after*
- * a failure; this shows the same structure *before* one, so a player deciding what to shed
- * can see it will take the greenhouse down with it before they click the button, not after.
+ * The Incident Command console (M8.3): the Ripple Web dependency graph, moved wholesale from
+ * its own old tab (M8's settled navigation — dependency awareness is exactly what deciding a
+ * repair queue or a shelter order needs) — see ripple/graph.ts for the topology itself, cited
+ * line-by-line to the model code it reflects.
  *
- * The topology itself is documented in ripple/graph.ts, cited line-by-line to the model code
- * it reflects. This view's only job is turning that structure, plus the live state, into
- * something a player can actually read: node status through the same glyph+word+colour rule
- * as everywhere else (rule 6), and a full text table underneath as a non-visual fallback,
- * since a force-directed graph is not something a screen reader can usefully narrate as SVG.
+ * The Decision Card (M8.2) renders globally from App.tsx, not scoped here, so a pending
+ * incident is visible regardless of which console is open — this is just its most natural
+ * *home* tab, not its only path to the player.
  */
-export function RippleView() {
+export function IncidentCommandConsole() {
   const state = useRun((s) => s.state);
   const scenario = useRun((s) => s.scenario);
   const level = useDial((s) => s.level);
@@ -98,9 +96,9 @@ export function RippleView() {
   });
 
   return (
-    <div className="ripple">
+    <div className="console">
       <header className="view-head">
-        <h1>Ripple Web</h1>
+        <h2>Incident Command</h2>
         <p className="view-hint">
           What depends on what. Shedding a system on the left ripples through to everything
           connected to it on the right — see it before you decide, not after.

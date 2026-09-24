@@ -1,11 +1,12 @@
 {
   "tabs": {
     "nav": "Sol Keeper views",
-    "operate": "Operate",
-    "ripple": "Ripple Web",
-    "liveSky": "Live Sky",
-    "launchPacking": "Launch Packing",
-    "landingSite": "Landing Site",
+    "power": "Power",
+    "lifeSupport": "Life Support",
+    "comms": "Comms",
+    "incidentCommand": "Incident Command",
+    "missionCommand": "Mission Command",
+    "briefing": "Briefing",
     "debrief": "Debrief",
     "dataSources": "Data Sources",
     "debriefReady": "ready"
@@ -29,7 +30,7 @@
     "bodyMoon": "the Moon",
     "activityHeading": "Recent solar activity",
     "hintHistorical": "No solar activity in the live window right now — here's a real storm from NASA's records instead.",
-    "hintLive": "The same real solar flares and storms that could trigger a radiation-shelter call in Operate.",
+    "hintLive": "The same real solar flares and storms that could trigger a radiation-shelter Decision Card.",
     "empty": "No events to show yet.",
     "nasaRecord": "NASA record ↗"
   },

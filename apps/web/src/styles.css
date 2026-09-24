@@ -593,6 +593,42 @@ code {
   font-size: 0.6rem;
 }
 
+/* ---------------------------------------------------------------- app head actions (M8.3) */
+.app-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+  z-index: 90;
+}
+
+.overlay-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  max-width: 900px;
+  width: 100%;
+  position: relative;
+}
+
+.overlay-close {
+  position: sticky;
+  top: 0;
+  float: right;
+}
+
 /* ---------------------------------------------------------------- dial switch */
 .dial-switch {
   display: flex;
@@ -622,7 +658,7 @@ code {
   margin-bottom: var(--gap);
 }
 
-.view-head h1 {
+.view-head h2 {
   font-size: 1.3rem;
   margin: 0 0 4px;
 }

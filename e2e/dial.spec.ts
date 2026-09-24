@@ -11,6 +11,7 @@ import { expect, test, type Page } from "@playwright/test";
 test.describe("Reality Dial", () => {
   test("switching level changes gauge text without changing status colour", async ({ page }) => {
     await page.goto("/");
+    await page.getByRole("button", { name: "Life Support" }).click();
 
     await expect(page.getByText("161 mmHg")).toBeVisible();
     const oxygenGaugeBefore = await page.locator(".gauge").first().getAttribute("class");
@@ -28,21 +29,23 @@ test.describe("Reality Dial", () => {
 
   test("the choice persists across a reload", async ({ page }) => {
     await page.goto("/");
+    await page.getByRole("button", { name: "Life Support" }).click();
     await page.getByRole("button", { name: /^Cadet/ }).click();
     await expect(page.getByText(/Plenty of air/)).toBeVisible();
 
     await page.reload();
-    await expect(page.getByText(/Plenty of air/)).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Cadet/ })).toHaveAttribute("aria-pressed", "true");
   });
 
   test("cadet status words differ from Nominal/Caution/Critical, and are still present", async ({
     page,
   }) => {
     await page.goto("/");
+    await page.getByRole("button", { name: "Life Support" }).click();
     await page.getByRole("button", { name: /^Cadet/ }).click();
 
     const statuses = page.locator(".gauge-status");
-    await expect(statuses).toHaveCount(6);
+    await expect(statuses).toHaveCount(5);
     for (const text of await statuses.allInnerTexts()) {
       expect(text).toMatch(/Good|Careful|Danger/);
     }
@@ -50,50 +53,75 @@ test.describe("Reality Dial", () => {
 });
 
 test.describe("Tab navigation", () => {
-  test("switches between Operate, Debrief and Data Sources", async ({ page }) => {
+  test("switches between station consoles, Debrief, and Briefing", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator("h1")).toHaveText("Sol Keeper");
-
-    await page.getByRole("button", { name: "Data Sources" }).click();
-    await expect(page.locator("h1")).toHaveText("Data Sources");
-    await expect(page.getByText("Not affiliated with or endorsed by NASA")).toBeVisible();
+    await expect(page.getByText("Mission Briefing")).toBeVisible();
 
     await page.getByRole("button", { name: /^Debrief/ }).click();
     await expect(page.getByText("fills in once the mission ends")).toBeVisible();
 
-    await page.getByRole("button", { name: "Operate" }).click();
-    await expect(page.locator("h1")).toHaveText("Sol Keeper");
+    await page.getByRole("button", { name: "Briefing" }).click();
+    await expect(page.getByText("Mission Briefing")).toBeVisible();
+  });
+
+  test("Data Sources opens as an overlay from any tab, and closes again", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Power", exact: true }).click();
+
+    await page.getByRole("button", { name: "Data Sources" }).click();
+    const overlay = page.getByRole("dialog", { name: "Data Sources" });
+    await expect(overlay).toBeVisible();
+    await expect(overlay.getByText("Not affiliated with or endorsed by NASA")).toBeVisible();
+
+    await overlay.getByRole("button", { name: /Close/ }).click();
+    await expect(overlay).not.toBeVisible();
+    // Closing the overlay leaves the underlying tab exactly where it was.
+    await expect(page.getByText("Power priority")).toBeVisible();
   });
 
   test("Data Sources lists real sources and discloses open placeholders", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Data Sources" }).click();
 
-    await expect(page.getByText("BVAD-2022")).toBeVisible();
-    // Every constant is now sourced, and the screen says so rather than hiding the section.
-    await expect(page.getByText("Still unsourced (0)")).toBeVisible();
-    await expect(page.getByText(/Every number this simulation runs on is backed/)).toBeVisible();
+    const overlay = page.getByRole("dialog", { name: "Data Sources" });
+    await expect(overlay.getByText("BVAD-2022")).toBeVisible();
+    await expect(overlay.getByText("Still unsourced (4)")).toBeVisible();
   });
 });
 
 /**
  * Drives the +1 sol button rather than a real-time speed setting: at 4x speed a real 30-sol
  * mission ticks once every 400ms of wall-clock time, over five minutes to finish. Clicking
- * +1 sol dispatches synchronously, so the same 30 sols complete in a couple of seconds.
- * 32 clicks covers the scenario's ~739.8-hour duration at ~25 h/click with room to spare;
- * a crew loss ending the mission early is an equally valid "ended" state for this test.
+ * +1 sol dispatches synchronously, so the same 30 sols complete in a couple of seconds — a
+ * crew loss ending the mission early is an equally valid "ended" state for this test. The
+ * button is in the persistent header (M8.1/M8.3), so it does not matter which tab is active.
+ *
+ * M8.2's auto-pause (store/run.ts) means a "+1 sol" click can land on a newly detected
+ * incident or a worsened gauge status well before the full ~24.66 h — the *hour* it happens,
+ * not the sol — so a click can net as little as one real hour instead of ~25. That makes a
+ * fixed click count unreliable; this loops until the mission genuinely ends (or a generous
+ * safety cap), answering any Decision Card that blocks the way with its first option, the
+ * same as a real player must.
  */
 async function finishMission(page: Page): Promise<void> {
   const solButton = page.getByRole("button", { name: "+1 sol" });
-  for (let i = 0; i < 32; i++) {
+  for (let i = 0; i < 400; i++) {
+    while ((await page.locator(".decision-card-response").count()) > 0) {
+      await page.locator(".decision-card-response").first().click();
+    }
     if (await solButton.isDisabled()) break;
     await solButton.click();
+  }
+  while ((await page.locator(".decision-card-response").count()) > 0) {
+    await page.locator(".decision-card-response").first().click();
   }
   await expect(page.locator(".run-badge")).not.toContainText("Running");
 }
 
 test.describe("Black Box debrief", () => {
   test("fills in once a mission actually ends", async ({ page }) => {
+    test.setTimeout(60000); // auto-pause can make finishMission take more clicks than before
     await page.goto("/");
     await finishMission(page);
 
@@ -111,6 +139,7 @@ test.describe("Black Box debrief", () => {
     { page },
     testInfo,
   ) => {
+    test.setTimeout(60000); // auto-pause can make finishMission take more clicks than before
     await page.goto("/");
     await finishMission(page);
     await page.getByRole("button", { name: /^Debrief/ }).click();

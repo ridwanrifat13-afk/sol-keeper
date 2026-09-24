@@ -27,8 +27,12 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "../src/App";
 import { DebriefView } from "../src/views/Debrief/DebriefView";
 import { DataSourcesView } from "../src/views/DataSources/DataSourcesView";
-import { RippleView } from "../src/views/Ripple/RippleView";
-import { LiveSkyView } from "../src/views/LiveSky/LiveSkyView";
+import { PowerConsole } from "../src/views/Power/PowerConsole";
+import { LifeSupportConsole } from "../src/views/LifeSupport/LifeSupportConsole";
+import { CommsConsole } from "../src/views/Comms/CommsConsole";
+import { IncidentCommandConsole } from "../src/views/IncidentCommand/IncidentCommandConsole";
+import { MissionCommandConsole } from "../src/views/MissionCommand/MissionCommandConsole";
+import { BriefingView } from "../src/views/Briefing/BriefingView";
 import { LaunchPackingView } from "../src/views/LaunchPacking/LaunchPackingView";
 import { LandingSiteView } from "../src/views/LandingSite/LandingSiteView";
 import { useRun } from "../src/store/run";
@@ -46,7 +50,7 @@ beforeEach(() => {
   useDial.getState().setLevel("specialist");
 });
 
-describe("Operate view, first frame", () => {
+describe("App shell, first frame (persistent across every tab)", () => {
   it("shows the mission header for the Jezero scenario", () => {
     const out = render();
     expect(out).toContain("Sol Keeper");
@@ -55,30 +59,42 @@ describe("Operate view, first frame", () => {
     expect(out).toContain("4/4 crew");
   });
 
-  it("renders every resource gauge with its real opening value", () => {
-    const out = render();
-    for (const label of ["Oxygen", "Carbon dioxide", "Water", "Food", "Battery", "Cabin"]) {
-      expect(out, `missing gauge: ${label}`).toContain(label);
-    }
-    // The scenario opens with 1200 kg of water and 150 kg of dry food.
-    expect(out).toContain("1200 kg");
-    expect(out).toContain("150 kg dry");
-    // Outside temperature comes from the corrected Mars mean, -59 degC.
-    expect(out).toContain("outside -59 °C");
-  });
-
-  it("renders the time controls, priority list and mission log", () => {
+  it("renders the time controls and mission log on every tab, not just one console", () => {
     const out = render();
     expect(out).toContain("Sol 0.00");
     expect(out).toContain("+1 sol");
-    expect(out).toContain("Power priority");
-    expect(out).toContain("Life support");
     expect(out).toContain("Mission log");
     expect(out).toContain("Nothing has happened yet");
   });
 
-  it("lists every system in shed order, least essential last", () => {
+  it("carries the credit line and no NASA insignia (brief rule 5)", () => {
     const out = render();
+    expect(out).toContain("Not affiliated with or endorsed by NASA");
+    expect(out.toLowerCase()).not.toContain("meatball");
+    expect(out).not.toMatch(/nasa[-_]?logo|insignia/i);
+    expect(out).not.toMatch(/<img[^>]+nasa/i);
+  });
+
+  it("the run status is a live region carrying text", () => {
+    const out = render();
+    expect(out).toContain('role="status"');
+    expect(out).toContain("Running");
+  });
+
+  it("decorative glyphs are hidden from screen readers", () => {
+    const out = render();
+    // Every bare glyph is paired with aria-hidden so it is not read out as punctuation.
+    expect(out).toContain('<span aria-hidden="true">●</span>');
+  });
+});
+
+describe("Power console, first frame", () => {
+  it("renders the battery gauge and the priority list in shed order, least essential last", () => {
+    const out = render(<PowerConsole />);
+    expect(out).toContain("Battery");
+    expect(out).toContain("150 kWh");
+    expect(out).toContain("Power priority");
+
     const order = ["Power distribution", "Life support", "CO₂ scrubber", "Heating"];
     let cursor = -1;
     for (const name of order) {
@@ -99,26 +115,90 @@ describe("Operate view, first frame", () => {
    * render test never saw it because it wasn't looking for the absence of a word.
    */
   it("does not claim any system is Shed before the mission clock has run", () => {
-    const out = render();
+    const out = render(<PowerConsole />);
     expect(out).not.toContain("Shed");
     expect(out).toContain("Standby");
   });
 
+  it("priority reorder buttons say what they do, not just an arrow", () => {
+    const out = render(<PowerConsole />);
+    expect(out).toContain("keep it powered longer");
+    expect(out).toContain("shed it sooner");
+  });
+
+  /**
+   * The space-weather and fact-card data hooks fetch inside a useEffect, which — like every
+   * store mutation in this file — never runs during renderToString (see the note at the top).
+   * So this can only assert the pristine pre-fetch frame: headings present, and both
+   * provenance badges reading "Loading…" rather than a stale or fabricated
+   * "Live"/"Snapshot" claim before any fetch has actually settled. The live-then-snapshot-
+   * fallback behaviour itself is proven against a real browser in e2e/liveSky.spec.ts.
+   */
+  it("folds in Live Sky's space-weather panel and fact cards (M8's settled navigation)", () => {
+    const out = render(<PowerConsole />);
+    expect(out).toContain("Recent solar activity");
+    expect(out).toContain("What NASA did: MOXIE"); // Jezero is the default scenario (Mars)
+    // The space-weather panel's own badge plus the fact-card gallery's own — both still
+    // "Loading…", neither claiming Live/Snapshot/Historical before a fetch has settled.
+    expect((out.match(/Loading…/g) ?? []).length).toBe(2);
+    expect(out).not.toMatch(/is-live|is-snapshot|is-historical/);
+  });
+});
+
+describe("Life Support console, first frame", () => {
+  it("renders every resource gauge with its real opening value", () => {
+    const out = render(<LifeSupportConsole />);
+    for (const label of ["Oxygen", "Carbon dioxide", "Water", "Food", "Cabin"]) {
+      expect(out, `missing gauge: ${label}`).toContain(label);
+    }
+    // The scenario opens with 1200 kg of water and 150 kg of dry food.
+    expect(out).toContain("1200 kg");
+    expect(out).toContain("150 kg dry");
+    // Outside temperature comes from the corrected Mars mean, -59 degC.
+    expect(out).toContain("outside -59 °C");
+  });
+
   it("renders the ration controls with their sourced calorie figures", () => {
-    const out = render();
+    const out = render(<LifeSupportConsole />);
     expect(out).toContain("Rations");
     expect(out).toContain("3600 kcal");
     expect(out).toContain("1800 kcal");
     expect(out).toContain("600 kcal");
   });
 
+  it("every gauge prints a status word beside its glyph (brief rule 6)", () => {
+    const out = render(<LifeSupportConsole />);
+    const statusWords = (out.match(/Nominal|Caution|Critical/g) ?? []).length;
+    expect(statusWords).toBeGreaterThanOrEqual(5);
+  });
+
+  it("meters expose their real value to assistive technology", () => {
+    const out = render(<LifeSupportConsole />);
+    expect(out).toContain('role="meter"');
+    expect(out).toContain('aria-valuetext="1200 kg, Nominal"');
+    expect(out).toContain("aria-valuenow");
+  });
+});
+
+describe("Comms console, first frame", () => {
+  it("renders the light-time panel, folded in wholesale from Live Sky", () => {
+    const out = render(<CommsConsole />);
+    expect(out).toContain("Comms");
+    expect(out).toContain("Distance to Earth");
+    // The light-time data hook fetches inside a useEffect, which never runs during SSR (see
+    // the note on Power console's own equivalent check) — still "Loading…", not a stale claim.
+    expect((out.match(/Loading…/g) ?? []).length).toBe(1);
+  });
+});
+
+describe("Mission Command console, first frame", () => {
   it("shows crew dose against the career limit, not as a bare number", () => {
-    const out = render();
+    const out = render(<MissionCommandConsole />);
     expect(out).toContain("600 mSv career limit");
   });
 
   it("renders the ESM budget with a real per-system breakdown, no reactor line for Jezero", () => {
-    const out = render();
+    const out = render(<MissionCommandConsole />);
     expect(out).toContain("Mission ESM budget");
     expect(out).toContain("Total equivalent mass");
     expect(out).toContain("Habitat pressurised volume");
@@ -133,58 +213,40 @@ describe("Operate view, first frame", () => {
     expect(out).toContain("Life Support has no hardware-mass figure");
   });
 
-  it("carries the credit line and no NASA insignia (brief rule 5)", () => {
-    const out = render();
-    expect(out).toContain("Not affiliated with or endorsed by NASA");
-    expect(out.toLowerCase()).not.toContain("meatball");
-    expect(out).not.toMatch(/nasa[-_]?logo|insignia/i);
-    expect(out).not.toMatch(/<img[^>]+nasa/i);
+  it("renders the scenario switch", () => {
+    const out = render(<MissionCommandConsole />);
+    expect(out).toContain("Jezero Outpost");
+    expect(out).toContain("First Light");
+    expect(out).toContain("The Long Night");
   });
 });
 
-describe("accessibility: status is never carried by colour alone (brief rule 6)", () => {
-  it("every gauge prints a status word beside its glyph", () => {
+describe("Briefing view, first frame", () => {
+  it("is the default screen a fresh mission opens on", () => {
     const out = render();
-    const statusWords = (out.match(/Nominal|Caution|Critical/g) ?? []).length;
-    expect(statusWords).toBeGreaterThanOrEqual(6);
+    expect(out).toContain("Mission Briefing");
+    expect(out).toContain("Jezero Crater");
   });
 
-  it("meters expose their real value to assistive technology", () => {
-    const out = render();
-    expect(out).toContain('role="meter"');
-    expect(out).toContain('aria-valuetext="1200 kg, Nominal"');
-    expect(out).toContain("aria-valuenow");
-  });
-
-  it("priority reorder buttons say what they do, not just an arrow", () => {
-    const out = render();
-    expect(out).toContain("keep it powered longer");
-    expect(out).toContain("shed it sooner");
-  });
-
-  it("the run status is a live region carrying text", () => {
-    const out = render();
-    expect(out).toContain('role="status"');
-    expect(out).toContain("Running");
-    expect(out).toContain('aria-live="polite"');
-  });
-
-  it("decorative glyphs are hidden from screen readers", () => {
-    const out = render();
-    // Every bare glyph is paired with aria-hidden so it is not read out as punctuation.
-    expect(out).toContain('<span aria-hidden="true">●</span>');
+  it("renders standalone with the same content", () => {
+    const out = render(<BriefingView />);
+    expect(out).toContain("Mission Briefing");
   });
 });
 
 describe("App shell: tab nav and Reality Dial, first frame", () => {
-  it("renders every tab with Operate active by default", () => {
+  it("renders the five station consoles plus Briefing and Debrief, Briefing active by default", () => {
     const out = render();
-    expect(out).toContain("Operate");
-    expect(out).toContain("Ripple Web");
-    expect(out).toContain("Live Sky");
-    expect(out).toContain("Launch Packing");
-    expect(out).toContain("Landing Site");
+    expect(out).toContain("Power");
+    expect(out).toContain("Life Support");
+    expect(out).toContain("Comms");
+    expect(out).toContain("Incident Command");
+    expect(out).toContain("Mission Command");
+    expect(out).toContain("Briefing");
     expect(out).toContain("Debrief");
+    // Data Sources is a persistent link now, not one of the seven tabs (M8.3's settled
+    // navigation) — still present, just outside .tab-nav, so this only checks the label
+    // exists at all, not that it's a tab.
     expect(out).toContain("Data Sources");
     // aria-current="page" is only present on the active tab's button.
     expect((out.match(/aria-current="page"/g) ?? []).length).toBe(1);
@@ -264,10 +326,10 @@ describe("DebriefView, mission still running (first frame)", () => {
   });
 });
 
-describe("RippleView, first frame (Jezero, the default scenario)", () => {
-  it("renders the graph and every system/domain/crew node it should for Jezero", () => {
-    const out = render(<RippleView />);
-    expect(out).toContain("Ripple Web");
+describe("Incident Command console, first frame (Jezero, the default scenario)", () => {
+  it("renders the dependency graph and every system/domain/crew node it should for Jezero", () => {
+    const out = render(<IncidentCommandConsole />);
+    expect(out).toContain("Incident Command");
     // One node per scenario system, using the friendly label, not the raw id.
     for (const label of ["Life support", "CO₂ scrubber", "Heating", "MOXIE", "Greenhouse"]) {
       expect(out, `missing node: ${label}`).toContain(label);
@@ -280,7 +342,7 @@ describe("RippleView, first frame (Jezero, the default scenario)", () => {
   });
 
   it("renders one <line> per edge and one node group per node — nothing dangling", () => {
-    const out = render(<RippleView />);
+    const out = render(<IncidentCommandConsole />);
     const lineCount = (out.match(/<line /g) ?? []).length;
     const nodeGroupCount = (out.match(/class="ripple-node /g) ?? []).length;
     expect(lineCount).toBeGreaterThan(0);
@@ -288,38 +350,16 @@ describe("RippleView, first frame (Jezero, the default scenario)", () => {
   });
 
   it("carries a full text table as a non-visual fallback (rule 6, and SVG isn't screen-reader friendly)", () => {
-    const out = render(<RippleView />);
+    const out = render(<IncidentCommandConsole />);
     expect(out).toContain("Same information, as text");
     expect(out).toContain('role="img"');
     expect(out).toContain("<table");
   });
 
   it("marks the graph accessible without relying on colour alone", () => {
-    const out = render(<RippleView />);
+    const out = render(<IncidentCommandConsole />);
     // Every table row's status cell carries a real word, not just a colour class.
     expect(out).toMatch(/Standby|Powered|Shed|Failed|Nominal|Caution|Critical/);
-  });
-});
-
-/**
- * LiveSkyView's data hooks fetch inside a useEffect, which — like every store mutation in
- * this file — never runs during renderToString (see the note at the top). So this can only
- * assert the pristine pre-fetch frame: headings present, and both provenance badges reading
- * "Loading…" rather than a stale or fabricated "Live"/"Snapshot" claim before any fetch has
- * actually settled. The live-then-snapshot-fallback behaviour itself is proven against a
- * real browser in e2e/liveSky.spec.ts.
- */
-describe("LiveSkyView, first frame", () => {
-  it("renders all three panels with a real heading, and none claims data it hasn't fetched yet", () => {
-    const out = render(<LiveSkyView />);
-    expect(out).toContain("Live Sky");
-    expect(out).toContain("Distance to Earth");
-    expect(out).toContain("Recent solar activity");
-    expect(out).toContain("What NASA did: MOXIE"); // Jezero is the default scenario (Mars)
-    // Two provenance badges plus the fact-card gallery's own — all still "Loading…", none
-    // claiming Live/Snapshot/Historical before a fetch has actually settled.
-    expect((out.match(/Loading…/g) ?? []).length).toBe(3);
-    expect(out).not.toMatch(/is-live|is-snapshot|is-historical/);
   });
 });
 

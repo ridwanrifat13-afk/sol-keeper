@@ -24,9 +24,10 @@ test.describe("Offline (PWA)", () => {
     await context.setOffline(true);
     await page.reload();
     await expect(page.getByText("Sol Keeper")).toBeVisible();
-    // The Operate view's own data comes from the sim running in the browser, not a
+    // The Life Support console's own data comes from the sim running in the browser, not a
     // network call, so a real resource gauge rendering confirms this isn't just a cached
     // blank shell — the whole app is functional with the network off.
+    await page.getByRole("button", { name: "Life Support" }).click();
     await expect(page.locator(".gauge-label", { hasText: "Oxygen" })).toBeVisible();
 
     await context.setOffline(false);

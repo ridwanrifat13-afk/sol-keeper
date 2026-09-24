@@ -97,7 +97,7 @@ export function LandingSiteView() {
   return (
     <div className="landing-site">
       <header className="view-head">
-        <h1>Landing Site</h1>
+        <h2>Landing Site</h2>
         <p className="view-hint">
           {scenario.site.name} on real NASA imagery — equirectangular projection, which
           stretches visibly near the poles (Shackleton's own map looks wider than it is,

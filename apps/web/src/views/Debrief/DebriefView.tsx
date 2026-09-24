@@ -27,7 +27,7 @@ export function DebriefView() {
     return (
       <div className="debrief">
         <header className="view-head">
-          <h1>Debrief</h1>
+          <h2>Debrief</h2>
           <p className="view-hint">
             The Black Box fills in once the mission ends — keep the outpost running.
           </p>
@@ -47,7 +47,7 @@ export function DebriefView() {
   return (
     <div className="debrief">
       <header className="view-head">
-        <h1>{headline.title}</h1>
+        <h2>{headline.title}</h2>
         <p className="view-hint">{headline.subtitle}</p>
       </header>
 
