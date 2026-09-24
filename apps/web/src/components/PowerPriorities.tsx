@@ -23,6 +23,7 @@ export function PowerPriorities() {
   const hour = useRun((s) => s.state.hour);
   const systems = useRun((s) => s.state.systems);
   const setPriority = useRun((s) => s.setPriority);
+  const phase = useRun((s) => s.phase);
   const level = useDial((s) => s.level);
 
   const ordered = Object.values(systems)
@@ -37,12 +38,16 @@ export function PowerPriorities() {
   // four-state logic now lives in dial/systemStatus.ts, shared with the Ripple Web, so the
   // two views can never disagree about what "Shed" means for a given system.
   const missionStarted = hour > 0;
+  // M8.4 Part A: only adjustable during Sol Planning (components/TimeControls.tsx), same as
+  // the brief's own core loop — the order is a plan made before the sol runs, not a live dial.
+  const locked = phase !== "planning";
 
   return (
     <section className="panel" aria-labelledby="power-priorities-heading">
       <h2 id="power-priorities-heading">Power priority</h2>
       <p className="panel-hint">
         When power runs short, systems at the bottom are switched off first.
+        {locked && " Locked while the sol is running — adjust it during Sol Planning."}
       </p>
 
       <ol className="priority-list" key={version}>
@@ -67,7 +72,7 @@ export function PowerPriorities() {
                 <button
                   type="button"
                   className="btn btn-tiny"
-                  disabled={index === 0}
+                  disabled={index === 0 || locked}
                   aria-label={`Move ${name} up, keep it powered longer`}
                   onClick={() => {
                     setPriority(system.id, -1);
@@ -78,7 +83,7 @@ export function PowerPriorities() {
                 <button
                   type="button"
                   className="btn btn-tiny"
-                  disabled={index === ordered.length - 1}
+                  disabled={index === ordered.length - 1 || locked}
                   aria-label={`Move ${name} down, shed it sooner`}
                   onClick={() => {
                     setPriority(system.id, 1);

@@ -9,6 +9,19 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
+ * Clicks "Run the sol" if Sol Planning currently has the clock locked (M8.4 Part A — the
+ * brief's own core loop: the clock does not advance during `phase === "planning"`, which
+ * `step()` resets to at every 24-hour day boundary, so this needs checking before every
+ * step, not just once).
+ */
+async function runSolIfLocked(page: Page): Promise<void> {
+  const runSolButton = page.getByRole("button", { name: "Run the sol" });
+  if ((await runSolButton.count()) > 0) {
+    await runSolButton.click();
+  }
+}
+
+/**
  * Clicks +1 sol `times` times, answering any Decision Card that blocks the way with its
  * first option first — a real player would too, and M8.2's auto-pause means a rapid
  * multi-sol advance can genuinely land on a detected, unresolved incident.
@@ -19,6 +32,7 @@ async function advanceSol(page: Page, times: number): Promise<void> {
     while ((await page.locator(".decision-card-response").count()) > 0) {
       await page.locator(".decision-card-response").first().click();
     }
+    await runSolIfLocked(page);
     if (await solButton.isDisabled()) break;
     await solButton.click();
   }
@@ -65,12 +79,38 @@ test.describe("Power console", () => {
       expect(text).toContain("Standby");
     }
 
+    await runSolIfLocked(page);
     await page.getByRole("button", { name: "+1 sol" }).click();
 
     for (const text of await rowStatus.allInnerTexts()) {
       expect(text).not.toContain("Standby");
       expect(text).toMatch(/Powered|Shed|Failed/);
     }
+  });
+
+  test("Sol Planning locks the clock and the priority list until Run the sol is clicked", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Power", exact: true }).click();
+
+    // A fresh mission opens in Sol Planning (phase "planning", store/run.ts) — the clock
+    // controls are disabled and a "Run the sol" button is the one live control.
+    await expect(page.getByRole("button", { name: "Run the sol" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "+1 sol" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "1×" })).toBeDisabled();
+
+    // Reordering priorities is still live during planning — that is the whole point of the
+    // phase.
+    await expect(page.locator(".priority-row").first().getByRole("button", { name: /down, shed it sooner/ })).toBeEnabled();
+
+    await page.getByRole("button", { name: "Run the sol" }).click();
+
+    await expect(page.getByRole("button", { name: "Run the sol" })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "+1 sol" })).toBeEnabled();
+    // Once the sol is running, the priority order is locked until the next Sol Planning.
+    await expect(page.locator(".priority-row").first().getByRole("button", { name: /down, shed it sooner/ })).toBeDisabled();
+    await expect(page.getByText("Locked while the sol is running")).toBeVisible();
   });
 
   test("reordering a power priority moves it in the visible list", async ({ page }) => {

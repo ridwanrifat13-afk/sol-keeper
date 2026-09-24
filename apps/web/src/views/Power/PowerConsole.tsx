@@ -69,6 +69,33 @@ export function PowerConsole() {
         )}
       </section>
 
+      {/* M8.4 Part A: read-only — no settable reactor throttle, array tilt, or "clean now"
+       *  control exists in the sim today; inventing one would mean a new, unsourced physical
+       *  constant with no real lever to attach it to (brief rule 1). duststorm-2018's own
+       *  cleanArrays response already models the real proactive-cleaning trade-off during an
+       *  actual storm — this panel is status only. */}
+      <section className="panel" aria-labelledby="reactor-array-heading">
+        <h2 id="reactor-array-heading">Reactor &amp; array status</h2>
+        <ul className="status-list">
+          <li>
+            <span className="status-list-label">Solar array</span>
+            <span className="status-list-value">
+              {scenario.initial.solarArrayAreaM2} m² · {state.power.generationKw.toFixed(1)} kW generated
+            </span>
+          </li>
+          <li>
+            <span className="status-list-label">Dust obscuration</span>
+            <span className="status-list-value">{Math.round(state.environment.dustObscurationFraction * 100)}%</span>
+          </li>
+          {scenario.initial.fissionReactorKwe > 0 && (
+            <li>
+              <span className="status-list-label">Fission reactor</span>
+              <span className="status-list-value">{scenario.initial.fissionReactorKwe} kWe rated</span>
+            </li>
+          )}
+        </ul>
+      </section>
+
       <PowerPriorities />
 
       <section className="panel" aria-labelledby="space-weather-heading">

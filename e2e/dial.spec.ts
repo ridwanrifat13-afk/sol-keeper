@@ -103,12 +103,20 @@ test.describe("Tab navigation", () => {
  * fixed click count unreliable; this loops until the mission genuinely ends (or a generous
  * safety cap), answering any Decision Card that blocks the way with its first option, the
  * same as a real player must.
+ *
+ * M8.4 Part A: `step()` also resets `phase` to "planning" at every day boundary, which locks
+ * "+1 sol" until "Run the sol" is clicked again (components/TimeControls.tsx) — so that has
+ * to be checked before every click here too, not just once at the start.
  */
 async function finishMission(page: Page): Promise<void> {
   const solButton = page.getByRole("button", { name: "+1 sol" });
+  const runSolButton = page.getByRole("button", { name: "Run the sol" });
   for (let i = 0; i < 400; i++) {
     while ((await page.locator(".decision-card-response").count()) > 0) {
       await page.locator(".decision-card-response").first().click();
+    }
+    if ((await runSolButton.count()) > 0) {
+      await runSolButton.click();
     }
     if (await solButton.isDisabled()) break;
     await solButton.click();

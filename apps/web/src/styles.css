@@ -1261,3 +1261,36 @@ code {
   font-size: 0.85rem;
   color: var(--text-dim);
 }
+
+/* ---------------------------------------------------------------- read-only status lists (M8.4) */
+.status-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.status-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.status-list li:last-child {
+  border-bottom: none;
+}
+
+.status-list-label {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.status-list-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
