@@ -1149,3 +1149,79 @@ code {
   border-radius: 8px;
   border: 1px solid var(--line);
 }
+
+/* ---------------------------------------------------------------- Decision Card (M8.2) */
+.decision-card-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.decision-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--critical);
+  border-radius: var(--radius);
+  padding: 18px;
+  max-width: 520px;
+  width: 100%;
+}
+
+.decision-card-station {
+  margin: 0 0 4px;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.decision-card h2 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.decision-card-countdown {
+  margin: 0 0 14px;
+  color: var(--caution);
+  font-weight: 600;
+}
+
+.decision-card-responses {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.decision-card-response {
+  width: 100%;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.decision-card-response-text {
+  font-weight: 600;
+}
+
+.decision-card-response-tradeoffs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+
+.decision-card-default {
+  margin: 14px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}

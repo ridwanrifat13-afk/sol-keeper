@@ -7,7 +7,7 @@
  * they reach a player; that job lives here rather than in the sim (brief rule 4) and rather
  * than duplicated inline in every component that shows a system name.
  */
-import type { CropTray, CrewLocation, SurvivalMode, SystemId } from "@sol-keeper/sim";
+import type { CropTray, CrewLocation, StationId, SurvivalMode, SystemId } from "@sol-keeper/sim";
 import type { DialLevel } from "./types.js";
 
 /** Full names, used at the specialist and commander levels. */
@@ -86,4 +86,25 @@ const SURVIVAL_MODE_LABELS_CADET: Record<SurvivalMode, string> = {
 
 export function survivalModeLabel(mode: SurvivalMode, level: DialLevel): string {
   return level === "cadet" ? SURVIVAL_MODE_LABELS_CADET[mode] : SURVIVAL_MODE_LABELS[mode];
+}
+
+/** M8.2: the crew role that owns an incident's Decision Card (IncidentDefinition.station). */
+const STATION_LABELS: Record<StationId, string> = {
+  power: "Power",
+  lifeSupport: "Life Support",
+  comms: "Comms",
+  incidentCommand: "Incident Command",
+  missionCommand: "Mission Command",
+};
+
+const STATION_LABELS_CADET: Record<StationId, string> = {
+  power: "the Power team",
+  lifeSupport: "the Air & Water team",
+  comms: "the Radio team",
+  incidentCommand: "the Emergency team",
+  missionCommand: "the Captain",
+};
+
+export function stationLabel(id: StationId, level: DialLevel): string {
+  return level === "cadet" ? STATION_LABELS_CADET[id] : STATION_LABELS[id];
 }

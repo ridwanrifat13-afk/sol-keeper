@@ -10,6 +10,7 @@ import { LaunchPackingView } from "./views/LaunchPacking/LaunchPackingView.js";
 import { LandingSiteView } from "./views/LandingSite/LandingSiteView.js";
 import { LanguageSwitch } from "./components/LanguageSwitch.js";
 import { TimeControls } from "./components/TimeControls.js";
+import { DecisionCard } from "./components/DecisionCard.js";
 import "./i18n/config.js";
 
 type View = "operate" | "ripple" | "liveSky" | "launchPacking" | "landingSite" | "debrief" | "dataSources";
@@ -51,6 +52,10 @@ const TAB_KEYS: Record<View, string> = {
  * view — its own tick-interval `useEffect` was previously tied to `OperateView`'s mount
  * lifecycle, so navigating away paused the mission by accident. It still owns the interval
  * itself (mounting/unmounting the whole app stops it, same design, just anchored higher).
+ *
+ * M8.2: `DecisionCard` renders here too, globally, for the same reason — a Decision Card
+ * names its own owning station in the card itself (brief's M8 core loop), so it does not
+ * require the player to navigate to any particular tab to see or answer it.
  */
 export function App() {
   const [view, setView] = useState<View>("operate");
@@ -84,6 +89,7 @@ export function App() {
       </div>
 
       <TimeControls />
+      <DecisionCard />
 
       {view === "operate" && <OperateView />}
       {view === "ripple" && <RippleView />}

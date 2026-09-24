@@ -483,3 +483,18 @@ describe("the view's data sources respond to the running simulation", () => {
     expect(useRun.getState().state.crew[0]!.primaryStation).toBe(after);
   });
 });
+
+describe("Decision Card (M8.2)", () => {
+  // Not exercised through render()/renderToString here: this file's own header note applies
+  // (Zustand v5's SSR snapshot is frozen at module load, so a mutation made after `reset()`
+  // replaces `state` with a new object renderToString never sees — the same reason every
+  // other post-mutation assertion in this file goes through the store directly, not a second
+  // render). DecisionCard's actual DOM output is verified in a real browser instead (M8.2's
+  // own manual check); `selectPendingIncident` and `decisionText`'s pure logic are covered
+  // directly in pendingIncident.test.ts and decisionText.test.ts.
+  it("does not render when no incident is pending", () => {
+    useRun.getState().reset();
+    const html = render();
+    expect(html).not.toContain("decision-card");
+  });
+});
