@@ -6,7 +6,7 @@ the same harness `validation/balance.test.ts` asserts the brief's pass/fail targ
 regenerate it after any change that could move the distribution below, rather than editing
 the numbers directly.
 
-150 seeds per row, computed in 34215 ms.
+150 seeds per row, computed in 62056 ms.
 
 ## Brief targets
 
@@ -22,6 +22,55 @@ most incidents it responds to well enough that raising Flight-Rated's incident r
 would only punish idleBot/greedyBot, not a skilled bot). First Light's own prudentBot/idleBot
 gap (`depress-mir97`'s fast kill clock outrunning a 2-person crew's only unassigned-station
 responder) is resolved — see `management.secondResponderPerformanceBonusFraction`.
+
+**ABORT is now reachable** (M9-prep audit): the mechanism (`engine/outcome.ts`'s
+`shouldConsiderAbort`/`requestAbort`) existed since M7.7 but no bot ever called it — this
+file's own outcome table previously showed 0 aborts across every one of 4,050 seeds, a real
+credibility risk for a built-and-documented-but-never-exercised feature. prudentBot now
+leaves the moment its dose or a sustained-critical-with-no-repair-path signal fires;
+greedyBot reacts to the same crew-critical signal only, matching the brief's own "greedyBot
+aborts too late"; idleBot still never does. Both are gated against aborting when the mission's
+own natural end is closer than the abort's own cost (the Moon's ~144 h return transit) —
+without that gate, a seed-level diagnostic found prudentBot/greedyBot converting several
+First Light Training seeds that would have reached a natural SUCCESS into an unneeded
+abort-PARTIAL in the mission's final ~20 hours (see `engine/bots.ts`'s own comments). ABORT
+is genuinely rare with today's thresholds: 4-5 of 150 seeds on The Long Night per difficulty
+(see the outcome table below), and only reachable on Jezero/First Light via a much wider seed
+search (validation/balance.test.ts's own "ABORT is reachable, not just built" tests use the
+specific seeds that search found, kept fast and deterministic rather than re-searching on
+every CI run).
+
+## Known limitations
+
+Disclosed rather than silently left implicit — none of these are being chased right now
+because fixing them would move balance numbers broadly, three days before M9, without the
+seed-level verification that deserves.
+
+1. **Crew-hours are only half the scarcity mechanism M7.7 §1 asked for.** The pooled daily
+   budget (`engine/crewHours.ts`) is real and correctly deducted for incident responses and
+   ordinary repairs, with genuine next-sol slippage visible in the Black Box. But farming,
+   science, cleaning, and ISRU are not metered against it at all — those models have no
+   `crewHoursCost` concept today. This is the single largest remaining gap in "no free
+   labour anywhere," ranked here above the others because it is the scarcity mechanism the
+   brief named explicitly and only got partially built.
+2. **`componentRiskBaseChancePerHour` is 0.0045/h — a 222-hour MTBF no flight hardware
+   resembles.** M7.5 §5 asked for this to be reframed as a TRL- and wear-scaled MTBF in the
+   realistic 2,000-20,000 h band; it never was. It stands, named, as a `"tuned"` gameplay
+   constant pending that rework, not a silently-accepted measured figure.
+3. **`shouldConsiderAbort`'s consumables-shortfall signal is a naive burn-down projection.**
+   It compares today's stock at today's ration rate against the mission's *full* remaining
+   duration, with no awareness that rationing tightens over time or that crop harvests
+   replenish food later in the mission — on a long, rationing-dependent scenario it can fire on
+   hour 1 at nominal rations before a bot has had any chance to react. Excluded from the bots'
+   own abort logic for exactly this reason (`engine/bots.ts`'s own comments). Fixing the
+   projection itself — accounting for planned rationing and expected harvests — is real engine
+   work, out of scope for this pass.
+4. **ABORT has no player-facing control at all yet.** M7.7 §6 asks for it to be "exposed as a
+   Mission Command decision whenever [the criteria] are met" — today `requestAbort`/
+   `shouldConsiderAbort` are engine-only (`engine/outcome.ts`); no console, button, or
+   Decision Card in `apps/web` calls either one. A human player cannot abort a mission today,
+   only the bots can. This is a real M8 gap, not an M7 one — surfacing it belongs with M8's
+   Mission Command console work, not this pass.
 
 ## Outcome distribution
 
@@ -54,20 +103,21 @@ responder) is resolved — see `management.secondResponderPerformanceBonusFracti
 | the-long-night | training | idle | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypoxia |
 | the-long-night | training | worst | 90.7% | 136 | 0 | 0 | 14 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
 | the-long-night | training | greedy | 92.7% | 139 | 0 | 0 | 11 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
-| the-long-night | training | prudent | 94.0% | 141 | 0 | 0 | 9 | end.missionComplete, end.crewLost, crew.lost.hypothermia, crew.lost.hypoxia |
+| the-long-night | training | prudent | 94.0% | 141 | 0 | 4 | 5 | end.missionComplete, end.abort, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
 | the-long-night | nominal | idle | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypoxia |
 | the-long-night | nominal | worst | 92.0% | 138 | 0 | 0 | 12 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
 | the-long-night | nominal | greedy | 94.7% | 142 | 0 | 0 | 8 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
-| the-long-night | nominal | prudent | 96.7% | 145 | 0 | 0 | 5 | end.missionComplete, end.crewLost, crew.lost.hypothermia, crew.lost.hypoxia |
+| the-long-night | nominal | prudent | 96.7% | 145 | 0 | 4 | 1 | end.missionComplete, end.abort, end.crewLost, crew.lost.hypoxia |
 | the-long-night | flightRated | idle | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypoxia |
 | the-long-night | flightRated | worst | 90.0% | 135 | 0 | 0 | 15 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
 | the-long-night | flightRated | greedy | 93.3% | 140 | 0 | 0 | 10 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
-| the-long-night | flightRated | prudent | 92.7% | 139 | 0 | 0 | 11 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
+| the-long-night | flightRated | prudent | 92.7% | 139 | 0 | 5 | 6 | end.missionComplete, end.crewLost, crew.lost.hypoxia, end.abort, crew.lost.hypothermia |
 
 ## Failure causes observed across every idleBot/greedyBot seed
 
 - `crew.lost.hypothermia`
 - `crew.lost.hypoxia`
+- `end.abort`
 - `end.crewLost`
 - `end.missionComplete`
 
@@ -135,7 +185,7 @@ of it.
 | depress-mir97 | patchHull | 932 | 89.5% |
 | depress-mir97 | sealModule | 517 | 84.7% |
 | fire-mir97 | evacuate | 473 | 88.6% |
-| fire-mir97 | fight | 949 | 87.5% |
+| fire-mir97 | fight | 947 | 87.6% |
 | fire-mir97 | ignore | 305 | 13.4% |
 | o2tank-apollo13 | improviseAdapter | 599 | 67.9% |
 | o2tank-apollo13 | noResponse | 241 | 7.9% |

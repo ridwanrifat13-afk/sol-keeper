@@ -179,12 +179,12 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     usedFor: "measured-reported: respirators lasted 45 min–1 h, ~24 h of manual cleanup — fire-mir97's smoke-recovery residual cost",
   },
   "OCHMO-TB004": {
-    title: "NASA OCHMO Carbon Dioxide (CO2) Technical Brief (TB-004) — not yet independently verified",
-    usedFor: "TODO: CO2 immediately-dangerous-to-life-or-health threshold (~30.4 mmHg / 4%)",
+    title: "NASA OCHMO Carbon Dioxide (CO2) Technical Brief (TB-004)",
+    usedFor: "CO2 immediately-dangerous-to-life-or-health threshold (30.4 mmHg / ~4%)",
   },
   "HRP-ARS": {
-    title: "NASA Human Research Program — Acute Radiation Syndrome thresholds — not yet independently verified",
-    usedFor: "TODO: onset/severe/lethal acute dose bands used by the outcome state machine",
+    title: "NASA Human Research Program evidence report — Acute Radiation Syndrome thresholds",
+    usedFor: "onset/severe/lethal acute dose bands (0.1-0.2 / 2 / 3.25 Gy) used by the outcome state machine",
   },
   "NASA-SMA-MIR-COLLISION": {
     title: "NASA Shuttle-Mir history: the Progress-Mir collision and depressurization, June 1997",

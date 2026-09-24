@@ -69,15 +69,12 @@ describe("constants registry (brief rule 1)", () => {
     // M7.5's addendum (docs/INCIDENT_MAGNITUDES.md) then closed three of those (depress-mir97,
     // o2tank-apollo13, coolant-ms22) with published/derived values, leaving seven. M7.6 Part D
     // then closed the last three incident placeholders (spe-1972, scrubber-iss, duststorm-2018
-    // — docs/M7.8_DIAGNOSIS.md's own research), leaving four. Each remaining placeholder
-    // carries a TODO note naming exactly what the team needs to supply; see
-    // docs/DATA_SOURCES.md for the matching "unverified" rows.
-    expect(placeholders).toEqual([
-      "physiology.co2ImmediatelyDangerousMmHg",
-      "radiation.arsLethalMSv",
-      "radiation.arsOnsetMSv",
-      "radiation.arsSevereMSv",
-    ]);
+    // — docs/M7.8_DIAGNOSIS.md's own research), leaving four. The lead developer closed the
+    // last four (M9-prep audit, 2026-09): the CO2 IDLH threshold and the three ARS dose bands
+    // were confirmed against OCHMO-TB004 and the HRP-ARS evidence report respectively — their
+    // DATA_SOURCES.md rows stay ☐ (nobody has recorded a page/table there yet), but the values
+    // themselves are no longer placeholders.
+    expect(placeholders).toEqual([]);
   });
 
   it("every placeholder carries a TODO explaining what is missing", () => {

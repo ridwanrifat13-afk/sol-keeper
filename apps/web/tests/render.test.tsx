@@ -315,11 +315,12 @@ describe("DataSourcesView, first frame", () => {
     // rule). M7.5's addendum (docs/INCIDENT_MAGNITUDES.md) then closed three of those
     // (depress-mir97, o2tank-apollo13, coolant-ms22) with published/derived values, and
     // M7.6 Part D closed the last three incident placeholders (spe-1972, scrubber-iss,
-    // duststorm-2018), leaving four — this screen honestly shows a nonzero count rather than
-    // claiming a false "fully sourced" the way it briefly could after M6.
-    expect(out).toContain("Still unsourced (4)");
-    expect(out).toContain("Every value below is a placeholder");
-    expect(out).toContain("radiation.arsLethalMSv");
+    // duststorm-2018), leaving four. The lead developer closed the last four (M9-prep audit,
+    // 2026-09): the CO2 IDLH threshold and the three ARS dose bands, confirmed against
+    // OCHMO-TB004 and the HRP-ARS evidence report — back to zero, honestly stated rather than
+    // just omitting the section.
+    expect(out).toContain("Still unsourced (0)");
+    expect(out).toContain("Every number this simulation runs on is backed by a NASA source");
   });
 
   it("discloses that fire risk is deliberately not modelled, and why", () => {

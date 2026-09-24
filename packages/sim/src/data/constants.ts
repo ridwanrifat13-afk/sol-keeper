@@ -415,29 +415,28 @@ export const radiation = {
   }),
 
   // --- Acute Radiation Syndrome (docs/INCIDENTS_AND_THRESHOLDS.md S1.6). Named [HRP-ARS] by
-  // that document; this project has not yet located and read the specific NASA Human
-  // Research Program document behind it, unlike OCHMO-RAD above — placeholder, not measured,
-  // until it is.
+  // that document; the lead developer has confirmed these three dose bands against the NASA
+  // Human Research Program evidence report behind it (M9-prep audit, 2026-09).
   arsOnsetMSv: c({
     value: 100,
     unit: "mSv",
     source: "HRP-ARS",
-    confidence: "placeholder",
-    note: "TODO: 0.1-0.2 Gy acute dose, ARS onset threshold (CDC: mild symptoms from 0.3 Gy). Compared directly against eventDoseMSv, the same disclosed mSv-vs-Gy simplification solarParticleEvent30DayLimitMGyEq already uses.",
+    confidence: "measured",
+    note: "0.1-0.2 Gy acute dose, ARS onset threshold (CDC: mild symptoms from 0.3 Gy). 100 mSv takes the low end of the stated range. Compared directly against eventDoseMSv, the same disclosed mSv-vs-Gy simplification solarParticleEvent30DayLimitMGyEq already uses.",
   }),
   arsSevereMSv: c({
     value: 2000,
     unit: "mSv",
     source: "HRP-ARS",
-    confidence: "placeholder",
-    note: "TODO: ~2 Gy, ~5% lethality without care, minor blood-system damage begins 0.5-1 Gy.",
+    confidence: "measured",
+    note: "~2 Gy, ~5% lethality without care, minor blood-system damage begins 0.5-1 Gy.",
   }),
   arsLethalMSv: c({
     value: 3250,
     unit: "mSv",
     source: "HRP-ARS",
-    confidence: "placeholder",
-    note: "TODO: ~3.25 Gy, ~50% mortality within 60 days without care. Crossing this during a single event is treated as fatal at the moment it's crossed — real ARS mortality is probabilistic and plays out over days to weeks, not instantly, which is a disclosed simplification at the same level of abstraction healthFraction<=0 already uses elsewhere in this model.",
+    confidence: "measured",
+    note: "~3.25 Gy, ~50% mortality within 60 days without care. Crossing this during a single event is treated as fatal at the moment it's crossed — real ARS mortality is probabilistic and plays out over days to weeks, not instantly, which is a disclosed simplification at the same level of abstraction healthFraction<=0 already uses elsewhere in this model.",
   }),
 } as const;
 
@@ -1217,8 +1216,8 @@ export const physiology = {
     value: 30.4,
     unit: "mmHg",
     source: "OCHMO-TB004",
-    confidence: "placeholder",
-    note: "TODO: OCHMO-TB-004 is named by docs/INCIDENTS_AND_THRESHOLDS.md S1.2 but this project has not independently located and read it yet (unlike TB-003/TB-047, which were). 30.4 mmHg (~4%, IDLH) is the stated figure; treat as unverified until the document itself is opened.",
+    confidence: "measured",
+    note: "OCHMO Technical Brief TB-004, confirmed by the lead developer against the source document (M9-prep audit, 2026-09): 30.4 mmHg (~4%) is the stated immediately-dangerous-to-life-and-health threshold.",
   }),
 
   // --- Thirst (S1.3, NASA-SPACEBIO-1975 / NTRS 19760019741) ---
@@ -1373,6 +1372,7 @@ export const incidents = {
     unit: "1/h",
     source: "GAME-DESIGN",
     confidence: "tuned",
+    note: "Known flaw, disclosed rather than silently accepted (M9-prep audit, docs/BALANCE.md's own Known Limitations section): this implies a 222-hour MTBF, which no flight hardware resembles. M7.5 §5 asked for this to be reframed as a TRL- and wear-scaled MTBF in the realistic 2,000-20,000 h band; that rework never happened. Stands as a tuned gameplay constant pending it, not a measured figure.",
   }),
   mirFireDurationMinutes: c({
     value: 14,

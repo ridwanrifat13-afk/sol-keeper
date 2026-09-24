@@ -160,10 +160,13 @@ export function crewStage(ctx: TickContext): void {
       1,
     );
 
-    // --- Hypothermia clock (S1.5): cabin-cold path only. The suit/EVA immersion-anchor path
-    // applies via a specific incident's effect (engine/incidents.ts), not every EVA hour —
-    // a real suit has its own thermal control; this models a *failure* of it, not its
-    // absence. Cabin-cool (15-22 degC) is a comfort/morale penalty only, no lethality. ---
+    // --- Hypothermia clock (S1.5): cabin-cold path only (docs/INCIDENTS_AND_THRESHOLDS.md
+    // S1.5's path 2) — the immersion anchor below feeds this path's own air-conversion
+    // formula (kAir/g(T)), it is not applied directly. S1.5's path 3, "suit or EVA thermal
+    // failure" (the 12h/22h anchors used directly, no kAir factor), is NOT implemented: no
+    // incident or EVA mechanic reads hypothermiaRaft4CHours anywhere in this package, and an
+    // EVA hour on its own never risks hypothermia today. Cabin-cool (15-22 degC, path 1) is a
+    // comfort/morale penalty only, no lethality. ---
     if (state.thermal.habitatTempC < 15) {
       const survivalHoursAir = clamp(
         physiology.hypothermiaImmersion4CHours.value *

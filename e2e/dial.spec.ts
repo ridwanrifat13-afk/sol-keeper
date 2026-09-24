@@ -81,13 +81,15 @@ test.describe("Tab navigation", () => {
     await expect(page.getByText("Power priority")).toBeVisible();
   });
 
-  test("Data Sources lists real sources and discloses open placeholders", async ({ page }) => {
+  test("Data Sources lists real sources and states the unsourced count plainly", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Data Sources" }).click();
 
     const overlay = page.getByRole("dialog", { name: "Data Sources" });
     await expect(overlay.getByText("BVAD-2022")).toBeVisible();
-    await expect(overlay.getByText("Still unsourced (4)")).toBeVisible();
+    // M9-prep audit closed the last four placeholders (CO2 IDLH, the three ARS dose bands) —
+    // this now honestly reads zero rather than a stale nonzero count.
+    await expect(overlay.getByText("Still unsourced (0)")).toBeVisible();
   });
 });
 

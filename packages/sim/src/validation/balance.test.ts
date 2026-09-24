@@ -68,7 +68,11 @@
 import { describe, expect, it } from "vitest";
 import { runCombination } from "../engine/balance.js";
 import { idleBot, greedyBot, prudentBot, worstChoiceBot } from "../engine/bots.js";
+import { createInitialState } from "../engine/state.js";
+import { runWithBot } from "../engine/runWithBot.js";
+import { SCENARIOS as SCENARIO_REGISTRY } from "../data/scenarios/index.js";
 import type { CombinationResult } from "../engine/balance.js";
+import type { Bot } from "../engine/bots.js";
 import type { MissionDifficulty, ScenarioId } from "../types.js";
 
 const SEEDS = 150;
@@ -237,5 +241,60 @@ describe("balance harness (docs/PHASE2_BRIEF.md targets)", () => {
     // measured a single overtuned incident rather than the genuine variety of hazards M7
     // was meant to introduce.
     expect(causesSeen.size, [...causesSeen].join(", ")).toBeGreaterThanOrEqual(2);
+  });
+
+  // M7.7 §6 (revisited, M9-prep audit): "Add a test asserting ABORT occurs in at least one
+  // seed per scenario." The mechanism (engine/outcome.ts's shouldConsiderAbort/requestAbort)
+  // existed since M7.7 but no bot ever called it — docs/BALANCE.md's own outcome table showed
+  // 0 aborts across every one of 4,050 seeds. prudentBot and greedyBot now both watch for it
+  // (see their own doc comments in engine/bots.ts); idleBot still never does, matching the
+  // brief's "idleBot never aborts".
+  //
+  // ABORT is genuinely rare with today's thresholds — well-played crews mostly avoid the
+  // conditions that trigger it, and on the two shorter scenarios (Jezero, First Light) it took
+  // a wide seed search (thousands, at Flight-Rated, the hardest difficulty) to find one that
+  // does, rather than it turning up naturally in the 150-seed sample the harness above uses.
+  // Hardcoding the specific seeds found keeps this test fast and deterministic (same seed +
+  // inputs = byte-identical run, CLAUDE.md) rather than re-running a slow search every CI pass.
+  describe("M7.7 §6 (revisited): ABORT is reachable, not just built", () => {
+    const cases: readonly { scenarioId: ScenarioId; bot: Bot; seed: number }[] = [
+      { scenarioId: "jezero-outpost", bot: greedyBot, seed: 950 },
+      { scenarioId: "first-light", bot: greedyBot, seed: 281 },
+      { scenarioId: "the-long-night", bot: prudentBot, seed: 39 },
+    ];
+
+    for (const { scenarioId, bot, seed } of cases) {
+      it(`${scenarioId}: seed ${seed} (${bot.id}Bot, Flight-Rated) reaches ABORT`, () => {
+        const scenario = SCENARIO_REGISTRY[scenarioId];
+        const params = {
+          scenarioId,
+          seed,
+          crewSize: scenario.crewSize,
+          missionStartIso: "2033-01-01",
+          difficulty: "flightRated" as const,
+        };
+        const state = createInitialState(params);
+        runWithBot(state, params, scenario, scenario.durationHours, bot);
+        expect(state.status).toBe("abort");
+      });
+    }
+
+    it("idleBot never aborts, even across a wide seed search", () => {
+      for (const scenarioId of SCENARIOS) {
+        const scenario = SCENARIO_REGISTRY[scenarioId];
+        for (let seed = 1; seed <= 100; seed++) {
+          const params = {
+            scenarioId,
+            seed,
+            crewSize: scenario.crewSize,
+            missionStartIso: "2033-01-01",
+            difficulty: "flightRated" as const,
+          };
+          const state = createInitialState(params);
+          runWithBot(state, params, scenario, scenario.durationHours, idleBot);
+          expect(state.status, `${scenarioId} seed ${seed}`).not.toBe("abort");
+        }
+      }
+    });
   });
 });

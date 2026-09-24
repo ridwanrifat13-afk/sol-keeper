@@ -22,11 +22,27 @@
  * knowledge of the future schedule no player has. It now only reacts once the event's own
  * incident actually triggers, the same single hour of warning every strategy gets.
  */
-import { food as foodConstants, management as managementConstants } from "../data/constants.js";
+import { food as foodConstants, management as managementConstants, physiology } from "../data/constants.js";
 import { rationKgPerCrewDay } from "../models/food.js";
 import type { ActiveIncident, SurvivalMode } from "../types.js";
+import { daysToHours } from "../units.js";
 import type { TickContext } from "./context.js";
 import { wouldResolveThisHour, type IncidentDefinition, type IncidentResponse } from "./incidents.js";
+import { requestAbort, shouldConsiderAbort } from "./outcome.js";
+
+/**
+ * On the Moon, `requestAbort` always succeeds but costs the sourced ~6-day return transit
+ * (NASA-ORION-FS) added on top of the current hour — a real cost, not a free out. Aborting
+ * with less than that much mission time actually left is strictly worse than just finishing
+ * normally: it takes longer to get home than the mission itself would have taken to end. On
+ * Mars, `requestAbort` either lands immediately (inside the departure window) or is rejected
+ * outright (outside it), so this comparison only matters for the Moon body.
+ */
+function abortWorthTakingNow(ctx: TickContext): boolean {
+  if (ctx.scenario.body !== "moon") return true;
+  const hoursRemaining = ctx.scenario.durationHours - ctx.state.hour;
+  return hoursRemaining > daysToHours(physiology.lunarReturnTransitNominalDays.value);
+}
 
 export type BotId = "idle" | "greedy" | "prudent" | "worst";
 
@@ -71,6 +87,20 @@ export const idleBot: Bot = {
  *  first is what actually makes this bot behave differently from idle.) */
 export const greedyBot: Bot = {
   id: "greedy",
+  // M7.7 §6: "greedyBot aborts too late." Reacts to only the single most severe, undeniable
+  // abort signal — a crew member already critical with nothing being done about it — never the
+  // dose warning prudentBot also watches below; the same short-term thinking that picks the
+  // cheapest incident response is blind to slower-building trouble until it's already dire.
+  // Gated by the same `abortWorthTakingNow` prudentBot uses: an early version of this without
+  // the gate measurably broke idleBot <= worstChoiceBot < greedyBot (M7.6 Part C.6) on First
+  // Light Training by aborting in a mission's final ~20 hours, converting several near-certain
+  // natural SUCCESSes into an unneeded PARTIAL (see prudentBot's own note on the same bug).
+  planHour: (ctx) => {
+    const signal = shouldConsiderAbort(ctx);
+    if (signal?.reasonCode === "abort.signal.crewCriticalNoRepairPath" && abortWorthTakingNow(ctx)) {
+      requestAbort(ctx);
+    }
+  },
   chooseIncidentResponse: (_ctx, _incident, definition) => {
     const eligible = definition.responses.filter((r) => r.id !== definition.defaultResponseId);
     const pool = eligible.length > 0 ? eligible : definition.responses;
@@ -95,6 +125,41 @@ export const prudentBot: Bot = {
   id: "prudent",
   planHour: (ctx) => {
     const { state } = ctx;
+
+    // M7.7 §6: "prudentBot aborts when survival probability falls below a threshold" — the
+    // same forward-looking caution that rations down early and avoids spares gambles below
+    // also watches for the two abort signals that only fire once something has actually gone
+    // wrong (dose approaching the career limit from a real exposure event; a crew member
+    // actually sustained-critical with no repair path) and leaves the moment either does. A
+    // timely abort saves the crew and scores PARTIAL — which beats the LOSS these signals are
+    // warning of (brief: "surviving is a legitimate win condition"). On Mars this can be
+    // rejected outside the departure window; the signal re-fires every hour it holds, so
+    // prudent keeps asking until the window opens, same as a real crew would have to. Gated by
+    // `abortWorthTakingNow` above: on the Moon, a crew member sustained-critical in a mission's
+    // final ~144 hours (the return transit's own cost) should ride it out rather than divert to
+    // a trip home that takes longer than just finishing would — confirmed by a seed-level
+    // diagnostic during this fix (First Light Training: 31/150 seeds were aborting in the
+    // mission's last ~20 hours, converting a near-certain natural SUCCESS into an unneeded
+    // PARTIAL and single-handedly dragging the floor from 84.7% to 64.0%).
+    //
+    // Deliberately excludes `abort.signal.consumablesShortOfDuration`: that signal projects
+    // today's stock at today's ration rate against the mission's FULL remaining duration, with
+    // no awareness that rationing tightens over time (the very next lines below) or that crop
+    // harvests replenish food later in the mission. On a long, rationing-dependent scenario
+    // (The Long Night, ~2124h) it fires on hour 1 at nominal rations before the bot has had a
+    // single chance to tighten them — a false alarm from the projection's own naivety, not a
+    // real emergency; confirmed by a seed-level diagnostic during this fix (abort at hour 1,
+    // food stock still at 449.9/450kg, mode still "nominal"). Fixing the projection itself to
+    // account for planned rationing and expected harvests is real engine work, out of scope
+    // for teaching the bots to abort; tracked as a known limitation in docs/BALANCE.md instead.
+    const signal = shouldConsiderAbort(ctx);
+    const realSignal =
+      signal?.reasonCode === "abort.signal.doseApproachingLimit" ||
+      signal?.reasonCode === "abort.signal.crewCriticalNoRepairPath";
+    if (realSignal && abortWorthTakingNow(ctx)) {
+      const result = requestAbort(ctx);
+      if (result.allowed) return;
+    }
 
     const daysRemaining = foodDaysRemaining(ctx);
     const currentMode = state.food.mode;
