@@ -35,9 +35,51 @@ test.describe("Scenario switch (Mission Command console)", () => {
     await page.getByRole("button", { name: "Mission Command" }).click();
     await page.getByRole("button", { name: /^First Light/ }).click();
 
-    // MOXIE is Mars-only ISRU; First Light must not list it as a system.
-    await page.getByRole("button", { name: "Power", exact: true }).click();
+    // MOXIE is Mars-only ISRU; First Light must not list it as a system. Scoped to .tab-nav:
+    // M8.4 Part E's crew-assignment control also has station-name buttons (e.g. "Power") on
+    // this same page, so an unscoped lookup is ambiguous.
+    await page.locator(".tab-nav").getByRole("button", { name: "Power", exact: true }).click();
     await expect(page.getByText("MOXIE (oxygen from air)")).not.toBeVisible();
+  });
+});
+
+test.describe("Mission Command console (M8.4 Part E)", () => {
+  test("shows station coverage, the daily plan, and real goal status", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Mission Command" }).click();
+
+    await expect(page.getByText("Station coverage")).toBeVisible();
+    // Jezero's own 4-person crew covers every station via primary or backup (state.ts's
+    // round-robin assignment) — real coverage, not an invented "unassigned" case for this
+    // scenario specifically; First Light's 2-person roster is the one that leaves stations
+    // genuinely unassigned (management.secondResponderPerformanceBonusFraction's own note).
+    await expect(page.locator(".status-list-value").filter({ hasText: "%" }).first()).toBeVisible();
+
+    await expect(page.getByText("Daily plan")).toBeVisible();
+    await expect(page.getByText("Science downlink")).toBeVisible();
+
+    // Not exact: the glyph (aria-hidden span) is a sibling text node inside the same element,
+    // same reason other status checks in this suite avoid an exact match (e.g. gauge status).
+    await expect(page.getByText("Primary goal")).toBeVisible();
+    await expect(page.getByText("Stretch goal")).toBeVisible();
+    // Nothing is met on a fresh mission.
+    await expect(page.getByText("Primary goal met")).toHaveCount(0);
+  });
+
+  test("crew assignment is real and locked to Sol Planning", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Mission Command" }).click();
+
+    const firstRow = page.locator(".crew-location-row").first();
+    await firstRow.getByRole("button", { name: "Comms", exact: true }).click();
+    await expect(firstRow.getByRole("button", { name: "Comms", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    await page.getByRole("button", { name: "Run the sol" }).click();
+    await expect(firstRow.getByRole("button", { name: "Power", exact: true })).toBeDisabled();
+    await expect(page.getByText("Locked while the sol is running")).toBeVisible();
   });
 });
 
@@ -90,7 +132,9 @@ test.describe("Incident Command console", () => {
     await page.goto("/");
     await page.getByRole("button", { name: "Mission Command" }).click();
     await page.getByRole("button", { name: /^The Long Night/ }).click();
-    await page.getByRole("button", { name: "Incident Command" }).click();
+    // Scoped to .tab-nav: Mission Command's own crew-assignment control (M8.4 Part E) also has
+    // a station-name button ("Incident Command") still on screen at this point.
+    await page.locator(".tab-nav").getByRole("button", { name: "Incident Command" }).click();
 
     await expect(page.getByRole("cell", { name: "MOXIE (oxygen from air)" })).toHaveCount(0);
     await expect(page.getByRole("cell", { name: "Reactor" })).toBeVisible();

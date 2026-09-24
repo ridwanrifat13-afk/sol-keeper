@@ -1,0 +1,54 @@
+/**
+ * Mission goal text, at a chosen Reality Dial level (M8.4 Part E — the first place any
+ * `MissionGoal.briefKey` is actually rendered). Same discipline as logText.ts/decisionText.ts:
+ * the simulation never stores prose (brief rule 4) — only the stable `briefKey` each
+ * scenario's own `primaryGoal`/`stretchGoal` already declares (packages/sim/src/data/
+ * scenarios/*.ts). Whether a goal is currently met is never described in this text — that
+ * comes from `checkGoal` (packages/sim), called live by whatever renders this.
+ */
+import type { DialLevel } from "../dial/types.js";
+
+type TemplateTable = Record<string, string>;
+
+const SPECIALIST: TemplateTable = {
+  "scenario.jezero.goal.primary":
+    "Meet the science target, keep every system running, and bring the whole crew home.",
+  "scenario.jezero.goal.stretch": "Harvest every crop tray before the mission ends.",
+  "scenario.firstLight.goal.primary": "Survive the full night-day-night cycle with the whole crew alive.",
+  "scenario.firstLight.goal.stretch": "End the mission with no system left failed.",
+  "scenario.theLongNight.goal.primary": "Survive all three lunar nights with the whole crew alive.",
+  "scenario.theLongNight.goal.stretch": "End the mission with no system left failed.",
+};
+
+const CADET: TemplateTable = {
+  "scenario.jezero.goal.primary": "Do enough science, keep everything working, and get everyone home safe.",
+  "scenario.jezero.goal.stretch": "Pick every plant tray before you're done.",
+  "scenario.firstLight.goal.primary": "Keep everyone alive through the whole mission.",
+  "scenario.firstLight.goal.stretch": "Don't let anything stay broken.",
+  "scenario.theLongNight.goal.primary": "Keep everyone alive through all three long nights.",
+  "scenario.theLongNight.goal.stretch": "Don't let anything stay broken.",
+};
+
+const COMMANDER: TemplateTable = {
+  "scenario.jezero.goal.primary":
+    "science.points >= scenarioTargetPoints, every system operational, full crew survival (engine/goals.ts's missionGoalsMet).",
+  "scenario.jezero.goal.stretch": "All crop trays harvested at least once (harvestAllCropTrays).",
+  "scenario.firstLight.goal.primary": "Full mission duration elapsed, zero crew loss (surviveFullDurationNoLoss).",
+  "scenario.firstLight.goal.stretch": "No system in a failed state at mission end (noSystemLeftFailed).",
+  "scenario.theLongNight.goal.primary": "Full mission duration elapsed, zero crew loss (surviveFullDurationNoLoss).",
+  "scenario.theLongNight.goal.stretch": "No system in a failed state at mission end (noSystemLeftFailed).",
+};
+
+const TABLES: Record<DialLevel, TemplateTable> = {
+  cadet: CADET,
+  specialist: SPECIALIST,
+  commander: COMMANDER,
+};
+
+export function goalText(briefKey: string, level: DialLevel): string {
+  return TABLES[level][briefKey] ?? SPECIALIST[briefKey] ?? briefKey;
+}
+
+export function hasGoalTemplate(briefKey: string, level: DialLevel = "specialist"): boolean {
+  return briefKey in TABLES[level];
+}
