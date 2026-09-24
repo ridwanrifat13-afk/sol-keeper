@@ -114,6 +114,36 @@ describe("every incident in the catalog is reachable", () => {
     expect(state.crew.some((c) => c.eventDoseMSv > 0)).toBe(true);
   });
 
+  it("spe-1972's cumulative dose is permanent — never decreases, whichever response is chosen or how long the run continues (M7.6 Part D.10)", () => {
+    for (const responseId of ["shelterNow", "continueOperations"] as const) {
+      const state = freshState();
+      const ctx = tickOnce(state);
+      triggerHazardStart(ctx, "hazard.solarParticleEvent.start");
+      incidentsStage(ctx);
+
+      const dosesAfterSpike = state.crew.map((c) => c.cumulativeDoseMSv);
+      expect(dosesAfterSpike.some((d) => d > 0)).toBe(true);
+
+      const incident = state.activeIncidents.find((i) => i.definitionId === "spe-1972");
+      if (incident === undefined) throw new Error("spe-1972 did not trigger");
+      const def = byId("spe-1972");
+      applyResponse(tickOnce(state), def, incident, responseId);
+
+      state.crew.forEach((c, i) => {
+        expect(c.cumulativeDoseMSv).toBeGreaterThanOrEqual(dosesAfterSpike[i] ?? 0);
+      });
+
+      // Dose must still hold — never reset, never decreased — after many further,
+      // unrelated hours of simulation.
+      for (let i = 0; i < 500; i++) {
+        incidentsStage(tickOnce(state));
+      }
+      state.crew.forEach((c, i) => {
+        expect(c.cumulativeDoseMSv).toBeGreaterThanOrEqual(dosesAfterSpike[i] ?? 0);
+      });
+    }
+  });
+
   it("duststorm-2018 triggers on the same hour the scripted dust storm starts and obscures the arrays", () => {
     const state = freshState();
     const before = state.environment.dustObscurationFraction;

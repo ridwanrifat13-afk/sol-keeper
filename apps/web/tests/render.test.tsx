@@ -232,10 +232,11 @@ describe("DataSourcesView, first frame", () => {
     // NASA-cited physiology/radiation thresholds and incident magnitudes the team had not
     // yet supplied documents for (docs/PHASE2_BRIEF.md's own "placeholder, not a guess"
     // rule). M7.5's addendum (docs/INCIDENT_MAGNITUDES.md) then closed three of those
-    // (depress-mir97, o2tank-apollo13, coolant-ms22) with published/derived values, leaving
-    // seven — this screen honestly shows a nonzero count rather than claiming a false
-    // "fully sourced" the way it briefly could after M6.
-    expect(out).toContain("Still unsourced (7)");
+    // (depress-mir97, o2tank-apollo13, coolant-ms22) with published/derived values, and
+    // M7.6 Part D closed the last three incident placeholders (spe-1972, scrubber-iss,
+    // duststorm-2018), leaving four — this screen honestly shows a nonzero count rather than
+    // claiming a false "fully sourced" the way it briefly could after M6.
+    expect(out).toContain("Still unsourced (4)");
     expect(out).toContain("Every value below is a placeholder");
     expect(out).toContain("radiation.arsLethalMSv");
   });

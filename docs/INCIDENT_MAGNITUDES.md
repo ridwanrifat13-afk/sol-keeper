@@ -99,4 +99,138 @@ All three incidents now carry a permanent cost: Spektr loses a module and its po
 Apollo 13 consumes spares and degrades the scrubber, MS-22 forces a capability shutdown
 while the fault lasts. Once these are implemented, re-run the Flight-Rated prudentBot
 before touching any hazard rate — this alone should pull it down from 97–100%.
+
+---
+
+# Addendum 2 — M7.6 Part D: the last four incidents
+
+Closes the four magnitudes M7.6 Part D asked for (fire-mir97, spe-1972, duststorm-2018,
+scrubber-iss), following the same discipline as Addendum 1 above: real documented facts
+anchor each magnitude; where no number was ever published for the specific residual-cost
+effect this sim adds, the magnitude is tuned and disclosed as such, never invented as if
+measured. Full research trail and exact source rows in docs/DATA_SOURCES.md.
+
+## 4. INC-FIRE-MIR97 — smoke recovery, cleanup, and permanent equipment damage
+[NASA-MIR-FIRE-25YR], [MIR-FIRE-LINENGER]
+Documented values:
+- Some of Kvant-1's solar panels were charred by the fire — measured
+  [NASA-MIR-FIRE-25YR, https://www.nasa.gov/history/25-years-ago-fire-aboard-space-station-mir/].
+  No damage to the station's structure; no lasting harm to the crew — same source.
+- Jerry Linenger's own firsthand account (BBC Science Focus): full respirators lasted
+  "maybe 45 minutes to an hour" before the crew switched to filter masks; roughly a day
+  before things were properly cleaned out; a water-based extinguisher was used, followed
+  by about 24 elapsed hours of one crew member mopping up condensation with old clothing —
+  measured-reported (firsthand crew account, not a primary NASA document)
+  [MIR-FIRE-LINENGER, https://www.sciencefocus.com/space/fire-in-space-jerry-linenger].
+RESIDUAL COST, three parts, all applied the hour the fire triggers, regardless of which
+response is chosen (the crew fights, evacuates, or ignores the fire itself — the smoke and
+the charred panels are consequences of the fire, not of that choice):
+- Damaged equipment stays damaged: a permanent, modest efficiencyPenaltyFraction on
+  powerDistribution (tuned magnitude — no percentage was published for how much capability
+  Kvant-1's charred panels actually lost).
+- Cleanup costs crew-hours: a one-time crew-hours debit the same hour (tuned — Linenger's
+  own ~24 elapsed hours describes one crew member's wall-clock task, not directly a
+  crew-hours budget figure in this sim's own units, so it is not a literal conversion).
+- Smoke degrades crew performance for a recovery period: every response leaves a bounded
+  ongoing effect running for mirFireSmokeRecoveryHours (24 h, the more precisely stated of
+  Linenger's two figures — used instead of the brief's own less-precisely-sourced "36
+  hours", a discrepancy disclosed in the constant's own note for the lead developer to
+  reconcile if a firmer primary source turns up), adding a small tuned fatigueFraction each
+  hour of that window.
+
+## 5. INC-SPE-1972 — electronics degradation, halted science, interrupted crop light
+[AGU-KNIPP-2018]
+Documented values: Knipp et al. (2018, Space Weather, AGU), quoting Rauschenbach (1980):
+"an ~5% drop in solar cell power generation capability for the INTELSAT IV F-2 solar panel
+arrays during the 4 August SEP event, roughly equivalent to 2 years of magnetospheric
+trapped-radiation exposure to the panels." The same paper reports a Defense Communications
+Satellite Program II satellite suffering a mission-ending on-orbit power failure shortly
+after the same event (Shea & Smart, 1998) — measured
+[AGU-KNIPP-2018, https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018SW002024].
+RESIDUAL COST:
+- Electronics take a degradation roll: independent of the crew's shelter decision (the real
+  particles hit hardware regardless of where the crew is standing), a tuned-probability roll
+  (no rate exists to derive one from a single historical event) applies the real, measured
+  5% figure above as a permanent efficiencyPenaltyFraction on comms — this sim's own
+  established stand-in for sensitive spacecraft electronics.
+- Sheltering halts science and interrupts crop light: while any crew member is sheltering,
+  the comms-uptime and MOXIE science-point credits pause (not the underlying O2 production
+  itself, which the crew still needs), and the greenhouse's grow-light accumulation pauses
+  too — crew attention, not electrical power, is the cause, a distinct mechanism from the
+  existing power-priority shedding.
+- Cumulative career dose was already verified permanent (never reset) before this pass;
+  spe1972DoseMultiplier itself was also reclassified from a placeholder to "derived" this
+  same pass, now citing HRP-ARS with the M7.5 brief's own derivation
+  (1.37 mSv/day x 1500 ~= 0.5 Gy over 6 h).
+
+## 6. INC-DUSTSTORM-2018 — permanent dust, EVA dose, battery degradation
+[JPL-DUSTSTORM2018-TAU], [LORENZ-2020-INSIGHT-DUST]
+Documented values:
+- Dust optical depth (tau) reached 10.8 at Opportunity's location during the 2018 storm,
+  versus a pre-storm background of about 1.2 — "the highest ever recorded on Mars" —
+  measured [JPL-DUSTSTORM2018-TAU, https://www.jpl.nasa.gov/news/opportunity-hunkers-down-during-dust-storm/].
+- InSight's own solar arrays declined at roughly 0.28%/sol from steady-state dust
+  accumulation (the same rate reported for the Sojourner rover, Landis 1996), with no full
+  recovery possible short of a dust-devil-scale cleaning event; the mission ultimately died
+  of accumulated dust that was never cleaned — measured
+  [LORENZ-2020-INSIGHT-DUST, Lorenz et al. 2020, Earth and Space Science 7(5)].
+RESIDUAL COST:
+- Dust accumulation is permanent and cumulative: this sim tracks obscuration as a 0-1
+  fraction, not optical depth, so the real tau comparison above is used qualitatively
+  (justifying real, felt severity) rather than converted through an invented tau-to-fraction
+  formula. Each time this incident triggers, environment.dustObscurationFraction gains a
+  permanent floor (tuned magnitude, anchored to InSight's own "never fully cleaned" outcome)
+  it can never be cleaned back below again, however many cleaning responses follow.
+- Cleaning EVAs cost crew-hours (already declared) and dose: the crew member sent out is
+  exposed at the sim's own "eva" shielding factor for the response's declared duration,
+  using the exact GCR transmission physics radiationStage itself runs — not an invented EVA
+  dose rate.
+- Deep battery discharge cycles permanently reduce usable capacity: checked once per
+  incident, from whichever response actually resolves it (including its own default), since
+  the storm's own power crisis — not the cleanup choice made afterward — is what drove the
+  battery down. A real, well-documented property of battery chemistry in general; the
+  specific percentage is tuned, since no source here ties a number to this sim's own
+  abstracted battery model.
+
+## 7. INC-SCRUBBER-ISS — repeat degradation and chronic CO2 exposure
+[ICES-2019-CDRA]
+Documented values: Cmarik & Knox (2019, ICES-2019-5) document real, recurring CDRA
+sorbent-bed degradation — silica gel discoloration and performance loss "after many
+operating cycles" — as one of the ISS's most crew-maintenance-intensive systems, without
+stating a specific post-repair capacity percentage — measured
+[ICES-2019-CDRA, https://ntrs.nasa.gov/api/citations/20190030370/downloads/20190030370.pdf].
+RESIDUAL COST:
+- A repaired bed runs at reduced capacity for the rest of the mission: every successful
+  swapCartridge applies a small, tuned, permanent efficiencyPenaltyFraction to co2Scrubber,
+  stacking multiplicatively across repeated triggers of this same recurring-failure
+  incident — distinct from (and stacking with) the existing improvised-repair penalty,
+  which only applies on a spares shortfall.
+- Cumulative CO2 exposure above 3 mmHg (survivalModes' own OCHMO-TB047-sourced co2LimitMmHg)
+  is tracked and carries a lasting performance cost: an integral of hours-above-limit
+  weighted by how far above (mmHg-hours), not gated to when scrubber-iss specifically is
+  active, since ordinary excursions add up the same real way. Crossing a tuned threshold
+  applies a one-time, permanent crew fatigue increase, standing in for OCHMO's own
+  documented concern about chronic sub-acute CO2 exposure's cognitive effects.
+
+## New source IDs (Addendum 2)
+NASA-MIR-FIRE-25YR (primary NASA material), MIR-FIRE-LINENGER (firsthand crew account,
+"measured-reported" tier), AGU-KNIPP-2018 (peer-reviewed, Space Weather/AGU),
+ICES-2019-CDRA (primary NASA/NTRS conference paper), JPL-DUSTSTORM2018-TAU (primary
+NASA/JPL reporting), LORENZ-2020-INSIGHT-DUST (peer-reviewed, Earth and Space Science).
+Full rows in docs/DATA_SOURCES.md. The three "-PENDING" placeholders this addendum replaces
+(INC-SPE-1972-PENDING, INC-SCRUBBER-ISS-PENDING, INC-DUSTSTORM2018-PENDING) are gone from
+both the source registry and every constant that cited them.
+
+## Balance note (feeds M7.6 Part D.13)
+Measured, 150 seeds x scenario x difficulty (docs/BALANCE.md, regenerated after this pass):
+First Light's prudentBot moved from 54.0%/38.7%/32.7% (Training/Nominal/Flight-Rated) to
+45.3%/37.3%/31.3% — a real but modest further decline (Training moved most, ~9 points),
+consistent with adding four more real residual costs to an already-thin 2-person-crew
+scenario. Traced seed-by-seed: 79 of 82 (96%) of First Light Training's remaining
+prudentBot losses are still `depress-mir97`'s own pre-existing fast kill clock (M7.8 Part A's
+own finding, unchanged), not a new failure mode from this pass — this addendum's own four
+new mechanics account for the other 3. Jezero and The Long Night, both far better resourced,
+show no meaningful movement on their own already-passing numbers. No hazard rate was tuned
+to produce any of this movement — every change here is a residual-cost mechanic or a
+previously-undeclared/misattributed constant, per the brief's own restriction.
  

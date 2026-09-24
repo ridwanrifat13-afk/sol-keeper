@@ -134,6 +134,11 @@ const SPECIALIST: TemplateTable = {
   "incident.scrubber-iss.responseFailed": "Attempt to respond to the CO₂ scrubber failure failed: {response} did not work.",
   "incident.scrubber-iss.responseImpossible": "Cannot respond to the CO₂ scrubber failure right now: nobody available for {response}.",
   "system.repairAttemptFailed": "Repair attempt on {system} failed.",
+
+  // --- M7.6 Part D: residual costs for the last four incidents ---
+  "incident.spe-1972.electronicsDegraded": "The particle event permanently degraded {system} — {fraction} loss in capacity.",
+  "incident.duststorm-2018.batteryDegraded": "Deep discharge during the storm permanently reduced battery capacity by {lostKwh} kWh.",
+  "atmosphere.chronicCo2Exposure": "Sustained CO₂ exposure above the limit has left a lasting mark on the crew.",
 };
 
 /** Ages 8-11. Plain words, no raw units, present tense, encouraging where it can be. */
@@ -250,6 +255,11 @@ const CADET: TemplateTable = {
   "incident.scrubber-iss.responseFailed": "That didn't work: {response} for the air cleaner problem.",
   "incident.scrubber-iss.responseImpossible": "Nobody's free to try {response} for the air cleaner problem right now.",
   "system.repairAttemptFailed": "Tried to fix {system}, but it didn't work.",
+
+  // --- M7.6 Part D: residual costs for the last four incidents ---
+  "incident.spe-1972.electronicsDegraded": "The solar storm broke part of {system} for good.",
+  "incident.duststorm-2018.batteryDegraded": "The batteries got drained so low they don't hold as much charge anymore.",
+  "atmosphere.chronicCo2Exposure": "Breathing bad air for so long has worn the crew down for good.",
 };
 
 /** Ages 15+. Same facts, framed with the vocabulary an operator would actually use. */
@@ -371,6 +381,11 @@ const COMMANDER: TemplateTable = {
   "incident.scrubber-iss.responseFailed": "Response attempt failed for the scrubber failure: {response} unsuccessful.",
   "incident.scrubber-iss.responseImpossible": "Response infeasible for the scrubber failure: no crew available for {response}.",
   "system.repairAttemptFailed": "Repair attempt on {system} unsuccessful.",
+
+  // --- M7.6 Part D: residual costs for the last four incidents ---
+  "incident.spe-1972.electronicsDegraded": "SEP-induced permanent degradation: {system}, {fraction} capacity loss.",
+  "incident.duststorm-2018.batteryDegraded": "Deep-discharge cycling during the storm permanently reduced battery capacity by {lostKwh} kWh (now {newCapacityKwh} kWh rated).",
+  "atmosphere.chronicCo2Exposure": "Cumulative sub-acute CO₂ exposure ({exposureMmHgHours} mmHg-h) has crossed the chronic-effect threshold; permanent crew fatigue increase applied.",
 };
 
 const TABLES: Record<DialLevel, TemplateTable> = {

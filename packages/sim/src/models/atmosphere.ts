@@ -5,9 +5,9 @@
  * power. Partial pressures come from the ideal gas law rather than a lookup, so the
  * Commander level of the Reality Dial can show the actual equation.
  */
-import { crew as crewConstants, habitat, physics, physiology, survivalModes } from "../data/constants.js";
+import { crew as crewConstants, habitat, incidents as incidentConstants, physics, physiology, survivalModes } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
-import { partialPressureMmHg, perDayToPerHour } from "../units.js";
+import { clamp, partialPressureMmHg, perDayToPerHour } from "../units.js";
 
 /** The CO2 partial-pressure limit for the currently selected rationing mode. */
 export function co2LimitMmHg(mode: keyof typeof survivalModes): number {
@@ -109,6 +109,35 @@ export function atmosphereStage(ctx: TickContext): void {
         limitMmHg: limit,
         mode: state.food.mode,
       },
+    });
+  }
+
+  // M7.6 Part D.12 (scrubber-iss residual cost): "cumulative CO2 exposure above 3 mmHg is
+  // tracked and carries lasting performance cost, not just momentary" — an integral of
+  // hours-above-limit weighted by how far above, not a plain "acute" threshold crossing like
+  // the log entry just above. Standing exposure tracking, not gated to only when scrubber-iss
+  // is active, since repeated ordinary CO2 excursions add up the same real way; scrubber-iss
+  // is simply the incident most likely to drive it there. Applied once, permanently, the
+  // first time the threshold is crossed — see the constant's own note.
+  a.cumulativeCo2ExposureAboveLimitMmHgHours += Math.max(0, a.co2PartialPressureMmHg - limit) * ctx.dtHours;
+  if (
+    !a.chronicCo2PenaltyApplied &&
+    a.cumulativeCo2ExposureAboveLimitMmHgHours >= incidentConstants.co2ChronicExposureThresholdMmHgHours.value
+  ) {
+    a.chronicCo2PenaltyApplied = true;
+    for (const member of state.crew) {
+      if (!member.alive) continue;
+      member.fatigueFraction = clamp(
+        member.fatigueFraction + incidentConstants.co2ChronicExposureFatiguePenalty.value,
+        0,
+        1,
+      );
+    }
+    log.log({
+      kind: "crew",
+      severity: "warning",
+      code: "atmosphere.chronicCo2Exposure",
+      data: { exposureMmHgHours: round(a.cumulativeCo2ExposureAboveLimitMmHgHours) },
     });
   }
 

@@ -16,10 +16,10 @@
  * (engine/runWithBot.ts) via the exported `applyResponse`, never by the pipeline itself —
  * that keeps `tick()`'s own signature exactly as it was in Phase 1.
  */
-import { incidents as incidentConstants, management, missionDifficulty, physics } from "../data/constants.js";
+import { incidents as incidentConstants, management, missionDifficulty, physics, power as powerConstants } from "../data/constants.js";
 import type { SourceId } from "../data/sources.js";
 import { crewCondition } from "../models/crew.js";
-import { effectiveShieldingGPerCm2, speTransmission } from "../models/radiation.js";
+import { effectiveShieldingGPerCm2, gcrTransmission, speTransmission } from "../models/radiation.js";
 import type { ActiveIncident, CrewMember, QueuedWork, SimState, StationId, SystemId } from "../types.js";
 import {
   chokedOrificeEffectiveVelocityMPerS,
@@ -100,6 +100,43 @@ function mostInjured(state: SimState): CrewMember | undefined {
   return living.reduce((worst, c) => (c.injuryFraction > worst.injuryFraction ? c : worst));
 }
 
+/** M7.6 Part D.11: a cleaning EVA's own real, physics-based dose cost — the crew member sent
+ *  out (picked the same way fire-mir97 picks who gets hurt: `rng.stream("incidents").pick`,
+ *  not the outpost lead choosing the least-exposed member, since that knowledge is a bot/
+ *  player's decision, not a fairness violation to model here) is exposed at the "eva"
+ *  shielding factor for `hours`, using the exact GCR transmission physics `radiationStage`
+ *  itself runs (models/radiation.ts) — not an invented EVA dose rate. */
+function applyCleaningEvaDose(ctx: TickContext, hours: number): void {
+  const { state } = ctx;
+  const crewMember = ctx.rng.stream("incidents").pick(state.crew.filter((c) => c.alive));
+  if (crewMember === undefined) return;
+  const shielding = effectiveShieldingGPerCm2("eva", state.radiation.shieldingGPerCm2);
+  const doseMSv = (state.radiation.ambientMSvPerDay / 24) * gcrTransmission(shielding) * hours;
+  crewMember.cumulativeDoseMSv += doseMSv;
+  crewMember.eventDoseMSv += doseMSv;
+}
+
+/** M7.6 Part D.11: "deep battery discharge cycles permanently reduce usable capacity" — a
+ *  real property of battery chemistry in general, magnitude tuned (see
+ *  duststorm2018BatteryDegradationFraction's own note). Checked once, from whichever response
+ *  actually resolves this incident (including its own default), since the storm's own power
+ *  crisis — not the cleanup choice made afterward — is what drove the battery down. */
+function applyDeepDischargeBatteryDegradation(ctx: TickContext): void {
+  const { state, log } = ctx;
+  const p = state.power;
+  const dodFloorKwh = p.batteryCapacityKwh * (1 - powerConstants.batteryDepthOfDischargeFraction.value);
+  if (p.batteryEnergyKwh > dodFloorKwh) return;
+  const lostKwh = p.batteryCapacityKwh * incidentConstants.duststorm2018BatteryDegradationFraction.value;
+  p.batteryCapacityKwh = Math.max(0, p.batteryCapacityKwh - lostKwh);
+  p.batteryEnergyKwh = Math.min(p.batteryEnergyKwh, p.batteryCapacityKwh);
+  log.log({
+    kind: "resource",
+    severity: "warning",
+    code: "incident.duststorm-2018.batteryDegraded",
+    data: { lostKwh: round(lostKwh), newCapacityKwh: round(p.batteryCapacityKwh) },
+  });
+}
+
 export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
   {
     id: "fire-mir97",
@@ -113,7 +150,8 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
     // maker (bot or, in M8, a player) ever got a chance to answer.
     warningTimeHours: 1,
     physicsEffect: (ctx) => {
-      const living = ctx.state.crew.filter((c) => c.alive);
+      const { state } = ctx;
+      const living = state.crew.filter((c) => c.alive);
       const hit = ctx.rng.stream("incidents").pick(living);
       if (hit !== undefined) {
         hit.injuryFraction = clamp(hit.injuryFraction + 0.35, 0, 1);
@@ -124,6 +162,35 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
           data: { crew: hit.name, durationMinutes: incidentConstants.mirFireDurationMinutes.value },
         });
       }
+      // M7.6 Part D.9: two residual costs that apply regardless of which response is chosen,
+      // since both are consequences of the fire itself, not of how the crew reacted to it.
+      // "Damaged equipment stays damaged" — NASA-MIR-FIRE-25YR: some of Kvant-1's solar
+      // panels were charred by the real fire.
+      const powerSystem = state.systems.powerDistribution;
+      if (powerSystem !== undefined) {
+        powerSystem.efficiencyPenaltyFraction =
+          1 - (1 - powerSystem.efficiencyPenaltyFraction) * (1 - incidentConstants.mirFirePanelDamageEfficiencyPenaltyFraction.value);
+      }
+      // "Cleanup costs crew-hours" — MIR-FIRE-LINENGER's own account of a real, extended
+      // mop-up effort, billed the same hour regardless of response.
+      state.crewHours.spentTodayHours += incidentConstants.mirFireCleanupCrewHours.value;
+    },
+    // "Smoke degrades air quality and crew performance for a recovery period" — every
+    // response leaves this ongoing for mirFireSmokeRecoveryHours (MIR-FIRE-LINENGER), since
+    // fighting, evacuating, or ignoring the fire all still leave the crew breathing the same
+    // smoke afterward. The effect itself is a no-op once the window has passed, rather than
+    // gating on leavesOngoing per response, so this stays a bounded tail, not a permanent one.
+    ongoingEffect: (ctx, incident) => {
+      const { state } = ctx;
+      if (state.hour - incident.triggeredAtHour >= incidentConstants.mirFireSmokeRecoveryHours.value) return;
+      for (const member of state.crew) {
+        if (!member.alive) continue;
+        member.fatigueFraction = clamp(
+          member.fatigueFraction + incidentConstants.mirFireSmokeFatiguePerHour.value * ctx.dtHours,
+          0,
+          1,
+        );
+      }
     },
     responses: [
       {
@@ -132,6 +199,7 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         sparesCost: 1,
         sparesFromSystem: "powerDistribution",
         crewHoursCost: 4,
+        leavesOngoing: true,
         effect: (ctx) => {
           const target = mostInjured(ctx.state);
           if (target !== undefined) target.injuryFraction = clamp(target.injuryFraction - 0.25, 0, 1);
@@ -143,11 +211,13 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         id: "evacuate",
         i18nKey: "incident.fire-mir97.response.evacuate",
         crewHoursCost: 2,
+        leavesOngoing: true,
         effect: () => {}, // contains it without treating further; the initial injury stands
       },
       {
         id: "ignore",
         i18nKey: "incident.fire-mir97.response.ignore",
+        leavesOngoing: true,
         effect: (ctx) => {
           const target = mostInjured(ctx.state);
           if (target !== undefined) target.injuryFraction = clamp(target.injuryFraction + 0.2, 0, 1);
@@ -400,7 +470,7 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
   {
     id: "spe-1972",
     analogue: "August 1972 solar particle event",
-    sourceId: "INC-SPE-1972-PENDING",
+    sourceId: "AGU-KNIPP-2018",
     // The decisive action (shelter) belongs to Incident Command; Comms only carries the
     // warning that a real crew would have received ahead of it (not modelled separately).
     station: "incidentCommand",
@@ -423,6 +493,24 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         code: "incident.spe-1972.spike",
         data: { multiplier: incidentConstants.spe1972DoseMultiplier.value },
       });
+      // M7.6 Part D.10: "electronics take a degradation roll" — real particle flux hits
+      // hardware regardless of where the crew sheltered, so this is independent of the
+      // response chosen. comms is this sim's own established stand-in for sensitive
+      // spacecraft electronics (coolant-ms22's equipment-strain check uses the same proxy).
+      if (ctx.rng.stream("incidents").chance(incidentConstants.spe1972ElectronicsDegradationChance.value)) {
+        const comms = state.systems.comms;
+        if (comms !== undefined) {
+          comms.efficiencyPenaltyFraction =
+            1 - (1 - comms.efficiencyPenaltyFraction) * (1 - incidentConstants.spe1972ElectronicsDegradationFraction.value);
+          log.log({
+            kind: "fault",
+            severity: "warning",
+            code: "incident.spe-1972.electronicsDegraded",
+            system: "comms",
+            data: { fraction: incidentConstants.spe1972ElectronicsDegradationFraction.value },
+          });
+        }
+      }
     },
     responses: [
       {
@@ -448,7 +536,7 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
   {
     id: "duststorm-2018",
     analogue: "2018 Mars global dust storm",
-    sourceId: "INC-DUSTSTORM2018-PENDING",
+    sourceId: "JPL-DUSTSTORM2018-TAU",
     station: "power",
     trigger: { kind: "hazardStart", hazardLogCode: "hazard.dustStorm.start" },
     warningTimeHours: 2,
@@ -456,6 +544,16 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
       const e = ctx.state.environment;
       e.dustObscurationFraction = clamp(
         e.dustObscurationFraction + incidentConstants.duststorm2018ObscurationSpikeFraction.value,
+        0,
+        0.95,
+      );
+      // M7.6 Part D.11: "dust accumulation on arrays is PERMANENT and cumulative" —
+      // LORENZ-2020-INSIGHT-DUST. A property of the storm itself, not of how the crew
+      // responds to it: even a well-cleaned array can never be brought below this
+      // ever-rising floor again.
+      const env = ctx.state.environment;
+      env.dustObscurationFloorFraction = clamp(
+        env.dustObscurationFloorFraction + incidentConstants.duststorm2018DustFloorIncreaseFraction.value,
         0,
         0.95,
       );
@@ -473,7 +571,13 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         crewHoursCost: 3,
         effect: (ctx) => {
           const e = ctx.state.environment;
-          e.dustObscurationFraction = clamp(e.dustObscurationFraction - 0.15, 0, 0.95);
+          e.dustObscurationFraction = clamp(e.dustObscurationFraction - 0.15, e.dustObscurationFloorFraction, 0.95);
+          // "Cleaning EVAs cost crew-hours (already declared above) and dose" — reuses the
+          // same GCR physics/shielding radiationStage itself uses (models/radiation.ts), not
+          // an invented EVA dose rate, for the duration this response's own crewHoursCost
+          // implies.
+          applyCleaningEvaDose(ctx, 3);
+          applyDeepDischargeBatteryDegradation(ctx);
         },
       },
       {
@@ -482,13 +586,16 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         crewHoursCost: 1,
         effect: (ctx) => {
           const e = ctx.state.environment;
-          e.dustObscurationFraction = clamp(e.dustObscurationFraction - 0.05, 0, 0.95);
+          e.dustObscurationFraction = clamp(e.dustObscurationFraction - 0.05, e.dustObscurationFloorFraction, 0.95);
+          applyDeepDischargeBatteryDegradation(ctx);
         },
       },
       {
         id: "noResponse",
         i18nKey: "incident.duststorm-2018.response.noResponse",
-        effect: () => {},
+        effect: (ctx) => {
+          applyDeepDischargeBatteryDegradation(ctx);
+        },
       },
     ],
     defaultResponseId: "noResponse",
@@ -498,7 +605,7 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
   {
     id: "scrubber-iss",
     analogue: "ISS CO2 scrubber (CDRA) recurring failures",
-    sourceId: "INC-SCRUBBER-ISS-PENDING",
+    sourceId: "ICES-2019-CDRA",
     station: "lifeSupport",
     trigger: { kind: "componentRisk", system: "co2Scrubber", baseChancePerHour: incidentConstants.componentRiskBaseChancePerHour.value },
     warningTimeHours: 4,
@@ -528,7 +635,17 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
         crewHoursCost: 2,
         effect: (ctx) => {
           const system = ctx.state.systems.co2Scrubber;
-          if (system !== undefined) system.operational = true;
+          if (system !== undefined) {
+            system.operational = true;
+            // M7.6 Part D.12: "a repaired bed runs at reduced capacity for the rest of the
+            // mission" — ICES-2019-CDRA documents real, repeated sorbent-bed degradation
+            // after many operating cycles. Stacks multiplicatively across repeated
+            // swapCartridge successes on this same recurring-failure incident, same pattern
+            // as the shortfall-driven improvised-repair penalty elsewhere — this one applies
+            // every time, not only on a spares shortfall.
+            system.efficiencyPenaltyFraction =
+              1 - (1 - system.efficiencyPenaltyFraction) * (1 - incidentConstants.scrubberIssRepeatDegradationFraction.value);
+          }
         },
       },
       {

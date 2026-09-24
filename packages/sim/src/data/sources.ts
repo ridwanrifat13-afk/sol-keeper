@@ -55,13 +55,6 @@ export const SOURCE_IDS = [
   // constant citing one is honest about not being independently verified yet.
   "OCHMO-TB004",
   "HRP-ARS",
-  // The remaining incidents the Phase 2 brief names without a source of its own, pending the
-  // team supplying one per incident (brief: "Add each to DATA_SOURCES.md as unverified").
-  // depress-mir97, o2tank-apollo13 and coolant-ms22 were resolved by the team's M7.5
-  // addendum (docs/INCIDENT_MAGNITUDES.md) — see the sources directly below instead.
-  "INC-SPE-1972-PENDING",
-  "INC-SCRUBBER-ISS-PENDING",
-  "INC-DUSTSTORM2018-PENDING",
   // M7.5: docs/INCIDENT_MAGNITUDES.md closed the three incident-magnitude placeholders above
   // with published/derived values. NASA-SMA-MIR-COLLISION and NASA-SHUTTLE-MIR are primary
   // NASA material; A13-CO2 and MS22-THERMAL are secondhand (crew debrief / news-agency
@@ -73,6 +66,22 @@ export const SOURCE_IDS = [
   "A13-CO2",
   "MS22-THERMAL",
   "NSF-MS22",
+  // M7.6 Part D: docs/DECISION_AUDIT.md-adjacent residual costs for the last four incidents.
+  // The three "-PENDING" placeholders that used to stand here (INC-SPE-1972-PENDING,
+  // INC-SCRUBBER-ISS-PENDING, INC-DUSTSTORM2018-PENDING) are gone — each incident now cites
+  // a real document below instead. NASA-MIR-FIRE-25YR is primary NASA material;
+  // MIR-FIRE-LINENGER is a firsthand crew account (secondhand relative to a primary NASA
+  // document, same "measured-reported" tier as A13-CO2/MS22-THERMAL above); AGU-KNIPP-2018
+  // is a peer-reviewed primary source; ICES-2019-CDRA and JPL-DUSTSTORM2018-TAU are primary
+  // NASA/NTRS/JPL material cited for a qualitative mechanism or a real-world severity
+  // comparison rather than a directly game-scale-convertible number (each constant's own
+  // note discloses exactly which); LORENZ-2020-INSIGHT-DUST is peer-reviewed.
+  "NASA-MIR-FIRE-25YR",
+  "MIR-FIRE-LINENGER",
+  "AGU-KNIPP-2018",
+  "ICES-2019-CDRA",
+  "JPL-DUSTSTORM2018-TAU",
+  "LORENZ-2020-INSIGHT-DUST",
 ] as const;
 
 export type SourceId = (typeof SOURCE_IDS)[number];

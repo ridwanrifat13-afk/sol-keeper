@@ -111,6 +111,11 @@ export interface EnvironmentState {
   irradianceWPerM2: number;
   /** Cumulative dust obscuration on the arrays, 0 = clean. */
   dustObscurationFraction: number;
+  /** M7.6 Part D.11: duststorm-2018's own residual cost — a floor `dustObscurationFraction`
+   *  can never be cleaned below, once this incident has resolved at least once ("dust
+   *  accumulation is PERMANENT and cumulative", LORENZ-2020-INSIGHT-DUST). Monotonically
+   *  non-decreasing, same "no free undo" pattern as arrayAreaLossM2/scrubberEfficiencyFraction. */
+  dustObscurationFloorFraction: number;
   outsideTempC: number;
   isDaylight: boolean;
   /** True while a dust storm or equivalent hazard is suppressing sunlight. */
@@ -156,6 +161,15 @@ export interface AtmosphereState {
    *  stops the incident's CO2 rise is not as good as the original hardware. Monotonically
    *  non-increasing — there is no in-game way to restore lost efficiency. */
   scrubberEfficiencyFraction: number;
+  /** M7.6 Part D.12: scrubber-iss's own chronic-exposure residual cost — an integral of
+   *  hours-above-limit weighted by how far above (mmHg*h), not just a threshold crossing.
+   *  "cumulative CO2 exposure above 3 mmHg is tracked and carries lasting performance cost,
+   *  not just momentary." Monotonically non-decreasing. */
+  cumulativeCo2ExposureAboveLimitMmHgHours: number;
+  /** Whether co2ChronicExposureThresholdMmHgHours has already applied its one-time,
+   *  permanent crew fatigue cost — guards against re-applying it every subsequent hour the
+   *  cumulative exposure stays above threshold. */
+  chronicCo2PenaltyApplied: boolean;
 }
 
 export interface WaterState {

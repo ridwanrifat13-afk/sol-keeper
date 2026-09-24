@@ -11,6 +11,7 @@
  */
 import { environment, science as scienceConstants } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
+import { isSheltering } from "./crew.js";
 import { hoursToDays } from "../units.js";
 
 /** True while Earth and Mars are close enough to conjunction that the link is out. */
@@ -32,9 +33,21 @@ export function commsStage(ctx: TickContext): void {
   // ("science data return" living under Communications) — accrues whenever the link is
   // actually up, checked before the Mars-only blackout branch below so it applies to both
   // bodies (Moon comms are never blacked out, so this is unconditional there).
+  // M7.6 Part D.10: spe-1972's own "halts science" residual cost — sheltering from a
+  // radiation event means nobody is working the downlink that hour, regardless of body.
+  // efficiencyPenaltyFraction is the same incident's "electronics take a degradation roll"
+  // cost (comms is this sim's own stand-in for sensitive spacecraft electronics) — a
+  // permanently reduced return on whatever uptime the link still gets, not a full outage.
   const comms = state.systems.comms;
-  if (comms !== undefined && comms.operational && comms.poweredThisHour && !state.comms.blackout) {
-    state.science.points += scienceConstants.pointsPerCommsUptimeHour.value * ctx.dtHours;
+  if (
+    comms !== undefined &&
+    comms.operational &&
+    comms.poweredThisHour &&
+    !state.comms.blackout &&
+    !isSheltering(state.crew)
+  ) {
+    state.science.points +=
+      scienceConstants.pointsPerCommsUptimeHour.value * (1 - comms.efficiencyPenaltyFraction) * ctx.dtHours;
   }
 
   if (scenario.body !== "mars") return;

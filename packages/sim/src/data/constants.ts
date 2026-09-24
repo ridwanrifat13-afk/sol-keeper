@@ -1508,23 +1508,107 @@ export const incidents = {
   spe1972DoseMultiplier: c({
     value: 1500,
     unit: "multiplier",
-    source: "INC-SPE-1972-PENDING",
-    confidence: "placeholder",
-    note: "TODO: August 1972 solar particle event, one of the largest on record and considered potentially lethal to an unshielded crew in some historical estimates. Team to supply a source for its dose magnitude relative to a design-reference SPE (radiationStage already models a x40 multiplier for a generic SPE; this incident should exceed it substantially — a small multiplier over Mars's tiny ambient rate landed far below even the placeholder ARS onset threshold during M7 balance tuning, i.e. not dangerous at all, which is not credible for the actual 1972 event).",
+    source: "HRP-ARS",
+    confidence: "derived",
+    note: "M7.6 Part D.10: reclassified from a placeholder. Moon baseline 1.37 mSv/day x 1500 ~= 86 mSv/h ~= 0.5 Gy over 6 h, matching HRP-ARS's own measured statement that a large unshielded SPE delivers >0.5 Gy over several hours. August 1972, one of the largest SPEs on record and considered potentially lethal to an unshielded crew in some historical estimates (AGU-KNIPP-2018) — this multiplier is what makes the modelled incident's dose spike land in that real, dangerous band rather than being swamped by Mars's tiny ambient rate.",
   }),
   scrubberIssFailureRateMultiplier: c({
     value: 3,
     unit: "multiplier",
-    source: "INC-SCRUBBER-ISS-PENDING",
-    confidence: "placeholder",
-    note: "TODO: ISS CO2 scrubber (CDRA) recurring failures. Team to supply a source for how much more failure-prone a scrubber is post-incident versus its base TRL-scaled rate.",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "M7.6 Part D.12: reclassified from a placeholder. ICES-2019-CDRA documents CDRA sorbent-bed degradation \"after many operating cycles\" as a real, recurring ISS maintenance problem, but states no specific post-failure failure-rate multiplier — this figure (how much more failure-prone the scrubber is right after this incident, versus its base TRL-scaled rate) is a tuned game-design choice consistent with that documented pattern, not a cited number (brief rule 1: every 'tuned' confidence value cites GAME-DESIGN as its source, its real-world anchor disclosed here in the note instead).",
   }),
   duststorm2018ObscurationSpikeFraction: c({
     value: 0.15,
     unit: "fraction",
-    source: "INC-DUSTSTORM2018-PENDING",
-    confidence: "placeholder",
-    note: "TODO: 2018 Mars global dust storm (the one that ended Opportunity). power.dustLossPerSolFraction (NSSDC-FACTS) already drives the ordinary storm hazard's per-hour obscuration buildup; this is the extra one-time spike standing in for that storm's unusually severe, near-global opacity. Team to supply a source for how much more severe 2018 was than a typical modelled storm.",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "M7.6 Part D.11: reclassified from a placeholder. The 2018 storm's own dust optical depth (tau) reached 10.8 versus a pre-storm background of about 1.2 (JPL-DUSTSTORM2018-TAU) — \"the highest ever recorded on Mars\" — but this sim tracks obscuration as a 0-1 fraction, not optical depth, so no invented tau-to-fraction conversion is applied; the real severity comparison instead justifies treating this as a large, near-maximal one-time spike on top of power.dustLossPerSolFraction's (NSSDC-FACTS) own ordinary per-hour buildup, magnitude itself tuned (brief rule 1: every 'tuned' confidence value cites GAME-DESIGN as its source, its real-world anchor disclosed here in the note instead).",
+  }),
+  // --- M7.6 Part D.9: fire-mir97 residual cost. NASA-MIR-FIRE-25YR (primary) and
+  // MIR-FIRE-LINENGER (firsthand crew account, secondhand relative to a primary NASA
+  // document, same "measured-reported" tier as A13-CO2/MS22-THERMAL) supply the real facts;
+  // magnitudes not directly stated by either are tuned and disclosed as such.
+  mirFireSmokeRecoveryHours: c({
+    value: 24,
+    unit: "h",
+    source: "MIR-FIRE-LINENGER",
+    confidence: "measured",
+    note: "measured-reported: Linenger's own account puts full respirator use at 45 min-1 h before switching to filter masks, then \"probably a day or so\" before things were properly cleaned out, plus a specific ~24 h spent mopping condensation. This sim models one recovery window covering that whole tail, using the more precisely stated 24 h cleanup figure rather than the brief's own less-precisely-sourced \"36 hours\" — the discrepancy is disclosed here for the lead developer to reconcile if a firmer primary source turns up.",
+  }),
+  mirFireSmokeFatiguePerHour: c({
+    value: 0.01,
+    unit: "fraction/h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Crew fatigueFraction added each hour of mirFireSmokeRecoveryHours, representing smoke-inhalation and reduced-air-quality impairment — \"smoke degrades air quality and crew performance for a recovery period.\" No figure was published for the magnitude; this reaches a moderate ~0.24 total fatigue contribution over the full window, tuned to be felt without being decisive on its own.",
+  }),
+  mirFireCleanupCrewHours: c({
+    value: 4,
+    unit: "CM-h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "\"Cleanup costs crew-hours.\" MIR-FIRE-LINENGER's own account describes roughly 24 elapsed hours of one crew member mopping up water — a real-time duration, not directly a crew-hours budget debit (this sim's crew-hours model bills effort, not wall-clock elapsed time an already-busy crew works through regardless) — so this is a tuned stand-in of comparable weight to the incident's own other crew-hours costs, not a literal conversion of that figure.",
+  }),
+  mirFirePanelDamageEfficiencyPenaltyFraction: c({
+    value: 0.05,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "\"Damaged equipment stays damaged.\" NASA-MIR-FIRE-25YR: \"some of Kvant-1's solar panels were charred\" — real, permanent equipment damage from the fire itself, applied regardless of which response is chosen (unlike the existing response-dependent consequences). No magnitude was published for how much capability was lost; this is a modest, tuned permanent efficiencyPenaltyFraction on powerDistribution standing in for it (brief rule 1: every 'tuned' confidence value cites GAME-DESIGN as its source, its real-world anchor disclosed here in the note instead).",
+  }),
+  // --- M7.6 Part D.10: spe-1972's own "electronics take a degradation roll" residual cost.
+  spe1972ElectronicsDegradationChance: c({
+    value: 0.4,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "A single historical data point (the August 1972 event genuinely did degrade Intelsat IV F-2's arrays, AGU-KNIPP-2018) gives no rate to derive a trigger probability from; tuned so the roll is a real, felt risk without being certain every time.",
+  }),
+  spe1972ElectronicsDegradationFraction: c({
+    value: 0.05,
+    unit: "fraction",
+    source: "AGU-KNIPP-2018",
+    confidence: "measured",
+    note: "Rauschenbach (1980), cited by AGU-KNIPP-2018: \"an ~5% drop in solar cell power generation capability for the INTELSAT IV F-2 solar panel arrays during the 4 August SEP event, roughly equivalent to 2 years of magnetospheric trapped-radiation exposure to the panels.\" Applied here as a permanent efficiencyPenaltyFraction on comms — this sim's own established stand-in for sensitive spacecraft electronics (engine/incidents.ts's coolant-ms22 equipment-strain check uses the same proxy) — on the roll above succeeding.",
+  }),
+  // --- M7.6 Part D.11: duststorm-2018's own permanent/cumulative residual costs.
+  duststorm2018DustFloorIncreaseFraction: c({
+    value: 0.05,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "\"Dust accumulation on arrays is PERMANENT and cumulative (InSight declined over years; cleaning is not free).\" LORENZ-2020-INSIGHT-DUST: InSight's own arrays declined ~0.28%/sol with no full recovery possible short of a dust-devil-scale event, and the mission ultimately died of accumulated dust that was never cleaned. This sim tracks one storm-scale incident, not a multi-year daily accumulation model, so that real per-sol rate is used qualitatively rather than converted directly: each time this incident resolves, environment.dustObscurationFraction gains a permanent floor it can never be cleaned below, increasing by this tuned fraction per event (brief rule 1: every 'tuned' confidence value cites GAME-DESIGN as its source, its real-world anchor disclosed here in the note instead).",
+  }),
+  duststorm2018BatteryDegradationFraction: c({
+    value: 0.03,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "\"Deep battery discharge cycles permanently reduce usable capacity\" — a real, well-documented property of battery chemistry in general, but no source here ties a specific percentage to this sim's own abstracted battery model or to the 2018 storm's own discharge depth specifically, so the magnitude is tuned. Applied once, permanently, to power.batteryCapacityKwh, only if the battery is at or below its depth-of-discharge floor when this incident's response resolves.",
+  }),
+  // --- M7.6 Part D.12: scrubber-iss's own repeat-degradation and chronic-exposure costs.
+  scrubberIssRepeatDegradationFraction: c({
+    value: 0.05,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "\"A repaired bed runs at reduced capacity for the rest of the mission.\" ICES-2019-CDRA documents real, repeated CDRA sorbent-bed degradation after many operating cycles but states no specific percentage; this permanent, cumulative efficiencyPenaltyFraction on co2Scrubber (stacking multiplicatively across repeated swapCartridge successes, mirroring SystemState.efficiencyPenaltyFraction's own established stacking pattern) is tuned to that documented mechanism (brief rule 1: every 'tuned' confidence value cites GAME-DESIGN as its source, its real-world anchor disclosed here in the note instead).",
+  }),
+  co2ChronicExposureThresholdMmHgHours: c({
+    value: 72,
+    unit: "mmHg*h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "\"Cumulative CO2 exposure above 3 mmHg [survivalModes' own co2LimitMmHg, OCHMO-TB047] is tracked and carries lasting performance cost.\" No specific integrated-exposure threshold is published for a lasting (not acute) cognitive effect; 72 mmHg-hours is a tuned choice representing sustained, moderate above-limit exposure (e.g. 3 mmHg over limit for a full day, or 1 mmHg over for three days) rather than a brief spike.",
+  }),
+  co2ChronicExposureFatiguePenalty: c({
+    value: 0.15,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "One-time, permanent fatigueFraction increase applied to every living crew member the first time co2ChronicExposureThresholdMmHgHours is crossed — a real, felt, lasting consequence standing in for OCHMO's own documented concern about chronic sub-acute CO2 exposure's cognitive effects, which this sim does not model in full clinical detail.",
   }),
 } as const;
 

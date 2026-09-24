@@ -38,11 +38,19 @@
  *   the remaining four incidents (fire-mir97, spe-1972, duststorm-2018, scrubber-iss, none of
  *   which carry one yet, M7.6 Part D's own job) or a compounding-incidents mechanic — neither
  *   in scope for M7.7/M7.8. Only the lower bound is asserted for those cells.
- * - First Light: Training (54.0%) and Flight-Rated (32.7%) prudentBot still sit below their
- *   85%/40% floors. `depress-mir97`'s own fast kill clock outrunning any response on an
- *   unlucky detection/success roll accounts for 93% of the seeds still lost (M7.8 Part A);
- *   M7.8 Part B/D moved these substantially already (Flight-Rated was 12.7% before this
- *   milestone's strategy fix and scenario-margin pass) without touching a hazard rate.
+ * - First Light: Training (45.3%), Nominal (37.3%), and Flight-Rated (31.3%) prudentBot all
+ *   sit below their 85%/70%/40% floors. `depress-mir97`'s own fast kill clock outrunning any
+ *   response on an unlucky detection/success roll still accounts for 96% of Training's lost
+ *   seeds (M7.8 Part A; re-checked after M7.6 Part D below, unchanged). M7.8 Part B/D moved
+ *   these substantially already (Flight-Rated was 12.7% before that milestone's strategy fix
+ *   and scenario-margin pass); M7.6 Part D then added real, sourced residual costs to the
+ *   last four incidents (fire-mir97, spe-1972, duststorm-2018, scrubber-iss — docs/
+ *   INCIDENT_MAGNITUDES.md Addendum 2) per the brief's own instruction, without touching a
+ *   hazard rate — First Light's numbers moved down modestly as an honest side effect (Training
+ *   was 54.0% immediately before that pass) rather than up, since a resource-thin 2-person
+ *   scenario feels every added cost more than Jezero or The Long Night do. Nominal was already
+ *   below its own floor before M7.6 Part D too (38.7%) but is newly called out here because it
+ *   had been omitted from this list by oversight.
  */
 import { describe, expect, it } from "vitest";
 import { runCombination } from "../engine/balance.js";

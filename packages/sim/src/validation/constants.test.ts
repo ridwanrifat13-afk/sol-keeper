@@ -67,13 +67,12 @@ describe("constants registry (brief rule 1)", () => {
     // that empty list). M7 (Phase 2) reopened ten: the CO2 IDLH threshold, the acute
     // radiation syndrome thresholds, and one magnitude number per not-yet-sourced incident.
     // M7.5's addendum (docs/INCIDENT_MAGNITUDES.md) then closed three of those (depress-mir97,
-    // o2tank-apollo13, coolant-ms22) with published/derived values, leaving seven. Each
-    // remaining placeholder carries a TODO note naming exactly what the team needs to
-    // supply; see docs/DATA_SOURCES.md for the matching "unverified" rows.
+    // o2tank-apollo13, coolant-ms22) with published/derived values, leaving seven. M7.6 Part D
+    // then closed the last three incident placeholders (spe-1972, scrubber-iss, duststorm-2018
+    // — docs/M7.8_DIAGNOSIS.md's own research), leaving four. Each remaining placeholder
+    // carries a TODO note naming exactly what the team needs to supply; see
+    // docs/DATA_SOURCES.md for the matching "unverified" rows.
     expect(placeholders).toEqual([
-      "incidents.duststorm2018ObscurationSpikeFraction",
-      "incidents.scrubberIssFailureRateMultiplier",
-      "incidents.spe1972DoseMultiplier",
       "physiology.co2ImmediatelyDangerousMmHg",
       "radiation.arsLethalMSv",
       "radiation.arsOnsetMSv",

@@ -56,6 +56,14 @@ function hypothermiaAirG(habitatTempC: number): number {
   return floor + (1 - floor) * t;
 }
 
+/** M7.6 Part D.10: true while any living crew member is sheltering from a radiation event —
+ *  spe-1972's own "halts science and EVA, interrupts crop light" residual cost. Read from
+ *  models/comms.ts, models/isru.ts and models/food.ts rather than each duplicating the same
+ *  crew-location scan. */
+export function isSheltering(crew: readonly CrewMember[]): boolean {
+  return crew.some((c) => c.alive && c.location === "stormShelter");
+}
+
 /** The worst rung across every clock/threshold this member currently has. Pure and total:
  *  callers (Station rules, the outcome state machine, the UI) never need to know which
  *  specific clock is responsible, only how bad it is right now. */

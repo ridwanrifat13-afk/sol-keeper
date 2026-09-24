@@ -89,6 +89,12 @@ describe("Moon scenarios' resource sizing holds up under real physiology (Phase 
   // validation/balance.test.ts is the file that asserts idleBot's (deliberately harsh)
   // unattended pass rates; this block isolates resource sizing from incident-handling skill.
   it("First Light survives a full day-night-day cycle on most seeds, well played", () => {
+    // KNOWN GAP, same root cause validation/balance.test.ts's header discloses at length:
+    // `depress-mir97`'s fast kill clock outruns prudentBot often enough on this thin,
+    // 2-person scenario that this floor is not currently met (measured well under 15/20 as
+    // of M7.6 Part D) — a resource-envelope test entangled with that incident-handling gap,
+    // not evidence the battery/food/water sizing itself regressed. Left red and disclosed
+    // here rather than lowered, per the same TODO(P2) tracked there.
     let successes = 0;
     for (let seed = 1; seed <= 20; seed++) {
       if (playWithPrudentBot("first-light", seed).status === "success") successes++;

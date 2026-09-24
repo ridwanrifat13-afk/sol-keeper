@@ -8,6 +8,7 @@
  */
 import { food as foodConstants, physics, science as scienceConstants, survivalModes } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
+import { isSheltering } from "./crew.js";
 import type { CropTray } from "../types.js";
 import { clamp, daysToHours, perDayToPerHour } from "../units.js";
 
@@ -68,9 +69,12 @@ export function foodStage(ctx: TickContext): void {
     });
   }
 
-  // Crops only grow when the greenhouse is lit.
+  // Crops only grow when the greenhouse is lit. M7.6 Part D.10: spe-1972's own "interrupts
+  // crop light" residual cost — crew attention (not electrical power) diverts to sheltering
+  // during a radiation event, a distinct cause from the existing power-priority shedding.
   const greenhouse = state.systems.greenhouse;
-  const lit = greenhouse !== undefined && greenhouse.operational && greenhouse.poweredThisHour;
+  const lit =
+    greenhouse !== undefined && greenhouse.operational && greenhouse.poweredThisHour && !isSheltering(state.crew);
   for (const tray of f.trays) {
     if (!lit) continue;
     tray.lightHours += ctx.dtHours;

@@ -10,6 +10,7 @@
  */
 import { crew as crewConstants, habitat, lifeSupport, science as scienceConstants } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
+import { isSheltering } from "./crew.js";
 import { gramsToKg, kgToGrams, perDayToPerHour } from "../units.js";
 
 /** One crew member's oxygen demand, in grams per hour. */
@@ -50,8 +51,12 @@ export function isruStage(ctx: TickContext): void {
 
   state.atmosphere.o2Kg += producedKg;
   state.isru.moxieO2ProducedKg += producedKg;
-  // M7.7 §3: ISRU is one of the Station rules' own named science sources.
-  state.science.points += producedKg * scienceConstants.pointsPerMoxieProducedKg.value;
+  // M7.7 §3: ISRU is one of the Station rules' own named science sources. M7.6 Part D.10:
+  // spe-1972's own "halts science" residual cost pauses the science credit — not the O2
+  // production itself, which the crew still needs regardless of a radiation event.
+  if (!isSheltering(state.crew)) {
+    state.science.points += producedKg * scienceConstants.pointsPerMoxieProducedKg.value;
+  }
 
   // Log the first time the outpost passes the real MOXIE's whole-mission total.
   const totalG = state.isru.moxieO2ProducedKg * 1000;

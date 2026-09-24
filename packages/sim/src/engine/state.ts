@@ -112,6 +112,7 @@ export function createInitialState(params: Params): SimState {
     environment: {
       irradianceWPerM2: 0,
       dustObscurationFraction: 0,
+      dustObscurationFloorFraction: 0,
       outsideTempC:
         scenario.body === "mars"
           ? environment.marsMeanSurfaceTempC.value
@@ -145,6 +146,8 @@ export function createInitialState(params: Params): SimState {
       o2PartialPressureMmHg: initialO2MmHg,
       co2PartialPressureMmHg: initialCo2MmHg,
       scrubberEfficiencyFraction: 1,
+      cumulativeCo2ExposureAboveLimitMmHgHours: 0,
+      chronicCo2PenaltyApplied: false,
     },
 
     water: {

@@ -168,6 +168,16 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     title: "NASA SP-4030, Wagner Award history documenting the Mir fire, February 1997",
     usedFor: "Mir fire incident: ~14-minute burn duration (a disputed 90-second figure also exists)",
   },
+  "NASA-MIR-FIRE-25YR": {
+    title: "NASA \"25 Years Ago: Fire Aboard Space Station Mir\"",
+    url: "https://www.nasa.gov/history/25-years-ago-fire-aboard-space-station-mir/",
+    usedFor: "fire-mir97's own residual cost: some of Kvant-1's solar panels were charred — permanent equipment damage regardless of response chosen",
+  },
+  "MIR-FIRE-LINENGER": {
+    title: "Jerry Linenger (Mir EO-23 crew member) firsthand account of the fire, via BBC Science Focus",
+    url: "https://www.sciencefocus.com/space/fire-in-space-jerry-linenger",
+    usedFor: "measured-reported: respirators lasted 45 min–1 h, ~24 h of manual cleanup — fire-mir97's smoke-recovery residual cost",
+  },
   "OCHMO-TB004": {
     title: "NASA OCHMO Carbon Dioxide (CO2) Technical Brief (TB-004) — not yet independently verified",
     usedFor: "TODO: CO2 immediately-dangerous-to-life-or-health threshold (~30.4 mmHg / 4%)",
@@ -200,16 +210,24 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     url: "https://www.nasaspaceflight.com/2023/03/soyuz-ms-22-return/",
     usedFor: "measured-reported: wet-bulb heat-stress threshold (31°C at ~95% RH) and equipment failure limits",
   },
-  "INC-SPE-1972-PENDING": {
-    title: "August 1972 solar particle event — source pending",
-    usedFor: "TODO: dose magnitude relative to the design-reference SPE for the spe-1972 incident",
+  "AGU-KNIPP-2018": {
+    title: "Knipp et al. (2018), \"On the Little-Known Consequences of the 4 August 1972 Ultra-Fast Coronal Mass Ejecta\", Space Weather 16(11)",
+    url: "https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018SW002024",
+    usedFor: "spe-1972's own residual cost: Intelsat IV F-2's real ~5% permanent solar-array power loss from the actual 1972 event — the incident's \"electronics take a degradation roll\" magnitude",
   },
-  "INC-SCRUBBER-ISS-PENDING": {
-    title: "ISS CO2 scrubber (CDRA) recurring failures — source pending",
-    usedFor: "TODO: post-incident failure-rate multiplier for the scrubber-iss incident",
+  "ICES-2019-CDRA": {
+    title: "Cmarik & Knox (2019), \"CO2 Removal Onboard the International Space Station\", ICES-2019-5",
+    url: "https://ntrs.nasa.gov/api/citations/20190030370/downloads/20190030370.pdf",
+    usedFor: "scrubber-iss's own residual cost: CDRA sorbent-bed degradation after many operating cycles — the qualitative basis for a repaired bed running at reduced capacity",
   },
-  "INC-DUSTSTORM2018-PENDING": {
-    title: "2018 Mars global dust storm — source pending",
-    usedFor: "TODO: severity of the 2018 storm relative to the modelled ordinary dust-storm hazard",
+  "JPL-DUSTSTORM2018-TAU": {
+    title: "NASA JPL, \"Opportunity Hunkers Down During Dust Storm\" (Mars Climate Sounder optical-depth reporting)",
+    url: "https://www.jpl.nasa.gov/news/opportunity-hunkers-down-during-dust-storm/",
+    usedFor: "duststorm-2018's own severity: dust optical depth (tau) reached 10.8, the highest ever recorded on Mars",
+  },
+  "LORENZ-2020-INSIGHT-DUST": {
+    title: "Lorenz et al. (2020), \"Scientific Observations With the InSight Solar Arrays\", Earth and Space Science 7(5)",
+    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7375148/",
+    usedFor: "duststorm-2018's own residual cost: InSight's real ~0.28%/sol permanent dust decline, never fully recoverable — the model for dust accumulation being permanent and cumulative",
   },
 };
