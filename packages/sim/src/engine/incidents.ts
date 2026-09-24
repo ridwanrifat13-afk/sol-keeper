@@ -715,8 +715,10 @@ function triggeredThisHour(ctx: TickContext, trigger: IncidentTrigger): boolean 
 }
 
 /** `warningTimeHours` scaled by Mission Difficulty's `warningTimeMultiplier` — the one
- *  physics-adjacent field a difficulty preset is allowed to touch (plan §6). */
-function scaledWarningTimeHours(ctx: TickContext, def: IncidentDefinition): number {
+ *  physics-adjacent field a difficulty preset is allowed to touch (plan §6). Exported so a
+ *  Decision Card (M8.2) can render a real countdown from the exact same figure the engine's
+ *  own default-response fallback uses, rather than a second, invented one. */
+export function scaledWarningTimeHours(ctx: TickContext, def: IncidentDefinition): number {
   return def.warningTimeHours * missionDifficulty[ctx.params.difficulty].warningTimeMultiplier.value;
 }
 

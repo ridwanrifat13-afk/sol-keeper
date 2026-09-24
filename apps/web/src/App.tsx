@@ -9,6 +9,7 @@ import { LiveSkyView } from "./views/LiveSky/LiveSkyView.js";
 import { LaunchPackingView } from "./views/LaunchPacking/LaunchPackingView.js";
 import { LandingSiteView } from "./views/LandingSite/LandingSiteView.js";
 import { LanguageSwitch } from "./components/LanguageSwitch.js";
+import { TimeControls } from "./components/TimeControls.js";
 import "./i18n/config.js";
 
 type View = "operate" | "ripple" | "liveSky" | "launchPacking" | "landingSite" | "debrief" | "dataSources";
@@ -45,6 +46,11 @@ const TAB_KEYS: Record<View, string> = {
  *
  * Tab labels and the language switch are the first (M5) i18n-wired part of the UI — see
  * i18n/config.ts for exactly what is and is not translated yet.
+ *
+ * M8.1: `TimeControls` renders here, in the always-mounted shell, rather than inside one tab's
+ * view — its own tick-interval `useEffect` was previously tied to `OperateView`'s mount
+ * lifecycle, so navigating away paused the mission by accident. It still owns the interval
+ * itself (mounting/unmounting the whole app stops it, same design, just anchored higher).
  */
 export function App() {
   const [view, setView] = useState<View>("operate");
@@ -76,6 +82,8 @@ export function App() {
         </nav>
         <LanguageSwitch />
       </div>
+
+      <TimeControls />
 
       {view === "operate" && <OperateView />}
       {view === "ripple" && <RippleView />}

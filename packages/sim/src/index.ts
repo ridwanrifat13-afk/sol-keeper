@@ -80,7 +80,13 @@ export { PIPELINE, run, tick } from "./engine/tick.js";
 export type { NamedStage } from "./engine/tick.js";
 
 export type { IncidentDefinition, IncidentResponse, IncidentTrigger } from "./engine/incidents.js";
-export { INCIDENT_CATALOG, applyResponse, incidentsStage } from "./engine/incidents.js";
+export {
+  INCIDENT_CATALOG,
+  applyResponse,
+  incidentsStage,
+  scaledWarningTimeHours,
+  wouldResolveThisHour,
+} from "./engine/incidents.js";
 export { SYSTEM_TO_STATION, STATION_IDS, isDoubleCovering, stationCoverer, stationPerformance } from "./engine/stations.js";
 export type { AbortResult } from "./engine/outcome.js";
 export { determineOutcome, inMarsDepartureWindow, requestAbort } from "./engine/outcome.js";

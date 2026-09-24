@@ -1,7 +1,6 @@
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { Gauge } from "../../components/Gauge.js";
-import { TimeControls } from "../../components/TimeControls.js";
 import { PowerPriorities } from "../../components/PowerPriorities.js";
 import { EventFeed } from "../../components/EventFeed.js";
 import { CrewPanel } from "../../components/CrewPanel.js";
@@ -53,8 +52,6 @@ export function OperateView() {
       <ScenarioSwitch />
 
       <DialSwitch />
-
-      <TimeControls />
 
       <section className="panel" aria-labelledby="resources-heading">
         <h2 id="resources-heading">Resources</h2>

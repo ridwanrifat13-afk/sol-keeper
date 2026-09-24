@@ -371,16 +371,23 @@ describe("LandingSiteView, first frame", () => {
 describe("the view's data sources respond to the running simulation", () => {
   it("stepping the clock advances mission time and fills the log", () => {
     expect(useRun.getState().state.hour).toBe(0);
+    // Non-paused beforehand so that ending up "paused" afterward is meaningful evidence of
+    // one of the two real reasons step() can stop short of the requested count (below), not
+    // just the store's own default at rest.
+    useRun.getState().setSpeed("normal");
     useRun.getState().step(200);
 
     const state = useRun.getState().state;
     // Phase 2 (M7): an incident can now end the mission before the requested 200 hours — a
     // real, intended outcome (validation/balance.test.ts asserts the actual pass rates), not
-    // a bug this UI smoke test should assume away. What must still hold is that time moved
-    // forward at all and stopped only because the run really ended.
+    // a bug this UI smoke test should assume away. M8.1 adds a second, real reason `step()`
+    // can stop short of the requested count while the mission is still running: auto-pause,
+    // on a newly detected incident or a worsened gauge status (the "auto-pause on any incident
+    // or threshold crossing" the brief's M8 core loop asks for). Both paths force `speed` back
+    // to "paused", so stopping early now means one of the two, never neither.
     expect(state.hour).toBeGreaterThan(0);
     expect(state.hour).toBeLessThanOrEqual(200);
-    if (state.hour < 200) expect(state.status).not.toBe("running");
+    if (state.hour < 200) expect(useRun.getState().speed).toBe("paused");
     expect(state.log.length).toBeGreaterThan(0);
     // Every entry the feed will render must have English text, not a raw code.
     for (const entry of state.log.slice(0, 50)) {
@@ -425,12 +432,54 @@ describe("the view's data sources respond to the running simulation", () => {
   });
 
   it("restart returns the outpost to hour zero", () => {
+    // Not asserting an exact hour count here: M8.1's auto-pause can legitimately stop step()
+    // short of 50 (see the test above) — this test only cares that reset() zeroes things out.
     useRun.getState().step(50);
-    expect(useRun.getState().state.hour).toBe(50);
+    expect(useRun.getState().state.hour).toBeGreaterThan(0);
 
     useRun.getState().reset();
     expect(useRun.getState().state.hour).toBe(0);
     expect(useRun.getState().state.log).toHaveLength(0);
     expect(useRun.getState().speed).toBe("paused");
+  });
+
+  // M8.1: the player-driven counterpart to `tickWithBot`'s bot-driven resolution
+  // (packages/sim/src/engine/runWithBot.ts) — packages/sim's own incidents.test.ts already
+  // covers `applyResponse`'s probabilistic resolution in depth, so this only proves the store
+  // wiring actually reaches it, using a manually-planted pending incident rather than waiting
+  // on a real trigger.
+  it("resolveIncident reaches the sim's own applyResponse seam", () => {
+    const { state } = useRun.getState();
+    const incident = {
+      id: "test-spe-1972",
+      definitionId: "spe-1972",
+      triggeredAtHour: state.hour,
+      cause: "1:0",
+      detectedAtHour: state.hour,
+    };
+    state.activeIncidents.push(incident);
+    const logLengthBefore = state.log.length;
+
+    useRun.getState().resolveIncident(incident.id, "continueOperations");
+
+    const newCodes = state.log.slice(logLengthBefore).map((e) => e.code);
+    expect(newCodes.some((c) => c.startsWith("incident.spe-1972."))).toBe(true);
+  });
+
+  it("setCrewLocation moves a crew member (the shelter/EVA control's mechanism)", () => {
+    const member = useRun.getState().state.crew[0]!;
+    expect(member.location).toBe("habitat");
+
+    useRun.getState().setCrewLocation(member.id, "stormShelter");
+    expect(useRun.getState().state.crew[0]!.location).toBe("stormShelter");
+  });
+
+  it("assignStation reassigns a crew member's primary station", () => {
+    const member = useRun.getState().state.crew[0]!;
+    const before = member.primaryStation;
+    const after = before === "power" ? "comms" : "power";
+
+    useRun.getState().assignStation(member.id, after);
+    expect(useRun.getState().state.crew[0]!.primaryStation).toBe(after);
   });
 });
