@@ -78,6 +78,7 @@ export function PowerConsole() {
        *  actual storm — this panel is status only. */}
       <section className="panel" aria-labelledby="reactor-array-heading">
         <h2 id="reactor-array-heading">Reactor &amp; array status</h2>
+        <p className="panel-hint">Status only — no adjustable reactor or array control exists yet.</p>
         <ul className="status-list">
           <li>
             <span className="status-list-label">Solar array</span>

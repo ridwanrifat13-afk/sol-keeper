@@ -141,6 +141,7 @@ export function LifeSupportConsole() {
        *  real lever to attach it to (brief rule 1). */}
       <section className="panel" aria-labelledby="isru-heading">
         <h2 id="isru-heading">ISRU &amp; crops</h2>
+        <p className="panel-hint">Status only — no adjustable MOXIE or crop-task control exists yet.</p>
         <ul className="status-list">
           {state.systems.moxie !== undefined && (
             <li>

@@ -72,6 +72,19 @@ test.describe("Power console", () => {
     await expect(page.getByText("Power priority")).toBeVisible();
   });
 
+  test("reactor and array status is explicitly labelled read-only, not a dead control", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Power", exact: true }).click();
+
+    await expect(page.getByRole("heading", { name: "Reactor & array status" })).toBeVisible();
+    await expect(page.getByText("Status only", { exact: false })).toBeVisible();
+    // Real readouts, not placeholders — and no button anywhere in this one panel, so nothing
+    // here invites a click that would silently do nothing.
+    const panel = page.locator("section", { has: page.getByRole("heading", { name: "Reactor & array status" }) });
+    await expect(panel.getByText("Solar array")).toBeVisible();
+    await expect(panel.locator("button")).toHaveCount(0);
+  });
+
   /**
    * Regression test for a bug the full-page screenshot below caught: on first load, every
    * power priority row read "Shed", claiming nine systems had already lost power on a
@@ -167,10 +180,14 @@ test.describe("Life Support console", () => {
     await page.getByRole("button", { name: "Life Support" }).click();
 
     await expect(page.getByText("ISRU & crops")).toBeVisible();
-    await expect(page.getByText("MOXIE")).toBeVisible();
+    await expect(page.getByText("Status only", { exact: false })).toBeVisible();
+    await expect(page.getByText("MOXIE", { exact: true })).toBeVisible();
     // Jezero's own crop trays (dial/labels.ts's cropLabel), each with a real grown/health
     // readout — not a settable priority, per the settled decision.
     await expect(page.getByText(/% grown/).first()).toBeVisible();
+    // No button anywhere in this panel — nothing here invites a click that does nothing.
+    const panel = page.locator("section", { has: page.getByRole("heading", { name: "ISRU & crops" }) });
+    await expect(panel.locator("button")).toHaveCount(0);
   });
 
   test("Sol Planning locks rations until Run the sol is clicked", async ({ page }) => {
