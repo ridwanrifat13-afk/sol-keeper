@@ -95,4 +95,38 @@ test.describe("Incident Command console", () => {
     await expect(page.getByRole("cell", { name: "MOXIE (oxygen from air)" })).toHaveCount(0);
     await expect(page.getByRole("cell", { name: "Reactor" })).toBeVisible();
   });
+
+  test("shows an empty repair queue and every living crew member's real location control", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Incident Command" }).click();
+
+    await expect(page.getByText("Nothing queued.")).toBeVisible();
+    // Jezero's own 4-person crew, each starting in the habitat.
+    const rows = page.locator(".crew-location-row");
+    await expect(rows).toHaveCount(4);
+    await expect(rows.first().getByRole("button", { name: "the habitat", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  test("sending a crew member to the storm shelter is real and locked to Sol Planning", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Incident Command" }).click();
+
+    const firstRow = page.locator(".crew-location-row").first();
+    await firstRow.getByRole("button", { name: "the storm shelter", exact: true }).click();
+    await expect(firstRow.getByRole("button", { name: "the storm shelter", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    await page.getByRole("button", { name: "Run the sol" }).click();
+    await expect(firstRow.getByRole("button", { name: "the habitat", exact: true })).toBeDisabled();
+    await expect(page.getByText("Locked while the sol is running")).toBeVisible();
+  });
 });

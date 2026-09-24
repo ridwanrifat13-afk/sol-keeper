@@ -4,10 +4,13 @@ import { useDial } from "../../store/dial.js";
 import { buildRippleGraph, type RippleNode } from "../../ripple/graph.js";
 import { useForceLayout } from "../../ripple/useForceLayout.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
-import { systemLabel } from "../../dial/labels.js";
+import { locationLabel, systemLabel } from "../../dial/labels.js";
 import { systemStatusInfo } from "../../dial/systemStatus.js";
+import { decisionText } from "../../i18n/decisionText.js";
 import { STATUS, statusFromReserve, type StatusPresentation } from "../../components/status.js";
-import { radiation, type SystemId } from "@sol-keeper/sim";
+import { INCIDENT_CATALOG, radiation, type CrewLocation, type SystemId } from "@sol-keeper/sim";
+
+const LOCATIONS: readonly CrewLocation[] = ["habitat", "stormShelter", "eva"];
 
 const WIDTH = 640;
 const HEIGHT = 480;
@@ -38,11 +41,24 @@ function fromPresentation(status: StatusPresentation): NodeStatus {
  * The Decision Card (M8.2) renders globally from App.tsx, not scoped here, so a pending
  * incident is visible regardless of which console is open — this is just its most natural
  * *home* tab, not its only path to the player.
+ *
+ * M8.4 Part D: a read-only repair queue (state.crewHours.queue, already real and FIFO —
+ * reordering would need a crewHours.ts change, out of scope unless requested) and a real,
+ * already-wired shelter/EVA control per crew member via setCrewLocation (M8.1) — no sim
+ * change needed, radiationStage already reads CrewMember.location every hour.
  */
 export function IncidentCommandConsole() {
+  // `state` is mutated in place (store/run.ts's own doc comment) — this console previously
+  // did not subscribe to `version` at all, a real, pre-existing bug caught while adding Part
+  // D's own content: the dependency graph and text table never actually re-rendered as the
+  // mission progressed, only on whatever unrelated re-render happened to occur. Fixed here.
+  useRun((s) => s.version);
   const state = useRun((s) => s.state);
   const scenario = useRun((s) => s.scenario);
+  const phase = useRun((s) => s.phase);
+  const setCrewLocation = useRun((s) => s.setCrewLocation);
   const level = useDial((s) => s.level);
+  const locked = phase !== "planning";
 
   const { nodes, edges } = useMemo(() => buildRippleGraph(scenario), [scenario]);
   const laidOut = useForceLayout(nodes, edges, WIDTH, HEIGHT);
@@ -173,6 +189,64 @@ export function IncidentCommandConsole() {
             })}
           </tbody>
         </table>
+      </section>
+
+      <section className="panel" aria-labelledby="repair-queue-heading">
+        <h2 id="repair-queue-heading">Repair queue</h2>
+        <p className="panel-hint">
+          First in, first served — queued work pays down from each new day's crew-hours budget.
+        </p>
+        {state.crewHours.queue.length === 0 ? (
+          <p className="panel-hint">Nothing queued.</p>
+        ) : (
+          <ul className="status-list">
+            {state.crewHours.queue.map((item) => {
+              const def = INCIDENT_CATALOG.find((d) => d.id === item.definitionId);
+              const response = def?.responses.find((r) => r.id === item.responseId);
+              return (
+                <li key={item.id}>
+                  <span className="status-list-label">
+                    {response !== undefined ? decisionText(response.i18nKey, level) : item.responseId}
+                  </span>
+                  <span className="status-list-value">{item.hoursRemaining.toFixed(1)} h left</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      <section className="panel" aria-labelledby="crew-location-heading">
+        <h2 id="crew-location-heading">Crew location</h2>
+        <p className="panel-hint">
+          Send crew to the storm shelter ahead of a solar event, or out on an EVA.
+          {locked && " Locked while the sol is running — adjust it during Sol Planning."}
+        </p>
+        <ul className="crew-location-list">
+          {state.crew
+            .filter((c) => c.alive)
+            .map((member) => (
+              <li key={member.id} className="crew-location-row">
+                <span className="crew-location-name">{member.name}</span>
+                <span className="button-row" role="group" aria-label={`${member.name}'s location`}>
+                  {LOCATIONS.map((loc) => (
+                    <button
+                      key={loc}
+                      type="button"
+                      className={`btn btn-tiny ${member.location === loc ? "btn-active" : ""}`}
+                      aria-pressed={member.location === loc}
+                      disabled={locked}
+                      onClick={() => {
+                        setCrewLocation(member.id, loc);
+                      }}
+                    >
+                      {locationLabel(loc, level)}
+                    </button>
+                  ))}
+                </span>
+              </li>
+            ))}
+        </ul>
       </section>
     </div>
   );
