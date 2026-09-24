@@ -1710,6 +1710,13 @@ export const science = {
     confidence: "tuned",
     note: "Accrues while comms is operational, powered, and not in a blackout — routine science downlink, not a data-volume model.",
   }),
+  personalMessageMoralePerHour: c({
+    value: 0.0006,
+    unit: "fraction/h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "M8.4 Part C: engine/models/comms.ts applies this instead of pointsPerCommsUptimeHour's own science accrual when the player's downlink priority (SimState.commsPriority) is 'personal' rather than 'science' for that hour — a real trade-off (this sol's science progress against jezero-outpost's own scienceTargetPoints, vs. crew morale), not a free bonus. NASA's Human Research Program documents family/personal-contact loss as a real, named psychosocial stressor for isolated-and-confined crews — the real anchor for the mechanism existing at all — but no published figure quantifies a morale rate for this sim's own abstracted moraleFraction, so the magnitude is tuned (brief rule 1: every 'tuned' confidence value cites GAME-DESIGN as its source, its real-world anchor disclosed here in the note instead). Calibrated against models/crew.ts's own existing morale deltas — natural drift is -0.0002/h, sustained cold discomfort is -0.001/h — so this is a real, felt counterweight without dwarfing either.",
+  }),
 } as const;
 
 /**

@@ -30,6 +30,23 @@ test.describe("Comms console", () => {
     await page.waitForTimeout(3500); // let the failed live fetch time out and settle
     await page.screenshot({ path: testInfo.outputPath("comms-console.png"), fullPage: true });
   });
+
+  test("downlink priority defaults to science and is locked to Sol Planning", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Comms" }).click();
+
+    const science = page.getByRole("button", { name: "Science downlink", exact: false });
+    const personal = page.getByRole("button", { name: "Personal correspondence", exact: false });
+    await expect(science).toHaveAttribute("aria-pressed", "true");
+    await expect(personal).toBeEnabled();
+
+    await personal.click();
+    await expect(personal).toHaveAttribute("aria-pressed", "true");
+
+    await page.getByRole("button", { name: "Run the sol" }).click();
+    await expect(personal).toBeDisabled();
+    await expect(page.getByText("Locked while the sol is running")).toBeVisible();
+  });
 });
 
 test.describe("Power console: space weather", () => {

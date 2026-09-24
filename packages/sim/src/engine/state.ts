@@ -182,6 +182,7 @@ export function createInitialState(params: Params): SimState {
           ? auToLightSeconds(environment.marsMeanDistanceAu.value - 1)
           : 1.28,
       blackout: false,
+      priority: "science",
     },
 
     isru: {

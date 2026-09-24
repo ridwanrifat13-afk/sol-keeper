@@ -286,10 +286,18 @@ export interface SafetyConsumablesState {
   respiratorCartridges: number;
 }
 
+/** M8.4 Part C: which use of the downlink the player is prioritizing this hour — a real,
+ *  mutually exclusive trade-off between jezero-outpost's own science goal and crew morale,
+ *  not a free bonus. Read by models/comms.ts's commsStage; set via the Comms console during
+ *  Sol Planning (apps/web/src/store/run.ts's setCommsPriority). Defaults to "science" so a
+ *  save/scenario that never touches it keeps today's existing, unconditional accrual. */
+export type CommsPriority = "personal" | "science";
+
 export interface CommsState {
   /** One-way light time to Earth, seconds. Set from the scenario or /api/light-time. */
   oneWayLightSeconds: number;
   blackout: boolean;
+  priority: CommsPriority;
 }
 
 export interface IsruState {

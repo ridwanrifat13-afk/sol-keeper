@@ -11,6 +11,7 @@
  */
 import { environment, science as scienceConstants } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
+import { clamp } from "../units.js";
 import { isSheltering } from "./crew.js";
 import { hoursToDays } from "../units.js";
 
@@ -38,16 +39,31 @@ export function commsStage(ctx: TickContext): void {
   // efficiencyPenaltyFraction is the same incident's "electronics take a degradation roll"
   // cost (comms is this sim's own stand-in for sensitive spacecraft electronics) — a
   // permanently reduced return on whatever uptime the link still gets, not a full outage.
+  //
+  // M8.4 Part C: the player's own downlink priority (SimState.comms.priority, set from the
+  // Comms console during Sol Planning) decides which of the two competing real uses of that
+  // same uptime this hour's bandwidth goes to — jezero-outpost's own science goal, or crew
+  // morale (a real, documented psychosocial need for isolated-and-confined crews, NASA HRP —
+  // science.personalMessageMoralePerHour's own note) — never both at once, and never neither
+  // just because the player hasn't visited the Comms console (defaults to "science", today's
+  // unconditional behaviour, so an unattended run is unaffected).
   const comms = state.systems.comms;
-  if (
-    comms !== undefined &&
-    comms.operational &&
-    comms.poweredThisHour &&
-    !state.comms.blackout &&
-    !isSheltering(state.crew)
-  ) {
-    state.science.points +=
-      scienceConstants.pointsPerCommsUptimeHour.value * (1 - comms.efficiencyPenaltyFraction) * ctx.dtHours;
+  const commsUp =
+    comms !== undefined && comms.operational && comms.poweredThisHour && !state.comms.blackout && !isSheltering(state.crew);
+  if (commsUp && comms !== undefined) {
+    if (state.comms.priority === "science") {
+      state.science.points +=
+        scienceConstants.pointsPerCommsUptimeHour.value * (1 - comms.efficiencyPenaltyFraction) * ctx.dtHours;
+    } else {
+      for (const member of state.crew) {
+        if (!member.alive) continue;
+        member.moraleFraction = clamp(
+          member.moraleFraction + scienceConstants.personalMessageMoralePerHour.value * ctx.dtHours,
+          0,
+          1,
+        );
+      }
+    }
   }
 
   if (scenario.body !== "mars") return;

@@ -8,6 +8,7 @@ export type {
   ActiveIncident,
   AtmosphereState,
   Body,
+  CommsPriority,
   CommsState,
   CrewCondition,
   CrewLocation,

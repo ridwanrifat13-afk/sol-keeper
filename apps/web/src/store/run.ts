@@ -18,6 +18,7 @@ import {
   EventLogger,
   INCIDENT_CATALOG,
   Rng,
+  type CommsPriority,
   type CrewLocation,
   type Params,
   type Scenario,
@@ -68,8 +69,10 @@ interface RunStore {
   version: number;
   speed: Speed;
   /** M8.1: "Sol Planning (paused, station by station)" vs. "run the sol" (brief's M8 core
-   *  loop). Not yet gated on by anything — the "Run the sol" control that flips it lives in
-   *  M8.4 Part A. Reset to "planning" automatically at the same 24-hour day boundary
+   *  loop). Gates every station's planning-only controls (TimeControls' own speed/step
+   *  buttons, PowerPriorities, rations, and this file's own setCommsPriority/setCrewLocation/
+   *  assignStation — M8.4 Parts A-E) and the "Run the sol" control (TimeControls.tsx) flips
+   *  it to "running". Reset to "planning" automatically at the same 24-hour day boundary
    *  `packages/sim/src/engine/crewHours.ts` already uses for its own budget reset, so this
    *  never invents a second "day" concept. */
   phase: "planning" | "running";
@@ -95,6 +98,10 @@ interface RunStore {
    *  primaryStation` field via the same cast-workaround `setPriority` below already uses on
    *  `SystemState.priority` — no sim-side type change needed. */
   assignStation: (crewId: string, station: StationId) => void;
+  /** Comms' downlink-priority control (M8.4 Part C) — a real, mutually exclusive trade-off
+   *  `models/comms.ts`'s own `commsStage` reads every hour: the same comms uptime accrues
+   *  either jezero-outpost's own science goal or crew morale, never both. */
+  setCommsPriority: (priority: CommsPriority) => void;
 }
 
 export const useRun = create<RunStore>((set, get) => ({
@@ -216,6 +223,12 @@ export const useRun = create<RunStore>((set, get) => ({
     const member = state.crew.find((c) => c.id === crewId);
     if (member === undefined) return;
     (member as { primaryStation: StationId }).primaryStation = station;
+    set({ version: version + 1 });
+  },
+
+  setCommsPriority: (priority) => {
+    const { state, version } = get();
+    state.comms.priority = priority;
     set({ version: version + 1 });
   },
 }));
