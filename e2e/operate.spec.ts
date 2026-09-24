@@ -147,6 +147,29 @@ test.describe("Life Support console", () => {
     }
   });
 
+  test("shows read-only ISRU and crop status, no invented controls", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Life Support" }).click();
+
+    await expect(page.getByText("ISRU & crops")).toBeVisible();
+    await expect(page.getByText("MOXIE")).toBeVisible();
+    // Jezero's own crop trays (dial/labels.ts's cropLabel), each with a real grown/health
+    // readout — not a settable priority, per the settled decision.
+    await expect(page.getByText(/% grown/).first()).toBeVisible();
+  });
+
+  test("Sol Planning locks rations until Run the sol is clicked", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Life Support" }).click();
+
+    await expect(page.getByRole("button", { name: "Survival", exact: false })).toBeEnabled();
+
+    await page.getByRole("button", { name: "Run the sol" }).click();
+
+    await expect(page.getByRole("button", { name: "Survival", exact: false })).toBeDisabled();
+    await expect(page.getByText("Locked while the sol is running")).toBeVisible();
+  });
+
   test("advancing the clock changes the sol counter and fills the log", async ({ page }) => {
     await page.goto("/");
 

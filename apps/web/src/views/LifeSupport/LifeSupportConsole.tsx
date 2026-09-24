@@ -1,26 +1,30 @@
-import { survivalModes, type SurvivalMode } from "@sol-keeper/sim";
+import { cropRequiredLightHours, survivalModes, type SurvivalMode } from "@sol-keeper/sim";
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { Gauge } from "../../components/Gauge.js";
 import { statusWord } from "../../dial/statusWords.js";
-import { survivalModeLabel } from "../../dial/labels.js";
+import { cropLabel, survivalModeLabel } from "../../dial/labels.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
 
 const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
 
 /**
  * The Life Support console (M8.3): oxygen, CO2, water, food and cabin temperature, plus the
- * rations control (moved wholesale from the old Operate view — already fully real, no change
- * needed). ISRU and crop-task status are read-only readouts here from M8.4 Part B on — no
- * settable MOXIE/crop-priority parameter exists in the sim today, so nothing invented yet.
+ * rations control (moved wholesale from the old Operate view — already fully real). M8.4 Part
+ * B: rations is now locked to Sol Planning, same as Power's priority order, and ISRU/crop-task
+ * status ship as read-only readouts — no settable MOXIE-priority or crop-priority parameter
+ * exists in the sim today, and inventing one would mean a new, unsourced constant with no real
+ * lever to attach it to (brief rule 1) — settled with the user before Part A was built.
  */
 export function LifeSupportConsole() {
   const version = useRun((s) => s.version);
   const state = useRun((s) => s.state);
   const setSurvivalMode = useRun((s) => s.setSurvivalMode);
+  const phase = useRun((s) => s.phase);
   const level = useDial((s) => s.level);
 
   const summary = buildResourceSummary(state, level);
+  const locked = phase !== "planning";
 
   return (
     <div className="console" key={version}>
@@ -99,6 +103,7 @@ export function LifeSupportConsole() {
         <h2 id="rations-heading">Rations</h2>
         <p className="panel-hint">
           Cutting rations stretches the stores and costs the crew morale and warmth.
+          {locked && " Locked while the sol is running — adjust it during Sol Planning."}
         </p>
         <div className="button-row" role="group" aria-label="Survival mode">
           {SURVIVAL_MODES.map((m) => (
@@ -107,6 +112,7 @@ export function LifeSupportConsole() {
               type="button"
               className={`btn ${state.food.mode === m ? "btn-active" : ""}`}
               aria-pressed={state.food.mode === m}
+              disabled={locked}
               onClick={() => {
                 setSurvivalMode(m);
               }}
@@ -118,6 +124,36 @@ export function LifeSupportConsole() {
             </button>
           ))}
         </div>
+      </section>
+
+      {/* M8.4 Part B: read-only — no settable MOXIE-priority or crop-priority control exists
+       *  in the sim today; inventing one would mean a new, unsourced physical constant with no
+       *  real lever to attach it to (brief rule 1). */}
+      <section className="panel" aria-labelledby="isru-heading">
+        <h2 id="isru-heading">ISRU &amp; crops</h2>
+        <ul className="status-list">
+          {state.systems.moxie !== undefined && (
+            <li>
+              <span className="status-list-label">MOXIE</span>
+              <span className="status-list-value">
+                {state.isru.moxieRunning ? "Running" : "Not running"} ·{" "}
+                {state.isru.moxieO2ProducedKg.toFixed(2)} kg O₂ made
+              </span>
+            </li>
+          )}
+          {state.food.trays.map((tray) => {
+            const required = cropRequiredLightHours(tray.crop);
+            const progressPct = Math.min(100, Math.round((tray.lightHours / required) * 100));
+            return (
+              <li key={tray.id}>
+                <span className="status-list-label">{cropLabel(tray.crop, level)}</span>
+                <span className="status-list-value">
+                  {progressPct}% grown · {Math.round(tray.healthFraction * 100)}% healthy
+                </span>
+              </li>
+            );
+          })}
+        </ul>
       </section>
     </div>
   );
