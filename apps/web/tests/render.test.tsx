@@ -33,8 +33,10 @@ import { CommsConsole } from "../src/views/Comms/CommsConsole";
 import { IncidentCommandConsole } from "../src/views/IncidentCommand/IncidentCommandConsole";
 import { MissionCommandConsole } from "../src/views/MissionCommand/MissionCommandConsole";
 import { BriefingView } from "../src/views/Briefing/BriefingView";
+import { CoachMark } from "../src/onboarding/CoachMark";
 import { useRun } from "../src/store/run";
 import { useDial } from "../src/store/dial";
+import { useOnboarding } from "../src/store/onboarding";
 import { logText } from "../src/i18n/logText";
 import { statusFromCeiling, statusFromReserve } from "../src/components/status";
 
@@ -46,6 +48,7 @@ function render(node: ReactElement = <App />): string {
 beforeEach(() => {
   useRun.getState().reset();
   useDial.getState().setLevel("specialist");
+  useOnboarding.setState({ seen: false, step: 0 });
 });
 
 describe("App shell, first frame (persistent across every tab)", () => {
@@ -83,6 +86,24 @@ describe("App shell, first frame (persistent across every tab)", () => {
     const out = render();
     // Every bare glyph is paired with aria-hidden so it is not read out as punctuation.
     expect(out).toContain('<span aria-hidden="true">●</span>');
+  });
+});
+
+describe("First Light coach mark (M8.7)", () => {
+  // Zustand v5's SSR snapshot is fixed at store creation (see this file's own header comment)
+  // so a later setState never shows up in renderToString — seen/step transitions are covered
+  // directly against the store instead, in tests/onboarding.test.ts.
+  it("stays out of the way of Briefing, the app's default first frame", () => {
+    const out = render();
+    expect(out).toContain("Mission Briefing");
+    expect(out).not.toContain("Skip tutorial");
+  });
+
+  it("starts at step 1 of 5 on Power once the player is on any station console", () => {
+    const out = render(<CoachMark view="comms" onNavigate={() => {}} />);
+    expect(out).toContain("Step 1 of 5");
+    expect(out).toContain("Power");
+    expect(out).toContain("Skip tutorial");
   });
 });
 

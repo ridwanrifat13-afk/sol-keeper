@@ -6,7 +6,7 @@
  * widget itself (not just the surrounding text) comes up and requests real tiles from
  * trek.nasa.gov.
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures.js";
 
 test.describe("Mission Briefing", () => {
   test("is the default screen, with a real Leaflet map requesting actual Trek tiles for Jezero", async ({

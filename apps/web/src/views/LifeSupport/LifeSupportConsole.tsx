@@ -47,6 +47,8 @@ export function LifeSupportConsole() {
             status={summary.oxygen.status}
             statusLabel={statusWord(level, summary.oxygen.status.level, summary.oxygen.status.label)}
             detail={summary.oxygen.text.detail}
+            helpKey="gauge.oxygen"
+            level={level}
           />
           <Gauge
             icon="▽"
@@ -59,6 +61,8 @@ export function LifeSupportConsole() {
             status={summary.co2.status}
             statusLabel={statusWord(level, summary.co2.status.level, summary.co2.status.label)}
             detail={summary.co2.text.detail}
+            helpKey="gauge.co2"
+            level={level}
           />
           <Gauge
             icon="≈"
@@ -71,6 +75,8 @@ export function LifeSupportConsole() {
             status={summary.water.status}
             statusLabel={statusWord(level, summary.water.status.level, summary.water.status.label)}
             detail={summary.water.text.detail}
+            helpKey="gauge.water"
+            level={level}
           />
           <Gauge
             icon="✦"
@@ -83,6 +89,8 @@ export function LifeSupportConsole() {
             status={summary.food.status}
             statusLabel={statusWord(level, summary.food.status.level, summary.food.status.label)}
             detail={summary.food.text.detail}
+            helpKey="gauge.food"
+            level={level}
           />
           <Gauge
             icon="◈"
@@ -95,6 +103,8 @@ export function LifeSupportConsole() {
             status={summary.cabin.status}
             statusLabel={statusWord(level, summary.cabin.status.level, summary.cabin.status.label)}
             detail={summary.cabin.text.detail}
+            helpKey="gauge.cabin"
+            level={level}
           />
         </div>
       </section>

@@ -8,7 +8,7 @@
  * reach the "live succeeded" branch (that would need `vercel dev`, a separate manual check
  * the lead developer can run).
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures.js";
 
 test.describe("Comms console", () => {
   test("falls back to the real committed snapshot when /api is unavailable, and says so", async ({ page }) => {

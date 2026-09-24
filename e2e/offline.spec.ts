@@ -4,7 +4,7 @@
  * only exists in a real browser, and "does it actually work with the network cut" can only
  * be answered by actually cutting the network.
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures.js";
 
 test.describe("Offline (PWA)", () => {
   test("the app shell still renders after the network is cut, once the service worker has installed", async ({

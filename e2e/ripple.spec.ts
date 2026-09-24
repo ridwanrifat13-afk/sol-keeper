@@ -7,7 +7,7 @@
  * switching scenarios exercises the same zustand-store-mutation-after-mount path that a
  * server render can't observe either.
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures.js";
 
 test.describe("Scenario switch (Mission Command console)", () => {
   test("switching to a Moon scenario changes the mission header and system list", async ({

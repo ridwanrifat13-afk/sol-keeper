@@ -58,6 +58,8 @@ export function PowerConsole() {
             status={summary.battery.status}
             statusLabel={statusWord(level, summary.battery.status.level, summary.battery.status.label)}
             detail={summary.battery.text.detail}
+            helpKey="gauge.battery"
+            level={level}
           />
         </div>
 

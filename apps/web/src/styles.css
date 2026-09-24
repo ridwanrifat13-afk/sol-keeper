@@ -307,11 +307,50 @@ code {
   letter-spacing: 0.05em;
 }
 
+.gauge-help-toggle {
+  background: var(--bg);
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  width: 22px;
+  height: 22px;
+  line-height: 1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  /* Visual size stays small so it doesn't dominate the gauge head; the tap target is
+     widened with padding via a pseudo-hitbox rather than growing the visible circle. */
+  position: relative;
+}
+
+.gauge-help-toggle::after {
+  content: "";
+  position: absolute;
+  inset: -11px;
+}
+
+.gauge-help-toggle:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
 .gauge-status {
   margin-left: auto;
   color: var(--status);
   font-weight: 600;
   white-space: nowrap;
+}
+
+.gauge-help-text {
+  margin: 4px 0 0;
+  padding: 6px 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.4;
 }
 
 .gauge-value {
@@ -627,6 +666,43 @@ code {
   position: sticky;
   top: 0;
   float: right;
+}
+
+/* ---------------------------------------------------------------- coach mark (onboarding) */
+.coach-mark {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  max-width: 380px;
+  margin-left: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--nominal);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  z-index: 80;
+}
+
+.coach-mark-step {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.coach-mark-text {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.coach-mark-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 /* ---------------------------------------------------------------- dial switch */

@@ -4,7 +4,7 @@
  * shell and Live Sky, now split across the Power and Comms consoles per M8.3) — see
  * i18n/config.ts for what is and isn't covered yet.
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures.js";
 
 test.describe("Language switch", () => {
   test("switching to বাংলা changes the tab labels and Power console text, and persists across a reload", async ({

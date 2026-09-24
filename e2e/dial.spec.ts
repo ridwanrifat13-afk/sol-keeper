@@ -6,7 +6,8 @@
  * note in apps/web/tests/render.test.tsx) — a real page load and real clicks don't have that
  * limitation, so switching the dial and finishing a mission can actually be observed here.
  */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "./fixtures.js";
+import type { Page } from "@playwright/test";
 
 test.describe("Reality Dial", () => {
   test("switching level changes gauge text without changing status colour", async ({ page }) => {

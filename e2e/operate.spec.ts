@@ -6,7 +6,8 @@
  * the page actually paints, the CSS actually applies, and a click actually reaches the
  * store and comes back out as a DOM change — in a real Chromium, at a phone viewport.
  */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "./fixtures.js";
+import type { Page } from "@playwright/test";
 
 /**
  * Dismisses the end-of-sol summary if it's blocking (M8.5 — it appears the instant `step()`
