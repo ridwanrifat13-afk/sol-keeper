@@ -31,26 +31,34 @@
  * M7.8_DIAGNOSIS.md has the full seed-level diagnosis and what was already tried) — TODO(P2)
  * for all of these:
  *
- * - Flight-Rated *upper* bound (<= 60%): prudentBot clears the lower bound everywhere but
- *   lands well above 60% on Jezero and The Long Night (see docs/BALANCE.md). M7.5's residual
- *   costs measurably helped when first added; a *skilled* bot still neutralises most incidents
- *   well enough that genuinely constraining it further needs either steeper residual costs on
- *   the remaining four incidents (fire-mir97, spe-1972, duststorm-2018, scrubber-iss, none of
- *   which carry one yet, M7.6 Part D's own job) or a compounding-incidents mechanic — neither
- *   in scope for M7.7/M7.8. Only the lower bound is asserted for those cells.
- * - First Light: Training (45.3%), Nominal (37.3%), and Flight-Rated (31.3%) prudentBot all
- *   sit below their 85%/70%/40% floors. `depress-mir97`'s own fast kill clock outrunning any
- *   response on an unlucky detection/success roll still accounts for 96% of Training's lost
- *   seeds (M7.8 Part A; re-checked after M7.6 Part D below, unchanged). M7.8 Part B/D moved
- *   these substantially already (Flight-Rated was 12.7% before that milestone's strategy fix
- *   and scenario-margin pass); M7.6 Part D then added real, sourced residual costs to the
- *   last four incidents (fire-mir97, spe-1972, duststorm-2018, scrubber-iss — docs/
- *   INCIDENT_MAGNITUDES.md Addendum 2) per the brief's own instruction, without touching a
- *   hazard rate — First Light's numbers moved down modestly as an honest side effect (Training
- *   was 54.0% immediately before that pass) rather than up, since a resource-thin 2-person
- *   scenario feels every added cost more than Jezero or The Long Night do. Nominal was already
- *   below its own floor before M7.6 Part D too (38.7%) but is newly called out here because it
- *   had been omitted from this list by oversight.
+ * - Flight-Rated *upper* bound (<= 60%): prudentBot clears the lower bound on Jezero and The
+ *   Long Night but lands well above 60% on both (see docs/BALANCE.md — currently 88.7% and
+ *   92.7%). A *skilled* bot still neutralises most incidents well enough that genuinely
+ *   constraining it further needs either steeper residual costs than the ones already added
+ *   (M7.6 Part D — fire-mir97, spe-1972, duststorm-2018, scrubber-iss, docs/
+ *   INCIDENT_MAGNITUDES.md Addendum 2) or a compounding-incidents mechanic — neither in scope
+ *   for M7.7/M7.8. Movement is real but non-monotonic across scenarios: Jezero's own
+ *   Flight-Rated prudentBot fell substantially (97.3% -> 88.7%) once fire-mir97's smoke-tail
+ *   fatigue gained a real, sourced respirator-cartridge-exhaustion mechanic (below), while The
+ *   Long Night's *rose* (83.3% -> 92.7%) — plausibly the same shared `fatigueFraction` state
+ *   cascading into `stationPerformance` on later, unrelated incidents in a way this pass did
+ *   not trace seed-by-seed, not a new hazard rate (none was touched). Only the lower bound is
+ *   asserted for those cells.
+ * - First Light: Training (44.7%), Nominal (31.3%), and Flight-Rated (28.7%) prudentBot all
+ *   sit below their 85%/70%/40% floors, and idleBot's own Nominal ceiling (<=5%, 6.0%
+ *   measured) is missed too, by a small margin. `depress-mir97`'s own fast kill clock
+ *   outrunning any response on an unlucky detection/success roll still accounts for 96% of
+ *   Training's lost seeds (M7.8 Part A) — this is the dominant cause and remains untouched by
+ *   any of what follows. M7.8 Part B/D moved these substantially already (Flight-Rated was
+ *   12.7% before that milestone's strategy fix and scenario-margin pass); M7.6 Part D then
+ *   added real, sourced residual costs to the last four incidents, and a follow-up pass
+ *   replaced fire-mir97's "fight" response spending `powerDistribution`'s own repair spares
+ *   (the wrong pool, and a double-spend bug alongside its declared `sparesCost`) with a
+ *   dedicated `SimState.safetyConsumables` store for extinguishers and respirator cartridges
+ *   (types.ts) — First Light's numbers moved down further as an honest side effect (Training
+ *   was 54.0% before M7.6 Part D, 45.3% immediately after it, now 44.7%), since a resource-thin
+ *   2-person scenario feels every added cost more than Jezero or The Long Night do. No hazard
+ *   rate was touched at any point in this chain.
  */
 import { describe, expect, it } from "vitest";
 import { runCombination } from "../engine/balance.js";

@@ -139,6 +139,8 @@ const SPECIALIST: TemplateTable = {
   "incident.spe-1972.electronicsDegraded": "The particle event permanently degraded {system} — {fraction} loss in capacity.",
   "incident.duststorm-2018.batteryDegraded": "Deep discharge during the storm permanently reduced battery capacity by {lostKwh} kWh.",
   "atmosphere.chronicCo2Exposure": "Sustained CO₂ exposure above the limit has left a lasting mark on the crew.",
+  "incident.fire-mir97.extinguishersExhausted": "Fire extinguisher stock ran out mid-fight — the crew took additional injury.",
+  "incident.fire-mir97.respiratorsExhausted": "Respirator cartridges are exhausted; the crew is on filter masks for the rest of the smoke recovery.",
 };
 
 /** Ages 8-11. Plain words, no raw units, present tense, encouraging where it can be. */
@@ -260,6 +262,8 @@ const CADET: TemplateTable = {
   "incident.spe-1972.electronicsDegraded": "The solar storm broke part of {system} for good.",
   "incident.duststorm-2018.batteryDegraded": "The batteries got drained so low they don't hold as much charge anymore.",
   "atmosphere.chronicCo2Exposure": "Breathing bad air for so long has worn the crew down for good.",
+  "incident.fire-mir97.extinguishersExhausted": "Ran out of fire extinguishers mid-fight — someone got hurt worse because of it.",
+  "incident.fire-mir97.respiratorsExhausted": "Out of respirator cartridges — the crew's stuck with weaker filter masks for now.",
 };
 
 /** Ages 15+. Same facts, framed with the vocabulary an operator would actually use. */
@@ -386,6 +390,8 @@ const COMMANDER: TemplateTable = {
   "incident.spe-1972.electronicsDegraded": "SEP-induced permanent degradation: {system}, {fraction} capacity loss.",
   "incident.duststorm-2018.batteryDegraded": "Deep-discharge cycling during the storm permanently reduced battery capacity by {lostKwh} kWh (now {newCapacityKwh} kWh rated).",
   "atmosphere.chronicCo2Exposure": "Cumulative sub-acute CO₂ exposure ({exposureMmHgHours} mmHg-h) has crossed the chronic-effect threshold; permanent crew fatigue increase applied.",
+  "incident.fire-mir97.extinguishersExhausted": "Fire-extinguisher stock depleted mid-response: additional crew injury applied.",
+  "incident.fire-mir97.respiratorsExhausted": "Respirator-cartridge stock depleted: crew now on filter masks for the remainder of the smoke-recovery window, at a reduced protection factor.",
 };
 
 const TABLES: Record<DialLevel, TemplateTable> = {

@@ -1558,6 +1558,47 @@ export const incidents = {
     confidence: "tuned",
     note: "\"Damaged equipment stays damaged.\" NASA-MIR-FIRE-25YR: \"some of Kvant-1's solar panels were charred\" — real, permanent equipment damage from the fire itself, applied regardless of which response is chosen (unlike the existing response-dependent consequences). No magnitude was published for how much capability was lost; this is a modest, tuned permanent efficiencyPenaltyFraction on powerDistribution standing in for it (brief rule 1: every 'tuned' confidence value cites GAME-DESIGN as its source, its real-world anchor disclosed here in the note instead).",
   }),
+  // --- M7.6 Part D.9 revision: a dedicated safety-consumables mechanic. Earlier code let the
+  // "fight" response spend `powerDistribution`'s own repair spares as a stand-in for
+  // "consumes an extinguisher" — the wrong pool (fighting a fire draws down firefighting
+  // gear, not electronics repair parts) and, worse, a response-level `sparesCost` declared
+  // alongside a *second*, manual decrement inside the same effect, silently spending twice.
+  // `SimState.safetyConsumables` (types.ts) replaces it with its own tracked stock.
+  mirFireExtinguishersConsumedFighting: c({
+    value: 3,
+    unit: "count",
+    source: "NASA-MIR-FIRE-25YR",
+    confidence: "measured",
+    note: "\"Korzun began dousing the flame with foam from a fire extinguisher, as Linenger held him in place and the other crew members handed him two more extinguishers\" — three used in total to put out the real fire. Applied as the exact cost of choosing \"fight\" here.",
+  }),
+  mirFireExtinguisherInitialStock: c({
+    value: 6,
+    unit: "count",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "No total station-wide extinguisher inventory was ever published for Mir (only that three were used fighting this one real fire, mirFireExtinguishersConsumedFighting). Six is a tuned starting stock — enough to survive this exact incident with margin, not enough to make a shortfall impossible on a badly-timed run (brief rule 1: every 'tuned' confidence value cites GAME-DESIGN as its source, its real-world anchor disclosed here in the note instead).",
+  }),
+  mirFireExtinguisherShortfallInjuryPenalty: c({
+    value: 0.15,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Extra injuryFraction applied to the crew member fighting the fire if the extinguisher stock runs out mid-attempt — the honest consequence of a genuinely exhausted safety store rather than a free, unlimited resource. No real-world figure exists for \"fighting a fire with too few extinguishers\"; tuned to be a real, felt cost.",
+  }),
+  mirRespiratorCartridgeInitialStock: c({
+    value: 1,
+    unit: "count",
+    source: "MIR-FIRE-LINENGER",
+    confidence: "measured",
+    note: "measured-reported: Linenger's own account puts full respirator use at \"maybe 45 minutes to an hour\" before the crew switched to filter masks. Modelled as one hour's worth of full-respirator stock, consumed at the start of mirFireSmokeRecoveryHours's own window; once exhausted the crew is on filter masks (a real, lesser level of protection) for the rest of the recovery period, taking mirFireSmokeFatiguePerHourNoCartridge instead of the ordinary rate.",
+  }),
+  mirFireSmokeFatiguePerHourNoCartridge: c({
+    value: 0.015,
+    unit: "fraction/h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "The steeper fatigueFraction rate applied once mirRespiratorCartridgeInitialStock is exhausted and the crew is on filter masks instead of full respirators — a real, lesser level of protection (MIR-FIRE-LINENGER) whose exact magnitude was not quantified. Tuned at 1.5x mirFireSmokeFatiguePerHour's own rate rather than higher: mirFireSmokeFatiguePerHour's own note states the whole smoke-recovery window should stay 'moderate... felt without being decisive on its own,' and since the crew is on the weaker cartridge for only the window's first hour, almost the entire window now runs at this steeper rate — a flat doubling would have pushed the window's total fatigue contribution to the edge of the 0.5 'impaired' threshold (models/crew.ts) on its own, contradicting that stated intent (brief rule 1: every 'tuned' confidence value cites GAME-DESIGN as its source, its real-world anchor disclosed here in the note instead).",
+  }),
   // --- M7.6 Part D.10: spe-1972's own "electronics take a degradation roll" residual cost.
   spe1972ElectronicsDegradationChance: c({
     value: 0.4,

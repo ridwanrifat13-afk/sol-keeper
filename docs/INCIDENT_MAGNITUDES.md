@@ -116,27 +116,44 @@ Documented values:
 - Some of Kvant-1's solar panels were charred by the fire — measured
   [NASA-MIR-FIRE-25YR, https://www.nasa.gov/history/25-years-ago-fire-aboard-space-station-mir/].
   No damage to the station's structure; no lasting harm to the crew — same source.
+- The same NASA article: "Korzun began dousing the flame with foam from a fire extinguisher,
+  as Linenger held him in place and the other crew members handed him two more extinguishers"
+  — three fire extinguishers used in total to put the real fire out — measured
+  [NASA-MIR-FIRE-25YR]. The crew also "quickly donned oxygen masks" — same source.
 - Jerry Linenger's own firsthand account (BBC Science Focus): full respirators lasted
   "maybe 45 minutes to an hour" before the crew switched to filter masks; roughly a day
   before things were properly cleaned out; a water-based extinguisher was used, followed
   by about 24 elapsed hours of one crew member mopping up condensation with old clothing —
   measured-reported (firsthand crew account, not a primary NASA document)
   [MIR-FIRE-LINENGER, https://www.sciencefocus.com/space/fire-in-space-jerry-linenger].
-RESIDUAL COST, three parts, all applied the hour the fire triggers, regardless of which
-response is chosen (the crew fights, evacuates, or ignores the fire itself — the smoke and
-the charred panels are consequences of the fire, not of that choice):
+RESIDUAL COST, four parts, all applied the hour the fire triggers or during its aftermath,
+regardless of which response is chosen (the crew fights, evacuates, or ignores the fire
+itself — the smoke and the charred panels are consequences of the fire, not of that choice):
 - Damaged equipment stays damaged: a permanent, modest efficiencyPenaltyFraction on
   powerDistribution (tuned magnitude — no percentage was published for how much capability
   Kvant-1's charred panels actually lost).
 - Cleanup costs crew-hours: a one-time crew-hours debit the same hour (tuned — Linenger's
   own ~24 elapsed hours describes one crew member's wall-clock task, not directly a
   crew-hours budget figure in this sim's own units, so it is not a literal conversion).
+- Fighting the fire draws on a dedicated, tracked firefighting store, not a system's own
+  repair spares: `SimState.safetyConsumables` (types.ts) holds `fireExtinguishers` and
+  `respiratorCartridges` separately from any `SystemId`'s `spares`, since a station's
+  fire-safety gear isn't owned by the system it happens to be fighting a fire near. An
+  earlier version of this response spent `powerDistribution`'s own repair spares as a stand-in
+  for "used an extinguisher" — the wrong pool, and, because it declared a `sparesCost`
+  alongside a second manual decrement in the same effect, it silently spent that pool twice.
+  Choosing "fight" now consumes exactly the real, measured count (three extinguishers, the
+  same NASA account above); running the tracked stock dry mid-fight is a real, tuned
+  consequence (extra injury), not blocked or free.
 - Smoke degrades crew performance for a recovery period: every response leaves a bounded
   ongoing effect running for mirFireSmokeRecoveryHours (24 h, the more precisely stated of
   Linenger's two figures — used instead of the brief's own less-precisely-sourced "36
   hours", a discrepancy disclosed in the constant's own note for the lead developer to
-  reconcile if a firmer primary source turns up), adding a small tuned fatigueFraction each
-  hour of that window.
+  reconcile if a firmer primary source turns up). The crew's one hour of full-respirator
+  stock (Linenger's own "45 minutes to an hour" figure, measured-reported) is consumed at
+  the window's start; for the rest of the window they're on filter masks — a real, lesser
+  level of protection — at a steeper (tuned) fatigueFraction rate than the baseline hour,
+  calibrated to stay short of decisive impairment on its own (see the constant's own note).
 
 ## 5. INC-SPE-1972 — electronics degradation, halted science, interrupted crop light
 [AGU-KNIPP-2018]
@@ -223,14 +240,26 @@ both the source registry and every constant that cited them.
 
 ## Balance note (feeds M7.6 Part D.13)
 Measured, 150 seeds x scenario x difficulty (docs/BALANCE.md, regenerated after this pass):
-First Light's prudentBot moved from 54.0%/38.7%/32.7% (Training/Nominal/Flight-Rated) to
-45.3%/37.3%/31.3% — a real but modest further decline (Training moved most, ~9 points),
-consistent with adding four more real residual costs to an already-thin 2-person-crew
-scenario. Traced seed-by-seed: 79 of 82 (96%) of First Light Training's remaining
-prudentBot losses are still `depress-mir97`'s own pre-existing fast kill clock (M7.8 Part A's
-own finding, unchanged), not a new failure mode from this pass — this addendum's own four
-new mechanics account for the other 3. Jezero and The Long Night, both far better resourced,
-show no meaningful movement on their own already-passing numbers. No hazard rate was tuned
-to produce any of this movement — every change here is a residual-cost mechanic or a
-previously-undeclared/misattributed constant, per the brief's own restriction.
+First Light's prudentBot moved from 54.0%/38.7%/32.7% (Training/Nominal/Flight-Rated, before
+this addendum) to 45.3%/37.3%/31.3% (immediately after it) to 44.7%/31.3%/28.7% (after the
+follow-up pass below) — real, cumulative, but not dramatic declines, consistent with adding
+several real residual costs to an already-thin 2-person-crew scenario. Traced seed-by-seed
+after the addendum's first pass: 79 of 82 (96%) of First Light Training's remaining
+prudentBot losses were still `depress-mir97`'s own pre-existing fast kill clock (M7.8 Part
+A's own finding, unchanged), not a new failure mode — this addendum's own four new mechanics
+accounted for the other 3.
+
+Follow-up pass (fire-mir97's dedicated `safetyConsumables` mechanic, replacing the
+`powerDistribution`-spares stand-in described in section 4 above): this moved every
+scenario's prudentBot, not just First Light's — Jezero's Flight-Rated fell from 97.3% to
+88.7% (real progress toward the still-open Flight-Rated upper-bound gap, see
+validation/balance.test.ts's header), while The Long Night's Flight-Rated *rose* from 83.3%
+to 92.7%. That second direction was not traced further (the established "disclose, don't
+chase indefinitely" standard this whole file follows); the most likely mechanism is the new
+mechanic's fatigueFraction contribution cascading through the shared `stationPerformance`
+model into later, unrelated incidents' own success rolls in a seed-dependent way, not a
+second hazard rate change (none was made). No hazard/trigger rate was tuned at any point in
+this addendum or its follow-up — every change is a residual-cost mechanic, a dedicated
+resource replacing a wrong proxy, or a previously-undeclared/misattributed constant, per the
+brief's own restriction.
  

@@ -273,6 +273,19 @@ export interface SystemState {
   efficiencyPenaltyFraction: number;
 }
 
+/** M7.6 Part D.9 revision: a dedicated, tracked store for firefighting equipment — distinct
+ *  from a `SystemId`'s own repair `spares`, which model electronics/mechanical parts, not
+ *  consumable safety gear. Replaces fire-mir97's earlier stand-in of spending
+ *  `powerDistribution`'s repair spares for "used an extinguisher," which was both the wrong
+ *  pool and (via a redundant manual decrement alongside a declared `sparesCost`) double-spent.
+ *  Global, not per-system, since a station's fire-safety store isn't owned by any one system. */
+export interface SafetyConsumablesState {
+  fireExtinguishers: number;
+  /** One consumed at the start of a smoke-recovery window; once exhausted the crew is on
+   *  filter masks (a real, lesser level of protection, MIR-FIRE-LINENGER) for the rest of it. */
+  respiratorCartridges: number;
+}
+
 export interface CommsState {
   /** One-way light time to Earth, seconds. Set from the scenario or /api/light-time. */
   oneWayLightSeconds: number;
@@ -356,6 +369,7 @@ export interface SimState {
   systems: Partial<Record<SystemId, SystemState>>;
   comms: CommsState;
   isru: IsruState;
+  safetyConsumables: SafetyConsumablesState;
   science: ScienceState;
   crewHours: CrewHoursState;
   /** M7.7 §7: a temporary, global multiplier on crew metabolic output (CO2 production,

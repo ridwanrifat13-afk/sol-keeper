@@ -4,7 +4,7 @@
  * Everything produced here is plain, serialisable data — no class instances, no closures —
  * so `structuredClone(state)` is a complete save and two runs can be deep-equal compared.
  */
-import { crew as crewConstants, environment, physics, radiation } from "../data/constants.js";
+import { crew as crewConstants, environment, incidents as incidentConstants, physics, radiation } from "../data/constants.js";
 import { getScenario } from "../data/scenarios/index.js";
 import { pio2MmHg } from "../models/atmosphere.js";
 import type {
@@ -188,6 +188,11 @@ export function createInitialState(params: Params): SimState {
       moxieRunning: false,
       moxieO2ProducedKg: 0,
       electrolysisO2ProducedKg: 0,
+    },
+
+    safetyConsumables: {
+      fireExtinguishers: incidentConstants.mirFireExtinguisherInitialStock.value,
+      respiratorCartridges: incidentConstants.mirRespiratorCartridgeInitialStock.value,
     },
 
     science: { points: 0 },

@@ -84,11 +84,14 @@ ${SEEDS} seeds per row, computed in ${Date.now() - t0} ms.
 - greedyBot: strictly between idleBot and prudentBot
 - Every failure mode reachable in at least one idleBot or greedyBot seed
 
-**Known gap** (tracked in validation/balance.test.ts, not silently dropped): prudentBot
-clears every target above except the Flight-Rated *upper* bound — see the numbers below and
-that test file's header comment for why (its strategy neutralises most incidents it
-responds to well enough that raising Flight-Rated's incident rate further would only punish
-idleBot/greedyBot, not a skilled bot).
+**Known gaps** (tracked in validation/balance.test.ts, not silently dropped — see that test
+file's header comment for the full diagnosis): Jezero and The Long Night's prudentBot clears
+every floor above but sits well past the Flight-Rated *upper* bound (its strategy neutralises
+most incidents it responds to well enough that raising Flight-Rated's incident rate further
+would only punish idleBot/greedyBot, not a skilled bot). First Light's prudentBot instead
+misses the *lower* bound on every difficulty (\`depress-mir97\`'s fast kill clock, M7.8 Part A —
+unrelated to the upper-bound gap above). idleBot's own Nominal ceiling (<=5%) is also missed
+on First Light specifically, by a small margin.
 
 ## Outcome distribution
 

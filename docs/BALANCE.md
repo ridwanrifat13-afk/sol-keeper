@@ -6,7 +6,7 @@ the same harness `validation/balance.test.ts` asserts the brief's pass/fail targ
 regenerate it after any change that could move the distribution below, rather than editing
 the numbers directly.
 
-150 seeds per row, computed in 31905 ms.
+150 seeds per row, computed in 32145 ms.
 
 ## Brief targets
 
@@ -15,52 +15,55 @@ the numbers directly.
 - greedyBot: strictly between idleBot and prudentBot
 - Every failure mode reachable in at least one idleBot or greedyBot seed
 
-**Known gap** (tracked in validation/balance.test.ts, not silently dropped): prudentBot
-clears every target above except the Flight-Rated *upper* bound — see the numbers below and
-that test file's header comment for why (its strategy neutralises most incidents it
-responds to well enough that raising Flight-Rated's incident rate further would only punish
-idleBot/greedyBot, not a skilled bot).
+**Known gaps** (tracked in validation/balance.test.ts, not silently dropped — see that test
+file's header comment for the full diagnosis): Jezero and The Long Night's prudentBot clears
+every floor above but sits well past the Flight-Rated *upper* bound (its strategy neutralises
+most incidents it responds to well enough that raising Flight-Rated's incident rate further
+would only punish idleBot/greedyBot, not a skilled bot). First Light's prudentBot instead
+misses the *lower* bound on every difficulty (`depress-mir97`'s fast kill clock, M7.8 Part A —
+unrelated to the upper-bound gap above). idleBot's own Nominal ceiling (<=5%) is also missed
+on First Light specifically, by a small margin.
 
 ## Outcome distribution
 
 | Scenario | Difficulty | Bot | Success | success | partial | abort | loss | Causes seen |
 |---|---|---|---|---|---|---|---|---|
-| jezero-outpost | training | idle | 22.7% | 34 | 0 | 0 | 116 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
+| jezero-outpost | training | idle | 22.0% | 33 | 0 | 0 | 117 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
 | jezero-outpost | training | worst | 62.7% | 94 | 0 | 0 | 56 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
-| jezero-outpost | training | greedy | 99.3% | 149 | 0 | 0 | 1 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
-| jezero-outpost | training | prudent | 98.7% | 148 | 0 | 0 | 2 | end.missionComplete, end.crewLost, crew.lost.hypothermia |
-| jezero-outpost | nominal | idle | 4.7% | 7 | 0 | 0 | 143 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
-| jezero-outpost | nominal | worst | 48.0% | 72 | 0 | 0 | 78 | end.missionComplete, end.crewLost, crew.lost.hypothermia, crew.lost.hypoxia |
-| jezero-outpost | nominal | greedy | 96.7% | 145 | 0 | 0 | 5 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
-| jezero-outpost | nominal | prudent | 99.3% | 149 | 0 | 0 | 1 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
+| jezero-outpost | training | greedy | 98.0% | 147 | 0 | 0 | 3 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
+| jezero-outpost | training | prudent | 96.0% | 144 | 0 | 0 | 6 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
+| jezero-outpost | nominal | idle | 4.0% | 6 | 0 | 0 | 144 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
+| jezero-outpost | nominal | worst | 48.7% | 73 | 0 | 0 | 77 | end.missionComplete, end.crewLost, crew.lost.hypothermia, crew.lost.hypoxia |
+| jezero-outpost | nominal | greedy | 96.0% | 144 | 0 | 0 | 6 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
+| jezero-outpost | nominal | prudent | 96.7% | 145 | 0 | 0 | 5 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
 | jezero-outpost | flightRated | idle | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypoxia |
-| jezero-outpost | flightRated | worst | 20.7% | 31 | 0 | 0 | 119 | end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia, end.missionComplete |
-| jezero-outpost | flightRated | greedy | 95.3% | 143 | 0 | 0 | 7 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
-| jezero-outpost | flightRated | prudent | 97.3% | 146 | 0 | 0 | 4 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
+| jezero-outpost | flightRated | worst | 18.7% | 28 | 0 | 0 | 122 | end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia, end.missionComplete |
+| jezero-outpost | flightRated | greedy | 92.7% | 139 | 0 | 0 | 11 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
+| jezero-outpost | flightRated | prudent | 88.7% | 133 | 0 | 0 | 17 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
 | first-light | training | idle | 20.7% | 31 | 0 | 0 | 119 | end.crewLost, crew.lost.hypoxia, end.missionComplete, crew.lost.hypothermia |
-| first-light | training | worst | 29.3% | 44 | 0 | 0 | 106 | end.crewLost, crew.lost.hypoxia, end.missionComplete, crew.lost.hypothermia |
+| first-light | training | worst | 28.7% | 43 | 0 | 0 | 107 | end.crewLost, crew.lost.hypoxia, end.missionComplete, crew.lost.hypothermia |
 | first-light | training | greedy | 48.7% | 73 | 0 | 0 | 77 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
-| first-light | training | prudent | 45.3% | 68 | 0 | 0 | 82 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
+| first-light | training | prudent | 44.7% | 67 | 0 | 0 | 83 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
 | first-light | nominal | idle | 6.0% | 9 | 0 | 0 | 141 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
-| first-light | nominal | worst | 14.0% | 21 | 0 | 0 | 129 | end.crewLost, crew.lost.hypoxia, end.missionComplete, crew.lost.hypothermia |
+| first-light | nominal | worst | 13.3% | 20 | 0 | 0 | 130 | end.crewLost, crew.lost.hypoxia, end.missionComplete, crew.lost.hypothermia |
 | first-light | nominal | greedy | 38.7% | 58 | 0 | 0 | 92 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
-| first-light | nominal | prudent | 37.3% | 56 | 0 | 0 | 94 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
+| first-light | nominal | prudent | 31.3% | 47 | 0 | 0 | 103 | end.crewLost, crew.lost.hypoxia, end.missionComplete |
 | first-light | flightRated | idle | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypoxia |
 | first-light | flightRated | worst | 7.3% | 11 | 0 | 0 | 139 | end.crewLost, crew.lost.hypoxia, end.missionComplete, crew.lost.hypothermia |
 | first-light | flightRated | greedy | 30.7% | 46 | 0 | 0 | 104 | end.crewLost, crew.lost.hypoxia, end.missionComplete, crew.lost.hypothermia |
-| first-light | flightRated | prudent | 31.3% | 47 | 0 | 0 | 103 | end.crewLost, crew.lost.hypoxia, end.missionComplete, crew.lost.hypothermia |
+| first-light | flightRated | prudent | 28.7% | 43 | 0 | 0 | 107 | end.crewLost, crew.lost.hypoxia, end.missionComplete, crew.lost.hypothermia |
 | the-long-night | training | idle | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypoxia |
-| the-long-night | training | worst | 89.3% | 134 | 0 | 0 | 16 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
-| the-long-night | training | greedy | 97.3% | 146 | 0 | 0 | 4 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
-| the-long-night | training | prudent | 94.7% | 142 | 0 | 0 | 8 | end.missionComplete, end.crewLost, crew.lost.hypothermia, crew.lost.hypoxia |
+| the-long-night | training | worst | 90.7% | 136 | 0 | 0 | 14 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
+| the-long-night | training | greedy | 92.7% | 139 | 0 | 0 | 11 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
+| the-long-night | training | prudent | 94.0% | 141 | 0 | 0 | 9 | end.missionComplete, end.crewLost, crew.lost.hypothermia, crew.lost.hypoxia |
 | the-long-night | nominal | idle | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypoxia |
-| the-long-night | nominal | worst | 86.7% | 130 | 0 | 0 | 20 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
-| the-long-night | nominal | greedy | 96.7% | 145 | 0 | 0 | 5 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
-| the-long-night | nominal | prudent | 91.3% | 137 | 0 | 0 | 13 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
+| the-long-night | nominal | worst | 92.0% | 138 | 0 | 0 | 12 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
+| the-long-night | nominal | greedy | 94.7% | 142 | 0 | 0 | 8 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
+| the-long-night | nominal | prudent | 96.7% | 145 | 0 | 0 | 5 | end.missionComplete, end.crewLost, crew.lost.hypothermia, crew.lost.hypoxia |
 | the-long-night | flightRated | idle | 0.0% | 0 | 0 | 0 | 150 | end.crewLost, crew.lost.hypoxia |
-| the-long-night | flightRated | worst | 84.7% | 127 | 0 | 0 | 23 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
-| the-long-night | flightRated | greedy | 95.3% | 143 | 0 | 0 | 7 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
-| the-long-night | flightRated | prudent | 83.3% | 125 | 0 | 0 | 25 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
+| the-long-night | flightRated | worst | 90.0% | 135 | 0 | 0 | 15 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
+| the-long-night | flightRated | greedy | 93.3% | 140 | 0 | 0 | 10 | end.missionComplete, end.crewLost, crew.lost.hypoxia |
+| the-long-night | flightRated | prudent | 92.7% | 139 | 0 | 0 | 11 | end.missionComplete, end.crewLost, crew.lost.hypoxia, crew.lost.hypothermia |
 
 ## Failure causes observed across every idleBot/greedyBot seed
 
@@ -82,64 +85,64 @@ of it.
 
 | Incident | Response | Times chosen | Success rate when chosen |
 |---|---|---|---|
-| coolant-ms22 | rideItOut | 246 | 16.3% |
-| coolant-ms22 | shedLoad | 1204 | 82.0% |
-| depress-mir97 | ignoreLeak | 588 | 0.2% |
-| depress-mir97 | patchHull | 588 | 27.6% |
-| depress-mir97 | sealModule | 857 | 93.8% |
-| duststorm-2018 | cleanArrays | 792 | 80.8% |
-| duststorm-2018 | noResponse | 177 | 23.7% |
-| duststorm-2018 | shedNonEssential | 458 | 95.4% |
-| fire-mir97 | evacuate | 449 | 91.3% |
-| fire-mir97 | fight | 803 | 73.0% |
-| fire-mir97 | ignore | 290 | 22.1% |
-| o2tank-apollo13 | improviseAdapter | 658 | 59.0% |
-| o2tank-apollo13 | noResponse | 223 | 18.8% |
-| o2tank-apollo13 | rationActivity | 632 | 94.6% |
-| scrubber-iss | manualVenting | 185 | 97.8% |
-| scrubber-iss | noResponse | 257 | 15.6% |
-| scrubber-iss | swapCartridge | 1143 | 71.0% |
-| spe-1972 | continueOperations | 147 | 65.3% |
-| spe-1972 | shelterNow | 1150 | 93.7% |
+| coolant-ms22 | rideItOut | 257 | 15.6% |
+| coolant-ms22 | shedLoad | 1250 | 76.7% |
+| depress-mir97 | ignoreLeak | 634 | 0.2% |
+| depress-mir97 | patchHull | 589 | 27.3% |
+| depress-mir97 | sealModule | 869 | 89.5% |
+| duststorm-2018 | cleanArrays | 801 | 77.0% |
+| duststorm-2018 | noResponse | 185 | 23.8% |
+| duststorm-2018 | shedNonEssential | 454 | 94.7% |
+| fire-mir97 | evacuate | 448 | 89.7% |
+| fire-mir97 | fight | 804 | 70.0% |
+| fire-mir97 | ignore | 289 | 21.5% |
+| o2tank-apollo13 | improviseAdapter | 653 | 55.6% |
+| o2tank-apollo13 | noResponse | 223 | 17.0% |
+| o2tank-apollo13 | rationActivity | 627 | 93.8% |
+| scrubber-iss | manualVenting | 184 | 87.5% |
+| scrubber-iss | noResponse | 254 | 15.0% |
+| scrubber-iss | swapCartridge | 1151 | 69.7% |
+| spe-1972 | continueOperations | 249 | 73.9% |
+| spe-1972 | shelterNow | 1192 | 87.8% |
 
 ### first-light
 
 | Incident | Response | Times chosen | Success rate when chosen |
 |---|---|---|---|
-| coolant-ms22 | rideItOut | 633 | 19.3% |
-| coolant-ms22 | shedLoad | 1287 | 30.5% |
-| depress-mir97 | ignoreLeak | 963 | 0.0% |
-| depress-mir97 | patchHull | 287 | 12.9% |
-| depress-mir97 | sealModule | 897 | 30.0% |
-| fire-mir97 | evacuate | 503 | 42.1% |
-| fire-mir97 | fight | 589 | 35.0% |
-| fire-mir97 | ignore | 601 | 20.5% |
-| o2tank-apollo13 | improviseAdapter | 509 | 26.9% |
-| o2tank-apollo13 | noResponse | 285 | 17.2% |
-| o2tank-apollo13 | rationActivity | 489 | 52.4% |
-| scrubber-iss | manualVenting | 321 | 49.2% |
-| scrubber-iss | noResponse | 309 | 17.2% |
-| scrubber-iss | swapCartridge | 1064 | 22.0% |
-| spe-1972 | continueOperations | 696 | 22.7% |
-| spe-1972 | shelterNow | 1400 | 30.3% |
+| coolant-ms22 | rideItOut | 665 | 17.1% |
+| coolant-ms22 | shedLoad | 1285 | 29.3% |
+| depress-mir97 | ignoreLeak | 964 | 0.0% |
+| depress-mir97 | patchHull | 284 | 11.3% |
+| depress-mir97 | sealModule | 880 | 29.0% |
+| fire-mir97 | evacuate | 502 | 41.4% |
+| fire-mir97 | fight | 590 | 32.7% |
+| fire-mir97 | ignore | 600 | 20.5% |
+| o2tank-apollo13 | improviseAdapter | 524 | 25.0% |
+| o2tank-apollo13 | noResponse | 305 | 18.4% |
+| o2tank-apollo13 | rationActivity | 520 | 47.7% |
+| scrubber-iss | manualVenting | 326 | 44.2% |
+| scrubber-iss | noResponse | 320 | 16.9% |
+| scrubber-iss | swapCartridge | 1066 | 21.9% |
+| spe-1972 | continueOperations | 716 | 21.6% |
+| spe-1972 | shelterNow | 1402 | 29.1% |
 
 ### the-long-night
 
 | Incident | Response | Times chosen | Success rate when chosen |
 |---|---|---|---|
-| coolant-ms22 | rideItOut | 254 | 1.6% |
-| coolant-ms22 | shedLoad | 1397 | 87.8% |
-| depress-mir97 | ignoreLeak | 516 | 0.0% |
-| depress-mir97 | patchHull | 922 | 86.2% |
-| depress-mir97 | sealModule | 494 | 91.1% |
-| fire-mir97 | evacuate | 475 | 91.2% |
-| fire-mir97 | fight | 947 | 83.5% |
-| fire-mir97 | ignore | 306 | 10.1% |
-| o2tank-apollo13 | improviseAdapter | 598 | 65.1% |
-| o2tank-apollo13 | noResponse | 239 | 7.1% |
-| o2tank-apollo13 | rationActivity | 914 | 91.1% |
-| scrubber-iss | manualVenting | 3 | 33.3% |
-| scrubber-iss | noResponse | 254 | 3.5% |
-| scrubber-iss | swapCartridge | 1600 | 76.4% |
-| spe-1972 | continueOperations | 247 | 9.3% |
-| spe-1972 | shelterNow | 1378 | 89.2% |
+| coolant-ms22 | rideItOut | 268 | 2.6% |
+| coolant-ms22 | shedLoad | 1423 | 88.0% |
+| depress-mir97 | ignoreLeak | 561 | 0.0% |
+| depress-mir97 | patchHull | 932 | 89.5% |
+| depress-mir97 | sealModule | 517 | 84.7% |
+| fire-mir97 | evacuate | 473 | 88.6% |
+| fire-mir97 | fight | 949 | 87.5% |
+| fire-mir97 | ignore | 305 | 13.4% |
+| o2tank-apollo13 | improviseAdapter | 599 | 67.9% |
+| o2tank-apollo13 | noResponse | 241 | 7.9% |
+| o2tank-apollo13 | rationActivity | 909 | 92.5% |
+| scrubber-iss | manualVenting | 1 | 100.0% |
+| scrubber-iss | noResponse | 259 | 3.5% |
+| scrubber-iss | swapCartridge | 1584 | 78.9% |
+| spe-1972 | continueOperations | 274 | 17.2% |
+| spe-1972 | shelterNow | 1376 | 91.2% |

@@ -180,31 +180,60 @@ export const INCIDENT_CATALOG: readonly IncidentDefinition[] = [
     // fighting, evacuating, or ignoring the fire all still leave the crew breathing the same
     // smoke afterward. The effect itself is a no-op once the window has passed, rather than
     // gating on leavesOngoing per response, so this stays a bounded tail, not a permanent one.
+    // M7.6 Part D.9 revision: the crew's mirRespiratorCartridgeInitialStock of full-respirator
+    // protection is consumed hour by hour of this same window; once exhausted they're on
+    // filter masks (MIR-FIRE-LINENGER's own account) for the remainder, at a steeper fatigue
+    // rate — a real, lesser level of protection, not a free unlimited one.
     ongoingEffect: (ctx, incident) => {
-      const { state } = ctx;
+      const { state, log } = ctx;
       if (state.hour - incident.triggeredAtHour >= incidentConstants.mirFireSmokeRecoveryHours.value) return;
+      const consumables = state.safetyConsumables;
+      const hasCartridge = consumables.respiratorCartridges > 0;
+      if (hasCartridge) consumables.respiratorCartridges -= 1;
+      if (!hasCartridge) {
+        log.logEdge({
+          kind: "fault",
+          severity: "warning",
+          code: "incident.fire-mir97.respiratorsExhausted",
+          data: {},
+        });
+      }
+      const fatiguePerHour = hasCartridge
+        ? incidentConstants.mirFireSmokeFatiguePerHour.value
+        : incidentConstants.mirFireSmokeFatiguePerHourNoCartridge.value;
       for (const member of state.crew) {
         if (!member.alive) continue;
-        member.fatigueFraction = clamp(
-          member.fatigueFraction + incidentConstants.mirFireSmokeFatiguePerHour.value * ctx.dtHours,
-          0,
-          1,
-        );
+        member.fatigueFraction = clamp(member.fatigueFraction + fatiguePerHour * ctx.dtHours, 0, 1);
       }
     },
     responses: [
       {
         id: "fight",
         i18nKey: "incident.fire-mir97.response.fight",
-        sparesCost: 1,
-        sparesFromSystem: "powerDistribution",
         crewHoursCost: 4,
         leavesOngoing: true,
         effect: (ctx) => {
           const target = mostInjured(ctx.state);
           if (target !== undefined) target.injuryFraction = clamp(target.injuryFraction - 0.25, 0, 1);
-          const system = ctx.state.systems.powerDistribution;
-          if (system !== undefined && system.spares > 0) system.spares -= 1;
+          // M7.6 Part D.9 revision: draws from the dedicated safety-consumables store, not
+          // powerDistribution's own repair spares (the wrong pool for firefighting gear).
+          const consumables = ctx.state.safetyConsumables;
+          const needed = incidentConstants.mirFireExtinguishersConsumedFighting.value;
+          const shortfall = consumables.fireExtinguishers < needed;
+          consumables.fireExtinguishers = Math.max(0, consumables.fireExtinguishers - needed);
+          if (shortfall && target !== undefined) {
+            target.injuryFraction = clamp(
+              target.injuryFraction + incidentConstants.mirFireExtinguisherShortfallInjuryPenalty.value,
+              0,
+              1,
+            );
+            ctx.log.log({
+              kind: "fault",
+              severity: "warning",
+              code: "incident.fire-mir97.extinguishersExhausted",
+              data: {},
+            });
+          }
         },
       },
       {
