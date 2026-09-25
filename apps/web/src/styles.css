@@ -576,6 +576,18 @@ code {
   }
 }
 
+/* M9.4c: the manual low-power-mode toggle (App.tsx) applies the exact same rules as the OS
+   preference above, regardless of what the OS itself reports — kept as a separate block
+   (a class selector can't join a `@media` block's condition) rather than merged into one. */
+:root.low-power-mode .gauge-fill {
+  transition: none;
+}
+
+:root.low-power-mode .establishing-shot-craft {
+  animation: none;
+  transform: translateX(292px);
+}
+
 /* ---------------------------------------------------------------- tab nav */
 .app-head-row {
   display: flex;

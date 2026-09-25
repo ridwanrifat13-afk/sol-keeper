@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useRun } from "./store/run.js";
+import { useAccessibility } from "./store/accessibility.js";
 import { PowerConsole } from "./views/Power/PowerConsole.js";
 import { LifeSupportConsole } from "./views/LifeSupport/LifeSupportConsole.js";
 import { CommsConsole } from "./views/Comms/CommsConsole.js";
@@ -11,6 +12,7 @@ import { BriefingView } from "./views/Briefing/BriefingView.js";
 import { DebriefView } from "./views/Debrief/DebriefView.js";
 import { DataSourcesView } from "./views/DataSources/DataSourcesView.js";
 import { LanguageSwitch } from "./components/LanguageSwitch.js";
+import { LowPowerToggle } from "./components/LowPowerToggle.js";
 import { TimeControls } from "./components/TimeControls.js";
 import { DecisionCard } from "./components/DecisionCard.js";
 import { SolSummaryView } from "./views/SolSummary/SolSummaryView.js";
@@ -97,6 +99,12 @@ const TAB_KEYS: Record<TabView, string> = {
  *
  * Tab labels and the language switch are the first (M5) i18n-wired part of the UI — see
  * i18n/config.ts for exactly what is and is not translated yet.
+ *
+ * M9.4c adds a manual low-power-mode toggle (store/accessibility.ts) alongside the language
+ * switch — a player choice, not auto-detected (no reliable cross-browser "low-end device"
+ * signal exists) — that sets a `low-power-mode` class on the root element for `styles.css`'s
+ * existing reduced-motion rules to also key off, on top of the OS's own
+ * `prefers-reduced-motion` media query.
  */
 export function App() {
   const [view, setView] = useState<View>("setup");
@@ -105,9 +113,17 @@ export function App() {
   const scenario = useRun((s) => s.scenario);
   const crew = useRun((s) => s.state.crew);
   const version = useRun((s) => s.version);
+  const lowPowerMode = useAccessibility((s) => s.lowPowerMode);
   const { t } = useTranslation();
 
   const livingCrew = crew.filter((c) => c.alive).length;
+
+  // M9.4c: a single class on the root element, read by the same selectors that already
+  // respond to the OS's own `prefers-reduced-motion` (styles.css) — this is the one DOM
+  // side effect the manual low-power toggle needs; every actual animation rule lives in CSS.
+  useEffect(() => {
+    document.documentElement.classList.toggle("low-power-mode", lowPowerMode);
+  }, [lowPowerMode]);
 
   return (
     <main className="app">
@@ -153,6 +169,7 @@ export function App() {
           >
             {t("tabs.dataSources")}
           </button>
+          <LowPowerToggle />
           <LanguageSwitch />
         </div>
       </div>
