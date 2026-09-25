@@ -167,12 +167,28 @@ export interface ScenarioEsmBreakdown {
   readonly habitatVolumeKg: number;
   readonly batteryMassKg: number;
   readonly reactorMassKg: number;
+  /** M9: the scenario's own starting O2/CO2/food/water stores — genuinely omitted from this
+   *  breakdown until M9 (verified: no ESM line ever read `scenario.initial.potableWaterKg` or
+   *  any other consumable), which meant every scenario's real Launch Packing mass was
+   *  undercounted by however much consumable mass it actually launches. A real fix, not
+   *  new-in-M9 scope creep — the M9 water-wall shielding choice (engine/shielding.ts) adds to
+   *  `initial.potableWaterKg` and is picked up here automatically, with no separate line. */
+  readonly consumablesMassKg: number;
+  /** M9: a regolithBerm's one-time construction cost (0 for hullOnly/waterWall) — an ESM
+   *  crew-time line, not launched mass, per `shieldingCrewHours`'s own doc comment below. */
+  readonly shieldingCrewTimeKg: number;
   readonly totalKg: number;
 }
 
 export function scenarioEsmBreakdown(
   scenario: Scenario,
   powerInfrastructure: PowerInfrastructure = "surfaceMid",
+  /** M9: a regolithBerm's one-time pre-mission construction crew-hours (engine/shielding.ts's
+   *  `SizedShielding.constructionCrewHours`), 0 for every other shielding approach. Kept as a
+   *  plain number parameter rather than a `ShieldingApproach` argument so this function stays
+   *  decoupled from that type — the caller already resolved the approach into a crew-hours
+   *  figure by the time it gets here. */
+  shieldingCrewHours = 0,
 ): ScenarioEsmBreakdown {
   const kgPerKw = powerEquivalencyKgPerKw(powerInfrastructure);
   const durationDays = hoursToDays(scenario.durationHours);
@@ -209,6 +225,12 @@ export function scenarioEsmBreakdown(
   // scenario either carries the whole reactor or none of it, so this is not a linear scale.
   const reactorMassKg =
     scenario.initial.fissionReactorKwe > 0 ? power.fissionSurfacePowerMassKg.value : 0;
+  const consumablesMassKg =
+    scenario.initial.o2Kg +
+    scenario.initial.co2Kg +
+    scenario.initial.foodDryMassKg +
+    scenario.initial.potableWaterKg;
+  const shieldingCrewTimeKg = shieldingCrewHours * management.esmCrewTimeKgPerCrewHour.value;
 
   const perSystemKg = perSystem.reduce((sum, line) => sum + line.equivalentKg, 0);
 
@@ -217,6 +239,9 @@ export function scenarioEsmBreakdown(
     habitatVolumeKg,
     batteryMassKg,
     reactorMassKg,
-    totalKg: perSystemKg + habitatVolumeKg + batteryMassKg + reactorMassKg,
+    consumablesMassKg,
+    shieldingCrewTimeKg,
+    totalKg:
+      perSystemKg + habitatVolumeKg + batteryMassKg + reactorMassKg + consumablesMassKg + shieldingCrewTimeKg,
   };
 }

@@ -776,6 +776,13 @@ export const management = {
     confidence: "measured",
     note: "Standard NASA ESM crew-time equivalency. Resolved in the 2026-09 verification pass; was a zero placeholder that disabled the crew-time term entirely.",
   }),
+  regolithBermConstructionCrewHours: c({
+    value: 80,
+    unit: "CM-h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "One-time, pre-mission crew-hours to build a regolithBerm (engine/shielding.ts) — no sourced NASA figure exists for how long this actually takes; a disclosed gameplay choice, converted to an ESM crew-time line via esmCrewTimeKgPerCrewHour rather than launched as mass, which is the whole point of this shielding approach's trade-off (mass vs. labor).",
+  }),
   esmCoolingKgPerW: c({
     value: 0.14,
     unit: "kg/W",
@@ -1180,6 +1187,14 @@ export const habitat = {
     source: "GAME-DESIGN",
     confidence: "tuned",
     note: "Stored water doubles as shielding. Tuned so a full 2000 kg tank adds about 5 g/cm^2.",
+  }),
+  // M9: engine/shielding.ts's regolithBerm approach.
+  regolithBermShieldingGPerCm2: c({
+    value: 15,
+    unit: "g/cm^2",
+    source: "AIP-2023-REGOLITH-SHIELD",
+    confidence: "derived",
+    note: "Added to the base scenario's own starting shieldingGPerCm2 (not a multiplier). Al Zaman & Kunja (2023) measured a 15 g/cm^2 shield (10 g/cm^2 Martian regolith + 5 g/cm^2 polymer) outperforming an equal-thickness aluminum shield. This project uses their combined figure as a thin, practical berm's additive delta — a disclosed, game-scaled reading of the paper's own result, not the paper's own comparison scale (which studies full-habitat burial, not an additive bump).",
   }),
 } as const;
 

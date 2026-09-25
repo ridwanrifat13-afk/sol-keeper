@@ -75,6 +75,9 @@ export { LANDING_SITES, getLandingSite, landingSitesForBody } from "./data/landi
 export type { SizedPowerArchitecture } from "./engine/powerArchitecture.js";
 export { sizePowerArchitecture } from "./engine/powerArchitecture.js";
 
+export type { SizedShielding } from "./engine/shielding.js";
+export { sizeShielding } from "./engine/shielding.js";
+
 export type { RngState, Stream, StreamName } from "./engine/rng.js";
 export { Rng, createRngState } from "./engine/rng.js";
 

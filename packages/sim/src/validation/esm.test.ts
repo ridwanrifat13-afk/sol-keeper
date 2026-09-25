@@ -165,9 +165,34 @@ describe("scenarioEsmBreakdown", () => {
     const breakdown = scenarioEsmBreakdown(jezeroOutpost);
     const powerKg = breakdown.perSystem.reduce((sum, l) => sum + l.equivalentKg, 0);
     expect(breakdown.totalKg).toBeCloseTo(
-      powerKg + breakdown.habitatVolumeKg + breakdown.batteryMassKg + breakdown.reactorMassKg,
+      powerKg +
+        breakdown.habitatVolumeKg +
+        breakdown.batteryMassKg +
+        breakdown.reactorMassKg +
+        breakdown.consumablesMassKg +
+        breakdown.shieldingCrewTimeKg,
       6,
     );
+  });
+
+  it("consumables mass is the scenario's own starting O2/CO2/food/water, previously omitted entirely", () => {
+    const breakdown = scenarioEsmBreakdown(jezeroOutpost);
+    const expectedKg =
+      jezeroOutpost.initial.o2Kg +
+      jezeroOutpost.initial.co2Kg +
+      jezeroOutpost.initial.foodDryMassKg +
+      jezeroOutpost.initial.potableWaterKg;
+    expect(breakdown.consumablesMassKg).toBeCloseTo(expectedKg, 6);
+    expect(breakdown.consumablesMassKg).toBeGreaterThan(0);
+  });
+
+  it("shielding crew-time is zero by default, and scales with the optional crew-hours argument", () => {
+    const withoutBerm = scenarioEsmBreakdown(jezeroOutpost);
+    expect(withoutBerm.shieldingCrewTimeKg).toBe(0);
+
+    const withBerm = scenarioEsmBreakdown(jezeroOutpost, "surfaceMid", 80);
+    expect(withBerm.shieldingCrewTimeKg).toBeCloseTo(80 * management.esmCrewTimeKgPerCrewHour.value, 6);
+    expect(withBerm.totalKg).toBeCloseTo(withoutBerm.totalKg + withBerm.shieldingCrewTimeKg, 6);
   });
 
   it("a higher-mass power infrastructure choice never produces a lower total", () => {
