@@ -5,6 +5,7 @@ import { CrewSizeStep } from "./CrewSizeStep.js";
 import { LandingSiteStep } from "./LandingSiteStep.js";
 import { PowerArchitectureStep } from "./PowerArchitectureStep.js";
 import { ShieldingStep } from "./ShieldingStep.js";
+import { LaunchPackingStep } from "./LaunchPackingStep.js";
 
 const STEP_LABELS: Record<SetupStepId, string> = {
   scenario: "Scenario",
@@ -13,6 +14,7 @@ const STEP_LABELS: Record<SetupStepId, string> = {
   landingSite: "Landing site",
   power: "Power",
   shielding: "Shielding",
+  launchPacking: "Launch Packing",
 };
 
 interface SetupWizardProps {
@@ -22,8 +24,9 @@ interface SetupWizardProps {
 }
 
 /**
- * M9's mission setup wizard. Every choice step has real UI now (M9.2a/b/c) — Launch Packing
- * (M9.2d) will append as the wizard's final review step, not a "choice" step, once it exists.
+ * M9's mission setup wizard. Every step has real UI now (M9.2a-d) — Launch Packing is the
+ * final review step, not a "choice" step, previewing the exact scenario "Launch Mission"
+ * is about to commit.
  */
 export function SetupWizard({ onLaunch }: SetupWizardProps) {
   const stepIndex = useSetup((s) => s.stepIndex);
@@ -49,6 +52,7 @@ export function SetupWizard({ onLaunch }: SetupWizardProps) {
       {stepId === "landingSite" && <LandingSiteStep />}
       {stepId === "power" && <PowerArchitectureStep />}
       {stepId === "shielding" && <ShieldingStep />}
+      {stepId === "launchPacking" && <LaunchPackingStep />}
 
       <div className="button-row">
         <button type="button" className="btn btn-quiet" disabled={stepIndex === 0} onClick={back}>

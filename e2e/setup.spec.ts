@@ -1,7 +1,7 @@
 /**
  * Real-browser check for M9's mission setup wizard — the app's true first screen now
- * (App.tsx's own doc comment). Every choice step (scenario/difficulty/crew-size/landing-site/
- * power/shielding) has real UI now (M9.2a/b/c); Launch Packing (M9.2d) is still a step short.
+ * (App.tsx's own doc comment). Every step (scenario/difficulty/crew-size/landing-site/
+ * power/shielding/launch-packing) has real UI now (M9.2a-d) — the wizard is complete.
  */
 import { expect, test } from "./fixtures.js";
 import type { Page } from "@playwright/test";
@@ -17,7 +17,7 @@ test.describe("Mission Setup", () => {
   test("is the app's default screen, with all three scenarios offered", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByText("Mission Setup")).toBeVisible();
-    await expect(page.getByText("Step 1 of 6: Scenario")).toBeVisible();
+    await expect(page.getByText("Step 1 of 7: Scenario")).toBeVisible();
 
     for (const label of ["Jezero Outpost", "First Light", "The Long Night"]) {
       await expect(page.getByRole("button", { name: new RegExp(label) })).toBeVisible();
@@ -26,16 +26,16 @@ test.describe("Mission Setup", () => {
     await expect(page.getByRole("button", { name: /Jezero Outpost/ })).toHaveAttribute("aria-pressed", "true");
   });
 
-  test("Back is disabled on the first step; walking Next through all six steps and back again works", async ({
+  test("Back is disabled on the first step; walking Next through all seven steps and back again works", async ({
     page,
   }) => {
     await page.goto("/");
     await expect(page.getByRole("button", { name: "Back" })).toBeDisabled();
 
-    const steps = ["Difficulty", "Crew size", "Landing site", "Power", "Shielding"];
+    const steps = ["Difficulty", "Crew size", "Landing site", "Power", "Shielding", "Launch Packing"];
     for (const [i, label] of steps.entries()) {
       await page.getByRole("button", { name: "Next" }).click();
-      await expect(page.getByText(`Step ${i + 2} of 6: ${label}`)).toBeVisible();
+      await expect(page.getByText(`Step ${i + 2} of 7: ${label}`)).toBeVisible();
       await expect(page.getByRole("button", { name: "Back" })).toBeEnabled();
     }
     // The last step's action launches the mission, it doesn't say "Next".
@@ -43,17 +43,17 @@ test.describe("Mission Setup", () => {
 
     for (const [i, label] of [...steps].reverse().slice(1).entries()) {
       await page.getByRole("button", { name: "Back" }).click();
-      await expect(page.getByText(`Step ${steps.length - i} of 6: ${label}`)).toBeVisible();
+      await expect(page.getByText(`Step ${steps.length - i} of 7: ${label}`)).toBeVisible();
     }
     await page.getByRole("button", { name: "Back" }).click();
-    await expect(page.getByText("Step 1 of 6: Scenario")).toBeVisible();
+    await expect(page.getByText("Step 1 of 7: Scenario")).toBeVisible();
   });
 
   test("crew size step: stepper is clamped to 2-6, and consequence text is real", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "Next" }).click();
-    await expect(page.getByText("Step 3 of 6: Crew size")).toBeVisible();
+    await expect(page.getByText("Step 3 of 7: Crew size")).toBeVisible();
 
     await expect(page.getByText("4 crew")).toBeVisible(); // default
     await expect(page.getByText(/at least one person will cover two stations/)).toBeVisible();
@@ -83,7 +83,7 @@ test.describe("Mission Setup", () => {
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "Next" }).click();
-    await expect(page.getByText("Step 4 of 6: Landing site")).toBeVisible();
+    await expect(page.getByText("Step 4 of 7: Landing site")).toBeVisible();
 
     // Jezero is Mars — the three real Mars sites, not the Moon ones.
     for (const label of ["Jezero Crater", "Gale Crater", "Arcadia Planitia"]) {
@@ -111,7 +111,7 @@ test.describe("Mission Setup", () => {
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "Next" }).click();
-    await expect(page.getByText("Step 5 of 6: Power")).toBeVisible();
+    await expect(page.getByText("Step 5 of 7: Power")).toBeVisible();
 
     const solar = page.getByRole("button", { name: /Solar \+ battery/ });
     const fission = page.getByRole("button", { name: /Fission reactor/ });
@@ -134,7 +134,7 @@ test.describe("Mission Setup", () => {
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "Next" }).click();
-    await expect(page.getByText("Step 6 of 6: Shielding")).toBeVisible();
+    await expect(page.getByText("Step 6 of 7: Shielding")).toBeVisible();
 
     const hullOnly = page.getByRole("button", { name: /Hull only/ });
     const waterWall = page.getByRole("button", { name: /Water wall/ });
@@ -146,6 +146,26 @@ test.describe("Mission Setup", () => {
 
     await waterWall.click();
     await expect(waterWall).toHaveAttribute("aria-pressed", "true");
+
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByRole("button", { name: "▶ Launch Mission" })).toBeVisible();
+  });
+
+  test("launch packing step: previews the real grand total, and reflects the regolith berm's crew-hours line", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await clickNext(page, 5);
+    // Choose Regolith berm on the Shielding step so the crew-time line is non-zero.
+    await page.getByRole("button", { name: /Regolith berm/ }).click();
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByText("Step 7 of 7: Launch Packing")).toBeVisible();
+
+    await expect(page.getByText("Grand total")).toBeVisible();
+    await expect(page.getByText(/Consumables launched/)).toBeVisible();
+    await expect(page.getByText(/Shielding crew-time/)).toBeVisible();
+    // The regolith berm's 80 crew-hours convert to a non-zero ESM-equivalent kg line.
+    await expect(page.getByText(/80 pre-mission construction crew-hours/)).toBeVisible();
 
     await expect(page.getByRole("button", { name: "▶ Launch Mission" })).toBeVisible();
   });
@@ -173,6 +193,7 @@ test.describe("Mission Setup", () => {
     await page.getByRole("button", { name: "Next" }).click();
 
     await page.getByRole("button", { name: /Regolith berm/ }).click();
+    await page.getByRole("button", { name: "Next" }).click();
 
     await page.getByRole("button", { name: "▶ Launch Mission" }).click();
 
@@ -186,12 +207,12 @@ test.describe("Mission Setup", () => {
     page,
   }) => {
     await page.goto("/");
-    await clickNext(page, 5);
+    await clickNext(page, 6);
     await page.getByRole("button", { name: "▶ Launch Mission" }).click(); // launch with defaults
     await expect(page.getByText("Mission Briefing")).toBeVisible();
 
     await page.getByRole("button", { name: "New Mission" }).click();
     await expect(page.getByText("Mission Setup")).toBeVisible();
-    await expect(page.getByText("Step 1 of 6: Scenario")).toBeVisible();
+    await expect(page.getByText("Step 1 of 7: Scenario")).toBeVisible();
   });
 });

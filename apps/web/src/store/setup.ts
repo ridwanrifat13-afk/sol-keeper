@@ -2,7 +2,7 @@
  * M9's mission setup wizard — a short-lived, in-progress flow, not a settings preference
  * (unlike store/dial.ts), so it deliberately does not persist across a reload.
  *
- * Every choice step now has real UI (M9.2a/b/c) — `commit()`'s own defaults
+ * Every step now has real UI (M9.2a-d) — `commit()`'s own defaults
  * (`landingSitesForBody(scenario.body)[0]`, `"solarBattery"`, `"hullOnly"`) only matter if a
  * player never visits a given step at all, not because any step is still unbuilt.
  */
@@ -14,13 +14,14 @@ import {
   type LandingSiteId,
   type MissionDifficulty,
   type PowerArchitecture,
+  type Scenario,
   type ScenarioId,
   type ShieldingApproach,
 } from "@sol-keeper/sim";
 import { useRun } from "./run.js";
 
-/** M9.2a/b/c implement all six; Launch Packing (M9.2d) is the wizard's final review step,
- *  not a "choice" step, and is added separately once it exists. */
+/** The first six are choice steps (M9.2a/b/c); `launchPacking` (M9.2d) is a review step —
+ *  it reads the choices made so far rather than setting one of its own. */
 export const SETUP_STEPS = [
   "scenario",
   "difficulty",
@@ -28,6 +29,7 @@ export const SETUP_STEPS = [
   "landingSite",
   "power",
   "shielding",
+  "launchPacking",
 ] as const;
 export type SetupStepId = (typeof SETUP_STEPS)[number];
 
@@ -57,6 +59,29 @@ interface SetupStore {
   /** Builds the custom scenario from every choice made so far (defaulting the rest) and
    *  hands it straight to `useRun`'s own `reset`, then resets this wizard for next time. */
   commit: () => void;
+}
+
+/** Layers the wizard's current choices onto their base scenario — the same logic `commit()`
+ *  uses to actually start the mission, pulled out so `LaunchPackingStep` can preview the
+ *  exact scenario the player is about to launch, without committing anything. */
+export function resolveScenario(choices: {
+  readonly scenarioId: ScenarioId;
+  readonly landingSiteId: LandingSiteId | undefined;
+  readonly crewSize: number;
+  readonly powerArchitecture: PowerArchitecture;
+  readonly shieldingApproach: ShieldingApproach;
+}): Scenario {
+  const base = getScenario(choices.scenarioId);
+  const landingSiteId = choices.landingSiteId ?? landingSitesForBody(base.body)[0]?.id;
+  if (landingSiteId === undefined) {
+    throw new Error(`No landing site catalogued for body "${base.body}"`);
+  }
+  return buildCustomScenario(base, {
+    landingSiteId,
+    crewSize: choices.crewSize,
+    powerArchitecture: choices.powerArchitecture,
+    shieldingApproach: choices.shieldingApproach,
+  });
 }
 
 const initialChoices = {
@@ -114,17 +139,7 @@ export const useSetup = create<SetupStore>((set, get) => ({
 
   commit: () => {
     const choices = get();
-    const base = getScenario(choices.scenarioId);
-    const landingSiteId = choices.landingSiteId ?? landingSitesForBody(base.body)[0]?.id;
-    if (landingSiteId === undefined) {
-      throw new Error(`No landing site catalogued for body "${base.body}"`);
-    }
-    const scenario = buildCustomScenario(base, {
-      landingSiteId,
-      crewSize: choices.crewSize,
-      powerArchitecture: choices.powerArchitecture,
-      shieldingApproach: choices.shieldingApproach,
-    });
+    const scenario = resolveScenario(choices);
     useRun.getState().reset({ scenarioId: choices.scenarioId, crewSize: choices.crewSize, difficulty: choices.difficulty }, scenario);
     set({ ...initialChoices });
   },
