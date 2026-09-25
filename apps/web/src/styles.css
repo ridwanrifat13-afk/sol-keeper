@@ -573,29 +573,6 @@ code {
   opacity: 0.8;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .gauge-fill {
-    transition: none;
-  }
-
-  .establishing-shot-craft {
-    animation: none;
-    transform: translateX(292px);
-  }
-}
-
-/* M9.4c: the manual low-power-mode toggle (App.tsx) applies the exact same rules as the OS
-   preference above, regardless of what the OS itself reports — kept as a separate block
-   (a class selector can't join a `@media` block's condition) rather than merged into one. */
-:root.low-power-mode .gauge-fill {
-  transition: none;
-}
-
-:root.low-power-mode .establishing-shot-craft {
-  animation: none;
-  transform: translateX(292px);
-}
-
 /* ---------------------------------------------------------------- tab nav */
 .app-head-row {
   display: flex;
@@ -1552,4 +1529,37 @@ code {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--nominal);
+}
+
+/* ---------------------------------------------------------------- reduced motion (M9.7 fix) */
+/* Deliberately last in the file: every rule above that sets an `animation`/`transition` on
+   one of these selectors shares the exact same specificity (a single class), so normal CSS
+   cascade order — not specificity — decides the winner. Moved here after M9.7's own
+   Playwright pass caught a real bug: the OS-level media query used to sit near the top of
+   this file (right after :root), so a later same-specificity base rule for
+   .establishing-shot-craft (added in the "establishing shot" section, M9.3) silently won
+   regardless of the media query being active — prefers-reduced-motion never actually did
+   anything for that animation, only the manual low-power-mode toggle did (whose selector has
+   higher specificity — two classes, not one — so it was never affected by this bug). */
+@media (prefers-reduced-motion: reduce) {
+  .gauge-fill {
+    transition: none;
+  }
+
+  .establishing-shot-craft {
+    animation: none;
+    transform: translateX(292px);
+  }
+}
+
+/* The manual low-power-mode toggle (App.tsx) applies the exact same rules as the OS
+   preference above, regardless of what the OS itself reports — kept as a separate block
+   (a class selector can't join a `@media` block's condition) rather than merged into one. */
+:root.low-power-mode .gauge-fill {
+  transition: none;
+}
+
+:root.low-power-mode .establishing-shot-craft {
+  animation: none;
+  transform: translateX(292px);
 }
