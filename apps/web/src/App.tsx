@@ -18,11 +18,25 @@ import { DialSwitch } from "./components/DialSwitch.js";
 import { RunStatusBadge } from "./components/RunStatusBadge.js";
 import { EventFeed } from "./components/EventFeed.js";
 import { durationLabel } from "./dial/missionTime.js";
+import { SetupWizard } from "./views/Setup/SetupWizard.js";
 import "./i18n/config.js";
 
-type View = "power" | "lifeSupport" | "comms" | "incidentCommand" | "missionCommand" | "briefing" | "debrief";
+/** The tab-nav's own seven destinations — unchanged since M8.3. */
+type TabView =
+  | "power"
+  | "lifeSupport"
+  | "comms"
+  | "incidentCommand"
+  | "missionCommand"
+  | "briefing"
+  | "debrief";
 
-const TAB_IDS: readonly View[] = [
+/** M9: Setup is a real screen but deliberately not a tab-nav destination (see this file's own
+ *  doc comment) — a separate, wider type rather than adding it to `TabView` and every
+ *  `Record<TabView, ...>` below. */
+type View = TabView | "setup";
+
+const TAB_IDS: readonly TabView[] = [
   "power",
   "lifeSupport",
   "comms",
@@ -31,7 +45,7 @@ const TAB_IDS: readonly View[] = [
   "briefing",
   "debrief",
 ];
-const TAB_KEYS: Record<View, string> = {
+const TAB_KEYS: Record<TabView, string> = {
   power: "tabs.power",
   lifeSupport: "tabs.lifeSupport",
   comms: "tabs.comms",
@@ -51,9 +65,16 @@ const TAB_KEYS: Record<View, string> = {
  * M8.6's real Briefing content — those two files still exist but are temporarily unreached by
  * any tab until M8.6 folds them in, a disclosed gap for this sub-part, not a silent one.
  *
- * A fresh mission (and every `reset()`) now opens on Briefing, not mid-console, so "a new
- * player makes a first meaningful decision within 60 seconds" starts from the intended entry
- * point (brief's own M8 kickoff order: Briefing before every mission).
+ * The app opens on Setup (M9) — a real mission-configuration wizard, not the placeholder id
+ * switch `ScenarioSwitch` still is on Mission Command — and `reset()` itself still lands on
+ * Briefing (M8.3's own settled choice for what a `reset()` in progress, e.g. Restart, should
+ * show), so "a new player makes a first meaningful decision within 60 seconds" still starts
+ * from Briefing once a mission exists, just with a real setup step before the first one.
+ * Setup is deliberately not one of the tab-nav's own destinations (unlike the other seven) —
+ * reachable again via "New Mission" in the header actions, matching Data Sources' own
+ * non-tab placement — and while it's open, the tab nav, mission clock, and Decision Card for
+ * whatever mission is still running underneath are hidden rather than shown alongside a
+ * wizard for a mission that doesn't exist yet.
  *
  * Persistent, always-visible shell (not scoped to any one console): the tab nav, the mission
  * identity line + run-status badge, the Reality Dial switch, the sol clock (`TimeControls`,
@@ -67,7 +88,7 @@ const TAB_KEYS: Record<View, string> = {
  * i18n/config.ts for exactly what is and is not translated yet.
  */
 export function App() {
-  const [view, setView] = useState<View>("briefing");
+  const [view, setView] = useState<View>("setup");
   const [dataSourcesOpen, setDataSourcesOpen] = useState(false);
   const status = useRun((s) => s.state.status);
   const scenario = useRun((s) => s.scenario);
@@ -104,6 +125,15 @@ export function App() {
           <button
             type="button"
             className="btn btn-quiet"
+            onClick={() => {
+              setView("setup");
+            }}
+          >
+            New Mission
+          </button>
+          <button
+            type="button"
+            className="btn btn-quiet"
             aria-haspopup="dialog"
             aria-expanded={dataSourcesOpen}
             onClick={() => {
@@ -116,32 +146,42 @@ export function App() {
         </div>
       </div>
 
-      <header className="mission-head" key={version}>
-        <div>
-          <h1>Sol Keeper</h1>
-          <p className="mission-site">
-            {scenario.site.name} · {scenario.body === "mars" ? "Mars" : "Moon"} ·{" "}
-            {durationLabel(scenario.durationHours, scenario.body)} · {livingCrew}/{crew.length} crew
-          </p>
-        </div>
-        <RunStatusBadge />
-      </header>
+      {view === "setup" ? (
+        <SetupWizard
+          onLaunch={() => {
+            setView("briefing");
+          }}
+        />
+      ) : (
+        <>
+          <header className="mission-head" key={version}>
+            <div>
+              <h1>Sol Keeper</h1>
+              <p className="mission-site">
+                {scenario.site.name} · {scenario.body === "mars" ? "Mars" : "Moon"} ·{" "}
+                {durationLabel(scenario.durationHours, scenario.body)} · {livingCrew}/{crew.length} crew
+              </p>
+            </div>
+            <RunStatusBadge />
+          </header>
 
-      <DialSwitch />
-      <TimeControls />
-      <DecisionCard />
-      <SolSummaryView />
-      <CoachMark view={view} onNavigate={setView} />
+          <DialSwitch />
+          <TimeControls />
+          <DecisionCard />
+          <SolSummaryView />
+          <CoachMark view={view} onNavigate={setView} />
 
-      {view === "power" && <PowerConsole />}
-      {view === "lifeSupport" && <LifeSupportConsole />}
-      {view === "comms" && <CommsConsole />}
-      {view === "incidentCommand" && <IncidentCommandConsole />}
-      {view === "missionCommand" && <MissionCommandConsole />}
-      {view === "briefing" && <BriefingView />}
-      {view === "debrief" && <DebriefView />}
+          {view === "power" && <PowerConsole />}
+          {view === "lifeSupport" && <LifeSupportConsole />}
+          {view === "comms" && <CommsConsole />}
+          {view === "incidentCommand" && <IncidentCommandConsole />}
+          {view === "missionCommand" && <MissionCommandConsole />}
+          {view === "briefing" && <BriefingView />}
+          {view === "debrief" && <DebriefView />}
 
-      <EventFeed />
+          <EventFeed />
+        </>
+      )}
 
       <footer className="credits">
         <p>

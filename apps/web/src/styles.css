@@ -587,7 +587,13 @@ code {
   border-bottom: 1px solid var(--line);
   overflow-x: auto;
   flex: 1;
-  min-width: 0;
+  /* A flex item with overflow:auto has an implicit min-width:auto-collapses-to-0 (a classic
+     flexbox quirk) — with a `flex: 1` sibling row (.app-head-actions) crowded enough (M9
+     added a third header button, "New Mission"), the row's own flex-wrap never triggers
+     because the nav can always shrink to satisfy it instead, collapsing the whole tab bar to
+     a sliver instead of wrapping .app-head-actions onto its own line. A real minimum width
+     (not 0) is what makes flex-wrap actually engage when it should. */
+  min-width: 220px;
 }
 
 .language-switch {
@@ -727,6 +733,17 @@ code {
 
 .btn-scenario {
   flex: 1 1 160px;
+}
+
+/* ---------------------------------------------------------------- mission setup wizard (M9) */
+.setup-crew-size-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------------------------------------------------------------- view heads (Debrief, Data Sources) */

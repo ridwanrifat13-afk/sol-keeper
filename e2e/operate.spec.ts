@@ -6,7 +6,7 @@
  * the page actually paints, the CSS actually applies, and a click actually reaches the
  * store and comes back out as a DOM change — in a real Chromium, at a phone viewport.
  */
-import { expect, test } from "./fixtures.js";
+import { expect, skipSetup, test } from "./fixtures.js";
 import type { Page } from "@playwright/test";
 
 /**
@@ -54,9 +54,11 @@ async function advanceSol(page: Page, times: number): Promise<void> {
 }
 
 test.describe("App shell", () => {
-  test("opens on the Briefing screen, with the mission header always visible", async ({ page }) => {
+  test("opens on Setup, and Briefing (reachable from it) shows the mission header", async ({ page }) => {
     await page.goto("/");
+    await expect(page.getByText("Mission Setup")).toBeVisible();
 
+    await skipSetup(page);
     await expect(page.locator("h1")).toHaveText("Sol Keeper");
     await expect(page.locator(".mission-site")).toContainText("Jezero Crater");
     await expect(page.getByText("Mission Briefing")).toBeVisible();
@@ -204,6 +206,7 @@ test.describe("Life Support console", () => {
 
   test("advancing the clock changes the sol counter and fills the log", async ({ page }) => {
     await page.goto("/");
+    await skipSetup(page);
 
     await expect(page.getByText("Nothing has happened yet.")).toBeVisible();
 

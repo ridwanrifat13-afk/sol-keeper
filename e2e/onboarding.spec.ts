@@ -26,8 +26,13 @@ function tabButton(page: Page, label: string) {
 }
 
 test.describe("First Light coach mark", () => {
-  test("stays off Briefing, then walks all five stations in the brief's own order", async ({ page }) => {
+  test("stays off Setup and Briefing, then walks all five stations in the brief's own order", async ({ page }) => {
     await page.goto("/");
+    await expect(page.getByText("Mission Setup")).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "First Light tutorial" })).toHaveCount(0);
+
+    // Briefing is reachable straight from Setup (a real tab) — the tutorial stays off it too.
+    await tabButton(page, "Briefing").click();
     await expect(page.getByText("Mission Briefing")).toBeVisible();
     await expect(page.getByRole("dialog", { name: "First Light tutorial" })).toHaveCount(0);
 
@@ -96,9 +101,10 @@ test.describe("Gauge help", () => {
 
   test("cadet level shows plain-word help text instead", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /^Cadet/ }).click();
+    // DialSwitch is hidden while Setup is open — get off it first.
     await tabButton(page, "Life Support").click();
     await skipTutorialIfShown(page);
+    await page.getByRole("button", { name: /^Cadet/ }).click();
     await tabButton(page, "Life Support").click();
 
     await page.getByRole("button", { name: "What is Oxygen?" }).click();

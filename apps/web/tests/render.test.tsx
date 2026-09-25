@@ -34,6 +34,9 @@ import { IncidentCommandConsole } from "../src/views/IncidentCommand/IncidentCom
 import { MissionCommandConsole } from "../src/views/MissionCommand/MissionCommandConsole";
 import { BriefingView } from "../src/views/Briefing/BriefingView";
 import { CoachMark } from "../src/onboarding/CoachMark";
+import { TimeControls } from "../src/components/TimeControls";
+import { RunStatusBadge } from "../src/components/RunStatusBadge";
+import { DialSwitch } from "../src/components/DialSwitch";
 import { useRun } from "../src/store/run";
 import { useDial } from "../src/store/dial";
 import { useOnboarding } from "../src/store/onboarding";
@@ -51,21 +54,22 @@ beforeEach(() => {
   useOnboarding.setState({ seen: false, step: 0 });
 });
 
-describe("App shell, first frame (persistent across every tab)", () => {
-  it("shows the mission header for the Jezero scenario", () => {
+describe("App shell, first frame (M9: Setup is the true entry point)", () => {
+  it("opens on Setup, not Briefing — a real mission-configuration step before the first one", () => {
     const out = render();
     expect(out).toContain("Sol Keeper");
-    expect(out).toContain("Jezero Crater");
-    expect(out).toContain("30 sols");
-    expect(out).toContain("4/4 crew");
+    expect(out).toContain("Mission Setup");
+    expect(out).toContain("Choose a mission");
+    expect(out).not.toContain("Mission Briefing");
   });
 
-  it("renders the time controls and mission log on every tab, not just one console", () => {
+  it("the tab nav, New Mission, and Data Sources stay reachable even while Setup is open", () => {
     const out = render();
-    expect(out).toContain("Sol 0.00");
-    expect(out).toContain("+1 sol");
-    expect(out).toContain("Mission log");
-    expect(out).toContain("Nothing has happened yet");
+    expect(out).toContain("New Mission");
+    expect(out).toContain("Data Sources");
+    for (const label of ["Power", "Life Support", "Comms", "Incident Command", "Mission Command", "Briefing", "Debrief"]) {
+      expect(out, `missing tab: ${label}`).toContain(`>${label}<`);
+    }
   });
 
   it("carries the credit line and no NASA insignia (brief rule 5)", () => {
@@ -76,16 +80,38 @@ describe("App shell, first frame (persistent across every tab)", () => {
     expect(out).not.toMatch(/<img[^>]+nasa/i);
   });
 
-  it("the run status is a live region carrying text", () => {
+  it("no tab reads as the current page — Setup is deliberately not one of the seven tab-nav destinations", () => {
     const out = render();
-    expect(out).toContain('role="status"');
-    expect(out).toContain("Running");
+    expect((out.match(/aria-current="page"/g) ?? []).length).toBe(0);
   });
 
-  it("decorative glyphs are hidden from screen readers", () => {
+  it("mission-runtime chrome (clock, Decision Card, event feed) is hidden while Setup is open", () => {
     const out = render();
+    expect(out).not.toContain("Sol 0.00");
+    expect(out).not.toContain("Mission log");
+  });
+});
+
+describe("Persistent mission-runtime chrome, standalone (shown once a mission is underway, not during Setup)", () => {
+  it("TimeControls shows the sol clock and step controls", () => {
+    const out = render(<TimeControls />);
+    expect(out).toContain("Sol 0.00");
+    expect(out).toContain("+1 sol");
+  });
+
+  it("RunStatusBadge is a live region carrying real status text", () => {
+    const out = render(<RunStatusBadge />);
+    expect(out).toContain('role="status"');
+    expect(out).toContain("Running");
     // Every bare glyph is paired with aria-hidden so it is not read out as punctuation.
     expect(out).toContain('<span aria-hidden="true">●</span>');
+  });
+
+  it("DialSwitch renders all three Reality Dial levels", () => {
+    const out = render(<DialSwitch />);
+    expect(out).toContain("Cadet");
+    expect(out).toContain("Specialist");
+    expect(out).toContain("Commander");
   });
 });
 
@@ -93,9 +119,9 @@ describe("First Light coach mark (M8.7)", () => {
   // Zustand v5's SSR snapshot is fixed at store creation (see this file's own header comment)
   // so a later setState never shows up in renderToString — seen/step transitions are covered
   // directly against the store instead, in tests/onboarding.test.ts.
-  it("stays out of the way of Briefing, the app's default first frame", () => {
+  it("stays out of the way of Setup, the app's true default first frame", () => {
     const out = render();
-    expect(out).toContain("Mission Briefing");
+    expect(out).toContain("Mission Setup");
     expect(out).not.toContain("Skip tutorial");
   });
 
@@ -241,20 +267,17 @@ describe("Mission Command console, first frame", () => {
 });
 
 describe("Briefing view, first frame", () => {
-  it("is the default screen a fresh mission opens on", () => {
-    const out = render();
-    expect(out).toContain("Mission Briefing");
-    expect(out).toContain("Jezero Crater");
-  });
-
+  // Briefing is reached by completing Setup (App.tsx's onLaunch callback), which the SSR
+  // harness can't simulate (zustand v5's server snapshot is frozen at store creation, per
+  // this file's own header comment) — its own real content is still fully covered standalone.
   it("renders standalone with the same content", () => {
     const out = render(<BriefingView />);
     expect(out).toContain("Mission Briefing");
   });
 });
 
-describe("App shell: tab nav and Reality Dial, first frame", () => {
-  it("renders the five station consoles plus Briefing and Debrief, Briefing active by default", () => {
+describe("App shell: tab nav, first frame", () => {
+  it("renders the five station consoles plus Briefing and Debrief as real tab destinations", () => {
     const out = render();
     expect(out).toContain("Power");
     expect(out).toContain("Life Support");
@@ -267,25 +290,15 @@ describe("App shell: tab nav and Reality Dial, first frame", () => {
     // navigation) — still present, just outside .tab-nav, so this only checks the label
     // exists at all, not that it's a tab.
     expect(out).toContain("Data Sources");
-    // aria-current="page" is only present on the active tab's button.
-    expect((out.match(/aria-current="page"/g) ?? []).length).toBe(1);
-  });
-
-  it("renders the Reality Dial with Specialist selected by default", () => {
-    const out = render();
-    expect(out).toContain("Cadet");
-    expect(out).toContain("Specialist");
-    expect(out).toContain("Commander");
-    expect((out.match(/aria-pressed="true"/g) ?? []).length).toBeGreaterThanOrEqual(1);
   });
 
   // Switching the dial level and re-rendering to prove it changes the text is *not* testable
   // through renderToString: zustand v5 supplies every store's getInitialState() as
   // useSyncExternalStore's server snapshot, so an SSR render is frozen to whatever every
   // store held at module import, and setLevel() (like useRun's step()/reset()) simply never
-  // reaches it. That behaviour is what "renders the Reality Dial with Specialist selected by
-  // default" above actually exercises. The level's real effect on rendered text is proven
-  // directly against dial/present.ts in dial.test.ts, and against a live DOM in
+  // reaches it. That behaviour is what the standalone "DialSwitch renders all three Reality
+  // Dial levels" test above actually exercises. The level's real effect on rendered text is
+  // proven directly against dial/present.ts in dial.test.ts, and against a live DOM in
   // e2e/dial.spec.ts, where a real browser's hydration does observe store updates.
 });
 

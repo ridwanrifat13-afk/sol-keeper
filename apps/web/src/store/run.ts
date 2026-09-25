@@ -89,7 +89,12 @@ interface RunStore {
   setSpeed: (speed: Speed) => void;
   setPhase: (phase: "planning" | "running") => void;
   dismissSolSummary: () => void;
-  reset: (params?: Partial<Params>) => void;
+  /** `scenarioOverride` is M9's own setup flow's seam: `store/setup.ts`'s `commit()` builds a
+   *  custom `Scenario` (`buildCustomScenario`) from a player's landing-site/crew-size/power/
+   *  shielding choices and hands it straight through here, so `scenario` and `state` are
+   *  built from the exact same object — never resolved twice and left free to disagree.
+   *  Defaults to the base scenario `params.scenarioId` names, matching every pre-M9 caller. */
+  reset: (params?: Partial<Params>, scenarioOverride?: Scenario) => void;
   setSurvivalMode: (mode: SurvivalMode) => void;
   setPriority: (id: SystemId, direction: -1 | 1) => void;
   /** M8.1: the player-driven counterpart to `tickWithBot`'s bot-driven incident resolution
@@ -173,12 +178,13 @@ export const useRun = create<RunStore>((set, get) => ({
     set({ justEndedSol: undefined });
   },
 
-  reset: (overrides = {}) => {
+  reset: (overrides = {}, scenarioOverride) => {
     const params = { ...DEFAULT_PARAMS, ...overrides };
+    const scenario = scenarioOverride ?? getScenario(params.scenarioId);
     set({
       params,
-      scenario: getScenario(params.scenarioId),
-      state: createRun(params),
+      scenario,
+      state: createRun(params, scenario),
       version: 0,
       speed: "paused",
       phase: "planning",

@@ -6,7 +6,7 @@
  * note in apps/web/tests/render.test.tsx) — a real page load and real clicks don't have that
  * limitation, so switching the dial and finishing a mission can actually be observed here.
  */
-import { expect, test } from "./fixtures.js";
+import { expect, skipSetup, test } from "./fixtures.js";
 import type { Page } from "@playwright/test";
 
 test.describe("Reality Dial", () => {
@@ -34,7 +34,11 @@ test.describe("Reality Dial", () => {
     await page.getByRole("button", { name: /^Cadet/ }).click();
     await expect(page.getByText(/Plenty of air/)).toBeVisible();
 
+    // A reload always lands back on Setup (App.tsx's `view` state doesn't persist, only the
+    // Reality Dial's own choice does) — DialSwitch is hidden there, so the Cadet button isn't
+    // reachable until Setup is bypassed again.
     await page.reload();
+    await skipSetup(page);
     await expect(page.getByRole("button", { name: /^Cadet/ })).toHaveAttribute("aria-pressed", "true");
   });
 
@@ -56,6 +60,7 @@ test.describe("Reality Dial", () => {
 test.describe("Tab navigation", () => {
   test("switches between station consoles, Debrief, and Briefing", async ({ page }) => {
     await page.goto("/");
+    await skipSetup(page);
     await expect(page.locator("h1")).toHaveText("Sol Keeper");
     await expect(page.getByText("Mission Briefing")).toBeVisible();
 
@@ -115,6 +120,8 @@ test.describe("Tab navigation", () => {
  * way as a Decision Card.
  */
 async function finishMission(page: Page): Promise<void> {
+  // TimeControls (Run the sol / +1 sol) is hidden while Setup is open — get off it first.
+  await skipSetup(page);
   const solButton = page.getByRole("button", { name: "+1 sol" });
   const runSolButton = page.getByRole("button", { name: "Run the sol" });
   const continueButton = page.getByRole("button", { name: "Continue to Sol Planning" });

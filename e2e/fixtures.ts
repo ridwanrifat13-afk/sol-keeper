@@ -12,7 +12,7 @@
  * (e2e/onboarding.spec.ts) import directly from `@playwright/test` instead, deliberately
  * bypassing this fixture.
  */
-import { test as base, expect } from "@playwright/test";
+import { test as base, expect, type Page } from "@playwright/test";
 
 export const test = base.extend({
   page: async ({ page }, use) => {
@@ -24,3 +24,15 @@ export const test = base.extend({
 });
 
 export { expect };
+
+/**
+ * M9: the app now opens on Setup, not Briefing — every pre-M9 spec that expects to land
+ * straight on a running mission (the clock, Decision Card, and mission-head are all hidden
+ * while Setup is open) needs to get off it first. Clicking any real tab bypasses Setup
+ * entirely, using whatever mission is already loaded in the store — no need to actually
+ * complete the wizard for a spec that isn't about Setup itself. Defaults to Briefing, since
+ * that's where most pre-M9 specs already assumed they'd land.
+ */
+export async function skipSetup(page: Page, tab = "Briefing"): Promise<void> {
+  await page.locator(".tab-nav").getByRole("button", { name: tab }).click();
+}

@@ -7,10 +7,12 @@ import { COACH_MARK_ORDER, coachMarkText } from "../i18n/onboardingText.js";
 import { stationLabel } from "../dial/labels.js";
 
 interface CoachMarkProps {
-  /** The app shell's current tab. The tutorial stays out of the way of Briefing — the
-   *  deliberately-chosen mission entry point (M8.3's settled navigation) — and only starts
-   *  once the player has moved on to a station console under their own steam. */
-  readonly view: StationId | "briefing" | "debrief";
+  /** The app shell's current tab. The tutorial stays out of the way of Setup and Briefing —
+   *  M9 added Setup before Briefing as the app's true first screen, and the tutorial should
+   *  no more interrupt choosing a mission than it interrupts reading about the one already
+   *  chosen (M8.3's original "stays off Briefing" reasoning, just widened by one screen) —
+   *  and only starts once the player has moved on to a station console under their own steam. */
+  readonly view: StationId | "setup" | "briefing" | "debrief";
   readonly onNavigate: (station: StationId) => void;
 }
 
@@ -33,7 +35,7 @@ export function CoachMark({ view, onNavigate }: CoachMarkProps) {
 
   const totalSteps = COACH_MARK_ORDER.length;
   const station = COACH_MARK_ORDER[step] ?? COACH_MARK_ORDER[totalSteps - 1];
-  const active = !seen && station !== undefined && view !== "briefing" && view !== "debrief";
+  const active = !seen && station !== undefined && view !== "setup" && view !== "briefing" && view !== "debrief";
 
   useEffect(() => {
     if (!active || station === undefined) return;

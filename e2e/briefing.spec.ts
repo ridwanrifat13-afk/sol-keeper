@@ -6,10 +6,10 @@
  * widget itself (not just the surrounding text) comes up and requests real tiles from
  * trek.nasa.gov.
  */
-import { expect, test } from "./fixtures.js";
+import { expect, skipSetup, test } from "./fixtures.js";
 
 test.describe("Mission Briefing", () => {
-  test("is the default screen, with a real Leaflet map requesting actual Trek tiles for Jezero", async ({
+  test("reachable straight from Setup, with a real Leaflet map requesting actual Trek tiles for Jezero", async ({
     page,
   }) => {
     const tileRequests: string[] = [];
@@ -18,6 +18,7 @@ test.describe("Mission Briefing", () => {
     });
 
     await page.goto("/");
+    await skipSetup(page);
     await expect(page.getByText("Mission Briefing")).toBeVisible();
     await expect(page.getByText("Jezero Crater", { exact: false }).first()).toBeVisible();
 
@@ -54,6 +55,7 @@ test.describe("Mission Briefing", () => {
 
   test("shows real crew, goals, and failure-outcome content, not placeholders", async ({ page }) => {
     await page.goto("/");
+    await skipSetup(page);
 
     await expect(page.getByText("Crew", { exact: true })).toBeVisible();
     await expect(page.getByText("Ayesha")).toBeVisible();
@@ -72,6 +74,7 @@ test.describe("Mission Briefing", () => {
     page,
   }) => {
     await page.goto("/");
+    await skipSetup(page);
     await expect(page.locator(".leaflet-tile.leaflet-tile-loaded").first()).toBeVisible({ timeout: 5000 });
 
     // Every <img> on this screen must be one of Leaflet's own real Trek map tiles — not a
@@ -88,6 +91,7 @@ test.describe("Mission Briefing", () => {
 
   test("cadet level swaps in icon-led, shorter briefing text", async ({ page }) => {
     await page.goto("/");
+    await skipSetup(page);
     await page.getByRole("button", { name: /^Cadet/ }).click();
 
     await expect(page.getByText(/⚠️/)).toBeVisible();
@@ -96,6 +100,7 @@ test.describe("Mission Briefing", () => {
 
   test("full-page screenshot for a human to look at", async ({ page }, testInfo) => {
     await page.goto("/");
+    await skipSetup(page);
     await page.waitForTimeout(1500);
     await page.screenshot({ path: testInfo.outputPath("briefing.png"), fullPage: true });
   });

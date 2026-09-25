@@ -1,0 +1,128 @@
+/**
+ * M9's mission setup wizard — a short-lived, in-progress flow, not a settings preference
+ * (unlike store/dial.ts), so it deliberately does not persist across a reload.
+ *
+ * Only the scenario/difficulty/crew-size steps have real UI yet (M9.2a). `commit()` can
+ * still be called from any step: the choices M9.2b/c/d's own steps will make (landing site,
+ * power architecture, shielding) default sensibly in the meantime —
+ * `landingSitesForBody(scenario.body)[0]` (each body's catalog entry order puts its own
+ * scenario's real default site first, e.g. MARS-JEZERO for jezero-outpost), `"solarBattery"`,
+ * and `"hullOnly"` — so the wizard is never a dead end at any point in M9's own rollout, only
+ * progressively more interactive.
+ */
+import { create } from "zustand";
+import {
+  buildCustomScenario,
+  getScenario,
+  landingSitesForBody,
+  type LandingSiteId,
+  type MissionDifficulty,
+  type PowerArchitecture,
+  type ScenarioId,
+  type ShieldingApproach,
+} from "@sol-keeper/sim";
+import { useRun } from "./run.js";
+
+/** M9.2a implements the first three; M9.2b/c/d append their own ids here as those steps land
+ *  real UI, rather than this array anticipating steps that don't exist yet. */
+export const SETUP_STEPS = ["scenario", "difficulty", "crewSize"] as const;
+export type SetupStepId = (typeof SETUP_STEPS)[number];
+
+const MIN_CREW_SIZE = 2;
+const MAX_CREW_SIZE = 6;
+
+interface SetupStore {
+  stepIndex: number;
+  scenarioId: ScenarioId;
+  difficulty: MissionDifficulty;
+  crewSize: number;
+  /** `undefined` means "use this scenario's own default site" — resolved at `commit()` time,
+   *  not eagerly, so switching scenarios never has to guess whether a player-chosen site
+   *  should be kept or cleared. */
+  landingSiteId: LandingSiteId | undefined;
+  powerArchitecture: PowerArchitecture;
+  shieldingApproach: ShieldingApproach;
+
+  setScenarioId: (id: ScenarioId) => void;
+  setDifficulty: (difficulty: MissionDifficulty) => void;
+  setCrewSize: (size: number) => void;
+  setLandingSiteId: (id: LandingSiteId) => void;
+  setPowerArchitecture: (architecture: PowerArchitecture) => void;
+  setShieldingApproach: (approach: ShieldingApproach) => void;
+  next: () => void;
+  back: () => void;
+  /** Builds the custom scenario from every choice made so far (defaulting the rest) and
+   *  hands it straight to `useRun`'s own `reset`, then resets this wizard for next time. */
+  commit: () => void;
+}
+
+const initialChoices = {
+  stepIndex: 0,
+  scenarioId: "jezero-outpost" as ScenarioId,
+  difficulty: "nominal" as MissionDifficulty,
+  crewSize: 4,
+  landingSiteId: undefined as LandingSiteId | undefined,
+  powerArchitecture: "solarBattery" as PowerArchitecture,
+  shieldingApproach: "hullOnly" as ShieldingApproach,
+};
+
+export const useSetup = create<SetupStore>((set, get) => ({
+  ...initialChoices,
+
+  setScenarioId: (scenarioId) => {
+    const current = get();
+    const currentBody = getScenario(current.scenarioId).body;
+    const nextBody = getScenario(scenarioId).body;
+    // A chosen site only survives a scenario change if it's still valid for the new body —
+    // otherwise commit() would silently fall back to a default anyway, so clearing it here
+    // keeps the wizard's own state honest about what the player actually picked.
+    set({ scenarioId, landingSiteId: currentBody === nextBody ? current.landingSiteId : undefined });
+  },
+
+  setDifficulty: (difficulty) => {
+    set({ difficulty });
+  },
+
+  setCrewSize: (size) => {
+    set({ crewSize: Math.max(MIN_CREW_SIZE, Math.min(MAX_CREW_SIZE, size)) });
+  },
+
+  setLandingSiteId: (landingSiteId) => {
+    set({ landingSiteId });
+  },
+
+  setPowerArchitecture: (powerArchitecture) => {
+    set({ powerArchitecture });
+  },
+
+  setShieldingApproach: (shieldingApproach) => {
+    set({ shieldingApproach });
+  },
+
+  next: () => {
+    const { stepIndex } = get();
+    set({ stepIndex: Math.min(stepIndex + 1, SETUP_STEPS.length - 1) });
+  },
+
+  back: () => {
+    const { stepIndex } = get();
+    set({ stepIndex: Math.max(stepIndex - 1, 0) });
+  },
+
+  commit: () => {
+    const choices = get();
+    const base = getScenario(choices.scenarioId);
+    const landingSiteId = choices.landingSiteId ?? landingSitesForBody(base.body)[0]?.id;
+    if (landingSiteId === undefined) {
+      throw new Error(`No landing site catalogued for body "${base.body}"`);
+    }
+    const scenario = buildCustomScenario(base, {
+      landingSiteId,
+      crewSize: choices.crewSize,
+      powerArchitecture: choices.powerArchitecture,
+      shieldingApproach: choices.shieldingApproach,
+    });
+    useRun.getState().reset({ scenarioId: choices.scenarioId, crewSize: choices.crewSize, difficulty: choices.difficulty }, scenario);
+    set({ ...initialChoices });
+  },
+}));
