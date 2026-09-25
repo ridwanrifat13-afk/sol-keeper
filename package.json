@@ -17,7 +17,8 @@
     "sim": "pnpm --filter @sol-keeper/sim run sim",
     "verify": "pnpm typecheck && pnpm lint && pnpm test",
     "e2e": "playwright test",
-    "e2e:ui": "playwright test --ui"
+    "e2e:ui": "playwright test --ui",
+    "lighthouse": "node scripts/lighthouse.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -30,6 +31,7 @@
     "@types/node": "^24.5.2",
     "eslint": "^9.36.0",
     "eslint-config-prettier": "^10.1.8",
+    "lighthouse": "^12.8.2",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.1",

@@ -21,5 +21,8 @@ playwright-report
 playwright/.cache
 blob-report
 
+# Lighthouse
+lighthouse-report
+
 # os
 .DS_Store
