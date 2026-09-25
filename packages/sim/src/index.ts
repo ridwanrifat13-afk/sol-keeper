@@ -78,6 +78,9 @@ export { sizePowerArchitecture } from "./engine/powerArchitecture.js";
 export type { SizedShielding } from "./engine/shielding.js";
 export { sizeShielding } from "./engine/shielding.js";
 
+export type { SetupChoices } from "./engine/setup.js";
+export { buildCustomScenario } from "./engine/setup.js";
+
 export type { RngState, Stream, StreamName } from "./engine/rng.js";
 export { Rng, createRngState } from "./engine/rng.js";
 
@@ -138,19 +141,24 @@ export { pio2MmHg, totalPressureMmHg } from "./models/atmosphere.js";
 
 export * as units from "./units.js";
 
-import type { Params, SimState } from "./types.js";
+import type { Params, Scenario, SimState } from "./types.js";
 import { getScenario } from "./data/scenarios/index.js";
 import { createInitialState } from "./engine/state.js";
 import { run } from "./engine/tick.js";
 
-/** Convenience: build the opening state for a run. */
-export function createRun(params: Params): SimState {
-  return createInitialState(params);
+/** Convenience: build the opening state for a run. `scenario` defaults to the base scenario
+ *  `params.scenarioId` names (every existing caller keeps working unchanged) — see
+ *  `createInitialState`'s own doc comment for why M9's setup flow needs this seam. */
+export function createRun(params: Params, scenario: Scenario = getScenario(params.scenarioId)): SimState {
+  return createInitialState(params, scenario);
 }
 
 /** Convenience: create and play a whole scenario through to its end. */
-export function runScenario(params: Params, extraHours = 0): SimState {
-  const scenario = getScenario(params.scenarioId);
-  const state = createInitialState(params);
+export function runScenario(
+  params: Params,
+  extraHours = 0,
+  scenario: Scenario = getScenario(params.scenarioId),
+): SimState {
+  const state = createInitialState(params, scenario);
   return run(state, params, scenario, scenario.durationHours + extraHours);
 }

@@ -87,8 +87,16 @@ export function ambientDoseMSvPerDay(body: Scenario["body"]): number {
     : radiation.moonSurfaceMSvPerDay.value;
 }
 
-export function createInitialState(params: Params): SimState {
-  const scenario = getScenario(params.scenarioId);
+/**
+ * `scenario` defaults to the base scenario `params.scenarioId` names — every existing caller
+ * (the CLI, the balance harness, e2e fixtures) keeps working unchanged. M9's setup flow is the
+ * one real caller that ever passes something else: `engine/setup.ts`'s `buildCustomScenario`
+ * layers a player's landing-site/crew-size/power/shielding choices onto the base scenario and
+ * hands the result straight through here, so `state.crew.length`/`scenario.crewSize` and
+ * `scenario.site`/`state.thermal.outsideTempC` etc. can never silently disagree with what the
+ * player actually chose.
+ */
+export function createInitialState(params: Params, scenario: Scenario = getScenario(params.scenarioId)): SimState {
   const init = scenario.initial;
 
   const startTempC = 22;
