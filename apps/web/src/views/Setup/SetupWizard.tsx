@@ -3,6 +3,7 @@ import { ScenarioStep } from "./ScenarioStep.js";
 import { DifficultyStep } from "./DifficultyStep.js";
 import { CrewSizeStep } from "./CrewSizeStep.js";
 import { LandingSiteStep } from "./LandingSiteStep.js";
+import { EstablishingShot } from "./EstablishingShot.js";
 import { PowerArchitectureStep } from "./PowerArchitectureStep.js";
 import { ShieldingStep } from "./ShieldingStep.js";
 import { LaunchPackingStep } from "./LaunchPackingStep.js";
@@ -12,6 +13,7 @@ const STEP_LABELS: Record<SetupStepId, string> = {
   difficulty: "Difficulty",
   crewSize: "Crew size",
   landingSite: "Landing site",
+  transit: "Transit",
   power: "Power",
   shielding: "Shielding",
   launchPacking: "Launch Packing",
@@ -24,9 +26,10 @@ interface SetupWizardProps {
 }
 
 /**
- * M9's mission setup wizard. Every step has real UI now (M9.2a-d) — Launch Packing is the
- * final review step, not a "choice" step, previewing the exact scenario "Launch Mission"
- * is about to commit.
+ * M9's mission setup wizard. Every step has real UI now (M9.2a-d, M9.3) — Transit (the
+ * Earth-to-body establishing shot) and Launch Packing are review/flourish steps, not
+ * "choice" steps: Launch Packing previews the exact scenario "Launch Mission" is about to
+ * commit.
  */
 export function SetupWizard({ onLaunch }: SetupWizardProps) {
   const stepIndex = useSetup((s) => s.stepIndex);
@@ -50,6 +53,7 @@ export function SetupWizard({ onLaunch }: SetupWizardProps) {
       {stepId === "difficulty" && <DifficultyStep />}
       {stepId === "crewSize" && <CrewSizeStep />}
       {stepId === "landingSite" && <LandingSiteStep />}
+      {stepId === "transit" && <EstablishingShot />}
       {stepId === "power" && <PowerArchitectureStep />}
       {stepId === "shielding" && <ShieldingStep />}
       {stepId === "launchPacking" && <LaunchPackingStep />}

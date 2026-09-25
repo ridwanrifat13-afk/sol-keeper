@@ -20,13 +20,17 @@ import {
 } from "@sol-keeper/sim";
 import { useRun } from "./run.js";
 
-/** The first six are choice steps (M9.2a/b/c); `launchPacking` (M9.2d) is a review step —
- *  it reads the choices made so far rather than setting one of its own. */
+/** The six choice steps (M9.2a/b/c) plus two review/flourish steps that read the choices
+ *  made so far rather than setting one of their own: `transit` (M9.3's establishing shot,
+ *  needs only `scenarioId`/`landingSiteId`, so it sits right after the site is chosen and
+ *  before the power/shielding trade-offs) and `launchPacking` (M9.2d, the wizard's final
+ *  review before launch). */
 export const SETUP_STEPS = [
   "scenario",
   "difficulty",
   "crewSize",
   "landingSite",
+  "transit",
   "power",
   "shielding",
   "launchPacking",
