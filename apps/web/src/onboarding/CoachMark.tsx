@@ -7,12 +7,14 @@ import { COACH_MARK_ORDER, coachMarkText } from "../i18n/onboardingText.js";
 import { stationLabel } from "../dial/labels.js";
 
 interface CoachMarkProps {
-  /** The app shell's current tab. The tutorial stays out of the way of Setup and Briefing —
-   *  M9 added Setup before Briefing as the app's true first screen, and the tutorial should
-   *  no more interrupt choosing a mission than it interrupts reading about the one already
-   *  chosen (M8.3's original "stays off Briefing" reasoning, just widened by one screen) —
-   *  and only starts once the player has moved on to a station console under their own steam. */
-  readonly view: StationId | "setup" | "briefing" | "debrief";
+  /** The app shell's current tab. The tutorial stays out of the way of Setup, Briefing, and
+   *  Habitat — M9 added Setup before Briefing as the app's true first screen, and M9.4a added
+   *  Habitat as a sixth non-station tab (a visualization, not a console with its own
+   *  station), so the tutorial should no more interrupt either than it interrupts reading
+   *  about the mission already chosen (M8.3's original "stays off Briefing" reasoning, just
+   *  widened twice) — it only starts once the player has moved on to a station console under
+   *  their own steam. */
+  readonly view: StationId | "setup" | "briefing" | "debrief" | "habitat";
   readonly onNavigate: (station: StationId) => void;
 }
 
@@ -35,7 +37,8 @@ export function CoachMark({ view, onNavigate }: CoachMarkProps) {
 
   const totalSteps = COACH_MARK_ORDER.length;
   const station = COACH_MARK_ORDER[step] ?? COACH_MARK_ORDER[totalSteps - 1];
-  const active = !seen && station !== undefined && view !== "setup" && view !== "briefing" && view !== "debrief";
+  const active =
+    !seen && station !== undefined && view !== "setup" && view !== "briefing" && view !== "debrief" && view !== "habitat";
 
   useEffect(() => {
     if (!active || station === undefined) return;

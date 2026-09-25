@@ -1486,3 +1486,13 @@ code {
     transform: translateX(292px);
   }
 }
+
+/* ---------------------------------------------------------------- habitat (M9.4a) */
+.habitat-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 400 / 220;
+  border-radius: var(--radius);
+  overflow: hidden;
+}

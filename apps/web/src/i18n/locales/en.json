@@ -6,6 +6,7 @@
     "comms": "Comms",
     "incidentCommand": "Incident Command",
     "missionCommand": "Mission Command",
+    "habitat": "Habitat",
     "briefing": "Briefing",
     "debrief": "Debrief",
     "dataSources": "Data Sources",

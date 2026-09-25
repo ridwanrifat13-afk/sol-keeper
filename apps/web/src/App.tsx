@@ -6,6 +6,7 @@ import { LifeSupportConsole } from "./views/LifeSupport/LifeSupportConsole.js";
 import { CommsConsole } from "./views/Comms/CommsConsole.js";
 import { IncidentCommandConsole } from "./views/IncidentCommand/IncidentCommandConsole.js";
 import { MissionCommandConsole } from "./views/MissionCommand/MissionCommandConsole.js";
+import { HabitatView } from "./views/Habitat/HabitatView.js";
 import { BriefingView } from "./views/Briefing/BriefingView.js";
 import { DebriefView } from "./views/Debrief/DebriefView.js";
 import { DataSourcesView } from "./views/DataSources/DataSourcesView.js";
@@ -21,13 +22,15 @@ import { durationLabel } from "./dial/missionTime.js";
 import { SetupWizard } from "./views/Setup/SetupWizard.js";
 import "./i18n/config.js";
 
-/** The tab-nav's own seven destinations — unchanged since M8.3. */
+/** The tab-nav's own eight destinations — seven since M8.3, plus Habitat (M9.4a) as the
+ *  confirmed 6th slot: after the five station consoles, before Briefing/Debrief. */
 type TabView =
   | "power"
   | "lifeSupport"
   | "comms"
   | "incidentCommand"
   | "missionCommand"
+  | "habitat"
   | "briefing"
   | "debrief";
 
@@ -42,6 +45,7 @@ const TAB_IDS: readonly TabView[] = [
   "comms",
   "incidentCommand",
   "missionCommand",
+  "habitat",
   "briefing",
   "debrief",
 ];
@@ -51,6 +55,7 @@ const TAB_KEYS: Record<TabView, string> = {
   comms: "tabs.comms",
   incidentCommand: "tabs.incidentCommand",
   missionCommand: "tabs.missionCommand",
+  habitat: "tabs.habitat",
   briefing: "tabs.briefing",
   debrief: "tabs.debrief",
 };
@@ -58,12 +63,18 @@ const TAB_KEYS: Record<TabView, string> = {
 /**
  * The app shell (M8.3): the five station consoles plus Briefing and Debrief, replacing
  * Phase 2 (M2-M7)'s seven-tab IA — still a plain `useState<View>` tab switch, no router (the
- * brief reaffirms this is not needed for seven destinations; adding one would be a dependency
- * to clear first). Ripple Web, Live Sky, Launch Packing and Landing Site are no longer their
- * own tabs: their content folded into the five consoles (Ripple -> Incident Command, Live
- * Sky's two halves -> Power and Comms) or, for Landing Site/Launch Packing, is deferred to
- * M8.6's real Briefing content — those two files still exist but are temporarily unreached by
- * any tab until M8.6 folds them in, a disclosed gap for this sub-part, not a silent one.
+ * brief reaffirms this is not needed for this many destinations; adding one would be a
+ * dependency to clear first). Ripple Web, Live Sky, Launch Packing and Landing Site are no
+ * longer their own tabs: their content folded into the five consoles (Ripple -> Incident
+ * Command, Live Sky's two halves -> Power and Comms) or, for Landing Site/Launch Packing, is
+ * deferred to M8.6's real Briefing content — those two files still exist but are temporarily
+ * unreached by any tab until M8.6 folds them in, a disclosed gap for this sub-part, not a
+ * silent one.
+ *
+ * M9.4a adds Habitat as an eighth tab-nav destination, at the confirmed 6th slot (after the
+ * five station consoles, before Briefing/Debrief) — a visualization, not a control surface:
+ * it reads `state.environment` the same way every console reads its own slice, but has no
+ * levers of its own.
  *
  * The app opens on Setup (M9) — a real mission-configuration wizard, not the placeholder id
  * switch `ScenarioSwitch` still is on Mission Command — and `reset()` itself still lands on
@@ -176,6 +187,7 @@ export function App() {
           {view === "comms" && <CommsConsole />}
           {view === "incidentCommand" && <IncidentCommandConsole />}
           {view === "missionCommand" && <MissionCommandConsole />}
+          {view === "habitat" && <HabitatView />}
           {view === "briefing" && <BriefingView />}
           {view === "debrief" && <DebriefView />}
 
