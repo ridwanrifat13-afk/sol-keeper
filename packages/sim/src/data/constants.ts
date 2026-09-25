@@ -535,6 +535,27 @@ export const power = {
     source: "BVAD-2022",
     confidence: "measured",
   }),
+  // M9: engine/powerArchitecture.ts's setup-time sizing. Deliberately NOT reverse-engineered
+  // from the three existing scenarios' own array/battery numbers — jezero-outpost's 380 m^2
+  // array generates roughly 7x its own ~9.5 kW peak demand, which may reflect other, earlier
+  // design considerations (dust-storm resilience headroom, an intentionally generous first
+  // guess) this project has no record of; inventing a margin to match that ratio exactly
+  // would be reverse-fitting a number, not deriving one. These are honest, disclosed, tuned
+  // choices instead.
+  setupArrayMarginFraction: c({
+    value: 2.0,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "A player-configured solarBattery/hybrid array is sized to generate this many times peak demand — headroom for same-day battery recharge and dust/inefficiency losses a bare 1x sizing wouldn't survive.",
+  }),
+  fissionBufferHours: c({
+    value: 6,
+    unit: "h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "A player-configured fission/hybrid setup's buffer battery is sized to this many hours of peak demand. Anchored to the-long-night's own real fission setup: 80 kWh capacity against a 14.7 kW peak demand is ~5.4 h, rounded up to a clean 6.",
+  }),
 } as const;
 
 /** Planetary environment. */

@@ -30,6 +30,15 @@ export type LandingSiteId =
 export type IlluminationModel = "latitudeSolar" | "polarRidge" | "equatorialLunar";
 export type IceAccess = "none" | "low" | "moderate" | "high";
 
+/** M9: a player-chosen power setup, sized at mission setup by engine/powerArchitecture.ts's
+ *  `sizePowerArchitecture` — solar array + battery, a single non-scaling NASA-FSP reactor, or
+ *  both together (the full reactor plus a partial daytime-only array, not a cost saving). */
+export type PowerArchitecture = "solarBattery" | "fission" | "hybrid";
+
+/** M9: how a mission's radiation shielding is funded — a real, differentiated trade-off
+ *  (mass launched vs. crew-hours spent), sized by engine/shielding.ts. */
+export type ShieldingApproach = "hullOnly" | "waterWall" | "regolithBerm";
+
 /**
  * A real candidate landing site (docs/LANDING_SITES.md), independent of which of the three
  * fixed scenarios a player picked — M9's setup flow lets a player choose any site valid for

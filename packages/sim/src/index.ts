@@ -30,12 +30,14 @@ export type {
   MissionDifficulty,
   MissionGoal,
   Params,
+  PowerArchitecture,
   PowerState,
   RadiationState,
   RunStatus,
   Scenario,
   ScenarioId,
   ScriptedEvent,
+  ShieldingApproach,
   Severity,
   SimState,
   StationId,
@@ -69,6 +71,9 @@ export {
 
 export { SCENARIOS, firstLight, getScenario, jezeroOutpost, theLongNight } from "./data/scenarios/index.js";
 export { LANDING_SITES, getLandingSite, landingSitesForBody } from "./data/landingSites.js";
+
+export type { SizedPowerArchitecture } from "./engine/powerArchitecture.js";
+export { sizePowerArchitecture } from "./engine/powerArchitecture.js";
 
 export type { RngState, Stream, StreamName } from "./engine/rng.js";
 export { Rng, createRngState } from "./engine/rng.js";
