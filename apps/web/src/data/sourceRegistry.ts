@@ -230,4 +230,37 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7375148/",
     usedFor: "duststorm-2018's own residual cost: InSight's real ~0.28%/sol permanent dust decline, never fully recoverable — the model for dust accumulation being permanent and cumulative",
   },
+  "NASA-M2020-LANDING": {
+    title: "NASA Mars 2020 Perseverance landing site (Octavia E. Butler Landing, Jezero Crater)",
+    usedFor: "MARS-JEZERO landing-site coordinates, 18.44°N, 77.45°E",
+  },
+  "NASA-MSL-LANDING": {
+    title: "NASA Mars Science Laboratory Curiosity landing site (Bradbury Landing, Gale Crater)",
+    usedFor: "MARS-GALE landing-site coordinates, 4.59°S, 137.44°E",
+  },
+  "SWIM-2021": {
+    title: "Morgan et al. (2021), \"Availability of subsurface water-ice resources in the northern mid-latitudes of Mars\", Nature Astronomy 5",
+    url: "https://www.nature.com/articles/s41550-020-01290-z",
+    usedFor: "MARS-ARCADIA's accessible subsurface ice; also the absence-of-ice evidence for MARS-JEZERO",
+  },
+  "LUZZI-2025": {
+    title: "Luzzi et al. (2025), JGR Planets",
+    url: "https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2024JE008724",
+    usedFor: "MARS-ARCADIA: ice beneath thermal-contraction polygons at roughly tens of centimetres depth",
+  },
+  "NASA-ARTEMIS-CLR": {
+    title: "NASA, \"NASA Identifies Candidate Regions for Landing Next Americans on the Moon\"",
+    url: "https://www.nasa.gov/news-release/nasa-identifies-candidate-regions-for-landing-next-americans-on-Moon/",
+    usedFor: "MOON-CONNECTING-RIDGE and MOON-MALAPERT as official Artemis III candidate landing regions",
+  },
+  "WUELLER-2026": {
+    title: "Wueller et al. (2026), JGR Planets",
+    url: "https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2025JE009434",
+    usedFor: "terrain suitability for MOON-CONNECTING-RIDGE and MOON-MALAPERT",
+  },
+  "AIP-2023-REGOLITH-SHIELD": {
+    title: "Al Zaman & Kunja (2023), \"Effectiveness of radiation shields constructed from Martian regolith and different polymers\", AIP Advances 13",
+    url: "https://pubs.aip.org/aip/adv/article/13/8/085108/2905736",
+    usedFor: "the regolithBerm shielding approach's g/cm² delta (a 15 g/cm² regolith+polymer combination shield)",
+  },
 };

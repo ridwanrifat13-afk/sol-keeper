@@ -82,6 +82,16 @@ export const SOURCE_IDS = [
   "ICES-2019-CDRA",
   "JPL-DUSTSTORM2018-TAU",
   "LORENZ-2020-INSIGHT-DUST",
+  // M9: docs/LANDING_SITES.md's own "For the team" list — named there, added here per that
+  // doc's own instruction ("Add the NEW source IDs to docs/DATA_SOURCES.md before M9 ships").
+  "NASA-M2020-LANDING",
+  "NASA-MSL-LANDING",
+  "SWIM-2021",
+  "LUZZI-2025",
+  "NASA-ARTEMIS-CLR",
+  "WUELLER-2026",
+  // M9: the regolith-berm shielding delta (engine/constants.ts's habitat group).
+  "AIP-2023-REGOLITH-SHIELD",
 ] as const;
 
 export type SourceId = (typeof SOURCE_IDS)[number];

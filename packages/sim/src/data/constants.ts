@@ -10,6 +10,14 @@
  *   - where the brief quotes a convenient secondary form (e.g. "11.82 MJ/CM-day = 136.8 W"),
  *     the secondary form goes in `note` as a cross-check, not into a second constant that
  *     could drift.
+ *
+ * `confidence: "placeholder"` convention (M9, docs/LANDING_SITES.md): a number the team has
+ * flagged as needed but not yet sourced still needs a real, registered `SourceId` (the closed
+ * union means it cannot cite one that doesn't exist) — cite `"GAME-DESIGN"` and let `note`
+ * state plainly what's missing and what would resolve it. This is distinguishable from a real
+ * `GAME-DESIGN`/`"tuned"` balance value by the confidence tag alone, and is how a genuinely
+ * unsourced figure stays visible rather than silently guessed (the brief's own "never present
+ * a placeholder as a fact" rule) until someone supplies the real document.
  */
 import { c } from "./sources.js";
 
