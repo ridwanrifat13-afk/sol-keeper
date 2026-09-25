@@ -18,8 +18,12 @@ export type {
   EventId,
   FoodState,
   HazardKind,
+  IceAccess,
+  IlluminationModel,
   InitialResources,
   IsruState,
+  LandingSite,
+  LandingSiteId,
   LegacyDifficulty,
   LogEntry,
   LogKind,
@@ -64,6 +68,7 @@ export {
 } from "./data/constants.js";
 
 export { SCENARIOS, firstLight, getScenario, jezeroOutpost, theLongNight } from "./data/scenarios/index.js";
+export { LANDING_SITES, getLandingSite, landingSitesForBody } from "./data/landingSites.js";
 
 export type { RngState, Stream, StreamName } from "./engine/rng.js";
 export { Rng, createRngState } from "./engine/rng.js";

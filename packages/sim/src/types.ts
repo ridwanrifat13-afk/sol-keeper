@@ -8,9 +8,71 @@
  *     three Reality Dial depths in two languages (brief rule 4).
  */
 import type { RngState } from "./engine/rng.js";
+import type { Constant, SourceId } from "./data/sources.js";
 
 export type Body = "mars" | "moon";
 export type ScenarioId = "jezero-outpost" | "first-light" | "the-long-night";
+
+/** M9: docs/LANDING_SITES.md's own catalog, one entry per real candidate site. */
+export type LandingSiteId =
+  | "MARS-JEZERO"
+  | "MARS-GALE"
+  | "MARS-ARCADIA"
+  | "MOON-CONNECTING-RIDGE"
+  | "MOON-MALAPERT"
+  | "MOON-EQUATORIAL";
+
+/** How a site's illumination behaves over time — drives battery/solar sizing (engine/
+ *  powerArchitecture.ts). "latitudeSolar": ordinary day/night cycle, sun angle by latitude
+ *  (Mars sites). "polarRidge": near-continuous sun with short, frequent shadow periods, not
+ *  a long night (the two Moon polar sites). "equatorialLunar": a ~14.75-Earth-day night
+ *  (MOON-EQUATORIAL only). */
+export type IlluminationModel = "latitudeSolar" | "polarRidge" | "equatorialLunar";
+export type IceAccess = "none" | "low" | "moderate" | "high";
+
+/**
+ * A real candidate landing site (docs/LANDING_SITES.md), independent of which of the three
+ * fixed scenarios a player picked — M9's setup flow lets a player choose any site valid for
+ * the chosen scenario's `body`. Every numeric field is a `Constant` (not a bare number) so
+ * its own `confidence` travels with it: several of these are genuinely still `"placeholder"`
+ * (see docs/LANDING_SITES.md's own disclosure), and the brief's own M9 rule is "never present
+ * a placeholder as a fact" — the Reality Dial's Commander depth and the Data Sources screen
+ * both need the per-field confidence to honour that.
+ */
+export interface LandingSite {
+  readonly id: LandingSiteId;
+  readonly body: Body;
+  readonly name: string;
+  readonly latDeg: Constant<number>;
+  readonly lonDeg: Constant<number>;
+  /** Omitted, not placeholdered, where the source material gives no figure at all (the three
+   *  Moon sites) — docs/LANDING_SITES.md only discusses elevation for the three Mars sites. */
+  readonly elevationM?: Constant<number>;
+  readonly illuminationModel: IlluminationModel;
+  /** Fraction of the lunar year the site sees sunlight — `polarRidge` sites only. */
+  readonly illuminationFraction?: Constant<number>;
+  /** The longest single dark stretch, in hours — the real battery-sizing driver
+   *  (engine/powerArchitecture.ts), not the illumination fraction on its own: a polar ridge
+   *  and an equatorial site can share a similar fraction while needing wildly different
+   *  battery capacities, because one's darkness comes in short stretches and the other's in
+   *  one ~354-hour night. */
+  readonly maxDarkHours: Constant<number>;
+  readonly iceAccess: IceAccess;
+  /** Crew-hours per water-gathering run — only meaningful when `iceAccess !== "none"`. */
+  readonly iceTraverseHours?: Constant<number>;
+  readonly doseMSvPerDay: Constant<number>;
+  /** Fraction of time Earth is in view (comms visibility), 0-1. */
+  readonly commsVisibilityFraction: Constant<number>;
+  /** Affects EVA time and construction (e.g. a regolith berm) — 0-1, higher is harder. */
+  readonly terrainDifficulty: Constant<number>;
+  /** 0 for every Moon site (no atmosphere to loft dust), not omitted — a reader should never
+   *  have to guess whether a missing field means "zero" or "not modelled here". */
+  readonly dustExposure: Constant<number>;
+  /** Every `SourceId` this site's fields draw from, for the Data Sources screen's per-site
+   *  rollup — deliberately separate from each field's own individual `source`, since several
+   *  fields on one site cite different documents. */
+  readonly sourceIds: readonly SourceId[];
+}
 
 /**
  * Scenario parameters only (starting margins, incident frequency, warning time) — never
