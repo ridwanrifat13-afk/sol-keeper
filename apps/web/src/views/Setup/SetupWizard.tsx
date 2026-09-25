@@ -3,12 +3,16 @@ import { ScenarioStep } from "./ScenarioStep.js";
 import { DifficultyStep } from "./DifficultyStep.js";
 import { CrewSizeStep } from "./CrewSizeStep.js";
 import { LandingSiteStep } from "./LandingSiteStep.js";
+import { PowerArchitectureStep } from "./PowerArchitectureStep.js";
+import { ShieldingStep } from "./ShieldingStep.js";
 
 const STEP_LABELS: Record<SetupStepId, string> = {
   scenario: "Scenario",
   difficulty: "Difficulty",
   crewSize: "Crew size",
   landingSite: "Landing site",
+  power: "Power",
+  shielding: "Shielding",
 };
 
 interface SetupWizardProps {
@@ -18,11 +22,8 @@ interface SetupWizardProps {
 }
 
 /**
- * M9's mission setup wizard. Scenario/difficulty/crew-size/landing-site have real UI
- * (M9.2a/M9.2b) — power architecture and shielding (M9.2c/d) will append their own ids to
- * store/setup.ts's `SETUP_STEPS` and a case below, each one making `commit()`'s existing
- * sensible defaults progressively more player-chosen rather than changing how this shell
- * works.
+ * M9's mission setup wizard. Every choice step has real UI now (M9.2a/b/c) — Launch Packing
+ * (M9.2d) will append as the wizard's final review step, not a "choice" step, once it exists.
  */
 export function SetupWizard({ onLaunch }: SetupWizardProps) {
   const stepIndex = useSetup((s) => s.stepIndex);
@@ -46,6 +47,8 @@ export function SetupWizard({ onLaunch }: SetupWizardProps) {
       {stepId === "difficulty" && <DifficultyStep />}
       {stepId === "crewSize" && <CrewSizeStep />}
       {stepId === "landingSite" && <LandingSiteStep />}
+      {stepId === "power" && <PowerArchitectureStep />}
+      {stepId === "shielding" && <ShieldingStep />}
 
       <div className="button-row">
         <button type="button" className="btn btn-quiet" disabled={stepIndex === 0} onClick={back}>

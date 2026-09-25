@@ -777,6 +777,11 @@ code {
   white-space: nowrap;
 }
 
+.setup-sized-numbers {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
 /* ---------------------------------------------------------------- view heads (Debrief, Data Sources) */
 .view-head {
   margin-bottom: var(--gap);

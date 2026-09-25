@@ -2,11 +2,9 @@
  * M9's mission setup wizard — a short-lived, in-progress flow, not a settings preference
  * (unlike store/dial.ts), so it deliberately does not persist across a reload.
  *
- * Scenario/difficulty/crew-size/landing-site have real UI (M9.2a/M9.2b). `commit()` can
- * still be called from any step: the choices M9.2c/d's own steps will make (power
- * architecture, shielding) default sensibly in the meantime — `"solarBattery"` and
- * `"hullOnly"` — so the wizard is never a dead end at any point in M9's own rollout, only
- * progressively more interactive.
+ * Every choice step now has real UI (M9.2a/b/c) — `commit()`'s own defaults
+ * (`landingSitesForBody(scenario.body)[0]`, `"solarBattery"`, `"hullOnly"`) only matter if a
+ * player never visits a given step at all, not because any step is still unbuilt.
  */
 import { create } from "zustand";
 import {
@@ -21,9 +19,16 @@ import {
 } from "@sol-keeper/sim";
 import { useRun } from "./run.js";
 
-/** M9.2a/b implement the first four; M9.2c/d append their own ids here as those steps land
- *  real UI, rather than this array anticipating steps that don't exist yet. */
-export const SETUP_STEPS = ["scenario", "difficulty", "crewSize", "landingSite"] as const;
+/** M9.2a/b/c implement all six; Launch Packing (M9.2d) is the wizard's final review step,
+ *  not a "choice" step, and is added separately once it exists. */
+export const SETUP_STEPS = [
+  "scenario",
+  "difficulty",
+  "crewSize",
+  "landingSite",
+  "power",
+  "shielding",
+] as const;
 export type SetupStepId = (typeof SETUP_STEPS)[number];
 
 const MIN_CREW_SIZE = 2;
