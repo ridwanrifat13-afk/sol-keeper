@@ -230,6 +230,14 @@ Rule 2 is easy to break by accident, so it is machine-enforced:
   changes, not just within one build.
 - **`validation/determinism.test.ts`** runs 30 sols twice from one seed and deep-equals both
   the final state and the full log.
+- **`version.ts`'s `SIM_VERSION`** (M10) and **`validation/simVersion.test.ts`**: determinism
+  proves two runs made *right now* agree with each other; it says nothing about whether a run
+  made *right now* still matches one made before a code change. The golden-fingerprint test
+  closes that gap — a fixed `(scenario, seed, difficulty)` combination's `runFingerprint()` is
+  pinned to a literal value, so any change to this package's actual numbers fails loudly with
+  a bump-`SIM_VERSION` message, rather than two internally-consistent-but-silently-different
+  runs both passing determinism.test.ts. See CLAUDE.md's own `SIM_VERSION` section for exactly
+  what does and doesn't require a bump.
 
 ## 5. Constants seeding
 

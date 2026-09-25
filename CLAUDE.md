@@ -35,6 +35,18 @@ This repo root is both the git root and the pnpm workspace root.
    what was built, what is placeholder, and what the lead developer must verify or do
    manually. **Ask before adding any dependency** not already listed in the brief.
 
+## SIM_VERSION (M10)
+
+`packages/sim/src/version.ts`'s `SIM_VERSION` is a compatibility token a shared run link
+carries, not a modelled quantity — rule 1 has nothing to say about it. **Bump it** whenever a
+change to `packages/sim` could change the numbers a run produces: `engine/tick.ts`'s
+`PIPELINE` or its order, anything in `models/`, any value in `data/constants.ts` or
+`data/scenarios/`, the incident catalog or its responses, the RNG or the number/order of
+draws it makes, `engine/state.ts`'s initial state, or `engine/setup.ts`'s sizing. **Never**
+bump it for `apps/web`, i18n, styling, or docs — none of those can move a single number this
+package computes. `validation/simVersion.test.ts` pins golden fingerprints against it; a
+failure there means bump-and-update, not "fix the test by accepting whatever changed."
+
 ## Secrets
 
 - The only secret is `NASA_API_KEY`. It lives in the Vercel dashboard and in a local
