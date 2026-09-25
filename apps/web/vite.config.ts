@@ -20,8 +20,11 @@ export default defineConfig({
         name: "Sol Keeper",
         short_name: "Sol Keeper",
         description: "Run a Mars or Moon outpost on real NASA numbers.",
-        theme_color: "#0b1020",
-        background_color: "#0b1020",
+        // M9.5: matches styles.css's own --shell-accent/--shell-bg — theme_color tints the
+        // OS/browser chrome (status bar, task switcher), background_color is the splash
+        // screen shown while the PWA cold-starts, before any CSS has painted.
+        theme_color: "#0b3d91",
+        background_color: "#eef3fb",
         display: "standalone",
         start_url: "/",
         icons: [

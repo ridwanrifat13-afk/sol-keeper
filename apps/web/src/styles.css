@@ -21,23 +21,17 @@
   --caution: #fbbf24;
   --critical: #f87171;
 
+  /* M9.5: the outer app shell's own NASA blue-white — deliberately separate from --bg and
+     never applied inside a .panel (see the four "dark surface" resets below), so every
+     panel/gauge/console control keeps the neutral dark mission-control palette above
+     unchanged. One fixed look for every visitor (no OS-based override, unlike before). */
+  --shell-bg: #eef3fb;
+  --shell-accent: #0b3d91;
+  --shell-text: #131a2e;
+  --shell-text-dim: #4a5578;
+
   --radius: 10px;
   --gap: 12px;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #f4f6fc;
-    --bg-panel: #ffffff;
-    --bg-raised: #eef1f9;
-    --line: #ccd4e8;
-    --text: #131a2e;
-    --text-dim: #55618a;
-
-    --nominal: #15803d;
-    --caution: #a16207;
-    --critical: #b91c1c;
-  }
 }
 
 * {
@@ -48,7 +42,7 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  background: var(--shell-bg);
   color: var(--text);
   font-family:
     system-ui,
@@ -79,6 +73,19 @@ h2 {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-dim);
+}
+
+/* M9.5: shell-chrome text — the tab nav, mission header, console/wizard headers, clock, and
+   footer all sit directly on the new light --shell-bg, never inside a .panel, so they use the
+   new dark-on-light tokens instead of --text/--text-dim (which stay light, for the panels
+   below). Higher specificity than the bare h2/.view-hint patterns they share with in-panel
+   content, so nothing inside an actual .panel is affected. */
+.mission-head h1 {
+  color: var(--shell-text);
+}
+
+.view-head h2 {
+  color: var(--shell-text);
 }
 
 code {
@@ -133,7 +140,7 @@ code {
 
 .mission-site {
   margin: 2px 0 0;
-  color: var(--text-dim);
+  color: var(--shell-text-dim);
   font-size: 0.85rem;
 }
 
@@ -266,11 +273,12 @@ code {
   font-size: 1.25rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: var(--shell-text);
 }
 
 .clock-hour {
   font-size: 0.75rem;
-  color: var(--text-dim);
+  color: var(--shell-text-dim);
   font-variant-numeric: tabular-nums;
 }
 
@@ -552,7 +560,7 @@ code {
 
 /* ---------------------------------------------------------------- credits */
 .credits {
-  color: var(--text-dim);
+  color: var(--shell-text-dim);
   font-size: 0.75rem;
   padding: 4px 2px 24px;
 }
@@ -623,7 +631,7 @@ code {
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  color: var(--text-dim);
+  color: var(--shell-text-dim);
   font: inherit;
   font-size: 0.9rem;
   font-weight: 600;
@@ -637,7 +645,7 @@ code {
 }
 
 .tab-button:hover {
-  color: var(--text);
+  color: var(--shell-text);
 }
 
 .tab-button:focus-visible {
@@ -646,8 +654,8 @@ code {
 }
 
 .tab-button-active {
-  color: var(--text);
-  border-bottom-color: var(--text);
+  color: var(--shell-text);
+  border-bottom-color: var(--shell-accent);
 }
 
 .tab-badge {
@@ -683,6 +691,18 @@ code {
   max-width: 900px;
   width: 100%;
   position: relative;
+}
+
+/* M9.5: Data Sources (and Sol Summary) reuse the .view-head/.view-hint shell-chrome pattern
+   for their own heading, but they render inside this dark .overlay-panel, not on the shell
+   background — back to the panel-friendly light tokens here, overriding the shell-text
+   defaults by selector specificity. */
+.overlay-panel .view-head h2 {
+  color: var(--text);
+}
+
+.overlay-panel .view-hint {
+  color: var(--text-dim);
 }
 
 .overlay-close {
@@ -810,7 +830,7 @@ code {
 }
 
 .view-hint {
-  color: var(--text-dim);
+  color: var(--shell-text-dim);
   font-size: 0.85rem;
   margin: 0;
 }
