@@ -746,6 +746,37 @@ code {
   font-variant-numeric: tabular-nums;
 }
 
+.landing-site-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.landing-site-card {
+  flex: 1 1 260px;
+  align-items: stretch;
+  text-align: left;
+}
+
+.landing-site-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.landing-site-caveat {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.confidence-badge {
+  color: var(--status);
+  font-weight: 600;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
 /* ---------------------------------------------------------------- view heads (Debrief, Data Sources) */
 .view-head {
   margin-bottom: var(--gap);
