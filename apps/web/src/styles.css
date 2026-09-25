@@ -1528,3 +1528,28 @@ code {
   border-radius: var(--radius);
   overflow: hidden;
 }
+
+/* ---------------------------------------------------------------- telemetry chrome (M9.6) */
+/* A shared accent-topped panel border, tying the setup wizard and the habitat view together
+   visually — the two M9 screens built around a single real, live-updating readout (the
+   wizard's own step counter, the habitat's real sol/hour clock), unlike the five older
+   station consoles this deliberately leaves unchanged. */
+.setup-wizard .panel,
+.habitat-telemetry .panel {
+  border-top: 3px solid var(--shell-accent);
+}
+
+.setup-progress {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.habitat-telemetry-readout {
+  margin: 0 0 0 auto;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--nominal);
+}

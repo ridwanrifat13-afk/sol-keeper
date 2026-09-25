@@ -6,7 +6,7 @@ import { Gauge } from "../../components/Gauge.js";
 import { PowerPriorities } from "../../components/PowerPriorities.js";
 import { ProvenanceBadge } from "../../components/ProvenanceBadge.js";
 import { FactCardGallery } from "../../components/FactCardGallery.js";
-import { STATUS } from "../../components/status.js";
+import { AlarmBanner } from "../../components/AlarmBanner.js";
 import { statusWord } from "../../dial/statusWords.js";
 import { spaceWeatherTypeLabel } from "../../dial/spaceWeatherLabels.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
@@ -64,10 +64,9 @@ export function PowerConsole() {
         </div>
 
         {powerServedFraction < 1 && (
-          <p className={`inline-alert ${STATUS.caution.className}`}>
-            <span aria-hidden="true">{STATUS.caution.glyph}</span> Power shortfall:{" "}
-            {state.power.shedSystems.length} system(s) shut down this hour.
-          </p>
+          <AlarmBanner severity="caution">
+            Power shortfall: {state.power.shedSystems.length} system(s) shut down this hour.
+          </AlarmBanner>
         )}
       </section>
 

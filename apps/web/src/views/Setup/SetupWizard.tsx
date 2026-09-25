@@ -30,6 +30,12 @@ interface SetupWizardProps {
  * Earth-to-body establishing shot) and Launch Packing are review/flourish steps, not
  * "choice" steps: Launch Packing previews the exact scenario "Launch Mission" is about to
  * commit.
+ *
+ * M9.6's `setup-wizard` class (styles.css) gives every step's own `.panel` a shared
+ * telemetry-style accent border, and `.setup-progress`'s monospace/tabular-nums treatment
+ * echoes the real mission clock's own — the wizard has no mission clock of its own yet (no
+ * mission exists during setup), so this ties its step counter to the same visual language
+ * Habitat's real sol/hour readout uses, rather than duplicating a timestamp that isn't real.
  */
 export function SetupWizard({ onLaunch }: SetupWizardProps) {
   const stepIndex = useSetup((s) => s.stepIndex);
@@ -41,10 +47,10 @@ export function SetupWizard({ onLaunch }: SetupWizardProps) {
   const isLastStep = stepIndex === SETUP_STEPS.length - 1;
 
   return (
-    <div className="console">
+    <div className="console setup-wizard">
       <header className="view-head">
         <h2>Mission Setup</h2>
-        <p className="view-hint">
+        <p className="view-hint setup-progress">
           Step {stepIndex + 1} of {SETUP_STEPS.length}: {stepId !== undefined ? STEP_LABELS[stepId] : ""}
         </p>
       </header>

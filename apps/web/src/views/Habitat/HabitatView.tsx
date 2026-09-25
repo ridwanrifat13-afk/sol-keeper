@@ -10,7 +10,9 @@ import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { Starfield } from "../../components/Starfield.js";
 import { STATUS } from "../../components/status.js";
+import { AlarmBanner } from "../../components/AlarmBanner.js";
 import { locationLabel, stationLabel } from "../../dial/labels.js";
+import { timestampLabel } from "../../dial/missionTime.js";
 
 /** Mars' real daytime sky is a dusty butterscotch, not Earth blue — no atmosphere means the
  *  Moon's sky is black at any hour, sun up or not (both are art-direction facts, not sourced
@@ -98,6 +100,12 @@ function ConditionMarker({ cx, cy, condition }: { cx: number; cy: number; condit
  * `<svg role="img" aria-label="...">` immediately followed by a real, visible text table
  * carrying the same facts — every status here is glyph + word + colour together, never
  * colour alone (rule 6).
+ *
+ * M9.6 adds the `habitat-telemetry` class (styles.css gives every `.panel` here a shared
+ * accent-topped chrome with the setup wizard's own panels) and a monospace sol/hour readout
+ * on the scene panel itself — the same real `state.hour` `TimeControls` already shows above
+ * every view, restyled as a HUD-style corner readout specifically where the player is
+ * looking at the environment that clock is driving, not a second, independent clock.
  */
 export function HabitatView() {
   // environment/crew/radiation/activeIncidents all mutate in place tick to tick —
@@ -144,7 +152,7 @@ export function HabitatView() {
   }
 
   return (
-    <div className="console">
+    <div className="console habitat-telemetry">
       <header className="view-head">
         <h2>Habitat</h2>
         <p className="view-hint">
@@ -154,22 +162,21 @@ export function HabitatView() {
       </header>
 
       {spe && (
-        <p className={`inline-alert ${STATUS.critical.className}`}>
-          <span aria-hidden="true">☢</span> Solar particle event in progress — crew should be
-          in the storm shelter.
-        </p>
+        <AlarmBanner severity="critical" glyph="☢">
+          Solar particle event in progress — crew should be in the storm shelter.
+        </AlarmBanner>
       )}
       {depressurizing && (
-        <p className={`inline-alert ${STATUS.critical.className}`}>
-          <span aria-hidden="true">{STATUS.critical.glyph}</span> Depressurization in progress —
-          see Incident Command.
-        </p>
+        <AlarmBanner severity="critical">Depressurization in progress — see Incident Command.</AlarmBanner>
       )}
 
       <section className="panel" aria-labelledby="habitat-scene-heading">
-        <h2 id="habitat-scene-heading" className="visually-hidden">
-          Habitat scene
-        </h2>
+        <div className="panel-head-row">
+          <h2 id="habitat-scene-heading" className="visually-hidden">
+            Habitat scene
+          </h2>
+          <p className="habitat-telemetry-readout">{timestampLabel(state.hour, scenario.body)} · hour {state.hour}</p>
+        </div>
         <svg
           className="habitat-svg"
           viewBox="0 0 400 220"
