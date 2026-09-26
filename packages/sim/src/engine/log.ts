@@ -24,13 +24,31 @@ export interface LogInput {
  * durable part, this is just the pen.
  */
 export class EventLogger {
-  private seq = 0;
+  private seq: number;
   private readonly causeStack: EventId[] = [];
 
   constructor(
     private readonly entries: LogEntry[],
     private readonly hour: number,
-  ) {}
+  ) {
+    // M10.3: a second logger for an hour the first one already wrote to (the player-decision
+    // path in apps/web's store/run.ts builds one of these per action, not per tick, so an
+    // hour that already had a tick's own logger gets a second instance here) must not restart
+    // `seq` at 0 — that collides with `${hour}:0` the first logger already assigned, a real,
+    // reproduced bug (Jezero seed 7: a duplicate "4:0" after the tick had already written
+    // 4:0-4:3), and a duplicate EventId silently corrupts `rootCauses`/`causalCascade` (both
+    // key by id) and any UI keyed on `entry.id`. Entries for one hour are always contiguous
+    // at the tail of an append-only, hour-ordered log, so scanning backward from the end
+    // until the hour changes finds every `seq` already used this hour, cheaply.
+    let nextSeq = 0;
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const entry = entries[i];
+      if (entry === undefined || entry.hour !== hour) break;
+      const used = Number(entry.id.slice(entry.id.indexOf(":") + 1));
+      if (Number.isFinite(used) && used >= nextSeq) nextSeq = used + 1;
+    }
+    this.seq = nextSeq;
+  }
 
   /** Appends an entry and returns its id, so callers can use it as an explicit parent. */
   log(input: LogInput): EventId {
