@@ -6,6 +6,7 @@ import { LandingSiteMap } from "../../components/LandingSiteMap.js";
 import { stationLabel } from "../../dial/labels.js";
 import { durationLabel } from "../../dial/missionTime.js";
 import { goalText } from "../../i18n/goalText.js";
+import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 
 /**
  * Mission Briefing (M8.6, brief: "crew names, roles and stations; duration; landing site; the
@@ -32,6 +33,7 @@ export function BriefingView() {
   const scenario = useRun((s) => s.scenario);
   const crew = useRun((s) => s.state.crew);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
   const { t } = useTranslation();
 
   const cadet = level === "cadet";
@@ -48,9 +50,9 @@ export function BriefingView() {
   return (
     <div className="console">
       <header className="view-head">
-        <h2>Mission Briefing</h2>
+        <h2>{t("briefing.title")}</h2>
         <p className="view-hint">
-          {scenario.site.name} · {scenario.body === "mars" ? "Mars" : "Moon"} ·{" "}
+          {scenario.site.name} · {t(scenario.body === "mars" ? "briefing.bodyMars" : "briefing.bodyMoon")} ·{" "}
           {durationLabel(scenario.durationHours, scenario.body)}
         </p>
       </header>
@@ -62,7 +64,8 @@ export function BriefingView() {
             <li key={member.id}>
               <span className="status-list-label">{member.name}</span>
               <span className="status-list-value">
-                {stationLabel(member.primaryStation, level)} · backup {stationLabel(member.backupStation, level)}
+                {stationLabel(member.primaryStation, level, language)} · {t("briefing.backup")}{" "}
+                {stationLabel(member.backupStation, level, language)}
               </span>
             </li>
           ))}
@@ -82,10 +85,12 @@ export function BriefingView() {
       <section className="panel" aria-labelledby="briefing-goals-heading">
         <h2 id="briefing-goals-heading">{t("briefing.goalsHeading")}</h2>
         <p>
-          <strong>{t("briefing.primaryGoalLabel")}:</strong> {goalText(scenario.primaryGoal.briefKey, level)}
+          <strong>{t("briefing.primaryGoalLabel")}:</strong>{" "}
+          {goalText(scenario.primaryGoal.briefKey, level, language)}
         </p>
         <p>
-          <strong>{t("briefing.stretchGoalLabel")}:</strong> {goalText(scenario.stretchGoal.briefKey, level)}
+          <strong>{t("briefing.stretchGoalLabel")}:</strong>{" "}
+          {goalText(scenario.stretchGoal.briefKey, level, language)}
         </p>
       </section>
 

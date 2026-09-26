@@ -12,6 +12,7 @@ import { Starfield } from "../../components/Starfield.js";
 import { STATUS } from "../../components/status.js";
 import { AlarmBanner } from "../../components/AlarmBanner.js";
 import { locationLabel, stationLabel } from "../../dial/labels.js";
+import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { timestampLabel } from "../../dial/missionTime.js";
 
 /** Mars' real daytime sky is a dusty butterscotch, not Earth blue — no atmosphere means the
@@ -115,6 +116,7 @@ export function HabitatView() {
   const scenario = useRun((s) => s.scenario);
   const state = useRun((s) => s.state);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
 
   const dayHours = dayLengthHours(scenario.body);
   const sun = sunFactor(state.hour, dayHours);
@@ -291,11 +293,11 @@ export function HabitatView() {
               return (
                 <tr key={member.id}>
                   <td>{member.name}</td>
-                  <td>{stationLabel(member.primaryStation, level)}</td>
+                  <td>{stationLabel(member.primaryStation, level, language)}</td>
                   <td className={presentation.className}>
                     <span aria-hidden="true">{presentation.glyph}</span> {presentation.label}
                   </td>
-                  <td>{locationLabel(member.location, level)}</td>
+                  <td>{locationLabel(member.location, level, language)}</td>
                 </tr>
               );
             })}

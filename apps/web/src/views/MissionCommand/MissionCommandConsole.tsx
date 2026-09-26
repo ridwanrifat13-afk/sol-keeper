@@ -18,6 +18,7 @@ import { EsmPanel } from "../../components/EsmPanel.js";
 import { STATUS } from "../../components/status.js";
 import { stationLabel, survivalModeLabel } from "../../dial/labels.js";
 import { goalText } from "../../i18n/goalText.js";
+import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 
 /**
  * The Mission Command console (M8.3): crew status, which mission is running, and the whole
@@ -43,6 +44,7 @@ export function MissionCommandConsole() {
   const phase = useRun((s) => s.phase);
   const assignStation = useRun((s) => s.assignStation);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
   const locked = phase !== "planning";
 
   // Read-only ad hoc TickContext, the same shape resolveIncident/DecisionCard already build —
@@ -80,7 +82,7 @@ export function MissionCommandConsole() {
             const doubleCovering = coverer !== undefined && isDoubleCovering(ctx, coverer);
             return (
               <li key={station}>
-                <span className="status-list-label">{stationLabel(station, level)}</span>
+                <span className="status-list-label">{stationLabel(station, level, language)}</span>
                 <span className="status-list-value">
                   {coverer !== undefined ? coverer.name : "Unassigned"} · {Math.round(performance * 100)}%
                   {doubleCovering ? " (double-covering)" : ""}
@@ -115,7 +117,7 @@ export function MissionCommandConsole() {
                         assignStation(member.id, station);
                       }}
                     >
-                      {stationLabel(station, level)}
+                      {stationLabel(station, level, language)}
                     </button>
                   ))}
                 </span>
@@ -129,7 +131,7 @@ export function MissionCommandConsole() {
         <ul className="status-list">
           <li>
             <span className="status-list-label">Rations</span>
-            <span className="status-list-value">{survivalModeLabel(state.food.mode, level)}</span>
+            <span className="status-list-value">{survivalModeLabel(state.food.mode, level, language)}</span>
           </li>
           <li>
             <span className="status-list-label">Downlink priority</span>
@@ -152,14 +154,14 @@ export function MissionCommandConsole() {
             {primaryMet ? "Primary goal met" : "Primary goal"}
           </span>
         </p>
-        <p className="panel-hint">{goalText(scenario.primaryGoal.briefKey, level)}</p>
+        <p className="panel-hint">{goalText(scenario.primaryGoal.briefKey, level, language)}</p>
         <p>
           <span className={STATUS[stretchMet ? "nominal" : "caution"].className}>
             <span aria-hidden="true">{STATUS[stretchMet ? "nominal" : "caution"].glyph}</span>{" "}
             {stretchMet ? "Stretch goal met" : "Stretch goal"}
           </span>
         </p>
-        <p className="panel-hint">{goalText(scenario.stretchGoal.briefKey, level)}</p>
+        <p className="panel-hint">{goalText(scenario.stretchGoal.briefKey, level, language)}</p>
         {scenario.scienceTargetPoints > 0 && (
           <p className="panel-hint">
             Science: {state.science.points.toFixed(1)} / {scenario.scienceTargetPoints} points

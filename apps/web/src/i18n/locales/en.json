@@ -121,7 +121,11 @@
     }
   },
   "briefing": {
+    "title": "Mission Briefing",
+    "bodyMars": "Mars",
+    "bodyMoon": "the Moon",
     "crewHeading": "Crew",
+    "backup": "backup",
     "siteHeading": "Landing site",
     "hazardHeading": "What to expect",
     "goalsHeading": "Goals",

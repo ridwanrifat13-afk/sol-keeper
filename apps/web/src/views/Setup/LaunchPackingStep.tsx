@@ -10,6 +10,7 @@ import {
 import { useSetup, resolveScenario, buildClassLinkConfig } from "../../store/setup.js";
 import { useDial } from "../../store/dial.js";
 import { systemLabel } from "../../dial/labels.js";
+import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { CopyLinkButton } from "../../components/CopyLinkButton.js";
 import { buildRunLinkUrl } from "../../share/runLink.js";
 
@@ -65,6 +66,7 @@ export function LaunchPackingStep() {
   const setSeed = useSetup((s) => s.setSeed);
   const rerollSeed = useSetup((s) => s.rerollSeed);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
   const [phase, setPhase] = useState<ProjectPhase>("pdr");
   const { t } = useTranslation();
 
@@ -169,7 +171,7 @@ export function LaunchPackingStep() {
             const mtbfHours = trl > 0 ? 1 / failureRatePerHour(trl) : undefined;
             return (
               <tr key={line.system}>
-                <td>{systemLabel(line.system, level)}</td>
+                <td>{systemLabel(line.system, level, language)}</td>
                 <td>{trl || "—"}</td>
                 <td>{line.massKg !== undefined ? `${Math.round(line.massKg)} kg` : "not sourced"}</td>
                 <td>{mtbfHours !== undefined ? readableHours(mtbfHours) : "—"}</td>
@@ -213,7 +215,7 @@ export function LaunchPackingStep() {
       </table>
       {unsourcedLines.length > 0 && (
         <p className="panel-hint">
-          {unsourcedLines.map((l) => systemLabel(l.system, level)).join(", ")} carr
+          {unsourcedLines.map((l) => systemLabel(l.system, level, language)).join(", ")} carr
           {unsourcedLines.length === 1 ? "ies" : "y"} no sourced hardware mass and{" "}
           {unsourcedLines.length === 1 ? "is" : "are"} left out of the hardware totals above rather
           than guessed — see Data Sources for why.

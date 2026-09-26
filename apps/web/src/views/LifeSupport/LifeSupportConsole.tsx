@@ -4,6 +4,7 @@ import { useDial } from "../../store/dial.js";
 import { Gauge } from "../../components/Gauge.js";
 import { statusWord } from "../../dial/statusWords.js";
 import { cropLabel, survivalModeLabel } from "../../dial/labels.js";
+import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
 
 const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
@@ -22,8 +23,9 @@ export function LifeSupportConsole() {
   const setSurvivalMode = useRun((s) => s.setSurvivalMode);
   const phase = useRun((s) => s.phase);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
 
-  const summary = buildResourceSummary(state, level);
+  const summary = buildResourceSummary(state, level, language);
   const locked = phase !== "planning";
 
   return (
@@ -127,7 +129,7 @@ export function LifeSupportConsole() {
                 setSurvivalMode(m);
               }}
             >
-              {survivalModeLabel(m, level)}
+              {survivalModeLabel(m, level, language)}
               <span className="btn-sub">
                 {survivalModes[m].kcalPerCrewDay.value} kcal · {survivalModes[m].habitatTempC.value} °C
               </span>
@@ -157,7 +159,7 @@ export function LifeSupportConsole() {
             const progressPct = Math.min(100, Math.round((tray.lightHours / required) * 100));
             return (
               <li key={tray.id}>
-                <span className="status-list-label">{cropLabel(tray.crop, level)}</span>
+                <span className="status-list-label">{cropLabel(tray.crop, level, language)}</span>
                 <span className="status-list-value">
                   {progressPct}% grown · {Math.round(tray.healthFraction * 100)}% healthy
                 </span>

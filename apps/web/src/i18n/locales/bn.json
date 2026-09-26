@@ -121,7 +121,11 @@
     }
   },
   "briefing": {
+    "title": "মিশন ব্রিফিং",
+    "bodyMars": "মঙ্গল",
+    "bodyMoon": "চাঁদ",
     "crewHeading": "ক্রু",
+    "backup": "ব্যাকআপ",
     "siteHeading": "অবতরণ স্থান",
     "hazardHeading": "যা প্রত্যাশা করা যায়",
     "goalsHeading": "লক্ষ্য",

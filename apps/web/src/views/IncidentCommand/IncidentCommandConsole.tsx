@@ -5,6 +5,7 @@ import { buildRippleGraph, type RippleNode } from "../../ripple/graph.js";
 import { useForceLayout } from "../../ripple/useForceLayout.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
 import { locationLabel, systemLabel } from "../../dial/labels.js";
+import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { systemStatusInfo } from "../../dial/systemStatus.js";
 import { decisionText } from "../../i18n/decisionText.js";
 import { STATUS, statusFromReserve, type StatusPresentation } from "../../components/status.js";
@@ -58,13 +59,14 @@ export function IncidentCommandConsole() {
   const phase = useRun((s) => s.phase);
   const setCrewLocation = useRun((s) => s.setCrewLocation);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
   const locked = phase !== "planning";
 
   const { nodes, edges } = useMemo(() => buildRippleGraph(scenario), [scenario]);
   const laidOut = useForceLayout(nodes, edges, WIDTH, HEIGHT);
 
   const missionStarted = state.hour > 0;
-  const summary = buildResourceSummary(state, level);
+  const summary = buildResourceSummary(state, level, language);
   const livingCrew = state.crew.filter((c) => c.alive);
   const avgHealth =
     livingCrew.length > 0
@@ -102,7 +104,7 @@ export function IncidentCommandConsole() {
   }
 
   function label(node: RippleNode): string {
-    return node.kind === "system" ? systemLabel(node.id as SystemId, level) : node.label;
+    return node.kind === "system" ? systemLabel(node.id as SystemId, level, language) : node.label;
   }
 
   const edgeLines = edges.map((e) => {
@@ -206,7 +208,7 @@ export function IncidentCommandConsole() {
               return (
                 <li key={item.id}>
                   <span className="status-list-label">
-                    {response !== undefined ? decisionText(response.i18nKey, level) : item.responseId}
+                    {response !== undefined ? decisionText(response.i18nKey, level, undefined, language) : item.responseId}
                   </span>
                   <span className="status-list-value">{item.hoursRemaining.toFixed(1)} h left</span>
                 </li>
@@ -240,7 +242,7 @@ export function IncidentCommandConsole() {
                         setCrewLocation(member.id, loc);
                       }}
                     >
-                      {locationLabel(loc, level)}
+                      {locationLabel(loc, level, language)}
                     </button>
                   ))}
                 </span>
