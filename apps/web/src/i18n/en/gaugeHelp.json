@@ -1,0 +1,26 @@
+{
+  "cadet": {
+    "gauge.oxygen": "The air the crew breathes. If it gets too low, they can't breathe well.",
+    "gauge.co2": "The bad air building up. The air cleaner takes it back out.",
+    "gauge.water": "How many days of drinking water are left.",
+    "gauge.food": "How many days of food are left. Picking crops adds more.",
+    "gauge.battery": "How much power is stored up, like a big phone battery for the whole base.",
+    "gauge.cabin": "How warm or cold it is inside. Too cold or too hot is bad for everyone."
+  },
+  "specialist": {
+    "gauge.oxygen": "Cabin oxygen partial pressure. Below about 120 mmHg the crew is short of breath; the sim tracks this hour by hour, not just the total kg stored.",
+    "gauge.co2": "Cabin CO₂ partial pressure. Rises as the crew breathes; the scrubber pulls it back down. The limit shown depends on the current rations mode — a harsher mode tolerates less.",
+    "gauge.water": "Potable water on hand, shown as days of supply for the living crew at the current recovery rate.",
+    "gauge.food": "Stored dry food mass, shown as days of supply at the current ration. Crops add to this when they're harvested.",
+    "gauge.battery": "Stored electrical energy. Generation below demand draws this down; sustained zero means load shedding.",
+    "gauge.cabin": "Habitat air temperature. Too cold risks hypothermia and frozen water lines; too hot stresses the crew and the equipment bay."
+  },
+  "commander": {
+    "gauge.oxygen": "pO₂, cabin. Hypoxic risk below ~120 mmHg (S1.1); tracked continuously, independent of the O₂ mass stored.",
+    "gauge.co2": "pCO₂, cabin. Production scales with crew metabolic rate; scrubber uptime and efficiency set the removal side. Limit is mode-dependent (survivalModes' own co2LimitMmHg).",
+    "gauge.water": "Potable reserve, expressed as days of supply at current per-crew consumption and recovery-loop efficiency.",
+    "gauge.food": "Dry mass reserve, expressed as days of supply at the current ration's kcal/crew-day. Harvests are a real, tracked inflow.",
+    "gauge.battery": "State of charge. A sustained generation/demand deficit forces the load-shed priority order (Power console) to shed systems bottom-up.",
+    "gauge.cabin": "Habitat air temperature, thermostat-controlled. Drives the hypothermia clock below 15 °C and equipment/crew heat stress at the high end."
+  }
+}

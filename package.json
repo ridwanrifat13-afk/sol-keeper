@@ -16,6 +16,8 @@
     "format:check": "prettier --check .",
     "sim": "pnpm --filter @sol-keeper/sim run sim",
     "gen:source-verification": "node scripts/generate-source-verification.ts",
+    "bn-review:export": "node scripts/bn-review-export.ts",
+    "bn-review:import": "node scripts/bn-review-import.ts",
     "verify": "pnpm typecheck && pnpm lint && pnpm test",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
