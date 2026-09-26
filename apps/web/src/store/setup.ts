@@ -5,6 +5,13 @@
  * Every step now has real UI (M9.2a-d) — `commit()`'s own defaults
  * (`landingSitesForBody(scenario.body)[0]`, `"solarBattery"`, `"hullOnly"`) only matter if a
  * player never visits a given step at all, not because any step is still unbuilt.
+ *
+ * M10.2 adds a real, player-visible `seed` here — every mission before this shipped on
+ * `store/run.ts`'s implicit `DEFAULT_PARAMS.seed = 1`, since nothing ever overrode it. A
+ * fresh seed is rolled at store creation and again after every `commit()`, so a player who
+ * never looks at Launch Packing's seed control still gets a genuine, different seed each
+ * mission — the control (reroll + manual entry) only matters to someone who wants to record
+ * or reproduce one specific run (M10.5's shareable link is the other consumer of this field).
  */
 import { create } from "zustand";
 import {
@@ -40,6 +47,25 @@ export type SetupStepId = (typeof SETUP_STEPS)[number];
 const MIN_CREW_SIZE = 2;
 const MAX_CREW_SIZE = 6;
 
+// A uint32, matching what `createRngState`/M10.5's URL codec both expect — the sim's own
+// `seedStream` works with any JS number (it coerces via `>>> 0`), but a shareable link needs
+// one canonical range so a decoded seed can be range-checked rather than silently wrapping.
+const MAX_SEED = 0xffffffff;
+
+/** M10.2: every mission needs a real, player-visible seed, not the historical implicit
+ *  default (`store/run.ts`'s own `DEFAULT_PARAMS.seed = 1`, which every browser mission ran
+ *  on until now, since no UI path ever overrode it). `crypto.getRandomValues` — this is
+ *  decoration for a shareable link, not a simulation input, so rule 2's `Math.random` ban
+ *  (which only binds `packages/sim`) doesn't apply, and `crypto` is a stronger source anyway. */
+function rollSeed(): number {
+  return crypto.getRandomValues(new Uint32Array(1))[0]!;
+}
+
+function clampSeed(seed: number): number {
+  if (!Number.isFinite(seed)) return 0;
+  return Math.max(0, Math.min(MAX_SEED, Math.floor(seed)));
+}
+
 interface SetupStore {
   stepIndex: number;
   scenarioId: ScenarioId;
@@ -51,6 +77,10 @@ interface SetupStore {
   landingSiteId: LandingSiteId | undefined;
   powerArchitecture: PowerArchitecture;
   shieldingApproach: ShieldingApproach;
+  /** M10.2: rolled fresh whenever the wizard opens (store creation) and again after every
+   *  `commit()`, so leaving it untouched still gives each mission its own real seed instead
+   *  of quietly repeating the previous one. */
+  seed: number;
 
   setScenarioId: (id: ScenarioId) => void;
   setDifficulty: (difficulty: MissionDifficulty) => void;
@@ -58,6 +88,8 @@ interface SetupStore {
   setLandingSiteId: (id: LandingSiteId) => void;
   setPowerArchitecture: (architecture: PowerArchitecture) => void;
   setShieldingApproach: (approach: ShieldingApproach) => void;
+  setSeed: (seed: number) => void;
+  rerollSeed: () => void;
   next: () => void;
   back: () => void;
   /** Builds the custom scenario from every choice made so far (defaulting the rest) and
@@ -100,6 +132,7 @@ const initialChoices = {
 
 export const useSetup = create<SetupStore>((set, get) => ({
   ...initialChoices,
+  seed: rollSeed(),
 
   setScenarioId: (scenarioId) => {
     const current = get();
@@ -131,6 +164,14 @@ export const useSetup = create<SetupStore>((set, get) => ({
     set({ shieldingApproach });
   },
 
+  setSeed: (seed) => {
+    set({ seed: clampSeed(seed) });
+  },
+
+  rerollSeed: () => {
+    set({ seed: rollSeed() });
+  },
+
   next: () => {
     const { stepIndex } = get();
     set({ stepIndex: Math.min(stepIndex + 1, SETUP_STEPS.length - 1) });
@@ -144,7 +185,10 @@ export const useSetup = create<SetupStore>((set, get) => ({
   commit: () => {
     const choices = get();
     const scenario = resolveScenario(choices);
-    useRun.getState().reset({ scenarioId: choices.scenarioId, crewSize: choices.crewSize, difficulty: choices.difficulty }, scenario);
-    set({ ...initialChoices });
+    useRun.getState().reset(
+      { scenarioId: choices.scenarioId, crewSize: choices.crewSize, difficulty: choices.difficulty, seed: choices.seed },
+      scenario,
+    );
+    set({ ...initialChoices, seed: rollSeed() });
   },
 }));

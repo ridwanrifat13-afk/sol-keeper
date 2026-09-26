@@ -1240,6 +1240,32 @@ code {
   border-bottom: none;
 }
 
+/* ---------------------------------------------------------------- mission seed (M10.2) */
+.seed-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.seed-label {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.seed-input {
+  background: var(--bg-raised);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  width: 12ch;
+  min-height: 44px;
+}
+
 .risk-matrix-controls {
   display: flex;
   align-items: center;

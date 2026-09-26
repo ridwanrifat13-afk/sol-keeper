@@ -46,6 +46,10 @@ function readableHours(hours: number): string {
  * The M6 risk-matrix explorer (player-picked likelihood/consequence, since no system has a
  * sourced rating) is dropped here rather than revived — a teaching aside, not part of this
  * wizard's own review-and-launch purpose.
+ *
+ * M10.2 adds the mission seed control here — the last review step, so a player who cares
+ * enough to record or fix a seed sees it right before launching, not buried earlier in the
+ * wizard alongside choices that don't need memorising.
  */
 export function LaunchPackingStep() {
   const scenarioId = useSetup((s) => s.scenarioId);
@@ -53,6 +57,9 @@ export function LaunchPackingStep() {
   const landingSiteId = useSetup((s) => s.landingSiteId);
   const powerArchitecture = useSetup((s) => s.powerArchitecture);
   const shieldingApproach = useSetup((s) => s.shieldingApproach);
+  const seed = useSetup((s) => s.seed);
+  const setSeed = useSetup((s) => s.setSeed);
+  const rerollSeed = useSetup((s) => s.rerollSeed);
   const level = useDial((s) => s.level);
   const [phase, setPhase] = useState<ProjectPhase>("pdr");
 
@@ -79,6 +86,33 @@ export function LaunchPackingStep() {
       <p className="panel-hint">
         The mass you can actually launch for this exact mission, once technology maturity and
         design-review margin are counted — not just the bare hardware weight.
+      </p>
+
+      <div className="seed-row">
+        <label htmlFor="setup-seed-input" className="seed-label">
+          Mission seed
+        </label>
+        <input
+          id="setup-seed-input"
+          className="seed-input"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={4294967295}
+          step={1}
+          value={seed}
+          onChange={(e) => {
+            const parsed = Number(e.target.value);
+            if (Number.isFinite(parsed)) setSeed(parsed);
+          }}
+        />
+        <button type="button" className="btn btn-tiny" onClick={rerollSeed}>
+          🎲 Reroll
+        </button>
+      </div>
+      <p className="panel-hint">
+        Same seed, same choices, same outcome — every incident, every dice roll. Write it down
+        (or share a mission link, once you've flown) to reproduce this exact mission later.
       </p>
 
       <div className="button-row" role="group" aria-label="Project review phase">
