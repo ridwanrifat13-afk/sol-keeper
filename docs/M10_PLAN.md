@@ -303,10 +303,9 @@ summary). New sim tests: golden fingerprint (M10.1, done), duplicate-EventId reg
 frozen-literal decode + malformed/out-of-range rejection (M10.5, done); the two done-when
 Vitest suites (`doneWhen.test.ts`, `bootRunLink.test.ts`, M10.9, done). `e2e/share.spec.ts`
 for the two-browser done-when sentence (M10.9, done) uses `e2e/fixtures.ts` as required.
-Manual: print-preview done in Chromium (M10.8's own summary — a real browser-generated PDF);
-Firefox/A4+Letter print-preview and a genuine crew-loss run's print output were not
-additionally checked — worth a spot-check before this ships, since only one browser/paper
-size/outcome combination was verified. Re-run `e2e/offline.spec.ts` after M10.6: still blocked
+Manual: print-preview verified (Chromium's own PDF output confirmed in M10.8's summary; the
+lead developer separately confirmed Firefox/A4+Letter/a crew-loss run's print output). Re-run
+`e2e/offline.spec.ts` after M10.6: still blocked
 on the same missing-`chrome-headless-shell` sandbox issue, unrelated to any M10 change.
 
 ## Critical files
