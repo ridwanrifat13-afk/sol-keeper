@@ -2,12 +2,20 @@
  * M10.6: `share/bootRunLink.ts`'s own three modes (none/config-only/config+fragment) plus
  * version-mismatch/invalid, and that each one hydrates (or deliberately leaves untouched)
  * `useRun`'s store exactly as `App.tsx`'s boot-time effect depends on.
+ *
+ * M10.9 changed what "config+fragment" actually does: instead of jumping straight to the
+ * final state, it resets to hour 0 and starts `store/replay.ts`'s `useReplay` ticking through
+ * the recorded decisions. The test below drives that replay to completion by hand (no real
+ * timer) and checks the result against `replayRun` computed independently — the same
+ * done-when claim ("two browsers opening the same link produce byte-identical final states")
+ * proven directly against the mechanism a real replay actually uses.
  */
 import { beforeEach, describe, expect, it } from "vitest";
 import { replayRun, type RecordedInput } from "@sol-keeper/sim";
 import { applyRunLinkFromLocation } from "../src/share/bootRunLink.js";
 import { encodeRunLinkFragment, encodeRunLinkQuery, type RunLinkConfig } from "../src/share/runLink.js";
 import { useRun } from "../src/store/run.js";
+import { useReplay } from "../src/store/replay.js";
 
 const CONFIG: RunLinkConfig = {
   scenarioId: "jezero-outpost",
@@ -21,6 +29,7 @@ const CONFIG: RunLinkConfig = {
 
 beforeEach(() => {
   useRun.getState().reset();
+  useReplay.getState().stop();
 });
 
 describe("M10.6: applyRunLinkFromLocation", () => {
@@ -81,7 +90,7 @@ describe("M10.6: applyRunLinkFromLocation", () => {
     expect(store.inputLog).toEqual([]);
   });
 
-  it("config+fragment hydrates the exact final state replayRun itself produces", () => {
+  it("config+fragment resets to hour 0 and starts a replay, rather than jumping to the end", () => {
     const inputLog: RecordedInput[] = [
       { hour: 0, input: { kind: "commsPriority", priority: "personal" } },
       { hour: 12, input: { kind: "rations", mode: "mode1" } },
@@ -91,13 +100,46 @@ describe("M10.6: applyRunLinkFromLocation", () => {
     const fragment = encodeRunLinkFragment(inputLog, throughHour);
 
     const result = applyRunLinkFromLocation({ search: query, hash: `#i=${fragment}` });
-    expect(result).toEqual({ kind: "fullReplay" });
+    expect(result).toEqual({ kind: "replaying" });
 
     const store = useRun.getState();
-    expect(store.inputLog).toEqual(inputLog);
-    expect(store.state).toEqual(replayRun(store.params, store.scenario, inputLog, throughHour));
-    expect(store.state.hour).toBe(throughHour);
+    // Hour 0 is where the replay starts, not the end it's replaying toward — the hour-0
+    // input (commsPriority) is already applied (a pre-play Sol Planning choice), the
+    // hour-12 one (rations) is not yet.
+    expect(store.state.hour).toBe(0);
     expect(store.state.comms.priority).toBe("personal");
-    expect(store.state.food.mode).toBe("mode1");
+    expect(store.state.food.mode).toBe("nominal");
+    expect(useReplay.getState().active).toBe(true);
+    expect(useReplay.getState().throughHour).toBe(throughHour);
+  });
+
+  it("done-when: driving that replay to completion matches replayRun computed independently — the same claim two separate browsers opening the identical link would each have to satisfy", () => {
+    const inputLog: RecordedInput[] = [
+      { hour: 0, input: { kind: "commsPriority", priority: "personal" } },
+      { hour: 12, input: { kind: "rations", mode: "mode1" } },
+    ];
+    const throughHour = 48;
+    const query = encodeRunLinkQuery(CONFIG);
+    const fragment = encodeRunLinkFragment(inputLog, throughHour);
+
+    // "Browser A": opens the link and watches the replay play out, one tick at a time (no
+    // real timer — the interval in ReplayControls.tsx is a presentation concern only).
+    applyRunLinkFromLocation({ search: query, hash: `#i=${fragment}` });
+    let guard = 0;
+    while (useReplay.getState().active && guard++ < throughHour + 10) {
+      useReplay.getState().tickOnce();
+    }
+    expect(useReplay.getState().active).toBe(false);
+
+    const replayedByWatching = useRun.getState();
+
+    // "Browser B": decodes the exact same link and reconstructs the run directly, with no UI
+    // or animation involved at all — packages/sim's own replayRun (M10.4).
+    const replayedDirectly = replayRun(replayedByWatching.params, replayedByWatching.scenario, inputLog, throughHour);
+
+    expect(replayedByWatching.state).toEqual(replayedDirectly);
+    expect(replayedByWatching.state.hour).toBe(throughHour);
+    expect(replayedByWatching.state.comms.priority).toBe("personal");
+    expect(replayedByWatching.state.food.mode).toBe("mode1");
   });
 });

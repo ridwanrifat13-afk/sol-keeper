@@ -1637,6 +1637,22 @@ code {
   font-size: 0.82rem;
 }
 
+/* ---------------------------------------------------------------- replay controls (M10.9) */
+.replay-controls {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--shell-accent);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: var(--gap);
+}
+
+.replay-progress {
+  margin: 0 0 8px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 .report-head h1 {
   margin-bottom: 4px;
 }

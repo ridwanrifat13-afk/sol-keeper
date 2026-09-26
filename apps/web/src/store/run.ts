@@ -15,7 +15,6 @@ import {
   createRun,
   getScenario,
   landingSitesForBody,
-  replayRun,
   tick as simTick,
   EventLogger,
   Rng,
@@ -113,8 +112,8 @@ interface RunStore {
    *  record at all. */
   inputLog: RecordedInput[];
   /** M10.6: the setup choices `scenario` was built from — see `RunSetupChoices`'s own doc
-   *  comment. Set by every `reset()`/`loadReplayedRun()` call alongside `scenario` itself, so
-   *  the two can never silently disagree about which run they describe. */
+   *  comment. Set by every `reset()` call alongside `scenario` itself, so the two can never
+   *  silently disagree about which run they describe. */
   setupChoices: RunSetupChoices;
 
   step: (hours?: number) => void;
@@ -130,18 +129,6 @@ interface RunStore {
     params?: Partial<Params>,
     scenarioOverride?: Scenario,
     setupChoicesOverride?: RunSetupChoices,
-  ) => void;
-  /** M10.6: hydrates the store with an *already-replayed* final state — the boot-time
-   *  "config+fragment" run-link mode (a report/replay link, `share/bootRunLink.ts`), built
-   *  by replaying `inputLog` through `@sol-keeper/sim`'s own `replayRun` (M10.4) rather than
-   *  starting fresh at hour 0 the way `reset()` always does. Kept as a separate action rather
-   *  than a `reset()` mode: `reset()`'s whole contract is "start this mission from hour 0." */
-  loadReplayedRun: (
-    params: Params,
-    scenario: Scenario,
-    setupChoices: RunSetupChoices,
-    inputLog: RecordedInput[],
-    throughHour: number,
   ) => void;
   setSurvivalMode: (mode: SurvivalMode) => void;
   setPriority: (id: SystemId, direction: -1 | 1) => void;
@@ -270,19 +257,6 @@ export const useRun = create<RunStore>((set, get) => ({
     });
   },
 
-  loadReplayedRun: (params, scenario, setupChoices, inputLog, throughHour) => {
-    set({
-      params,
-      scenario,
-      state: replayRun(params, scenario, inputLog, throughHour),
-      version: 0,
-      speed: "paused",
-      phase: "planning",
-      justEndedSol: undefined,
-      inputLog,
-      setupChoices,
-    });
-  },
 
   setSurvivalMode: (mode) => {
     applyAndRecord(get, set, { kind: "rations", mode });

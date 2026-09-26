@@ -114,9 +114,10 @@ const TAB_KEYS: Record<TabView, string> = {
  * `window` doesn't exist under this app's own SSR-based render tests, `share/bootRunLink.ts`'s
  * own doc comment). A valid config-only link (a class mission) skips Setup for Briefing; a
  * valid config+fragment link (a report/replay link) skips straight to the Mission Report
- * (M10.8) with the exact final state `replayRun` reconstructs. A version mismatch or a
- * malformed link shows a dismissible banner and otherwise behaves exactly like opening the
- * app with no link at all.
+ * (M10.8), which replays the recorded decisions tick by tick at a chosen speed rather than
+ * jumping straight to the end (M10.9's `store/replay.ts`). A version mismatch or a malformed
+ * link shows a dismissible banner and otherwise behaves exactly like opening the app with no
+ * link at all.
  */
 export function App() {
   const [view, setView] = useState<View>("setup");
@@ -153,7 +154,7 @@ export function App() {
       case "configOnly":
         setView("briefing");
         return;
-      case "fullReplay":
+      case "replaying":
         setView("report");
         return;
     }

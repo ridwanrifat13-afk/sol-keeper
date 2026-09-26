@@ -40,6 +40,7 @@ import { TimeControls } from "../src/components/TimeControls";
 import { RunStatusBadge } from "../src/components/RunStatusBadge";
 import { DialSwitch } from "../src/components/DialSwitch";
 import { useRun } from "../src/store/run";
+import { useReplay } from "../src/store/replay";
 import { useDial } from "../src/store/dial";
 import { useOnboarding } from "../src/store/onboarding";
 import { logText } from "../src/i18n/logText";
@@ -408,6 +409,30 @@ describe("MissionReportView, mission still running (first frame, M10.8)", () => 
     expect(out).toContain("Mission in progress");
     expect(out).toContain("Copy report link");
     expect(out).toContain("Run signature");
+  });
+
+  it("shows no replay controls when no replay is in progress (reached via 'View printable Mission Report', not a report link)", () => {
+    const out = render(<MissionReportView onBack={() => {}} />);
+    expect(out).not.toContain("replay-controls");
+    expect(out).not.toContain("Replaying");
+  });
+});
+
+describe("MissionReportView, replay in progress (first frame, M10.9)", () => {
+  it("shows the replay speed controls and progress readout while a replay link is playing out", () => {
+    // Mutates `useReplay.getInitialState()`, not `.getState()` — same reason as DebriefView's
+    // own "mission ended" test above: SSR's snapshot is frozen at module load.
+    const initialReplayState = useReplay.getInitialState();
+    initialReplayState.active = true;
+    initialReplayState.throughHour = 100;
+    try {
+      const out = render(<MissionReportView onBack={() => {}} />);
+      expect(out).toContain("Replaying");
+      expect(out).toContain("Paused");
+      expect(out).toContain("4×");
+    } finally {
+      initialReplayState.active = false;
+    }
   });
 });
 

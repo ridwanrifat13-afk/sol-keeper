@@ -13,6 +13,8 @@
     "title": "Mission Report",
     "back": "Back",
     "printHint": "Use your browser's Print (Ctrl/Cmd+P) to save this report as a PDF.",
+    "replayControlsLabel": "Replay speed",
+    "replayingLabel": "Replaying —",
     "disclosureNote": "This page's headings and labels are shown in your chosen language. Station names, decision details, and event descriptions below are English-only for now — full translation is planned for a later milestone.",
     "runSignature": "Run signature",
     "titleSuccess": "Mission complete",

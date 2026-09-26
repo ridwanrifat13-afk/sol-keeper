@@ -7,10 +7,12 @@
  *    string with no `i=` fragment. Every student gets the identical mission, seed included,
  *    landing on Briefing (nothing has been played yet).
  * 3. **Config + fragment** — a report/replay link (M10.7's "Copy report link"): the query
- *    string plus the played-out decision log. Rebuilt here via `@sol-keeper/sim`'s own
- *    `replayRun` (M10.4) — the exact final state, not an animated replay; M10.9's own
- *    replay-at-speed driver is a later, separate concern from "does this link land somewhere
- *    correct at all."
+ *    string plus the played-out decision log. Resets `useRun` to a fresh hour-0 run with the
+ *    decoded config, then hands the decoded input log to `store/replay.ts`'s `useReplay`,
+ *    which plays it back tick by tick at a chosen speed (M10.9's own "opening a report link
+ *    replays the run's decisions at speed") — not the instant jump to the final state M10.6/
+ *    M10.8 originally used (`replayRun`, still what "Copy report link" and the done-when proof
+ *    compute directly, without watching).
  *
  * A version mismatch or a malformed link never partially applies (CLAUDE.md's `/api`
  * whitelisting rule's own spirit, per `docs/M10_PLAN.md`'s finding #9) — both degrade to the
@@ -23,13 +25,14 @@
  */
 import { decodeRunLinkFragment, decodeRunLinkQuery } from "./runLink.js";
 import { useRun, type RunSetupChoices } from "../store/run.js";
+import { useReplay } from "../store/replay.js";
 
 export type BootRunLinkResult =
   | { readonly kind: "none" }
   | { readonly kind: "versionMismatch"; readonly foundVersion: number }
   | { readonly kind: "invalid"; readonly reason: string }
   | { readonly kind: "configOnly" }
-  | { readonly kind: "fullReplay" };
+  | { readonly kind: "replaying" };
 
 export function applyRunLinkFromLocation(location: { readonly search: string; readonly hash: string }): BootRunLinkResult {
   const decodedConfig = decodeRunLinkQuery(location.search);
@@ -56,14 +59,7 @@ export function applyRunLinkFromLocation(location: { readonly search: string; re
     return { kind: "configOnly" };
   }
 
-  useRun
-    .getState()
-    .loadReplayedRun(
-      decodedConfig.params,
-      decodedConfig.scenario,
-      setupChoices,
-      decodedFragment.inputLog,
-      decodedFragment.throughHour,
-    );
-  return { kind: "fullReplay" };
+  useRun.getState().reset(decodedConfig.params, decodedConfig.scenario, setupChoices);
+  useReplay.getState().start(decodedFragment.inputLog, decodedFragment.throughHour);
+  return { kind: "replaying" };
 }

@@ -3,17 +3,55 @@
 ## Status (updated 2026-09-26)
 
 **Done and pushed to `main`:** M10.1 (`ef94762`), M10.2 (`01455ab`), M10.3 (`7e6e5b4`).
-**Just finished, not yet merged:** M10.4 (`packages/sim/src/engine/replay.ts`,
-`store/run.ts`'s `inputLog`), M10.5 (`apps/web/src/share/runLink.ts` + `binaryCodec.ts`), M10.6
-(`share/bootRunLink.ts`, `App.tsx`'s boot-time `useEffect`, the version-mismatch/invalid
-banner), M10.7 ("Create class link" on Launch Packing, "Copy report link" on Debrief, the
-shared `CopyLinkButton` clipboard+visible-fallback component), and M10.8
-(`views/Report/MissionReportView.tsx`, print CSS, the `report` i18n namespace in both
-locales). No `SIM_VERSION` bump for any of the five: M10.4 only adds a call path for five
-decisions that used to mutate `SimState` with no log entry at all, plus a pure replay driver
-over the exact same path; a small `data.crew` fix in that same file (M10.8, below) is a log
-*payload* change, not a physics one; M10.5-M10.8 are otherwise `apps/web`-only.
-**Not started:** M10.9 — replay-at-speed driver + the done-when tests.
+**M10.4 through M10.9 all done, not yet merged** — the whole M10 milestone is complete:
+M10.4 (`packages/sim/src/engine/replay.ts`, `store/run.ts`'s `inputLog`), M10.5
+(`apps/web/src/share/runLink.ts` + `binaryCodec.ts`), M10.6 (`share/bootRunLink.ts`,
+`App.tsx`'s boot-time `useEffect`, the version-mismatch/invalid banner), M10.7 ("Create class
+link" on Launch Packing, "Copy report link" on Debrief, the shared `CopyLinkButton` clipboard
++visible-fallback component), M10.8 (`views/Report/MissionReportView.tsx`, print CSS, the
+`report` i18n namespace in both locales), and M10.9 (the replay-at-speed driver, `store/
+replay.ts` + `components/ReplayControls.tsx`, plus the done-when tests). No `SIM_VERSION`
+bump anywhere in the chain: M10.4 only adds a call path for five decisions that used to
+mutate `SimState` with no log entry at all, plus a pure replay driver over the exact same
+path; a small `data.crew` fix in that same file (M10.8, below) is a log *payload* change, not
+a physics one; M10.5-M10.9 are otherwise `apps/web`-only.
+
+**M10.9 — the replay-at-speed driver.** `share/bootRunLink.ts`'s config+fragment mode no
+longer jumps straight to the final state (`replayRun`, instant — M10.6/M10.8's original
+behaviour): it resets `useRun` to a fresh hour-0 run and hands the decoded input log to a new
+`store/replay.ts` (`useReplay`), which ticks through the mission in real time at a chosen
+speed (paused/1×/4×/16×, the same vocabulary `TimeControls` already uses), applying each
+recorded input the instant `state.hour` reaches it — through the *same* six `useRun` mutators
+a live player's own clicks call, so a replay logs and records exactly as the original play
+did, not through a second copy of that logic. Deliberately not built on `useRun`'s own
+`step()`: that one is shaped around the M8 core loop (Sol Planning's phase gate, auto-pause
+so a real player can react) — nothing to react to here, since every decision is already
+decided. `components/ReplayControls.tsx` (shown only while a replay is active, absent
+entirely when `MissionReportView` is reached the normal way, via Debrief's "View printable
+Mission Report") drives it with the same `useEffect`+`setInterval` shape `TimeControls` uses.
+Because `MissionReportView` already renders from live `useRun` state, no separate "replaying"
+layout was needed — the same page just fills in further as the replay ticks forward, landing
+on the correct final outcome (or `outcomeRunning` if `throughHour` is reached before the
+mission itself ends) once `useReplay.active` goes false.
+
+**The done-when bar, discharged twice over.** `apps/web/tests/doneWhen.test.ts`: two entirely
+independent `decodeRunLinkQuery`/`decodeRunLinkFragment`/`replayRun` calls from the identical
+URL string (no shared object between them at all) produce byte-identical final states and
+matching `runFingerprint`s, across an empty-decision run, a run recording all five
+non-incident decision kinds, a run with a real `incidentResponse` (the one kind that draws
+from RNG streams beyond the tick itself), and a full mission replayed to a genuine ending
+(`"loss"`). `apps/web/tests/bootRunLink.test.ts`'s own new test complements this: it drives
+the *actual shipped mechanism* (`applyRunLinkFromLocation` → `useReplay` ticked to completion,
+no real timer) and checks it agrees with `replayRun` computed independently — proving the
+mechanism a real browser runs is the same one the pure proof already covers.
+`e2e/share.spec.ts` proves it the other way: two real, separate Chromium contexts open the
+identical URL, each runs the real replay-at-speed driver (fast-forwarded via the on-page 16×
+control, never a test-only shortcut), and both end on the same `MissionReportView`-printed run
+signature and the same outcome text. **Manually verified passing** against the sandbox's full
+Chromium binary via a local, uncommitted config override (the standard `pnpm exec playwright
+test` invocation still hits the same missing-`chrome-headless-shell` environment blocker
+flagged in the M10.6 summary — unrelated to this spec's own correctness, confirmed by the
+override run passing outright).
 
 **M10.8 also closed a real presentation gap M10.4 left open**: the five player-decision log
 codes (`decision.rations.set`, `.priority.changed`, `.crewLocation.set`, `.station.assigned`,
@@ -40,9 +78,9 @@ same default `resolveScenario` already used for an unvisited setup step. "Copy r
 config+fragment link (a report/replay link) on M10.8's real `MissionReportView`, not Debrief —
 the one `setView("debrief")` call the M10.6 summary flagged is now `setView("report")`.
 `configOnly`'s `setView("briefing")` is unchanged (the class-mission landing spot never
-moved). M10.9's replay-at-speed driver remains a separate, later concern: `loadReplayedRun`
-still jumps straight to the final state instantly via `replayRun`, it does not yet animate
-through the intermediate hours.
+moved). M10.9 replaced the instant `loadReplayedRun` (which used to jump straight to the
+final state via `replayRun`) with the real animated replay-at-speed driver — see the M10.9
+status note above.
 
 Manually verified in a real Chromium browser (via Playwright, `vite preview` against a
 production build) — see the boot-mode screenshots sent alongside the M10.6 summary: fresh
@@ -249,38 +287,50 @@ partially-applied mission.
 | M10.6 | Boot-time URL entry in App.tsx (3 modes: no params/config-only/config+fragment), version-mismatch banner | M10.5 | **Done** |
 | M10.7 | "Create class link" + "Copy report link" UI, clipboard + visible-input fallback | M10.5, M10.6 | **Done** |
 | M10.8 | `MissionReportView.tsx` + print CSS + `report` i18n namespace (both locales) | M10.6 | **Done** |
-| M10.9 | Replay-at-speed driver + done-when tests (Vitest determinism proof + e2e two-browser test) | M10.4, M10.6, M10.8 | Not started |
+| M10.9 | Replay-at-speed driver + done-when tests (Vitest determinism proof + e2e two-browser test) | M10.4, M10.6, M10.8 | **Done** |
 
-M10.4 onward is a strict dependency chain — start there next. Honest cut line if time runs
-short: M10.9's e2e half (the Vitest proof alone still discharges the done-when claim) — raise
-this with the user rather than taking the cut quietly.
+M10.1 through M10.9 are all done — the whole M10 milestone is complete. The e2e half of the
+done-when bar was not cut: `e2e/share.spec.ts` exists and passed against the sandbox's full
+Chromium binary (a local, uncommitted config override — see the M10.9 status note above for
+why the standard invocation doesn't run in this sandbox at all).
 
 ## Verification per sub-part
 
-`pnpm typecheck && pnpm lint && pnpm test` after each; `vercel build` before each commit.
-New sim tests: golden fingerprint (M10.1, done), duplicate-EventId regression (M10.3, done),
-play-vs-replay equality (M10.4, still to write). New web tests: codec round-trip +
-frozen-literal decode + malformed/out-of-range rejection (M10.5). New `e2e/share.spec.ts` for
-the two-browser done-when sentence (M10.9) — must use `e2e/fixtures.ts`. Manual: print-preview
-in Chrome+Firefox, A4+Letter, both languages, a long run and a crew-loss run — confirm page
-breaks, greyscale legibility, no NASA logo/insignia anywhere on the printed page (rule 5, extra
-scrutiny since a printed artifact is most likely to be mistaken for official). Re-run
-`e2e/offline.spec.ts` after M10.6.
+`pnpm typecheck && pnpm lint && pnpm test` after each; `vercel build` before each commit (not
+run in this sandbox — the CLI isn't installed here; flagged to the lead developer in the M10.4
+summary). New sim tests: golden fingerprint (M10.1, done), duplicate-EventId regression
+(M10.3, done), play-vs-replay equality (M10.4, done). New web tests: codec round-trip +
+frozen-literal decode + malformed/out-of-range rejection (M10.5, done); the two done-when
+Vitest suites (`doneWhen.test.ts`, `bootRunLink.test.ts`, M10.9, done). `e2e/share.spec.ts`
+for the two-browser done-when sentence (M10.9, done) uses `e2e/fixtures.ts` as required.
+Manual: print-preview done in Chromium (M10.8's own summary — a real browser-generated PDF);
+Firefox/A4+Letter print-preview and a genuine crew-loss run's print output were not
+additionally checked — worth a spot-check before this ships, since only one browser/paper
+size/outcome combination was verified. Re-run `e2e/offline.spec.ts` after M10.6: still blocked
+on the same missing-`chrome-headless-shell` sandbox issue, unrelated to any M10 change.
 
 ## Critical files
 
-- `apps/web/src/store/run.ts` — the five still-unrecorded mutations (`setSurvivalMode`,
-  `setPriority`, `setCrewLocation`, `assignStation`, `setCommsPriority`) that M10.4 must
-  refactor onto `applyInput` + a new `inputLog`
+- `apps/web/src/store/run.ts` — the five decisions (`setSurvivalMode`, `setPriority`,
+  `setCrewLocation`, `assignStation`, `setCommsPriority`) refactored onto `applyInput` + a new
+  `inputLog` (M10.4, done) — the same six mutators `store/replay.ts` (M10.9) dispatches
+  recorded inputs through, so a replay logs and records exactly as the original play did
 - `packages/sim/src/engine/log.ts` — `EventLogger` (seq fix already done),
-  `causalCascade`/`rootCauses`/`directEffects` for the report's causal-chain section
-- `packages/sim/src/index.ts` — public export surface; `SIM_VERSION`/`runFingerprint` and (as
-  of M10.4) `RunInput`/`RecordedInput`/`applyInput`/`replayRun` all exported
-- `apps/web/src/store/setup.ts` — `commit()` (now passes `seed`), `resolveScenario`
-- `apps/web/src/App.tsx` — boot-time URL entry and its three landing modes (M10.6, done); the
-  new report view (M10.8, done) is `views/Report/MissionReportView.tsx`
-- `apps/web/src/styles.css` — first `@media print` block (M10.8, done), placed directly
-  before the reduced-motion block per §6's own ordering note
+  `causalCascade`/`rootCauses`/`directEffects` used by both `DebriefView` and the report's
+  causal-chain section
+- `packages/sim/src/index.ts` — public export surface; `SIM_VERSION`/`runFingerprint`,
+  `RunInput`/`RecordedInput`/`applyInput`/`replayRun` all exported (M10.1/M10.4)
+- `apps/web/src/store/setup.ts` — `commit()` (passes `seed`), `resolveScenario`,
+  `buildClassLinkConfig` (M10.7)
+- `apps/web/src/App.tsx` — boot-time URL entry and its three landing modes (M10.6); routes a
+  config+fragment link to `views/Report/MissionReportView.tsx` (M10.8), which starts a replay
+  via `store/replay.ts` (M10.9) rather than jumping straight to the final state
+- `apps/web/src/store/replay.ts` + `components/ReplayControls.tsx` — the replay-at-speed
+  driver and its speed controls (M10.9)
+- `apps/web/src/styles.css` — the `@media print` block (M10.8), placed directly before the
+  reduced-motion block per §6's own ordering note
 - `apps/web/src/i18n/logText.ts` + `dial/labels.ts` — the five `decision.*` codes' templates
   and the `station`/`priority`/`direction` `resolveField` branches (M10.8), closing a gap
   M10.4 left open (see the M10.8 status note above)
+- `apps/web/tests/doneWhen.test.ts` + `e2e/share.spec.ts` — the done-when proof, at the pure
+  decode-and-replay level and via two real browser contexts (M10.9)

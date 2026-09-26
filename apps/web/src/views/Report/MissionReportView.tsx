@@ -10,6 +10,7 @@ import { durationLabel, elapsedValue, timeUnitWord, timestampLabel } from "../..
 import { stationLabel } from "../../dial/labels.js";
 import type { DialLevel } from "../../dial/types.js";
 import { ReportLinkButton } from "../../components/ReportLinkButton.js";
+import { ReplayControls } from "../../components/ReplayControls.js";
 
 /**
  * M10.8: the Mission Report — the brief's own printable one-pager (print CSS → browser print
@@ -26,6 +27,11 @@ import { ReportLinkButton } from "../../components/ReportLinkButton.js";
  * both `locales/en.json` and `locales/bn.json`. Everything below that comes from `logText()`
  * (station names, decision text, causal-chain descriptions) stays English-only — the same
  * scope boundary M10 plan's user decision 2 drew, unchanged by this milestone.
+ *
+ * M10.9: `<ReplayControls />` renders itself only while `store/replay.ts`'s `useReplay` is
+ * mid-replay (a report/replay link opened via `share/bootRunLink.ts`) — every section below it
+ * already reads live `useRun` state, so as the replay ticks forward this same page just fills
+ * in further, with no separate "replaying" layout to keep in sync with the finished one.
  */
 export function MissionReportView({ onBack }: { onBack: () => void }) {
   const state = useRun((s) => s.state);
@@ -57,6 +63,8 @@ export function MissionReportView({ onBack }: { onBack: () => void }) {
         </button>
         <p className="report-print-hint">{t("report.printHint")}</p>
       </div>
+
+      <ReplayControls />
 
       <header className="view-head report-head">
         <h1>{t("report.title")}</h1>
