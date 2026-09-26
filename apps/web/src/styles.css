@@ -1053,6 +1053,23 @@ code {
   font-style: italic;
 }
 
+/* M11: docs/DATA_SOURCES.md's own ☐/☑ Status column, mirrored here. Icon (a filled vs.
+   hollow circle) + text, never color alone (brief rule 6) — the color is a bonus for
+   sighted players who do distinguish it, not the only signal. */
+.source-verification {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.source-verified {
+  color: var(--nominal);
+}
+
+.source-unverified {
+  color: var(--text-dim);
+}
+
 .placeholder-list,
 .simplification-list {
   list-style: none;

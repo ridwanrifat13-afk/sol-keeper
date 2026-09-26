@@ -1,0 +1,152 @@
+{
+  "A13-CO2": {
+    "verified": false
+  },
+  "AGU-KNIPP-2018": {
+    "verified": false
+  },
+  "AIP-2023-REGOLITH-SHIELD": {
+    "verified": false
+  },
+  "BVAD-2022": {
+    "verified": false
+  },
+  "CE4-LND-2020": {
+    "verified": false
+  },
+  "FRONTIERS-2024": {
+    "verified": false
+  },
+  "GAME-DESIGN": {
+    "verified": true
+  },
+  "GSFC-STD-1000H": {
+    "verified": false
+  },
+  "HRP-ARS": {
+    "verified": false
+  },
+  "ICES-2017": {
+    "verified": false
+  },
+  "ICES-2019-CDRA": {
+    "verified": false
+  },
+  "JPL-DUSTSTORM2018-TAU": {
+    "verified": false
+  },
+  "LORENZ-2020-INSIGHT-DUST": {
+    "verified": false
+  },
+  "LUZZI-2025": {
+    "verified": false
+  },
+  "MIR-FIRE-LINENGER": {
+    "verified": false
+  },
+  "MIT-16851-WRS": {
+    "verified": false
+  },
+  "MIT-MOXIE-2023": {
+    "verified": false
+  },
+  "MIYAJIMA-LSS": {
+    "verified": false
+  },
+  "MOXIE-MASS-NASA": {
+    "verified": false
+  },
+  "MS22-THERMAL": {
+    "verified": false
+  },
+  "MSL-RAD-CRUISE": {
+    "verified": false
+  },
+  "MSL-RAD-SUMMARY": {
+    "verified": false
+  },
+  "MSL-RAD-SURFACE": {
+    "verified": false
+  },
+  "NASA-AMES-STD8070": {
+    "verified": false
+  },
+  "NASA-ARTEMIS-CLR": {
+    "verified": false
+  },
+  "NASA-FSP": {
+    "verified": false
+  },
+  "NASA-FSP-IAC2024": {
+    "verified": false
+  },
+  "NASA-HYPOTHERMIA-2008": {
+    "verified": false
+  },
+  "NASA-M2020-LANDING": {
+    "verified": false
+  },
+  "NASA-MIR-FIRE-25YR": {
+    "verified": false
+  },
+  "NASA-MSL-LANDING": {
+    "verified": false
+  },
+  "NASA-NUTRITION-2015": {
+    "verified": false
+  },
+  "NASA-ORION-FS": {
+    "verified": false
+  },
+  "NASA-SHUTTLE-MIR": {
+    "verified": false
+  },
+  "NASA-SMA-MIR-COLLISION": {
+    "verified": false
+  },
+  "NASA-SP-4030": {
+    "verified": false
+  },
+  "NASA-SPACEBIO-1975": {
+    "verified": false
+  },
+  "NASA-WATER-2023": {
+    "verified": false
+  },
+  "NSF-MS22": {
+    "verified": false
+  },
+  "NSSDC-FACTS": {
+    "verified": false
+  },
+  "OCHMO-RAD": {
+    "verified": false
+  },
+  "OCHMO-TB003": {
+    "verified": false
+  },
+  "OCHMO-TB004": {
+    "verified": false
+  },
+  "OCHMO-TB047": {
+    "verified": false
+  },
+  "RUCKER-2015-SURFACE-POWER": {
+    "verified": false
+  },
+  "SPACECRAFT-SUBSYS-NTRS": {
+    "verified": false
+  },
+  "STOICHIOMETRY": {
+    "verified": true
+  },
+  "SWIM-2021": {
+    "verified": false
+  },
+  "THEMIS-MARGINS": {
+    "verified": false
+  },
+  "WUELLER-2026": {
+    "verified": false
+  }
+}

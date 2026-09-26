@@ -1,5 +1,6 @@
 import { CONSTANTS, SOURCE_IDS, walkConstants, type Confidence, type SourceId } from "@sol-keeper/sim";
 import { SOURCE_REGISTRY } from "../../data/sourceRegistry.js";
+import sourceVerification from "../../data/sourceVerification.generated.json" with { type: "json" };
 
 /**
  * Where every number in the game comes from (brief rule 1, rule 5).
@@ -19,11 +20,25 @@ const CONFIDENCE_LABELS: Record<Confidence, string> = {
 
 const CONFIDENCE_ORDER: readonly Confidence[] = ["measured", "derived", "tuned", "placeholder"];
 
+/**
+ * `docs/DATA_SOURCES.md`'s own ☐/☑ Status column, mirrored (never set) here by
+ * `scripts/generate-source-verification.ts` — CLAUDE.md is explicit that only the lead
+ * developer marks a row ☑, after checking the page/table in the source document, so this
+ * screen only ever surfaces what that file already says, never its own judgment. Icon +
+ * pattern (a filled vs. hollow circle) + text, never color alone (brief rule 6).
+ */
+interface VerificationEntry {
+  readonly verified: boolean;
+  readonly verifiedBy?: string;
+}
+const SOURCE_VERIFICATION: Record<string, VerificationEntry | undefined> = sourceVerification;
+
 interface SourceRow {
   readonly id: SourceId;
   readonly info: (typeof SOURCE_REGISTRY)[SourceId];
   readonly count: number;
   readonly confidences: ReadonlySet<Confidence>;
+  readonly verification: VerificationEntry;
 }
 
 function buildSourceRows(): SourceRow[] {
@@ -40,7 +55,8 @@ function buildSourceRows(): SourceRow[] {
 
   return SOURCE_IDS.map((id) => {
     const entry = bySource.get(id) ?? { count: 0, confidences: new Set<Confidence>() };
-    return { id, info: SOURCE_REGISTRY[id], count: entry.count, confidences: entry.confidences };
+    const verification = SOURCE_VERIFICATION[id] ?? { verified: false };
+    return { id, info: SOURCE_REGISTRY[id], count: entry.count, confidences: entry.confidences, verification };
   })
     .filter((row) => row.count > 0)
     .sort((a, b) => b.count - a.count);
@@ -88,6 +104,14 @@ export function DataSourcesView() {
                   {row.count} constant{row.count === 1 ? "" : "s"}
                 </span>
               </div>
+              <p
+                className={`source-verification ${row.verification.verified ? "source-verified" : "source-unverified"}`}
+              >
+                <span aria-hidden="true">{row.verification.verified ? "●" : "○"}</span>{" "}
+                {row.verification.verified
+                  ? `Verified${row.verification.verifiedBy !== undefined ? ` by ${row.verification.verifiedBy}` : ""}`
+                  : "Not yet verified against the source document"}
+              </p>
               <p className="source-title">
                 {row.info.url !== undefined ? (
                   <a href={row.info.url} target="_blank" rel="noreferrer">
