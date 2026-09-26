@@ -9,18 +9,19 @@
  *
  * Nothing here decides anything about the simulation. All the rules live in @sol-keeper/sim.
  */
-import { create } from "zustand";
+import { create, type StoreApi } from "zustand";
 import {
-  applyResponse,
+  applyInput,
   createRun,
   getScenario,
   tick as simTick,
   EventLogger,
-  INCIDENT_CATALOG,
   Rng,
   type CommsPriority,
   type CrewLocation,
   type Params,
+  type RecordedInput,
+  type RunInput,
   type Scenario,
   type SimState,
   type StationId,
@@ -84,6 +85,12 @@ interface RunStore {
    *  SolSummaryView.tsx` reads this to show the brief's own "end-of-sol summary" overlay.
    *  `undefined` once dismissed (dismissSolSummary) or before any sol has ever ended. */
   justEndedSol: { startHour: number; endHour: number } | undefined;
+  /** M10.4: every player decision so far, tagged with the `state.hour` it was made at — the
+   *  input `@sol-keeper/sim`'s `replayRun` needs to reproduce this exact run byte-identically
+   *  from nothing but `params`/`scenario` (M10's own done-when bar). Appended to, never
+   *  mutated or reordered, by the same six actions below that used to mutate `state` with no
+   *  record at all. */
+  inputLog: RecordedInput[];
 
   step: (hours?: number) => void;
   setSpeed: (speed: Speed) => void;
@@ -118,6 +125,32 @@ interface RunStore {
   setCommsPriority: (priority: CommsPriority) => void;
 }
 
+/**
+ * M10.4: the one call site every player-decision action below goes through — builds the same
+ * ad hoc `TickContext` `resolveIncident` already built pre-M10.4 (a fresh `Rng` view over the
+ * live `state.rng`, an `EventLogger` whose constructor recovers the right starting `seq` for
+ * an hour `tick()` itself already wrote to, M10.3), hands it to `applyInput` so every one of
+ * the six kinds mutates state and logs its own causal entry the same single way, and appends
+ * `{ hour, input }` to `inputLog` so `replayRun` can reproduce this exact call later.
+ */
+function applyAndRecord(
+  get: StoreApi<RunStore>["getState"],
+  set: StoreApi<RunStore>["setState"],
+  input: RunInput,
+): void {
+  const { state, params, scenario, version, inputLog } = get();
+  const ctx: TickContext = {
+    state,
+    params,
+    scenario,
+    rng: new Rng(state.rng),
+    log: new EventLogger(state.log, state.hour),
+    dtHours: 1,
+  };
+  applyInput(ctx, input);
+  set({ version: version + 1, inputLog: [...inputLog, { hour: state.hour, input }] });
+}
+
 export const useRun = create<RunStore>((set, get) => ({
   params: DEFAULT_PARAMS,
   scenario: getScenario(DEFAULT_PARAMS.scenarioId),
@@ -126,6 +159,7 @@ export const useRun = create<RunStore>((set, get) => ({
   speed: "paused",
   phase: "planning",
   justEndedSol: undefined,
+  inputLog: [],
 
   step: (hours = 1) => {
     const { state, params, scenario } = get();
@@ -189,13 +223,12 @@ export const useRun = create<RunStore>((set, get) => ({
       speed: "paused",
       phase: "planning",
       justEndedSol: undefined,
+      inputLog: [],
     });
   },
 
   setSurvivalMode: (mode) => {
-    const { state, version } = get();
-    state.food.mode = mode;
-    set({ version: version + 1 });
+    applyAndRecord(get, set, { kind: "rations", mode });
   },
 
   /**
@@ -204,60 +237,22 @@ export const useRun = create<RunStore>((set, get) => ({
    * keeps the ordering stable and the change legible to the player.
    */
   setPriority: (id, direction) => {
-    const { state, version } = get();
-    const ordered = Object.values(state.systems).sort((a, b) => a.priority - b.priority);
-    const index = ordered.findIndex((s) => s.id === id);
-    const target = index + direction;
-    if (index === -1 || target < 0 || target >= ordered.length) return;
-
-    const a = ordered[index];
-    const b = ordered[target];
-    if (a === undefined || b === undefined) return;
-
-    const swap = a.priority;
-    (state.systems[a.id] as { priority: number }).priority = b.priority;
-    (state.systems[b.id] as { priority: number }).priority = swap;
-    set({ version: version + 1 });
+    applyAndRecord(get, set, { kind: "priority", systemId: id, direction });
   },
 
   resolveIncident: (incidentId, responseId) => {
-    const { state, params, scenario, version } = get();
-    const incident = state.activeIncidents.find((i) => i.id === incidentId);
-    if (incident === undefined) return;
-    const definition = INCIDENT_CATALOG.find((d) => d.id === incident.definitionId);
-    if (definition === undefined) return;
-
-    const ctx: TickContext = {
-      state,
-      params,
-      scenario,
-      rng: new Rng(state.rng),
-      log: new EventLogger(state.log, state.hour),
-      dtHours: 1,
-    };
-    applyResponse(ctx, definition, incident, responseId);
-    set({ version: version + 1 });
+    applyAndRecord(get, set, { kind: "incidentResponse", incidentId, responseId });
   },
 
   setCrewLocation: (crewId, location) => {
-    const { state, version } = get();
-    const member = state.crew.find((c) => c.id === crewId);
-    if (member === undefined) return;
-    member.location = location;
-    set({ version: version + 1 });
+    applyAndRecord(get, set, { kind: "crewLocation", crewId, location });
   },
 
   assignStation: (crewId, station) => {
-    const { state, version } = get();
-    const member = state.crew.find((c) => c.id === crewId);
-    if (member === undefined) return;
-    (member as { primaryStation: StationId }).primaryStation = station;
-    set({ version: version + 1 });
+    applyAndRecord(get, set, { kind: "station", crewId, station });
   },
 
   setCommsPriority: (priority) => {
-    const { state, version } = get();
-    state.comms.priority = priority;
-    set({ version: version + 1 });
+    applyAndRecord(get, set, { kind: "commsPriority", priority });
   },
 }));

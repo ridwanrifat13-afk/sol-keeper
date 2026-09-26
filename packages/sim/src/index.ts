@@ -99,6 +99,9 @@ export { createInitialState } from "./engine/state.js";
 export { PIPELINE, run, tick } from "./engine/tick.js";
 export type { NamedStage } from "./engine/tick.js";
 
+export type { RecordedInput, RunInput } from "./engine/replay.js";
+export { applyInput, replayRun } from "./engine/replay.js";
+
 export type { IncidentDefinition, IncidentResponse, IncidentTrigger } from "./engine/incidents.js";
 export {
   INCIDENT_CATALOG,

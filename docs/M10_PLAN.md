@@ -3,8 +3,14 @@
 ## Status (updated 2026-09-26)
 
 **Done and pushed to `main`:** M10.1 (`ef94762`), M10.2 (`01455ab`), M10.3 (`7e6e5b4`).
-**Not started:** M10.4 through M10.9 — the dependent chain below, starting with the replay
-engine (`packages/sim/src/engine/replay.ts`).
+**Just finished, not yet merged:** M10.4 — `packages/sim/src/engine/replay.ts`
+(`RunInput`/`applyInput`/`replayRun`), `store/run.ts`'s six mutators refactored onto
+`applyInput` + a new `inputLog`, and `validation/replay.test.ts`'s play-vs-replay equality
+test. No `SIM_VERSION` bump: nothing in `PIPELINE`, `models/`, `constants.ts`/`scenarios/`,
+the incident catalog, the RNG, `state.ts`'s initial state, or `setup.ts`'s sizing changed —
+this only adds a single call path for five decisions that used to mutate `SimState` with no
+log entry at all, plus a pure replay driver over the exact same path.
+**Not started:** M10.5 through M10.9 — the dependent chain below.
 
 ## The brief's M10 text, verbatim
 
@@ -71,13 +77,14 @@ count/order, `engine/state.ts`'s initial state, or `engine/setup.ts`'s sizing. N
 `apps/web`, i18n, styling, docs. Enforced by `validation/simVersion.test.ts`'s golden
 fingerprints. Documented in `CLAUDE.md` (new section) and `docs/ARCHITECTURE.md` §4.
 
-### 3. Player-decision record — incident responses exist, five other input kinds don't (M10.4, not started)
+### 3. Player-decision record — incident responses exist, five other input kinds don't (closed by M10.4)
 `applyResponse`/`resolveResponseAttempt` (`engine/incidents.ts`) already logs chosen responses
 with hour + station-recoverable data — decision timeline needs no new sim data for that part.
 But `setSurvivalMode`, `setPriority`, `setCrewLocation`, `assignStation`, `setCommsPriority`
 (`store/run.ts`) mutate `SimState` directly with **no log entry at all**, and each changes later
 physics (rations, load-shed order, radiation exposure, station coverage, science-vs-morale).
-Real, new plumbing needed — not an invented gap. **This is M10.4's job, still to do.**
+Real, new plumbing needed — not an invented gap. **Closed by M10.4**: all six now go through
+`applyInput`, each logging its own `decision.*` entry.
 
 **Bug found and fixed (M10.3):** `EventLogger` ids are `${hour}:${seq}`, `seq` starting at 0
 per *instance* (`engine/log.ts`). `tick()` builds one logger per hour; `store/run.ts`'s
@@ -158,7 +165,7 @@ partially-applied mission.
 | M10.1 | `SIM_VERSION`, `runFingerprint()`, golden-fingerprint guard test, CLAUDE.md + ARCHITECTURE.md rule | — | **Done** (`ef94762`) |
 | M10.2 | Real seed: `store/setup.ts` seed field (crypto-rolled), Launch Packing re-roll/manual entry, `commit()` wiring | — | **Done** (`01455ab`) |
 | M10.3 | `EventLogger` starting-seq fix + duplicate-id regression test | — | **Done** (`7e6e5b4`) |
-| M10.4 | `engine/replay.ts` (`RunInput`/`applyInput`/`replayRun`), `store/run.ts` mutators refactored onto it + `inputLog`, play-vs-replay equality test | M10.3 | Not started |
+| M10.4 | `engine/replay.ts` (`RunInput`/`applyInput`/`replayRun`), `store/run.ts` mutators refactored onto it + `inputLog`, play-vs-replay equality test | M10.3 | **Done** |
 | M10.5 | `share/runLink.ts` encode/decode, whitelist+validate every field, legacy-difficulty mapping, versionMismatch/invalid results, frozen-literal regression test | M10.1, M10.2, M10.4 | Not started |
 | M10.6 | Boot-time URL entry in App.tsx (3 modes: no params/config-only/config+fragment), version-mismatch banner | M10.5 | Not started |
 | M10.7 | "Create class link" + "Copy report link" UI, clipboard + visible-input fallback | M10.5, M10.6 | Not started |
@@ -188,8 +195,8 @@ scrutiny since a printed artifact is most likely to be mistaken for official). R
   refactor onto `applyInput` + a new `inputLog`
 - `packages/sim/src/engine/log.ts` — `EventLogger` (seq fix already done),
   `causalCascade`/`rootCauses`/`directEffects` for the report's causal-chain section
-- `packages/sim/src/index.ts` — public export surface; `SIM_VERSION`/`runFingerprint` already
-  exported, M10.4's `replay.ts` exports (`RunInput`/`applyInput`/`replayRun`) still need adding
+- `packages/sim/src/index.ts` — public export surface; `SIM_VERSION`/`runFingerprint` and (as
+  of M10.4) `RunInput`/`RecordedInput`/`applyInput`/`replayRun` all exported
 - `apps/web/src/store/setup.ts` — `commit()` (now passes `seed`), `resolveScenario`
 - `apps/web/src/App.tsx` — boot-time URL entry, new report view, three landing modes (all M10.6, not started)
 - `apps/web/src/styles.css` — first `@media print` block (M10.8, not started) — mind the
