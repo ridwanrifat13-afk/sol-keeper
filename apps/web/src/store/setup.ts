@@ -26,7 +26,7 @@ import {
   type ShieldingApproach,
 } from "@sol-keeper/sim";
 import { MAX_CREW_SIZE, MAX_SEED, MIN_CREW_SIZE } from "../share/runLink.js";
-import { useRun } from "./run.js";
+import { useRun, type RunSetupChoices } from "./run.js";
 
 /** The six choice steps (M9.2a/b/c) plus two review/flourish steps that read the choices
  *  made so far rather than setting one of their own: `transit` (M9.3's establishing shot,
@@ -90,6 +90,16 @@ interface SetupStore {
   commit: () => void;
 }
 
+export interface ResolvedScenario {
+  readonly scenario: Scenario;
+  /** The setup choices actually used to build `scenario` — same shape `store/run.ts`'s
+   *  `RunSetupChoices` wants, with `landingSiteId` resolved to the real default a caller who
+   *  never picked one gets, not the `undefined` they passed in. M10.6's `commit()` threads
+   *  this straight into `useRun`'s own `reset()` rather than resolving the default a second
+   *  time. */
+  readonly setupChoices: RunSetupChoices;
+}
+
 /** Layers the wizard's current choices onto their base scenario — the same logic `commit()`
  *  uses to actually start the mission, pulled out so `LaunchPackingStep` can preview the
  *  exact scenario the player is about to launch, without committing anything. */
@@ -99,18 +109,26 @@ export function resolveScenario(choices: {
   readonly crewSize: number;
   readonly powerArchitecture: PowerArchitecture;
   readonly shieldingApproach: ShieldingApproach;
-}): Scenario {
+}): ResolvedScenario {
   const base = getScenario(choices.scenarioId);
   const landingSiteId = choices.landingSiteId ?? landingSitesForBody(base.body)[0]?.id;
   if (landingSiteId === undefined) {
     throw new Error(`No landing site catalogued for body "${base.body}"`);
   }
-  return buildCustomScenario(base, {
+  const scenario = buildCustomScenario(base, {
     landingSiteId,
     crewSize: choices.crewSize,
     powerArchitecture: choices.powerArchitecture,
     shieldingApproach: choices.shieldingApproach,
   });
+  return {
+    scenario,
+    setupChoices: {
+      landingSiteId,
+      powerArchitecture: choices.powerArchitecture,
+      shieldingApproach: choices.shieldingApproach,
+    },
+  };
 }
 
 const initialChoices = {
@@ -177,10 +195,11 @@ export const useSetup = create<SetupStore>((set, get) => ({
 
   commit: () => {
     const choices = get();
-    const scenario = resolveScenario(choices);
+    const { scenario, setupChoices } = resolveScenario(choices);
     useRun.getState().reset(
       { scenarioId: choices.scenarioId, crewSize: choices.crewSize, difficulty: choices.difficulty, seed: choices.seed },
       scenario,
+      setupChoices,
     );
     set({ ...initialChoices, seed: rollSeed() });
   },

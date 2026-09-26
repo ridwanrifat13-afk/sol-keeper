@@ -14,6 +14,8 @@ import {
   applyInput,
   createRun,
   getScenario,
+  landingSitesForBody,
+  replayRun,
   tick as simTick,
   EventLogger,
   Rng,
@@ -23,6 +25,7 @@ import {
   type RecordedInput,
   type RunInput,
   type Scenario,
+  type SetupChoices,
   type SimState,
   type StationId,
   type SurvivalMode,
@@ -65,6 +68,23 @@ const DEFAULT_PARAMS: Params = {
   difficulty: "nominal",
 };
 
+/** M10.6: the three setup choices `buildCustomScenario` bakes into numeric fields
+ *  (`solarArrayAreaM2`, `shieldingGPerCm2`, …) and then discards the ids of — `scenario` alone
+ *  can't answer "what site/power/shielding was this run built from," but a "Copy report
+ *  link" (M10.7) needs exactly that alongside `params` to rebuild a `RunLinkConfig`. Omits
+ *  `crewSize`: that already lives in `Params` and would just be a second copy here. */
+export type RunSetupChoices = Omit<SetupChoices, "crewSize">;
+
+/** The same fallback `store/setup.ts`'s own `resolveScenario` uses for a step a player never
+ *  visited — matters here for every `reset()` caller that predates M9's setup wizard
+ *  (`ScenarioSwitch`, `TimeControls`' Restart, every bare `reset()` in a test) and so has no
+ *  real setup choices of its own to pass. */
+function defaultSetupChoices(scenario: Scenario): RunSetupChoices {
+  const site = landingSitesForBody(scenario.body)[0];
+  if (site === undefined) throw new Error(`No landing site catalogued for body "${scenario.body}"`);
+  return { landingSiteId: site.id, powerArchitecture: "solarBattery", shieldingApproach: "hullOnly" };
+}
+
 interface RunStore {
   params: Params;
   scenario: Scenario;
@@ -91,6 +111,10 @@ interface RunStore {
    *  mutated or reordered, by the same six actions below that used to mutate `state` with no
    *  record at all. */
   inputLog: RecordedInput[];
+  /** M10.6: the setup choices `scenario` was built from — see `RunSetupChoices`'s own doc
+   *  comment. Set by every `reset()`/`loadReplayedRun()` call alongside `scenario` itself, so
+   *  the two can never silently disagree about which run they describe. */
+  setupChoices: RunSetupChoices;
 
   step: (hours?: number) => void;
   setSpeed: (speed: Speed) => void;
@@ -101,7 +125,23 @@ interface RunStore {
    *  shielding choices and hands it straight through here, so `scenario` and `state` are
    *  built from the exact same object — never resolved twice and left free to disagree.
    *  Defaults to the base scenario `params.scenarioId` names, matching every pre-M9 caller. */
-  reset: (params?: Partial<Params>, scenarioOverride?: Scenario) => void;
+  reset: (
+    params?: Partial<Params>,
+    scenarioOverride?: Scenario,
+    setupChoicesOverride?: RunSetupChoices,
+  ) => void;
+  /** M10.6: hydrates the store with an *already-replayed* final state — the boot-time
+   *  "config+fragment" run-link mode (a report/replay link, `share/bootRunLink.ts`), built
+   *  by replaying `inputLog` through `@sol-keeper/sim`'s own `replayRun` (M10.4) rather than
+   *  starting fresh at hour 0 the way `reset()` always does. Kept as a separate action rather
+   *  than a `reset()` mode: `reset()`'s whole contract is "start this mission from hour 0." */
+  loadReplayedRun: (
+    params: Params,
+    scenario: Scenario,
+    setupChoices: RunSetupChoices,
+    inputLog: RecordedInput[],
+    throughHour: number,
+  ) => void;
   setSurvivalMode: (mode: SurvivalMode) => void;
   setPriority: (id: SystemId, direction: -1 | 1) => void;
   /** M8.1: the player-driven counterpart to `tickWithBot`'s bot-driven incident resolution
@@ -160,6 +200,7 @@ export const useRun = create<RunStore>((set, get) => ({
   phase: "planning",
   justEndedSol: undefined,
   inputLog: [],
+  setupChoices: defaultSetupChoices(getScenario(DEFAULT_PARAMS.scenarioId)),
 
   step: (hours = 1) => {
     const { state, params, scenario } = get();
@@ -212,7 +253,7 @@ export const useRun = create<RunStore>((set, get) => ({
     set({ justEndedSol: undefined });
   },
 
-  reset: (overrides = {}, scenarioOverride) => {
+  reset: (overrides = {}, scenarioOverride, setupChoicesOverride) => {
     const params = { ...DEFAULT_PARAMS, ...overrides };
     const scenario = scenarioOverride ?? getScenario(params.scenarioId);
     set({
@@ -224,6 +265,21 @@ export const useRun = create<RunStore>((set, get) => ({
       phase: "planning",
       justEndedSol: undefined,
       inputLog: [],
+      setupChoices: setupChoicesOverride ?? defaultSetupChoices(scenario),
+    });
+  },
+
+  loadReplayedRun: (params, scenario, setupChoices, inputLog, throughHour) => {
+    set({
+      params,
+      scenario,
+      state: replayRun(params, scenario, inputLog, throughHour),
+      version: 0,
+      speed: "paused",
+      phase: "planning",
+      justEndedSol: undefined,
+      inputLog,
+      setupChoices,
     });
   },
 

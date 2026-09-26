@@ -63,7 +63,7 @@ export function LaunchPackingStep() {
   const level = useDial((s) => s.level);
   const [phase, setPhase] = useState<ProjectPhase>("pdr");
 
-  const scenario = resolveScenario({
+  const { scenario } = resolveScenario({
     scenarioId,
     landingSiteId,
     crewSize,

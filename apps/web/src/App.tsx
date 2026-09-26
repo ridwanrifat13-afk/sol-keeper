@@ -22,6 +22,7 @@ import { RunStatusBadge } from "./components/RunStatusBadge.js";
 import { EventFeed } from "./components/EventFeed.js";
 import { durationLabel } from "./dial/missionTime.js";
 import { SetupWizard } from "./views/Setup/SetupWizard.js";
+import { applyRunLinkFromLocation, type BootRunLinkResult } from "./share/bootRunLink.js";
 import "./i18n/config.js";
 
 /** The tab-nav's own eight destinations — seven since M8.3, plus Habitat (M9.4a) as the
@@ -105,10 +106,19 @@ const TAB_KEYS: Record<TabView, string> = {
  * signal exists) — that sets a `low-power-mode` class on the root element for `styles.css`'s
  * existing reduced-motion rules to also key off, on top of the OS's own
  * `prefers-reduced-motion` media query.
+ *
+ * M10.6 reads a shareable run link once at boot, in a `useEffect` (never at render time —
+ * `window` doesn't exist under this app's own SSR-based render tests, `share/bootRunLink.ts`'s
+ * own doc comment). A valid config-only link (a class mission) skips Setup for Briefing; a
+ * valid config+fragment link (a report/replay link) skips straight to Debrief — the interim
+ * landing spot until M10.8's dedicated Mission Report view exists — with the exact final
+ * state `replayRun` reconstructs. A version mismatch or a malformed link shows a dismissible
+ * banner and otherwise behaves exactly like opening the app with no link at all.
  */
 export function App() {
   const [view, setView] = useState<View>("setup");
   const [dataSourcesOpen, setDataSourcesOpen] = useState(false);
+  const [linkBanner, setLinkBanner] = useState<BootRunLinkResult | undefined>(undefined);
   const status = useRun((s) => s.state.status);
   const scenario = useRun((s) => s.scenario);
   const crew = useRun((s) => s.state.crew);
@@ -124,6 +134,27 @@ export function App() {
   useEffect(() => {
     document.documentElement.classList.toggle("low-power-mode", lowPowerMode);
   }, [lowPowerMode]);
+
+  // M10.6: read once, at boot — a run link is a landing-page concern, not something to
+  // re-decode on every navigation, and re-running this after the player has started making
+  // their own decisions would silently overwrite them with whatever the URL still says.
+  useEffect(() => {
+    const result = applyRunLinkFromLocation({ search: window.location.search, hash: window.location.hash });
+    switch (result.kind) {
+      case "none":
+        return;
+      case "versionMismatch":
+      case "invalid":
+        setLinkBanner(result);
+        return;
+      case "configOnly":
+        setView("briefing");
+        return;
+      case "fullReplay":
+        setView("debrief");
+        return;
+    }
+  }, []);
 
   return (
     <main className="app">
@@ -173,6 +204,22 @@ export function App() {
           <LanguageSwitch />
         </div>
       </div>
+
+      {linkBanner !== undefined && (linkBanner.kind === "versionMismatch" || linkBanner.kind === "invalid") && (
+        <div className="run-link-banner" role="status">
+          <p>{t(linkBanner.kind === "versionMismatch" ? "shareLink.versionMismatch" : "shareLink.invalid")}</p>
+          <button
+            type="button"
+            className="btn btn-quiet run-link-banner-close"
+            aria-label={t("shareLink.dismiss")}
+            onClick={() => {
+              setLinkBanner(undefined);
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {view === "setup" ? (
         <SetupWizard

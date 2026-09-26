@@ -1,9 +1,10 @@
 /**
  * i18next setup (brief tech stack: "i18next with en and bn locales from day one").
  *
- * Scope, disclosed rather than silently partial: this covers the app shell (tab names) and
- * the Live Sky view end-to-end, as a real, working translation pipeline — not a stub. The
- * rest of the UI (Operate, Ripple Web, Debrief, Data Sources) and the event-log text system
+ * Scope, disclosed rather than silently partial: this covers the app shell (tab names, and,
+ * as of M10.6, the run-link version-mismatch/invalid banner) and the Live Sky view
+ * end-to-end, as a real, working translation pipeline — not a stub. The rest of the UI
+ * (Operate, Ripple Web, Debrief, Data Sources) and the event-log text system
  * (i18n/logText.ts, which already has its own English-only cadet/specialist/commander
  * templates) are not yet migrated to translation keys; that is a follow-up pass, not
  * something this file pretends to cover. The Bangla space-weather technical terms

@@ -4,23 +4,38 @@
 
 **Done and pushed to `main`:** M10.1 (`ef94762`), M10.2 (`01455ab`), M10.3 (`7e6e5b4`).
 **Just finished, not yet merged:** M10.4 (`packages/sim/src/engine/replay.ts`,
-`store/run.ts`'s `inputLog`) and M10.5 (`apps/web/src/share/runLink.ts` + `binaryCodec.ts`).
-No `SIM_VERSION` bump for either: M10.4 only adds a call path for five decisions that used to
-mutate `SimState` with no log entry at all, plus a pure replay driver over the exact same
-path; M10.5 is `apps/web`-only.
-**Not started:** M10.6 through M10.9 — the dependent chain below.
+`store/run.ts`'s `inputLog`), M10.5 (`apps/web/src/share/runLink.ts` + `binaryCodec.ts`), and
+M10.6 (`share/bootRunLink.ts`, `App.tsx`'s boot-time `useEffect`, the version-mismatch/invalid
+banner). No `SIM_VERSION` bump for any of the three: M10.4 only adds a call path for five
+decisions that used to mutate `SimState` with no log entry at all, plus a pure replay driver
+over the exact same path; M10.5 and M10.6 are `apps/web`-only.
+**Not started:** M10.7 through M10.9 — the dependent chain below.
 
-**Disclosed gap for M10.6/M10.7 to pick up**: `RunStore` (`apps/web/src/store/run.ts`) carries
-`params`/`scenario` but not the three setup choices (`landingSiteId`/`powerArchitecture`/
-`shieldingApproach`) that produced `scenario` — `buildCustomScenario` bakes them into numeric
-fields (`solarArrayAreaM2`, `shieldingGPerCm2`, …) and discards the ids themselves, and
-`useSetup`'s wizard state resets on `commit()`. `share/runLink.ts`'s `RunLinkConfig` needs all
-three to encode a link. M10.5's own tests construct a `RunLinkConfig` directly rather than
-from a live run, since nothing in the app currently holds one mid-mission. "Create class
-link" (setup-time, M10.7) is unaffected — `useSetup`'s own fields are still live at that
-point — but "Copy report link" from a finished/in-progress run needs `RunStore` to start
-carrying these three fields (set once at `reset()`, alongside `params`/`scenario`) before
-M10.7 can build a link from a real run.
+**The M10.6/M10.7 disclosed gap is closed.** `RunStore` (`apps/web/src/store/run.ts`) now
+carries a `setupChoices: RunSetupChoices` field (`landingSiteId`/`powerArchitecture`/
+`shieldingApproach`) alongside `params`/`scenario`, set by every `reset()`/`loadReplayedRun()`
+call — `store/setup.ts`'s `resolveScenario()` now returns `{ scenario, setupChoices }` (was
+just `Scenario`) so `commit()` threads the wizard's real choices straight through instead of
+resolving the "no site chosen yet" default a second time; every pre-M9 caller with no choices
+of its own (`ScenarioSwitch`, `TimeControls`' Restart, a bare `reset()` in a test) gets the
+same default `resolveScenario` already used for an unvisited setup step. "Copy report link"
+(M10.7) can now build a `RunLinkConfig` from any live `RunStore` via `params` + `setupChoices`.
+
+**M10.6 note for M10.8/M10.9**: `App.tsx`'s boot-time effect currently lands a config+fragment
+link (a report/replay link) on the existing Debrief tab, with the exact final state
+`replayRun` reconstructs — the closest existing view to a mission report, not the real thing.
+Once M10.8's `MissionReportView.tsx` exists, change that one `setView("debrief")` call (and,
+symmetrically, `configOnly`'s `setView("briefing")` if the class-mission landing spot ever
+moves) rather than adding a second boot path. M10.9's replay-at-speed driver is a separate,
+later concern from this: today's `loadReplayedRun` jumps straight to the final state instantly
+via `replayRun`, it does not animate through the intermediate hours.
+
+Manually verified in a real Chromium browser (via Playwright, `vite preview` against a
+production build) — see the boot-mode screenshots sent alongside this milestone's summary:
+fresh load opens Setup with no banner; a config-only link lands on Briefing at hour 0; a
+config+fragment link lands on Debrief with the exact replayed hour, event log, and resource
+state; a version-mismatch link and an invalid link both show their own dismissible banner and
+otherwise degrade to a fresh Setup exactly like opening the app with no link at all.
 
 ## The brief's M10 text, verbatim
 
@@ -177,7 +192,7 @@ partially-applied mission.
 | M10.3 | `EventLogger` starting-seq fix + duplicate-id regression test | — | **Done** (`7e6e5b4`) |
 | M10.4 | `engine/replay.ts` (`RunInput`/`applyInput`/`replayRun`), `store/run.ts` mutators refactored onto it + `inputLog`, play-vs-replay equality test | M10.3 | **Done** |
 | M10.5 | `share/runLink.ts` encode/decode, whitelist+validate every field, legacy-difficulty mapping, versionMismatch/invalid results, frozen-literal regression test | M10.1, M10.2, M10.4 | **Done** |
-| M10.6 | Boot-time URL entry in App.tsx (3 modes: no params/config-only/config+fragment), version-mismatch banner | M10.5 | Not started |
+| M10.6 | Boot-time URL entry in App.tsx (3 modes: no params/config-only/config+fragment), version-mismatch banner | M10.5 | **Done** |
 | M10.7 | "Create class link" + "Copy report link" UI, clipboard + visible-input fallback | M10.5, M10.6 | Not started |
 | M10.8 | `MissionReportView.tsx` + print CSS + `report` i18n namespace (both locales) | M10.6 | Not started |
 | M10.9 | Replay-at-speed driver + done-when tests (Vitest determinism proof + e2e two-browser test) | M10.4, M10.6, M10.8 | Not started |
@@ -208,6 +223,7 @@ scrutiny since a printed artifact is most likely to be mistaken for official). R
 - `packages/sim/src/index.ts` — public export surface; `SIM_VERSION`/`runFingerprint` and (as
   of M10.4) `RunInput`/`RecordedInput`/`applyInput`/`replayRun` all exported
 - `apps/web/src/store/setup.ts` — `commit()` (now passes `seed`), `resolveScenario`
-- `apps/web/src/App.tsx` — boot-time URL entry, new report view, three landing modes (all M10.6, not started)
+- `apps/web/src/App.tsx` — boot-time URL entry and its three landing modes (M10.6, done); the
+  new report view itself is still M10.8's job
 - `apps/web/src/styles.css` — first `@media print` block (M10.8, not started) — mind the
   end-of-file ordering note in §6 above

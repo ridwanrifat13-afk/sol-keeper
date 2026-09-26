@@ -688,6 +688,30 @@ code {
   float: right;
 }
 
+/* ---------------------------------------------------------------- run-link banner (M10.6) */
+.run-link-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--caution);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: var(--gap);
+}
+
+.run-link-banner p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.run-link-banner-close {
+  flex-shrink: 0;
+}
+
 /* ---------------------------------------------------------------- coach mark (onboarding) */
 .coach-mark {
   position: fixed;

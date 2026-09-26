@@ -1,4 +1,9 @@
 {
+  "shareLink": {
+    "versionMismatch": "⚠️ This link was made with an older version of Sol Keeper and can't be replayed here — starting a fresh mission instead.",
+    "invalid": "⚠️ This link isn't valid — starting a fresh mission instead.",
+    "dismiss": "Dismiss"
+  },
   "tabs": {
     "nav": "Sol Keeper views",
     "power": "Power",
