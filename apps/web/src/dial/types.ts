@@ -10,6 +10,12 @@
  */
 export type DialLevel = "cadet" | "specialist" | "commander";
 
+/** App UI language (M11). Structurally identical to `i18n/config.ts`'s own
+ *  `SupportedLanguage` — kept as a separate declaration rather than an import so that
+ *  `dial/` and `i18n/logText.ts`/`i18n/decisionText.ts` never have to load i18next's own
+ *  setup (and its `localStorage` read) just to know the type of a function parameter. */
+export type Language = "en" | "bn";
+
 export const DIAL_LEVELS: readonly DialLevel[] = ["cadet", "specialist", "commander"];
 
 export const DIAL_LEVEL_LABELS: Record<DialLevel, string> = {

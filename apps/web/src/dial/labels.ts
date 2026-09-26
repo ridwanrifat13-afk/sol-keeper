@@ -6,9 +6,15 @@
  * word is spelled in English or Bangla. Something has to turn them back into words before
  * they reach a player; that job lives here rather than in the sim (brief rule 4) and rather
  * than duplicated inline in every component that shows a system name.
+ *
+ * M11: every function takes an optional `language`, defaulting to `"en"` — the same
+ * DRAFT/needsReview Bangla treatment as `i18n/logText.ts`'s new `_BN` tables (see
+ * `docs/i18n/bn_review.csv`). The default keeps every existing English-only call site
+ * (station consoles, DecisionCard, EsmPanel, ...) compiling unchanged; only the log/decision
+ * text renderers pass `"bn"` explicitly once the player has chosen Bangla.
  */
 import type { CommsPriority, CropTray, CrewLocation, StationId, SurvivalMode, SystemId } from "@sol-keeper/sim";
-import type { DialLevel } from "./types.js";
+import type { DialLevel, Language } from "./types.js";
 
 /** Full names, used at the specialist and commander levels. */
 const SYSTEM_LABELS: Record<SystemId, string> = {
@@ -36,7 +42,32 @@ const SYSTEM_LABELS_CADET: Record<SystemId, string> = {
   comms: "the radio",
 };
 
-export function systemLabel(id: SystemId, level: DialLevel): string {
+const SYSTEM_LABELS_BN: Record<SystemId, string> = {
+  powerDistribution: "বিদ্যুৎ বণ্টন",
+  lifeSupport: "লাইফ সাপোর্ট",
+  co2Scrubber: "CO₂ স্ক্রাবার",
+  thermalControl: "তাপ নিয়ন্ত্রণ",
+  oxygenGenerator: "অক্সিজেন জেনারেটর",
+  waterRecovery: "পানি পুনরুদ্ধার",
+  moxie: "MOXIE (বাতাস থেকে অক্সিজেন)",
+  greenhouse: "গ্রিনহাউস",
+  comms: "যোগাযোগ",
+};
+
+const SYSTEM_LABELS_CADET_BN: Record<SystemId, string> = {
+  powerDistribution: "বিদ্যুতের বাক্স",
+  lifeSupport: "লাইফ সাপোর্ট",
+  co2Scrubber: "বাতাস পরিষ্কারক",
+  thermalControl: "হিটার",
+  oxygenGenerator: "বাতাস তৈরির যন্ত্র",
+  waterRecovery: "পানি পরিষ্কারক",
+  moxie: "অক্সিজেন মেশিন",
+  greenhouse: "বাগান",
+  comms: "রেডিও",
+};
+
+export function systemLabel(id: SystemId, level: DialLevel, language: Language = "en"): string {
+  if (language === "bn") return level === "cadet" ? SYSTEM_LABELS_CADET_BN[id] : SYSTEM_LABELS_BN[id];
   return level === "cadet" ? SYSTEM_LABELS_CADET[id] : SYSTEM_LABELS[id];
 }
 
@@ -52,7 +83,20 @@ const LOCATION_LABELS_CADET: Record<CrewLocation, string> = {
   eva: "outside, in a spacesuit",
 };
 
-export function locationLabel(location: CrewLocation, level: DialLevel): string {
+const LOCATION_LABELS_BN: Record<CrewLocation, string> = {
+  habitat: "বাসস্থান",
+  stormShelter: "ঝড় আশ্রয়কেন্দ্র",
+  eva: "ইভিএ (বাসস্থানের বাইরে)",
+};
+
+const LOCATION_LABELS_CADET_BN: Record<CrewLocation, string> = {
+  habitat: "ভেতরে",
+  stormShelter: "নিরাপদ ঘর",
+  eva: "বাইরে, স্পেসস্যুট পরে",
+};
+
+export function locationLabel(location: CrewLocation, level: DialLevel, language: Language = "en"): string {
+  if (language === "bn") return level === "cadet" ? LOCATION_LABELS_CADET_BN[location] : LOCATION_LABELS_BN[location];
   return level === "cadet" ? LOCATION_LABELS_CADET[location] : LOCATION_LABELS[location];
 }
 
@@ -63,9 +107,17 @@ const CROP_EMOJI: Record<CropTray["crop"], string> = {
   potato: "🥔",
 };
 
+const CROP_LABELS_BN: Record<CropTray["crop"], string> = {
+  lettuce: "লেটুস",
+  wheat: "গম",
+  soybean: "সয়াবিন",
+  potato: "আলু",
+};
+
 /** Cadet gets an emoji alongside the crop name; the name itself needs no simplifying. */
-export function cropLabel(crop: CropTray["crop"], level: DialLevel): string {
-  return level === "cadet" ? `${CROP_EMOJI[crop]} ${crop}` : crop;
+export function cropLabel(crop: CropTray["crop"], level: DialLevel, language: Language = "en"): string {
+  const name = language === "bn" ? CROP_LABELS_BN[crop] : crop;
+  return level === "cadet" ? `${CROP_EMOJI[crop]} ${name}` : name;
 }
 
 /**
@@ -84,7 +136,20 @@ const SURVIVAL_MODE_LABELS_CADET: Record<SurvivalMode, string> = {
   mode2: "the emergency plan",
 };
 
-export function survivalModeLabel(mode: SurvivalMode, level: DialLevel): string {
+const SURVIVAL_MODE_LABELS_BN: Record<SurvivalMode, string> = {
+  nominal: "স্বাভাবিক",
+  mode1: "হ্রাসকৃত",
+  mode2: "সারভাইভাল",
+};
+
+const SURVIVAL_MODE_LABELS_CADET_BN: Record<SurvivalMode, string> = {
+  nominal: "স্বাভাবিক খাবার পরিকল্পনা",
+  mode1: "কম-খাবার পরিকল্পনা",
+  mode2: "জরুরি পরিকল্পনা",
+};
+
+export function survivalModeLabel(mode: SurvivalMode, level: DialLevel, language: Language = "en"): string {
+  if (language === "bn") return level === "cadet" ? SURVIVAL_MODE_LABELS_CADET_BN[mode] : SURVIVAL_MODE_LABELS_BN[mode];
   return level === "cadet" ? SURVIVAL_MODE_LABELS_CADET[mode] : SURVIVAL_MODE_LABELS[mode];
 }
 
@@ -105,7 +170,24 @@ const STATION_LABELS_CADET: Record<StationId, string> = {
   missionCommand: "the Captain",
 };
 
-export function stationLabel(id: StationId, level: DialLevel): string {
+const STATION_LABELS_BN: Record<StationId, string> = {
+  power: "পাওয়ার",
+  lifeSupport: "লাইফ সাপোর্ট",
+  comms: "কমস",
+  incidentCommand: "ইনসিডেন্ট কমান্ড",
+  missionCommand: "মিশন কমান্ড",
+};
+
+const STATION_LABELS_CADET_BN: Record<StationId, string> = {
+  power: "পাওয়ার দল",
+  lifeSupport: "বাতাস ও পানি দল",
+  comms: "রেডিও দল",
+  incidentCommand: "জরুরি দল",
+  missionCommand: "ক্যাপ্টেন",
+};
+
+export function stationLabel(id: StationId, level: DialLevel, language: Language = "en"): string {
+  if (language === "bn") return level === "cadet" ? STATION_LABELS_CADET_BN[id] : STATION_LABELS_BN[id];
   return level === "cadet" ? STATION_LABELS_CADET[id] : STATION_LABELS[id];
 }
 
@@ -122,6 +204,19 @@ const COMMS_PRIORITY_LABELS_CADET: Record<CommsPriority, string> = {
   personal: "sending messages home",
 };
 
-export function commsPriorityLabel(priority: CommsPriority, level: DialLevel): string {
+const COMMS_PRIORITY_LABELS_BN: Record<CommsPriority, string> = {
+  science: "বিজ্ঞান ডাউনলিংক",
+  personal: "ব্যক্তিগত বার্তা",
+};
+
+const COMMS_PRIORITY_LABELS_CADET_BN: Record<CommsPriority, string> = {
+  science: "বিজ্ঞান তথ্য পাঠানো",
+  personal: "বাড়িতে বার্তা পাঠানো",
+};
+
+export function commsPriorityLabel(priority: CommsPriority, level: DialLevel, language: Language = "en"): string {
+  if (language === "bn") {
+    return level === "cadet" ? COMMS_PRIORITY_LABELS_CADET_BN[priority] : COMMS_PRIORITY_LABELS_BN[priority];
+  }
   return level === "cadet" ? COMMS_PRIORITY_LABELS_CADET[priority] : COMMS_PRIORITY_LABELS[priority];
 }

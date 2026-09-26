@@ -6,7 +6,7 @@
  * scenarios/*.ts). Whether a goal is currently met is never described in this text — that
  * comes from `checkGoal` (packages/sim), called live by whatever renders this.
  */
-import type { DialLevel } from "../dial/types.js";
+import type { DialLevel, Language } from "../dial/types.js";
 
 type TemplateTable = Record<string, string>;
 
@@ -39,16 +39,57 @@ const COMMANDER: TemplateTable = {
   "scenario.theLongNight.goal.stretch": "No system in a failed state at mission end (noSystemLeftFailed).",
 };
 
+/** M11: Bangla draft translations (needsReview — see `docs/i18n/bn_review.csv`). */
+const SPECIALIST_BN: TemplateTable = {
+  "scenario.jezero.goal.primary": "বিজ্ঞান লক্ষ্য পূরণ করুন, প্রতিটি সিস্টেম চালু রাখুন, এবং পুরো ক্রুকে বাড়ি ফিরিয়ে আনুন।",
+  "scenario.jezero.goal.stretch": "মিশন শেষ হওয়ার আগে প্রতিটি ফসলের ট্রে সংগ্রহ করুন।",
+  "scenario.firstLight.goal.primary": "পুরো ক্রু জীবিত রেখে সম্পূর্ণ রাত-দিন-রাত চক্র টিকে থাকুন।",
+  "scenario.firstLight.goal.stretch": "কোনো সিস্টেম বিকল না রেখে মিশন শেষ করুন।",
+  "scenario.theLongNight.goal.primary": "পুরো ক্রু জীবিত রেখে তিনটি চন্দ্র-রাতই টিকে থাকুন।",
+  "scenario.theLongNight.goal.stretch": "কোনো সিস্টেম বিকল না রেখে মিশন শেষ করুন।",
+};
+
+const CADET_BN: TemplateTable = {
+  "scenario.jezero.goal.primary": "পর্যাপ্ত বিজ্ঞান করুন, সব কিছু কাজ করা অবস্থায় রাখুন, এবং সবাইকে নিরাপদে বাড়ি আনুন।",
+  "scenario.jezero.goal.stretch": "শেষ হওয়ার আগে প্রতিটি গাছের ট্রে তুলুন।",
+  "scenario.firstLight.goal.primary": "পুরো মিশন জুড়ে সবাইকে বাঁচিয়ে রাখুন।",
+  "scenario.firstLight.goal.stretch": "কোনো কিছু ভাঙা রাখবেন না।",
+  "scenario.theLongNight.goal.primary": "তিনটি লম্বা রাত জুড়ে সবাইকে বাঁচিয়ে রাখুন।",
+  "scenario.theLongNight.goal.stretch": "কোনো কিছু ভাঙা রাখবেন না।",
+};
+
+const COMMANDER_BN: TemplateTable = {
+  "scenario.jezero.goal.primary":
+    "science.points >= scenarioTargetPoints, প্রতিটি সিস্টেম কার্যক্ষম, সম্পূর্ণ ক্রু বেঁচে থাকা (engine/goals.ts-এর missionGoalsMet)।",
+  "scenario.jezero.goal.stretch": "সব ফসলের ট্রে অন্তত একবার সংগ্রহ করা হয়েছে (harvestAllCropTrays)।",
+  "scenario.firstLight.goal.primary": "সম্পূর্ণ মিশন সময়কাল অতিক্রান্ত, শূন্য ক্রু ক্ষতি (surviveFullDurationNoLoss)।",
+  "scenario.firstLight.goal.stretch": "মিশন শেষে কোনো সিস্টেম বিকল অবস্থায় নেই (noSystemLeftFailed)।",
+  "scenario.theLongNight.goal.primary": "সম্পূর্ণ মিশন সময়কাল অতিক্রান্ত, শূন্য ক্রু ক্ষতি (surviveFullDurationNoLoss)।",
+  "scenario.theLongNight.goal.stretch": "মিশন শেষে কোনো সিস্টেম বিকল অবস্থায় নেই (noSystemLeftFailed)।",
+};
+
 const TABLES: Record<DialLevel, TemplateTable> = {
   cadet: CADET,
   specialist: SPECIALIST,
   commander: COMMANDER,
 };
 
-export function goalText(briefKey: string, level: DialLevel): string {
-  return TABLES[level][briefKey] ?? SPECIALIST[briefKey] ?? briefKey;
+const TABLES_BN: Record<DialLevel, TemplateTable> = {
+  cadet: CADET_BN,
+  specialist: SPECIALIST_BN,
+  commander: COMMANDER_BN,
+};
+
+export function goalText(briefKey: string, level: DialLevel, language: Language = "en"): string {
+  const tables = language === "bn" ? TABLES_BN : TABLES;
+  return tables[level][briefKey] ?? TABLES[level][briefKey] ?? SPECIALIST[briefKey] ?? briefKey;
 }
 
-export function hasGoalTemplate(briefKey: string, level: DialLevel = "specialist"): boolean {
-  return briefKey in TABLES[level];
+export function hasGoalTemplate(briefKey: string, level: DialLevel = "specialist", language: Language = "en"): boolean {
+  const tables = language === "bn" ? TABLES_BN : TABLES;
+  return briefKey in tables[level];
 }
+
+export { CADET_BN, COMMANDER_BN, SPECIALIST_BN };
+/** For `validation/i18nCompleteness.test.ts`. */
+export { TABLES, TABLES_BN };

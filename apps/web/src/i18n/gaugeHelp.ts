@@ -4,7 +4,7 @@
  * one short, real explanation of what the gauge measures and why it matters, not a repeat of
  * the number already on screen.
  */
-import type { DialLevel } from "../dial/types.js";
+import type { DialLevel, Language } from "../dial/types.js";
 
 type TemplateTable = Record<string, string>;
 
@@ -35,16 +35,60 @@ const COMMANDER: TemplateTable = {
   "gauge.cabin": "Habitat air temperature, thermostat-controlled. Drives the hypothermia clock below 15 °C and equipment/crew heat stress at the high end.",
 };
 
+/** M11: Bangla draft translations (needsReview — see `docs/i18n/bn_review.csv`). */
+const SPECIALIST_BN: TemplateTable = {
+  "gauge.oxygen":
+    "কেবিনের অক্সিজেনের আংশিক চাপ। প্রায় ১২০ mmHg-এর নিচে ক্রুর শ্বাসকষ্ট হয়; সিমুলেশন এটি ঘণ্টায় ঘণ্টায় ট্র্যাক করে, শুধু মোট মজুত কেজি নয়।",
+  "gauge.co2":
+    "কেবিনের CO₂-এর আংশিক চাপ। ক্রুর শ্বাস-প্রশ্বাসে বাড়ে; স্ক্রাবার এটি আবার কমায়। দেখানো সীমা বর্তমান রেশন মোডের উপর নির্ভর করে — কঠোর মোড কম সহ্য করে।",
+  "gauge.water": "হাতে থাকা পানযোগ্য পানি, বর্তমান পুনরুদ্ধার হারে জীবিত ক্রুর জন্য দিনের সরবরাহ হিসেবে দেখানো।",
+  "gauge.food": "মজুত শুষ্ক খাবারের ভর, বর্তমান রেশনে দিনের সরবরাহ হিসেবে দেখানো। ফসল সংগ্রহ করলে এতে যোগ হয়।",
+  "gauge.battery": "মজুত বৈদ্যুতিক শক্তি। চাহিদার চেয়ে কম উৎপাদন এটি কমায়; স্থায়ীভাবে শূন্য মানে লোড শেডিং।",
+  "gauge.cabin": "বাসস্থানের বাতাসের তাপমাত্রা। খুব ঠান্ডা হাইপোথার্মিয়া এবং পানির পাইপ জমে যাওয়ার ঝুঁকি তৈরি করে; খুব গরম ক্রু এবং যন্ত্রপাতির উপর চাপ ফেলে।",
+};
+
+const CADET_BN: TemplateTable = {
+  "gauge.oxygen": "ক্রু যে বাতাসে শ্বাস নেয়। এটা খুব কমে গেলে তারা ভালোভাবে শ্বাস নিতে পারে না।",
+  "gauge.co2": "যে খারাপ বাতাস জমছে। বাতাস পরিষ্কারক এটা বের করে দেয়।",
+  "gauge.water": "কতদিনের খাওয়ার পানি বাকি আছে।",
+  "gauge.food": "কতদিনের খাবার বাকি আছে। ফসল তোলা হলে আরও যোগ হয়।",
+  "gauge.battery": "কত বিদ্যুৎ জমা আছে, পুরো ঘাঁটির জন্য একটা বড় ফোনের ব্যাটারির মতো।",
+  "gauge.cabin": "ভেতরটা কতটা গরম বা ঠান্ডা। খুব ঠান্ডা বা খুব গরম দুটোই সবার জন্য খারাপ।",
+};
+
+const COMMANDER_BN: TemplateTable = {
+  "gauge.oxygen": "pO₂, কেবিন। ~১২০ mmHg-এর নিচে হাইপোক্সিক ঝুঁকি (S1.1); ক্রমাগত ট্র্যাক করা হয়, মজুত O₂ ভর থেকে স্বাধীন।",
+  "gauge.co2":
+    "pCO₂, কেবিন। উৎপাদন ক্রুর বিপাকীয় হারের সাথে স্কেল করে; স্ক্রাবারের আপটাইম এবং দক্ষতা অপসারণের দিকটি নির্ধারণ করে। সীমা মোড-নির্ভর (survivalModes-এর নিজস্ব co2LimitMmHg)।",
+  "gauge.water": "পানযোগ্য মজুত, বর্তমান প্রতি-ক্রু ব্যবহার এবং পুনরুদ্ধার-লুপ দক্ষতায় দিনের সরবরাহ হিসেবে প্রকাশিত।",
+  "gauge.food": "শুষ্ক ভরের মজুত, বর্তমান রেশনের kcal/ক্রু-দিনে দিনের সরবরাহ হিসেবে প্রকাশিত। ফসল সংগ্রহ একটি প্রকৃত, ট্র্যাক করা ইনফ্লো।",
+  "gauge.battery":
+    "চার্জের অবস্থা। একটি স্থায়ী উৎপাদন/চাহিদা ঘাটতি লোড-শেডিং অগ্রাধিকার ক্রমকে (পাওয়ার কনসোল) নিচ থেকে উপরে সিস্টেম বন্ধ করতে বাধ্য করে।",
+  "gauge.cabin": "বাসস্থানের বাতাসের তাপমাত্রা, থার্মোস্ট্যাট-নিয়ন্ত্রিত। ১৫ °সে-এর নিচে হাইপোথার্মিয়া ঘড়ি এবং উচ্চ প্রান্তে যন্ত্রপাতি/ক্রু তাপ চাপ চালায়।",
+};
+
 const TABLES: Record<DialLevel, TemplateTable> = {
   cadet: CADET,
   specialist: SPECIALIST,
   commander: COMMANDER,
 };
 
-export function gaugeHelp(key: string, level: DialLevel): string {
-  return TABLES[level][key] ?? SPECIALIST[key] ?? key;
+const TABLES_BN: Record<DialLevel, TemplateTable> = {
+  cadet: CADET_BN,
+  specialist: SPECIALIST_BN,
+  commander: COMMANDER_BN,
+};
+
+export function gaugeHelp(key: string, level: DialLevel, language: Language = "en"): string {
+  const tables = language === "bn" ? TABLES_BN : TABLES;
+  return tables[level][key] ?? TABLES[level][key] ?? SPECIALIST[key] ?? key;
 }
 
-export function hasGaugeHelp(key: string, level: DialLevel = "specialist"): boolean {
-  return key in TABLES[level];
+export function hasGaugeHelp(key: string, level: DialLevel = "specialist", language: Language = "en"): boolean {
+  const tables = language === "bn" ? TABLES_BN : TABLES;
+  return key in tables[level];
 }
+
+export { CADET_BN, COMMANDER_BN, SPECIALIST_BN };
+/** For `validation/i18nCompleteness.test.ts`. */
+export { TABLES, TABLES_BN };
