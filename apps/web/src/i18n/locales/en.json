@@ -2,7 +2,12 @@
   "shareLink": {
     "versionMismatch": "⚠️ This link was made with an older version of Sol Keeper and can't be replayed here — starting a fresh mission instead.",
     "invalid": "⚠️ This link isn't valid — starting a fresh mission instead.",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "createClassLink": "🔗 Create class link",
+    "classLinkHint": "Every student who opens this link gets the identical mission — same scenario, same seed, same incidents. No accounts, no backend: the whole mission lives in the link itself.",
+    "copyReportLink": "🔗 Copy report link",
+    "copied": "Copied!",
+    "linkLabel": "Shareable mission link"
   },
   "tabs": {
     "nav": "Sol Keeper views",

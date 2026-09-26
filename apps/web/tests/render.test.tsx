@@ -33,6 +33,7 @@ import { CommsConsole } from "../src/views/Comms/CommsConsole";
 import { IncidentCommandConsole } from "../src/views/IncidentCommand/IncidentCommandConsole";
 import { MissionCommandConsole } from "../src/views/MissionCommand/MissionCommandConsole";
 import { BriefingView } from "../src/views/Briefing/BriefingView";
+import { LaunchPackingStep } from "../src/views/Setup/LaunchPackingStep";
 import { CoachMark } from "../src/onboarding/CoachMark";
 import { TimeControls } from "../src/components/TimeControls";
 import { RunStatusBadge } from "../src/components/RunStatusBadge";
@@ -356,6 +357,43 @@ describe("DebriefView, mission still running (first frame)", () => {
     // Nothing from an ended-mission section should appear yet.
     expect(out).not.toContain("Final numbers");
     expect(out).not.toContain("Major incidents");
+  });
+
+  // M10.7: "Copy report link" works at any point in a run (replayRun rebuilds exactly
+  // state.hour's worth of the mission, whichever hour that is), so it has to show up on the
+  // still-running branch too, not only once a mission has actually ended.
+  it("still shows the Copy report link button", () => {
+    const out = render(<DebriefView />);
+    expect(out).toContain("Copy report link");
+  });
+});
+
+describe("DebriefView, mission ended (first frame)", () => {
+  it("shows the Copy report link button alongside the real outcome", () => {
+    // Mutates `useRun.getInitialState()`, not `useRun.getState()`: this file's own header
+    // note applies one level deeper here than elsewhere — SSR's snapshot is
+    // `getInitialState()`, a reference fixed the moment this module first loaded, which no
+    // `reset()` call (a `set()`, replacing `state` wholesale) ever touches. A direct field
+    // mutation on that exact object is the only way to move what an SSR render sees.
+    // Restored in `finally` so this doesn't leak into any test declared after it.
+    const initialState = useRun.getInitialState().state;
+    initialState.status = "success";
+    try {
+      const out = render(<DebriefView />);
+      expect(out).toContain("Mission complete");
+      expect(out).toContain("Final numbers");
+      expect(out).toContain("Copy report link");
+    } finally {
+      initialState.status = "running";
+    }
+  });
+});
+
+describe("LaunchPackingStep, Create class link (M10.7)", () => {
+  it("renders the Create class link button and its every-student-gets-the-same-mission hint", () => {
+    const out = render(<LaunchPackingStep />);
+    expect(out).toContain("Create class link");
+    expect(out).toContain("identical mission");
   });
 });
 

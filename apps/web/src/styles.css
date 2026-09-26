@@ -712,6 +712,41 @@ code {
   flex-shrink: 0;
 }
 
+/* ---------------------------------------------------------------- copy-link button (M10.7) */
+.copy-link {
+  margin: 8px 0;
+}
+
+.class-link-row {
+  margin: 12px 0;
+}
+
+.copy-link-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.copy-link-status {
+  color: var(--nominal);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.copy-link-input {
+  flex: 1 1 260px;
+  min-width: 0;
+  background: var(--bg-raised);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 0.8rem;
+}
+
 /* ---------------------------------------------------------------- coach mark (onboarding) */
 .coach-mark {
   position: fixed;

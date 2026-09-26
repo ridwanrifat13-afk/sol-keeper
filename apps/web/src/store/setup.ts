@@ -25,7 +25,7 @@ import {
   type ScenarioId,
   type ShieldingApproach,
 } from "@sol-keeper/sim";
-import { MAX_CREW_SIZE, MAX_SEED, MIN_CREW_SIZE } from "../share/runLink.js";
+import { MAX_CREW_SIZE, MAX_SEED, MIN_CREW_SIZE, type RunLinkConfig } from "../share/runLink.js";
 import { useRun, type RunSetupChoices } from "./run.js";
 
 /** The six choice steps (M9.2a/b/c) plus two review/flourish steps that read the choices
@@ -128,6 +128,32 @@ export function resolveScenario(choices: {
       powerArchitecture: choices.powerArchitecture,
       shieldingApproach: choices.shieldingApproach,
     },
+  };
+}
+
+/** M10.7: "Create class link" on Setup — every field a `RunLinkConfig` needs, straight from
+ *  the wizard's own current choices. Reuses `resolveScenario`'s own default-site resolution
+ *  (an unvisited landing-site step) rather than a second copy of that fallback, so a class
+ *  link can never disagree with what "Launch Mission" would actually build from the same
+ *  choices. */
+export function buildClassLinkConfig(choices: {
+  readonly scenarioId: ScenarioId;
+  readonly difficulty: MissionDifficulty;
+  readonly landingSiteId: LandingSiteId | undefined;
+  readonly crewSize: number;
+  readonly powerArchitecture: PowerArchitecture;
+  readonly shieldingApproach: ShieldingApproach;
+  readonly seed: number;
+}): RunLinkConfig {
+  const { setupChoices } = resolveScenario(choices);
+  return {
+    scenarioId: choices.scenarioId,
+    difficulty: choices.difficulty,
+    crewSize: choices.crewSize,
+    landingSiteId: setupChoices.landingSiteId,
+    powerArchitecture: setupChoices.powerArchitecture,
+    shieldingApproach: setupChoices.shieldingApproach,
+    seed: choices.seed,
   };
 }
 

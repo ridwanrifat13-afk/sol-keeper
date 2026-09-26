@@ -416,3 +416,25 @@ export function decodeRunLinkFragment(hash: string): DecodedFragment {
     return { kind: "invalid", reason: error instanceof Error ? error.message : "malformed input log" };
   }
 }
+
+// ---------------------------------------------------------------------------
+// Full URL assembly (M10.7: "Create class link" / "Copy report link")
+// ---------------------------------------------------------------------------
+
+/**
+ * Assembles the full shareable URL: the query string always, the fragment only when `replay`
+ * is given (a class-mission link has none — nothing has been played yet). Takes `location` as
+ * a plain `{ origin, pathname }` rather than reading `window.location` itself, the same
+ * "confine window access to the caller" shape `share/bootRunLink.ts` uses — a UI component
+ * builds the closure at render time but only actually reads `window.location` inside a click
+ * handler, so this file stays usable from Vitest's plain Node environment.
+ */
+export function buildRunLinkUrl(
+  location: { readonly origin: string; readonly pathname: string },
+  config: RunLinkConfig,
+  replay?: { readonly inputLog: readonly RecordedInput[]; readonly throughHour: number },
+): string {
+  const query = encodeRunLinkQuery(config);
+  const fragment = replay === undefined ? "" : `#i=${encodeRunLinkFragment(replay.inputLog, replay.throughHour)}`;
+  return `${location.origin}${location.pathname}?${query}${fragment}`;
+}

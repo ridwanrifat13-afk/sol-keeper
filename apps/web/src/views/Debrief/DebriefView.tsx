@@ -1,6 +1,7 @@
+import { useTranslation } from "react-i18next";
 import { causalCascade, directEffects, type Body, type LogEntry, type RunStatus } from "@sol-keeper/sim";
 import { useDial } from "../../store/dial.js";
-import { useRun } from "../../store/run.js";
+import { useRun, runLinkConfigFromStore } from "../../store/run.js";
 import { logText } from "../../i18n/logText.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
 import { crewLossConditions, groupIncidents, majorIncidents, type IncidentGroup } from "../../dial/blackBox.js";
@@ -8,6 +9,8 @@ import type { DialLevel } from "../../dial/types.js";
 import { durationLabel, elapsedValue, timeUnitWord, timestampLabel } from "../../dial/missionTime.js";
 import { statusFromSeverity } from "../../components/status.js";
 import { crewLossHeadline } from "../../dial/crewLoss.js";
+import { CopyLinkButton } from "../../components/CopyLinkButton.js";
+import { buildRunLinkUrl } from "../../share/runLink.js";
 
 /**
  * The Black Box debrief — what happened, and what an entry actually caused.
@@ -21,7 +24,27 @@ const CREW_LOSS_WINDOW_HOURS = 72;
 export function DebriefView() {
   const state = useRun((s) => s.state);
   const body = useRun((s) => s.scenario.body);
+  const params = useRun((s) => s.params);
+  const setupChoices = useRun((s) => s.setupChoices);
+  const inputLog = useRun((s) => s.inputLog);
   const level = useDial((s) => s.level);
+  const { t } = useTranslation();
+
+  // M10.7: "Copy report link" works at any point in a run, not only once it's finished —
+  // `replayRun` (M10.4) rebuilds exactly `state.hour`'s worth of the mission whatever that
+  // hour is, and a link to "here's how far I've gotten" is genuinely useful mid-mission too,
+  // not just as a finished mission's report.
+  const reportLinkButton = (
+    <CopyLinkButton
+      label={t("shareLink.copyReportLink")}
+      buildUrl={() =>
+        buildRunLinkUrl(window.location, runLinkConfigFromStore({ params, setupChoices }), {
+          inputLog,
+          throughHour: state.hour,
+        })
+      }
+    />
+  );
 
   if (state.status === "running") {
     return (
@@ -32,6 +55,7 @@ export function DebriefView() {
             The Black Box fills in once the mission ends — keep the outpost running.
           </p>
         </header>
+        {reportLinkButton}
       </div>
     );
   }
@@ -50,6 +74,8 @@ export function DebriefView() {
         <h2>{headline.title}</h2>
         <p className="view-hint">{headline.subtitle}</p>
       </header>
+
+      {reportLinkButton}
 
       <section className="panel" aria-labelledby="final-numbers-heading">
         <h2 id="final-numbers-heading">Final numbers</h2>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   failureRatePerHour,
   requiredMarginFraction,
@@ -6,9 +7,11 @@ import {
   sizeShielding,
   type ProjectPhase,
 } from "@sol-keeper/sim";
-import { useSetup, resolveScenario } from "../../store/setup.js";
+import { useSetup, resolveScenario, buildClassLinkConfig } from "../../store/setup.js";
 import { useDial } from "../../store/dial.js";
 import { systemLabel } from "../../dial/labels.js";
+import { CopyLinkButton } from "../../components/CopyLinkButton.js";
+import { buildRunLinkUrl } from "../../share/runLink.js";
 
 const PHASES: readonly { id: ProjectPhase; label: string; hint: string }[] = [
   { id: "srr", label: "SRR", hint: "System Requirements Review — earliest, most padding" },
@@ -53,6 +56,7 @@ function readableHours(hours: number): string {
  */
 export function LaunchPackingStep() {
   const scenarioId = useSetup((s) => s.scenarioId);
+  const difficulty = useSetup((s) => s.difficulty);
   const crewSize = useSetup((s) => s.crewSize);
   const landingSiteId = useSetup((s) => s.landingSiteId);
   const powerArchitecture = useSetup((s) => s.powerArchitecture);
@@ -62,6 +66,7 @@ export function LaunchPackingStep() {
   const rerollSeed = useSetup((s) => s.rerollSeed);
   const level = useDial((s) => s.level);
   const [phase, setPhase] = useState<ProjectPhase>("pdr");
+  const { t } = useTranslation();
 
   const { scenario } = resolveScenario({
     scenarioId,
@@ -114,6 +119,19 @@ export function LaunchPackingStep() {
         Same seed, same choices, same outcome — every incident, every dice roll. Write it down
         (or share a mission link, once you've flown) to reproduce this exact mission later.
       </p>
+
+      <div className="class-link-row">
+        <CopyLinkButton
+          label={t("shareLink.createClassLink")}
+          buildUrl={() =>
+            buildRunLinkUrl(
+              window.location,
+              buildClassLinkConfig({ scenarioId, difficulty, landingSiteId, crewSize, powerArchitecture, shieldingApproach, seed }),
+            )
+          }
+        />
+        <p className="panel-hint">{t("shareLink.classLinkHint")}</p>
+      </div>
 
       <div className="button-row" role="group" aria-label="Project review phase">
         {PHASES.map((p) => (

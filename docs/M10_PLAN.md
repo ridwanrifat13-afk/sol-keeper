@@ -4,12 +4,14 @@
 
 **Done and pushed to `main`:** M10.1 (`ef94762`), M10.2 (`01455ab`), M10.3 (`7e6e5b4`).
 **Just finished, not yet merged:** M10.4 (`packages/sim/src/engine/replay.ts`,
-`store/run.ts`'s `inputLog`), M10.5 (`apps/web/src/share/runLink.ts` + `binaryCodec.ts`), and
-M10.6 (`share/bootRunLink.ts`, `App.tsx`'s boot-time `useEffect`, the version-mismatch/invalid
-banner). No `SIM_VERSION` bump for any of the three: M10.4 only adds a call path for five
-decisions that used to mutate `SimState` with no log entry at all, plus a pure replay driver
-over the exact same path; M10.5 and M10.6 are `apps/web`-only.
-**Not started:** M10.7 through M10.9 — the dependent chain below.
+`store/run.ts`'s `inputLog`), M10.5 (`apps/web/src/share/runLink.ts` + `binaryCodec.ts`), M10.6
+(`share/bootRunLink.ts`, `App.tsx`'s boot-time `useEffect`, the version-mismatch/invalid
+banner), and M10.7 ("Create class link" on Launch Packing, "Copy report link" on Debrief, the
+shared `CopyLinkButton` clipboard+visible-fallback component). No `SIM_VERSION` bump for any
+of the four: M10.4 only adds a call path for five decisions that used to mutate `SimState`
+with no log entry at all, plus a pure replay driver over the exact same path; M10.5, M10.6,
+and M10.7 are `apps/web`-only.
+**Not started:** M10.8, M10.9 — the dependent chain below.
 
 **The M10.6/M10.7 disclosed gap is closed.** `RunStore` (`apps/web/src/store/run.ts`) now
 carries a `setupChoices: RunSetupChoices` field (`landingSiteId`/`powerArchitecture`/
@@ -36,6 +38,18 @@ fresh load opens Setup with no banner; a config-only link lands on Briefing at h
 config+fragment link lands on Debrief with the exact replayed hour, event log, and resource
 state; a version-mismatch link and an invalid link both show their own dismissible banner and
 otherwise degrade to a fresh Setup exactly like opening the app with no link at all.
+
+**M10.7, also manually verified end to end**: clicking "Create class link" on Launch Packing
+copies a real link to the clipboard (confirmed via a real Chromium clipboard read, not just
+that the button exists) and shows the visible fallback field either way; opening that exact
+link lands on Briefing with the same configuration. Clicking "Copy report link" on Debrief —
+while a mission is still running, not only once it's finished — likewise copies a working
+link; opening it lands on Debrief with the replayed state. `buildRunLinkUrl` (`share/
+runLink.ts`), `buildClassLinkConfig` (`store/setup.ts`), and `runLinkConfigFromStore`
+(`store/run.ts`) are the three pure, unit-tested functions behind both buttons — `CopyLinkButton`
+itself (`components/CopyLinkButton.tsx`) is the one place the Clipboard API is called, with a
+visible read-only input as the fallback for a non-secure origin, an unsupported browser, or a
+declined permission.
 
 ## The brief's M10 text, verbatim
 
@@ -193,7 +207,7 @@ partially-applied mission.
 | M10.4 | `engine/replay.ts` (`RunInput`/`applyInput`/`replayRun`), `store/run.ts` mutators refactored onto it + `inputLog`, play-vs-replay equality test | M10.3 | **Done** |
 | M10.5 | `share/runLink.ts` encode/decode, whitelist+validate every field, legacy-difficulty mapping, versionMismatch/invalid results, frozen-literal regression test | M10.1, M10.2, M10.4 | **Done** |
 | M10.6 | Boot-time URL entry in App.tsx (3 modes: no params/config-only/config+fragment), version-mismatch banner | M10.5 | **Done** |
-| M10.7 | "Create class link" + "Copy report link" UI, clipboard + visible-input fallback | M10.5, M10.6 | Not started |
+| M10.7 | "Create class link" + "Copy report link" UI, clipboard + visible-input fallback | M10.5, M10.6 | **Done** |
 | M10.8 | `MissionReportView.tsx` + print CSS + `report` i18n namespace (both locales) | M10.6 | Not started |
 | M10.9 | Replay-at-speed driver + done-when tests (Vitest determinism proof + e2e two-browser test) | M10.4, M10.6, M10.8 | Not started |
 

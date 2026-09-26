@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 import { INCIDENT_CATALOG, SIM_VERSION, type RecordedInput } from "@sol-keeper/sim";
 import {
+  buildRunLinkUrl,
   decodeRunLinkFragment,
   decodeRunLinkQuery,
   encodeRunLinkFragment,
@@ -199,5 +200,36 @@ describe("M10.5: frozen-literal regression", () => {
         { hour: 4, input: { kind: "rations", mode: "mode1" } },
       ],
     });
+  });
+});
+
+describe("M10.7: buildRunLinkUrl", () => {
+  const location = { origin: "https://sol-keeper.example", pathname: "/" };
+
+  it("a config-only link has a query string and no fragment", () => {
+    const url = buildRunLinkUrl(location, JEZERO_CONFIG);
+    expect(url).toBe(`https://sol-keeper.example/?${encodeRunLinkQuery(JEZERO_CONFIG)}`);
+    expect(url).not.toContain("#");
+
+    // Round-trips through decode: this is exactly the URL shape App.tsx's boot effect reads.
+    const [, query] = url.split("?");
+    const decoded = decodeRunLinkQuery(query ?? "");
+    expect(decoded.kind).toBe("config");
+  });
+
+  it("a report link with a replay log appends the fragment after the query string", () => {
+    const inputLog: RecordedInput[] = [{ hour: 3, input: { kind: "commsPriority", priority: "science" } }];
+    const url = buildRunLinkUrl(location, JEZERO_CONFIG, { inputLog, throughHour: 10 });
+    const [beforeHash, afterHash] = url.split("#");
+    expect(beforeHash).toBe(`https://sol-keeper.example/?${encodeRunLinkQuery(JEZERO_CONFIG)}`);
+    expect(afterHash).toBe(`i=${encodeRunLinkFragment(inputLog, 10)}`);
+
+    const decodedFragment = decodeRunLinkFragment(afterHash ?? "");
+    expect(decodedFragment).toEqual({ kind: "log", inputLog, throughHour: 10 });
+  });
+
+  it("respects a non-root pathname (a deployed subpath, not just the origin's root)", () => {
+    const url = buildRunLinkUrl({ origin: "https://example.com", pathname: "/sol-keeper/" }, JEZERO_CONFIG);
+    expect(url.startsWith("https://example.com/sol-keeper/?")).toBe(true);
   });
 });

@@ -34,6 +34,7 @@ import {
 } from "@sol-keeper/sim";
 import { buildResourceSummary } from "../dial/resourceSummary.js";
 import type { StatusLevel } from "../components/status.js";
+import type { RunLinkConfig } from "../share/runLink.js";
 
 const STATUS_RANK: Record<StatusLevel, number> = { nominal: 0, caution: 1, critical: 2 };
 
@@ -312,3 +313,19 @@ export const useRun = create<RunStore>((set, get) => ({
     applyAndRecord(get, set, { kind: "commsPriority", priority });
   },
 }));
+
+/** M10.7: "Copy report link" — every field a `RunLinkConfig` needs, straight from the live
+ *  store. A plain field mapping, no resolution needed (unlike `store/setup.ts`'s own
+ *  `buildClassLinkConfig`, which still has an unvisited-landing-site-step case to handle):
+ *  post-M10.6, `setupChoices` is always already resolved by the time any run exists. */
+export function runLinkConfigFromStore(store: Pick<RunStore, "params" | "setupChoices">): RunLinkConfig {
+  return {
+    scenarioId: store.params.scenarioId,
+    difficulty: store.params.difficulty,
+    crewSize: store.params.crewSize,
+    landingSiteId: store.setupChoices.landingSiteId,
+    powerArchitecture: store.setupChoices.powerArchitecture,
+    shieldingApproach: store.setupChoices.shieldingApproach,
+    seed: store.params.seed,
+  };
+}
