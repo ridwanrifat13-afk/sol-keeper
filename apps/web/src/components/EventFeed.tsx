@@ -25,7 +25,7 @@ export function EventFeed() {
   const recent = log.slice(-MAX_CARDS).reverse();
 
   return (
-    <section className="panel" aria-labelledby="events-heading">
+    <section className="panel event-feed-panel" aria-labelledby="events-heading">
       <h2 id="events-heading">Mission log</h2>
       <p className="panel-hint">
         {log.length} event{log.length === 1 ? "" : "s"} recorded. Newest first.

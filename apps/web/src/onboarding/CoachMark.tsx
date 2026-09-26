@@ -14,7 +14,7 @@ interface CoachMarkProps {
    *  about the mission already chosen (M8.3's original "stays off Briefing" reasoning, just
    *  widened twice) — it only starts once the player has moved on to a station console under
    *  their own steam. */
-  readonly view: StationId | "setup" | "briefing" | "debrief" | "habitat";
+  readonly view: StationId | "setup" | "briefing" | "debrief" | "habitat" | "report";
   readonly onNavigate: (station: StationId) => void;
 }
 
@@ -38,7 +38,13 @@ export function CoachMark({ view, onNavigate }: CoachMarkProps) {
   const totalSteps = COACH_MARK_ORDER.length;
   const station = COACH_MARK_ORDER[step] ?? COACH_MARK_ORDER[totalSteps - 1];
   const active =
-    !seen && station !== undefined && view !== "setup" && view !== "briefing" && view !== "debrief" && view !== "habitat";
+    !seen &&
+    station !== undefined &&
+    view !== "setup" &&
+    view !== "briefing" &&
+    view !== "debrief" &&
+    view !== "habitat" &&
+    view !== "report";
 
   useEffect(() => {
     if (!active || station === undefined) return;

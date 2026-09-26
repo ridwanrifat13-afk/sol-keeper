@@ -2,12 +2,17 @@
  * i18next setup (brief tech stack: "i18next with en and bn locales from day one").
  *
  * Scope, disclosed rather than silently partial: this covers the app shell (tab names, and,
- * as of M10.6, the run-link version-mismatch/invalid banner) and the Live Sky view
- * end-to-end, as a real, working translation pipeline — not a stub. M10.7 adds the
- * "shareLink" namespace's own button/status strings (`CopyLinkButton`, used from both
- * Launch Packing and Debrief) without migrating either of those views' surrounding English
- * text — the same incremental, disclosed pattern M10.6 already established. The rest of the
- * UI (Operate, Ripple Web, Debrief, Data Sources) and the event-log text system
+ * as of M10.6, the run-link version-mismatch/invalid banner), the Live Sky view end-to-end,
+ * and, as of M10.8, `views/Report/MissionReportView.tsx`'s own chrome (headings, labels,
+ * outcome text, table headers — the M10 plan's own user decision 2: "report chrome... gets
+ * real en+bn now"), as real, working translation, not a stub. M10.7 adds the "shareLink"
+ * namespace's own button/status strings (`CopyLinkButton`, used from Launch Packing, Debrief,
+ * and the Report) without migrating either of those views' surrounding English text — the
+ * same incremental, disclosed pattern M10.6 already established. The Report page's own
+ * `report.disclosureNote` says so on the page itself: station names, decision text, and
+ * causal-chain descriptions on that page still come from `logText.ts`, which has no locale
+ * parameter (English-only until M11 — the same user decision). The rest of the UI (Operate,
+ * Ripple Web, Debrief, Data Sources) and the event-log text system
  * (i18n/logText.ts, which already has its own English-only cadet/specialist/commander
  * templates) are not yet migrated to translation keys; that is a follow-up pass, not
  * something this file pretends to cover. The Bangla space-weather technical terms

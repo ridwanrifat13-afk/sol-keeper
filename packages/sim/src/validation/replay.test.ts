@@ -129,5 +129,14 @@ describe("M10.4: replayRun reproduces live play", () => {
       "decision.commsPriority.set",
     ]);
     expect(new Set(state.log.map((e) => e.id)).size).toBe(state.log.length);
+
+    // M10.8: `data.crew` holds the crew member's display name, not the internal `crewId` —
+    // the same convention every other log entry naming a crew member already follows
+    // (e.g. fire-mir97's `crewInjured`), and what `apps/web/src/i18n/logText.ts`'s generic
+    // fallback renders unlabelled.
+    const crewLocationEntry = state.log.find((e) => e.code === "decision.crewLocation.set");
+    const stationEntry = state.log.find((e) => e.code === "decision.station.assigned");
+    expect(crewLocationEntry?.data["crew"]).toBe(state.crew[1]?.name);
+    expect(stationEntry?.data["crew"]).toBe(state.crew[0]?.name);
   });
 });

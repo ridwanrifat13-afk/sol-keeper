@@ -6,12 +6,25 @@
 **Just finished, not yet merged:** M10.4 (`packages/sim/src/engine/replay.ts`,
 `store/run.ts`'s `inputLog`), M10.5 (`apps/web/src/share/runLink.ts` + `binaryCodec.ts`), M10.6
 (`share/bootRunLink.ts`, `App.tsx`'s boot-time `useEffect`, the version-mismatch/invalid
-banner), and M10.7 ("Create class link" on Launch Packing, "Copy report link" on Debrief, the
-shared `CopyLinkButton` clipboard+visible-fallback component). No `SIM_VERSION` bump for any
-of the four: M10.4 only adds a call path for five decisions that used to mutate `SimState`
-with no log entry at all, plus a pure replay driver over the exact same path; M10.5, M10.6,
-and M10.7 are `apps/web`-only.
-**Not started:** M10.8, M10.9 — the dependent chain below.
+banner), M10.7 ("Create class link" on Launch Packing, "Copy report link" on Debrief, the
+shared `CopyLinkButton` clipboard+visible-fallback component), and M10.8
+(`views/Report/MissionReportView.tsx`, print CSS, the `report` i18n namespace in both
+locales). No `SIM_VERSION` bump for any of the five: M10.4 only adds a call path for five
+decisions that used to mutate `SimState` with no log entry at all, plus a pure replay driver
+over the exact same path; a small `data.crew` fix in that same file (M10.8, below) is a log
+*payload* change, not a physics one; M10.5-M10.8 are otherwise `apps/web`-only.
+**Not started:** M10.9 — replay-at-speed driver + the done-when tests.
+
+**M10.8 also closed a real presentation gap M10.4 left open**: the five player-decision log
+codes (`decision.rations.set`, `.priority.changed`, `.crewLocation.set`, `.station.assigned`,
+`.commsPriority.set`) had no `i18n/logText.ts` templates at any Reality Dial level, so any of
+them rendered as their own raw code string in `DebriefView`'s mission log and `EventFeed` —
+not just a Mission Report gap, a live regression in every mission played since M10.4 shipped.
+Closed: templates added at all three levels (`SPECIALIST`/`CADET`/`COMMANDER`), a new
+`commsPriorityLabel` in `dial/labels.ts`, and `resolveField` branches for `station`/`priority`/
+`direction`. Alongside it, `engine/replay.ts`'s `crewLocation`/`station` cases now log the
+crew member's display name (`data.crew`), not the internal `crewId` — the same convention
+every other crew-naming log entry already followed, but M10.4 itself missed it.
 
 **The M10.6/M10.7 disclosed gap is closed.** `RunStore` (`apps/web/src/store/run.ts`) now
 carries a `setupChoices: RunSetupChoices` field (`landingSiteId`/`powerArchitecture`/
@@ -23,21 +36,34 @@ of its own (`ScenarioSwitch`, `TimeControls`' Restart, a bare `reset()` in a tes
 same default `resolveScenario` already used for an unvisited setup step. "Copy report link"
 (M10.7) can now build a `RunLinkConfig` from any live `RunStore` via `params` + `setupChoices`.
 
-**M10.6 note for M10.8/M10.9**: `App.tsx`'s boot-time effect currently lands a config+fragment
-link (a report/replay link) on the existing Debrief tab, with the exact final state
-`replayRun` reconstructs — the closest existing view to a mission report, not the real thing.
-Once M10.8's `MissionReportView.tsx` exists, change that one `setView("debrief")` call (and,
-symmetrically, `configOnly`'s `setView("briefing")` if the class-mission landing spot ever
-moves) rather than adding a second boot path. M10.9's replay-at-speed driver is a separate,
-later concern from this: today's `loadReplayedRun` jumps straight to the final state instantly
-via `replayRun`, it does not animate through the intermediate hours.
+**M10.6's own forward note is resolved**: `App.tsx`'s boot-time effect now lands a
+config+fragment link (a report/replay link) on M10.8's real `MissionReportView`, not Debrief —
+the one `setView("debrief")` call the M10.6 summary flagged is now `setView("report")`.
+`configOnly`'s `setView("briefing")` is unchanged (the class-mission landing spot never
+moved). M10.9's replay-at-speed driver remains a separate, later concern: `loadReplayedRun`
+still jumps straight to the final state instantly via `replayRun`, it does not yet animate
+through the intermediate hours.
 
 Manually verified in a real Chromium browser (via Playwright, `vite preview` against a
-production build) — see the boot-mode screenshots sent alongside this milestone's summary:
-fresh load opens Setup with no banner; a config-only link lands on Briefing at hour 0; a
-config+fragment link lands on Debrief with the exact replayed hour, event log, and resource
-state; a version-mismatch link and an invalid link both show their own dismissible banner and
-otherwise degrade to a fresh Setup exactly like opening the app with no link at all.
+production build) — see the boot-mode screenshots sent alongside the M10.6 summary: fresh
+load opens Setup with no banner; a config-only link lands on Briefing at hour 0; a
+config+fragment link lands on the Mission Report (updated from M10.6's own Debrief interim
+target) with the exact replayed hour, event log, and resource state; a version-mismatch link
+and an invalid link both show their own dismissible banner and otherwise degrade to a fresh
+Setup exactly like opening the app with no link at all.
+
+**M10.8, also manually verified end to end**: a finished-mission report link (`vite preview`
+against a production build, real Chromium) renders every required section — outcome, the
+real crew roster with real names/stations, landing site, a station-tagged decision timeline
+with real log text, the Black Box causal chain, a "What NASA did" card citing a real
+`SOURCE_REGISTRY` entry, the replay-link section, and the data-sources footer. Switching the
+language toggle to Bangla re-renders every `t()`-driven heading/label/outcome string in
+Bangla, while log-derived text (station names, decision text, causal-chain descriptions)
+correctly stays English either way, matching the page's own disclosure note. Emulating print
+media confirms the tab nav, header actions, the Report's own "Back"/print-hint toolbar, and
+the "Copy report link" section all disappear (`display: none`), and a real
+`page.pdf()`-generated PDF (screenshots + PDF sent alongside this summary) shows a clean,
+black-on-white, chrome-free printout.
 
 **M10.7, also manually verified end to end**: clicking "Create class link" on Launch Packing
 copies a real link to the clipboard (confirmed via a real Chromium clipboard read, not just
@@ -138,39 +164,53 @@ classroom purpose. Mechanical difference from an ordinary link is only: created 
 before a mission is played, no input-log fragment (nothing played yet), lands on Briefing
 instead of the Report.
 
-### 5. Black Box Debrief overlap with the new Mission Report
-`DebriefView.tsx` already has real outcome text, the strongest part (causal chain via
-`majorIncidents`/`causalCascade`/`crewLossConditions`), but is missing crew+stations, site,
-a station-tagged decision timeline, a "What NASA did" card, replay link, and is not i18n-wired.
-Decision: **separate `views/Report/MissionReportView.tsx`**, not a DebriefView rewrite —
+### 5. Black Box Debrief overlap with the new Mission Report — closed by M10.8
+`DebriefView.tsx` already had real outcome text, the strongest part (causal chain via
+`majorIncidents`/`causalCascade`/`crewLossConditions`), but was missing crew+stations, site,
+a station-tagged decision timeline, a "What NASA did" card, replay link, and was not i18n-wired.
+Built as a **separate `views/Report/MissionReportView.tsx`**, not a DebriefView rewrite —
 different jobs (interactive/exploratory vs. single linear printable page) and different
 lifetimes (mid-app tab vs. landing page for an inbound link with no prior run). Shared logic
-stays in `dial/blackBox.ts` + new small pure helpers.
+(`majorIncidents`/`groupIncidents`/`causalCascade`/`directEffects`/`logText`) stays reused
+from `dial/blackBox.ts` and `@sol-keeper/sim` directly; two new small pure helpers were added
+rather than folded into `blackBox.ts` itself, since neither is about incident-grouping or
+crew loss: `dial/decisionTimeline.ts` (station-tagging) and `dial/whatNasaDid.ts` (the NASA
+analogue cards). `DebriefView` keeps its own "Copy report link" (useful mid-mission, per
+finding #4's own "Copy report link ... works at any point in a run") and gains a new "View
+printable Mission Report" link once a mission ends, so a normal playthrough — not just an
+inbound link — has a real way to reach the Report.
 
 "What NASA did" card: text-only, from `def.analogue` (e.g. "Progress–Mir collision and
 depressurization, June 1997") + `SOURCE_REGISTRY[def.sourceId]` — no network/image fetch,
 print-safe, zero invented facts.
 
-### 6. Print CSS — none exists yet
-No `@media print` anywhere in `styles.css`. New block at the end of the file: invert dark
-panels to white/black-text for print, hide tab nav/header actions/Decision Card/EventFeed,
-print link URLs after anchors, `page-break-inside: avoid` per section. Status still never
-colour-alone on paper (existing `--pattern` classes already carry glyph + border, survives
-greyscale). Note for whoever builds M10.8: `styles.css`'s existing `@media (prefers-reduced-
-motion: reduce)` block was moved to the very end of the file in M9.7 specifically so a later
-same-specificity rule can never silently out-rank it again (cascade-order bug, see that
-commit) — add `@media print` before that block, or re-check the ordering doesn't reintroduce
-a similar issue for anything print touches.
+### 6. Print CSS — closed by M10.8
+Added directly before the `@media (prefers-reduced-motion: reduce)` block (per this finding's
+own ordering note — M9.7 moved that block to the very end of the file specifically so a later
+same-specificity rule can never silently out-rank it again). Inverts `--bg`/`--bg-panel`/
+`--line`/`--text`/`--text-dim`/`--shell-*` to a black-on-white palette (leaves `--nominal`/
+`--caution`/`--critical` alone — a colour printer still shows them, a black-and-white one
+already has the glyph + border); hides `.app-head-row` (tab nav + header actions),
+`.decision-card-overlay`, `.event-feed-panel` (a class added to `EventFeed.tsx` specifically
+so this rule has something to target), `.coach-mark`, `.credits`, `.run-link-banner`, and the
+Report's own `.report-toolbar`/`.report-no-print` (its "Back" button and "Copy report link"
+section — dead links on paper); prints every link's `href` after it via `a[href]:after`;
+`page-break-inside: avoid` on `.panel`/`.nasa-card`/`.report-decision-row`/`.incident-row`/
+`.crew-loss-report`. Status still never colour-alone on paper (existing `--pattern` classes
+already carry glyph + border, survives greyscale, untouched by this block).
 
 ### 7. Compression — measured, not needed (see user decision 1 above)
 Feature A (config in query string): 95–141 chars including origin. Feature B (input log in
 fragment): 660–1800 base64url chars worst-case realistic play. No compression dependency
 proposed or needed at these sizes.
 
-### 8. i18n — confirmed paths
+### 8. i18n — confirmed paths, `report` namespace closed by M10.8
 `apps/web/src/i18n/config.ts` → `./locales/en.json`/`./locales/bn.json`, i18next +
-react-i18next. New `report` namespace in both files. `logText.ts` has no locale parameter
-(English-only, M11's job) — see user decision 2.
+react-i18next. `report` namespace now real in both files (37 keys each, key sets checked
+identical) — headings, labels, per-`RunStatus` outcome title+detail, table headers, section
+hints, the page's own bilingual-scope disclosure line. `logText.ts` still has no locale
+parameter (English-only, M11's job) — see user decision 2; the Report page cites this
+directly in its own `report.disclosureNote`.
 
 ### 9. No new Vercel function needed
 Entirely client-side — a plain URL (`/?v=1&sc=...#i=...`), parsed in the browser. The fragment
@@ -208,7 +248,7 @@ partially-applied mission.
 | M10.5 | `share/runLink.ts` encode/decode, whitelist+validate every field, legacy-difficulty mapping, versionMismatch/invalid results, frozen-literal regression test | M10.1, M10.2, M10.4 | **Done** |
 | M10.6 | Boot-time URL entry in App.tsx (3 modes: no params/config-only/config+fragment), version-mismatch banner | M10.5 | **Done** |
 | M10.7 | "Create class link" + "Copy report link" UI, clipboard + visible-input fallback | M10.5, M10.6 | **Done** |
-| M10.8 | `MissionReportView.tsx` + print CSS + `report` i18n namespace (both locales) | M10.6 | Not started |
+| M10.8 | `MissionReportView.tsx` + print CSS + `report` i18n namespace (both locales) | M10.6 | **Done** |
 | M10.9 | Replay-at-speed driver + done-when tests (Vitest determinism proof + e2e two-browser test) | M10.4, M10.6, M10.8 | Not started |
 
 M10.4 onward is a strict dependency chain — start there next. Honest cut line if time runs
@@ -238,6 +278,9 @@ scrutiny since a printed artifact is most likely to be mistaken for official). R
   of M10.4) `RunInput`/`RecordedInput`/`applyInput`/`replayRun` all exported
 - `apps/web/src/store/setup.ts` — `commit()` (now passes `seed`), `resolveScenario`
 - `apps/web/src/App.tsx` — boot-time URL entry and its three landing modes (M10.6, done); the
-  new report view itself is still M10.8's job
-- `apps/web/src/styles.css` — first `@media print` block (M10.8, not started) — mind the
-  end-of-file ordering note in §6 above
+  new report view (M10.8, done) is `views/Report/MissionReportView.tsx`
+- `apps/web/src/styles.css` — first `@media print` block (M10.8, done), placed directly
+  before the reduced-motion block per §6's own ordering note
+- `apps/web/src/i18n/logText.ts` + `dial/labels.ts` — the five `decision.*` codes' templates
+  and the `station`/`priority`/`direction` `resolveField` branches (M10.8), closing a gap
+  M10.4 left open (see the M10.8 status note above)

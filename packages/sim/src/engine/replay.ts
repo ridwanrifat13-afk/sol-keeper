@@ -111,7 +111,11 @@ export function applyInput(ctx: TickContext, input: RunInput): void {
         kind: "decision",
         severity: "info",
         code: "decision.crewLocation.set",
-        data: { crew: input.crewId, location: input.location },
+        // The crew member's display name, not `input.crewId` — every other log entry
+        // naming a crew member already stores `data.crew` as a name (e.g. `fire-mir97`'s
+        // `crewInjured`), which is what `resolveField`'s generic fallback in
+        // `apps/web/src/i18n/logText.ts` renders directly, unlabelled.
+        data: { crew: member.name, location: input.location },
       });
       return;
     }
@@ -124,7 +128,7 @@ export function applyInput(ctx: TickContext, input: RunInput): void {
         kind: "decision",
         severity: "info",
         code: "decision.station.assigned",
-        data: { crew: input.crewId, station: input.station },
+        data: { crew: member.name, station: input.station },
       });
       return;
     }

@@ -34,6 +34,7 @@ import { IncidentCommandConsole } from "../src/views/IncidentCommand/IncidentCom
 import { MissionCommandConsole } from "../src/views/MissionCommand/MissionCommandConsole";
 import { BriefingView } from "../src/views/Briefing/BriefingView";
 import { LaunchPackingStep } from "../src/views/Setup/LaunchPackingStep";
+import { MissionReportView } from "../src/views/Report/MissionReportView";
 import { CoachMark } from "../src/onboarding/CoachMark";
 import { TimeControls } from "../src/components/TimeControls";
 import { RunStatusBadge } from "../src/components/RunStatusBadge";
@@ -351,7 +352,7 @@ describe("DataSourcesView, first frame", () => {
 
 describe("DebriefView, mission still running (first frame)", () => {
   it("shows a not-ready state rather than an empty debrief", () => {
-    const out = render(<DebriefView />);
+    const out = render(<DebriefView onViewReport={() => {}} />);
     expect(out).toContain("Debrief");
     expect(out).toContain("fills in once the mission ends");
     // Nothing from an ended-mission section should appear yet.
@@ -363,7 +364,7 @@ describe("DebriefView, mission still running (first frame)", () => {
   // state.hour's worth of the mission, whichever hour that is), so it has to show up on the
   // still-running branch too, not only once a mission has actually ended.
   it("still shows the Copy report link button", () => {
-    const out = render(<DebriefView />);
+    const out = render(<DebriefView onViewReport={() => {}} />);
     expect(out).toContain("Copy report link");
   });
 });
@@ -379,12 +380,82 @@ describe("DebriefView, mission ended (first frame)", () => {
     const initialState = useRun.getInitialState().state;
     initialState.status = "success";
     try {
-      const out = render(<DebriefView />);
+      const out = render(<DebriefView onViewReport={() => {}} />);
       expect(out).toContain("Mission complete");
       expect(out).toContain("Final numbers");
       expect(out).toContain("Copy report link");
     } finally {
       initialState.status = "running";
+    }
+  });
+
+  it("offers a way to reach the printable Mission Report once the mission has ended", () => {
+    const initialState = useRun.getInitialState().state;
+    initialState.status = "loss";
+    try {
+      const out = render(<DebriefView onViewReport={() => {}} />);
+      expect(out).toContain("View printable Mission Report");
+    } finally {
+      initialState.status = "running";
+    }
+  });
+});
+
+describe("MissionReportView, mission still running (first frame, M10.8)", () => {
+  it("shows the in-progress outcome and the replay link, not an empty page", () => {
+    const out = render(<MissionReportView onBack={() => {}} />);
+    expect(out).toContain("Mission Report");
+    expect(out).toContain("Mission in progress");
+    expect(out).toContain("Copy report link");
+    expect(out).toContain("Run signature");
+  });
+});
+
+describe("MissionReportView, mission ended (first frame, M10.8)", () => {
+  it("renders every required section: outcome, crew+stations, site, decisions, causal chain, What NASA did, replay, data sources", () => {
+    const initialState = useRun.getInitialState().state;
+    initialState.status = "success";
+    try {
+      const out = render(<MissionReportView onBack={() => {}} />);
+      expect(out).toContain("Mission complete");
+      expect(out).toContain("Crew and stations");
+      // Every crew member's real name and both their real stations appear, not a placeholder.
+      for (const member of initialState.crew) {
+        expect(out, `missing crew row for ${member.name}`).toContain(member.name);
+      }
+      expect(out).toContain("Landing site");
+      expect(out).toContain("Jezero Crater");
+      expect(out).toContain("Decision timeline");
+      expect(out).toContain("Black Box causal chain");
+      expect(out).toContain("What NASA did");
+      expect(out).toContain("Replay this mission");
+      expect(out).toContain("Data sources");
+      // Bilingual-scope disclosure (user decision 2) has to be visible on the page itself.
+      expect(out).toContain("English-only for now");
+      // Rule 5: never a NASA logo/insignia — spot-check no bare "NASA" without the
+      // not-affiliated disclosure right there on the same page.
+      expect(out).toContain("Not affiliated with or endorsed by NASA");
+    } finally {
+      initialState.status = "running";
+    }
+  });
+
+  it("shows a real \"What NASA did\" card for every incident that actually triggered", () => {
+    const initialState = useRun.getInitialState().state;
+    initialState.status = "success";
+    const cause = initialState.log[0]?.id ?? "0:0";
+    initialState.activeIncidents.push({
+      id: "fire-mir97-1",
+      definitionId: "fire-mir97",
+      triggeredAtHour: 1,
+      cause,
+    });
+    try {
+      const out = render(<MissionReportView onBack={() => {}} />);
+      expect(out).toContain("Mir fire, February 1997");
+    } finally {
+      initialState.status = "running";
+      initialState.activeIncidents = [];
     }
   });
 });

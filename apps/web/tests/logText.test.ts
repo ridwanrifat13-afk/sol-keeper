@@ -78,6 +78,12 @@ describe("Reality Dial log templates", () => {
       "comms.blackoutEnd",
       "end.missionComplete",
       "end.crewLost",
+      // M10.8: the five player decisions M10.4's applyInput started logging.
+      "decision.rations.set",
+      "decision.priority.changed",
+      "decision.crewLocation.set",
+      "decision.station.assigned",
+      "decision.commsPriority.set",
     ];
 
     for (const level of DIAL_LEVELS) {
@@ -123,6 +129,34 @@ describe("Reality Dial log templates", () => {
     });
     expect(logText(e, "commander")).not.toContain("mode1");
     expect(logText(e, "commander")).toContain("Reduced");
+  });
+
+  it("interpolates a station id through its friendly label, not the raw enum (decision.station.assigned)", () => {
+    const e = entry({ code: "decision.station.assigned", data: { crew: "Ayesha", station: "incidentCommand" } });
+    for (const level of DIAL_LEVELS) expect(logText(e, level)).not.toContain("incidentCommand");
+    expect(logText(e, "specialist")).toContain("Incident Command");
+    expect(logText(e, "cadet")).toContain("Emergency team");
+  });
+
+  it("interpolates a comms priority through its friendly label (decision.commsPriority.set)", () => {
+    const e = entry({ code: "decision.commsPriority.set", data: { priority: "science" } });
+    expect(logText(e, "specialist")).toContain("Science downlink");
+    expect(logText(e, "cadet")).toContain("sending science data");
+  });
+
+  it("interpolates a load-shed direction into up/down, not the raw -1/1 (decision.priority.changed)", () => {
+    const up = entry({ code: "decision.priority.changed", system: "comms", data: { direction: -1 } });
+    const down = entry({ code: "decision.priority.changed", system: "comms", data: { direction: 1 } });
+    expect(logText(up, "specialist")).toContain("moved up");
+    expect(logText(down, "specialist")).toContain("moved down");
+  });
+
+  it("renders the crew member's own name for the two crew-targeted decisions, not the internal crewId", () => {
+    const location = entry({ code: "decision.crewLocation.set", data: { crew: "Mei", location: "eva" } });
+    const station = entry({ code: "decision.station.assigned", data: { crew: "Mei", station: "power" } });
+    expect(logText(location, "specialist")).toContain("Mei");
+    expect(logText(station, "specialist")).toContain("Mei");
+    expect(logText(location, "specialist")).not.toContain("crew-");
   });
 
   it("an unknown code falls back to the raw code rather than throwing", () => {

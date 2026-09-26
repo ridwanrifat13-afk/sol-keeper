@@ -1616,6 +1616,195 @@ code {
   color: var(--nominal);
 }
 
+/* ---------------------------------------------------------------- mission report (M10.8) */
+.mission-report {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 var(--gap);
+}
+
+.report-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  margin: var(--gap) 0;
+}
+
+.report-print-hint {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+}
+
+.report-head h1 {
+  margin-bottom: 4px;
+}
+
+.report-head h2 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  color: var(--text-dim);
+}
+
+.report-run-signature {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.report-disclosure {
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  font-style: italic;
+  margin: 0 0 var(--gap);
+}
+
+.report-crew-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.report-crew-table th,
+.report-crew-table td {
+  text-align: left;
+  padding: 6px 10px 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.report-decision-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.report-decision-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.report-decision-station {
+  min-width: 130px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.report-decision-time {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.nasa-card-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nasa-card {
+  border-left: 3px solid var(--shell-accent);
+  padding: 6px 0 6px 10px;
+}
+
+.nasa-card-analogue {
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.nasa-card-source {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.report-not-affiliated {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.debrief-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  align-items: center;
+  margin-bottom: var(--gap);
+}
+
+/* ---------------------------------------------------------------- print (M10.8) */
+/* Placed before the reduced-motion block below rather than after it — see that block's own
+   comment (M9.7) on why a later same-specificity rule can otherwise silently out-rank an
+   @media block here. Nothing in this block shares a selector with reduced-motion's, but the
+   ordering is kept consistent regardless so the next person adding a print rule doesn't have
+   to re-derive why the reduced-motion block sits last. */
+@media print {
+  :root {
+    /* Brief rule 6 still holds on paper: every status class already carries a glyph and a
+       border pattern alongside its colour, so inverting to black-on-white here (rather than
+       trying to preserve the dark mission-control palette in ink) costs nothing but toner —
+       nothing on this page has ever depended on colour alone. --nominal/--caution/--critical
+       are left as is: a colour printer still shows them, and a black-and-white one already
+       has the glyph + border to fall back on. */
+    --bg: #ffffff;
+    --bg-panel: #ffffff;
+    --bg-raised: #f2f2f2;
+    --line: #999999;
+    --text: #000000;
+    --text-dim: #333333;
+    --shell-bg: #ffffff;
+    --shell-text: #000000;
+    --shell-text-dim: #333333;
+  }
+
+  body,
+  .app {
+    background: #fff;
+    color: #000;
+  }
+
+  /* Chrome that means nothing on paper: the tab nav and header actions (New Mission, Data
+     Sources, low-power/language toggles), the Decision Card overlay, the live mission-log
+     feed, the onboarding coach mark, the generic app footer (the Mission Report's own
+     data-sources footer replaces it), the version-mismatch/invalid banner, and the Report
+     page's own "Back"/print-hint toolbar and its "Copy report link" section — a link is
+     useless once already on paper. */
+  .app-head-row,
+  .decision-card-overlay,
+  .event-feed-panel,
+  .coach-mark,
+  .credits,
+  .run-link-banner,
+  .report-toolbar,
+  .report-no-print,
+  .debrief-actions {
+    display: none !important;
+  }
+
+  /* A printed link is dead — spell out the URL next to it. Skips an anchor with no href
+     (there are none in this app) and never applies inside the toolbar/link-button chrome
+     already hidden above. */
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: inherit;
+    word-break: break-all;
+  }
+
+  .panel,
+  .nasa-card,
+  .report-decision-row,
+  .incident-row,
+  .crew-loss-report {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
 /* ---------------------------------------------------------------- reduced motion (M9.7 fix) */
 /* Deliberately last in the file: every rule above that sets an `animation`/`transition` on
    one of these selectors shares the exact same specificity (a single class), so normal CSS

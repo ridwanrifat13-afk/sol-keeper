@@ -10,8 +10,8 @@
  * printed as the raw machine id the sim actually stores (`"co2Scrubber"`, `"stormShelter"`).
  * Every other placeholder is printed as the sim gave it.
  */
-import type { CropTray, CrewLocation, LogEntry, SurvivalMode, SystemId } from "@sol-keeper/sim";
-import { cropLabel, locationLabel, survivalModeLabel, systemLabel } from "../dial/labels.js";
+import type { CommsPriority, CropTray, CrewLocation, LogEntry, StationId, SurvivalMode, SystemId } from "@sol-keeper/sim";
+import { commsPriorityLabel, cropLabel, locationLabel, stationLabel, survivalModeLabel, systemLabel } from "../dial/labels.js";
 import type { DialLevel } from "../dial/types.js";
 
 type TemplateTable = Record<string, string>;
@@ -141,6 +141,16 @@ const SPECIALIST: TemplateTable = {
   "atmosphere.chronicCo2Exposure": "Sustained CO₂ exposure above the limit has left a lasting mark on the crew.",
   "incident.fire-mir97.extinguishersExhausted": "Fire extinguisher stock ran out mid-fight — the crew took additional injury.",
   "incident.fire-mir97.respiratorsExhausted": "Respirator cartridges are exhausted; the crew is on filter masks for the rest of the smoke recovery.",
+
+  // --- M10.8: the five player decisions M10.4 started logging (engine/replay.ts's
+  // applyInput) — a real gap between M10.4 (the log entry) and here (the words), closed
+  // now because the Mission Report's decision timeline is the first thing that needs them
+  // rendered, but a mission's own DebriefView mission log needed this fix regardless.
+  "decision.rations.set": "Rationing set to {mode}.",
+  "decision.priority.changed": "{system} moved {direction} the load-shed order.",
+  "decision.crewLocation.set": "{crew} moved to {location}.",
+  "decision.station.assigned": "{crew} assigned to {station}.",
+  "decision.commsPriority.set": "Downlink priority set to {priority}.",
 };
 
 /** Ages 8-11. Plain words, no raw units, present tense, encouraging where it can be. */
@@ -264,6 +274,13 @@ const CADET: TemplateTable = {
   "atmosphere.chronicCo2Exposure": "Breathing bad air for so long has worn the crew down for good.",
   "incident.fire-mir97.extinguishersExhausted": "Ran out of fire extinguishers mid-fight — someone got hurt worse because of it.",
   "incident.fire-mir97.respiratorsExhausted": "Out of respirator cartridges — the crew's stuck with weaker filter masks for now.",
+
+  // --- M10.8: the five player decisions M10.4 started logging ---
+  "decision.rations.set": "Switched to {mode}.",
+  "decision.priority.changed": "{system} moved {direction} the power list.",
+  "decision.crewLocation.set": "{crew} went to {location}.",
+  "decision.station.assigned": "{crew} is now on {station}.",
+  "decision.commsPriority.set": "Now sending {priority}.",
 };
 
 /** Ages 15+. Same facts, framed with the vocabulary an operator would actually use. */
@@ -392,6 +409,13 @@ const COMMANDER: TemplateTable = {
   "atmosphere.chronicCo2Exposure": "Cumulative sub-acute CO₂ exposure ({exposureMmHgHours} mmHg-h) has crossed the chronic-effect threshold; permanent crew fatigue increase applied.",
   "incident.fire-mir97.extinguishersExhausted": "Fire-extinguisher stock depleted mid-response: additional crew injury applied.",
   "incident.fire-mir97.respiratorsExhausted": "Respirator-cartridge stock depleted: crew now on filter masks for the remainder of the smoke-recovery window, at a reduced protection factor.",
+
+  // --- M10.8: the five player decisions M10.4 started logging ---
+  "decision.rations.set": "Survival mode set to {mode}.",
+  "decision.priority.changed": "Load-shed priority for {system} moved {direction}.",
+  "decision.crewLocation.set": "{crew} relocated to {location}.",
+  "decision.station.assigned": "{crew} reassigned to primary station: {station}.",
+  "decision.commsPriority.set": "Downlink priority reassigned: {priority}.",
 };
 
 const TABLES: Record<DialLevel, TemplateTable> = {
@@ -416,6 +440,20 @@ function resolveField(entry: LogEntry, key: string, level: DialLevel): string {
   if (key === "mode") {
     const mode = entry.data["mode"];
     return typeof mode === "string" ? survivalModeLabel(mode as SurvivalMode, level) : "";
+  }
+  if (key === "station") {
+    const station = entry.data["station"];
+    return typeof station === "string" ? stationLabel(station as StationId, level) : "";
+  }
+  if (key === "priority") {
+    const priority = entry.data["priority"];
+    return typeof priority === "string" ? commsPriorityLabel(priority as CommsPriority, level) : "";
+  }
+  if (key === "direction") {
+    // `decision.priority.changed`'s own data: -1 means "shed later" (moved up the list),
+    // +1 means "shed sooner" (moved down) — see `applyInput`'s `priority` case.
+    const direction = entry.data["direction"];
+    return direction === -1 ? "up" : direction === 1 ? "down" : "";
   }
   const value = entry.data[key];
   return value === undefined ? "" : String(value);

@@ -22,6 +22,7 @@ import { RunStatusBadge } from "./components/RunStatusBadge.js";
 import { EventFeed } from "./components/EventFeed.js";
 import { durationLabel } from "./dial/missionTime.js";
 import { SetupWizard } from "./views/Setup/SetupWizard.js";
+import { MissionReportView } from "./views/Report/MissionReportView.js";
 import { applyRunLinkFromLocation, type BootRunLinkResult } from "./share/bootRunLink.js";
 import "./i18n/config.js";
 
@@ -39,8 +40,10 @@ type TabView =
 
 /** M9: Setup is a real screen but deliberately not a tab-nav destination (see this file's own
  *  doc comment) — a separate, wider type rather than adding it to `TabView` and every
- *  `Record<TabView, ...>` below. */
-type View = TabView | "setup";
+ *  `Record<TabView, ...>` below. M10.8's Mission Report joins it for the same reason: a
+ *  standalone landing page for an inbound report link, not a mid-app tab (M10 plan's own
+ *  finding #5). */
+type View = TabView | "setup" | "report";
 
 const TAB_IDS: readonly TabView[] = [
   "power",
@@ -110,10 +113,10 @@ const TAB_KEYS: Record<TabView, string> = {
  * M10.6 reads a shareable run link once at boot, in a `useEffect` (never at render time —
  * `window` doesn't exist under this app's own SSR-based render tests, `share/bootRunLink.ts`'s
  * own doc comment). A valid config-only link (a class mission) skips Setup for Briefing; a
- * valid config+fragment link (a report/replay link) skips straight to Debrief — the interim
- * landing spot until M10.8's dedicated Mission Report view exists — with the exact final
- * state `replayRun` reconstructs. A version mismatch or a malformed link shows a dismissible
- * banner and otherwise behaves exactly like opening the app with no link at all.
+ * valid config+fragment link (a report/replay link) skips straight to the Mission Report
+ * (M10.8) with the exact final state `replayRun` reconstructs. A version mismatch or a
+ * malformed link shows a dismissible banner and otherwise behaves exactly like opening the
+ * app with no link at all.
  */
 export function App() {
   const [view, setView] = useState<View>("setup");
@@ -151,7 +154,7 @@ export function App() {
         setView("briefing");
         return;
       case "fullReplay":
-        setView("debrief");
+        setView("report");
         return;
     }
   }, []);
@@ -227,6 +230,12 @@ export function App() {
             setView("briefing");
           }}
         />
+      ) : view === "report" ? (
+        <MissionReportView
+          onBack={() => {
+            setView("debrief");
+          }}
+        />
       ) : (
         <>
           <header className="mission-head" key={version}>
@@ -253,7 +262,13 @@ export function App() {
           {view === "missionCommand" && <MissionCommandConsole />}
           {view === "habitat" && <HabitatView />}
           {view === "briefing" && <BriefingView />}
-          {view === "debrief" && <DebriefView />}
+          {view === "debrief" && (
+            <DebriefView
+              onViewReport={() => {
+                setView("report");
+              }}
+            />
+          )}
 
           <EventFeed />
         </>
