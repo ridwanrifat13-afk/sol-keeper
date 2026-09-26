@@ -12,6 +12,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { HabitatView } from "../src/views/Habitat/HabitatView";
 import { useRun } from "../src/store/run";
 import { useDial } from "../src/store/dial";
+// M11: HabitatView now reads the player's language (useAppLanguage -> useTranslation) to pass
+// through to stationLabel/locationLabel — this import is what initializes react-i18next in
+// this test file (render.test.tsx gets it for free by importing App.tsx; this file never did).
+import "../src/i18n/config";
 
 function render(): string {
   return renderToString(<HabitatView />).replace(/<!-- -->/g, "");
