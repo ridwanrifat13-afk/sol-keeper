@@ -3,14 +3,24 @@
 ## Status (updated 2026-09-26)
 
 **Done and pushed to `main`:** M10.1 (`ef94762`), M10.2 (`01455ab`), M10.3 (`7e6e5b4`).
-**Just finished, not yet merged:** M10.4 — `packages/sim/src/engine/replay.ts`
-(`RunInput`/`applyInput`/`replayRun`), `store/run.ts`'s six mutators refactored onto
-`applyInput` + a new `inputLog`, and `validation/replay.test.ts`'s play-vs-replay equality
-test. No `SIM_VERSION` bump: nothing in `PIPELINE`, `models/`, `constants.ts`/`scenarios/`,
-the incident catalog, the RNG, `state.ts`'s initial state, or `setup.ts`'s sizing changed —
-this only adds a single call path for five decisions that used to mutate `SimState` with no
-log entry at all, plus a pure replay driver over the exact same path.
-**Not started:** M10.5 through M10.9 — the dependent chain below.
+**Just finished, not yet merged:** M10.4 (`packages/sim/src/engine/replay.ts`,
+`store/run.ts`'s `inputLog`) and M10.5 (`apps/web/src/share/runLink.ts` + `binaryCodec.ts`).
+No `SIM_VERSION` bump for either: M10.4 only adds a call path for five decisions that used to
+mutate `SimState` with no log entry at all, plus a pure replay driver over the exact same
+path; M10.5 is `apps/web`-only.
+**Not started:** M10.6 through M10.9 — the dependent chain below.
+
+**Disclosed gap for M10.6/M10.7 to pick up**: `RunStore` (`apps/web/src/store/run.ts`) carries
+`params`/`scenario` but not the three setup choices (`landingSiteId`/`powerArchitecture`/
+`shieldingApproach`) that produced `scenario` — `buildCustomScenario` bakes them into numeric
+fields (`solarArrayAreaM2`, `shieldingGPerCm2`, …) and discards the ids themselves, and
+`useSetup`'s wizard state resets on `commit()`. `share/runLink.ts`'s `RunLinkConfig` needs all
+three to encode a link. M10.5's own tests construct a `RunLinkConfig` directly rather than
+from a live run, since nothing in the app currently holds one mid-mission. "Create class
+link" (setup-time, M10.7) is unaffected — `useSetup`'s own fields are still live at that
+point — but "Copy report link" from a finished/in-progress run needs `RunStore` to start
+carrying these three fields (set once at `reset()`, alongside `params`/`scenario`) before
+M10.7 can build a link from a real run.
 
 ## The brief's M10 text, verbatim
 
@@ -166,7 +176,7 @@ partially-applied mission.
 | M10.2 | Real seed: `store/setup.ts` seed field (crypto-rolled), Launch Packing re-roll/manual entry, `commit()` wiring | — | **Done** (`01455ab`) |
 | M10.3 | `EventLogger` starting-seq fix + duplicate-id regression test | — | **Done** (`7e6e5b4`) |
 | M10.4 | `engine/replay.ts` (`RunInput`/`applyInput`/`replayRun`), `store/run.ts` mutators refactored onto it + `inputLog`, play-vs-replay equality test | M10.3 | **Done** |
-| M10.5 | `share/runLink.ts` encode/decode, whitelist+validate every field, legacy-difficulty mapping, versionMismatch/invalid results, frozen-literal regression test | M10.1, M10.2, M10.4 | Not started |
+| M10.5 | `share/runLink.ts` encode/decode, whitelist+validate every field, legacy-difficulty mapping, versionMismatch/invalid results, frozen-literal regression test | M10.1, M10.2, M10.4 | **Done** |
 | M10.6 | Boot-time URL entry in App.tsx (3 modes: no params/config-only/config+fragment), version-mismatch banner | M10.5 | Not started |
 | M10.7 | "Create class link" + "Copy report link" UI, clipboard + visible-input fallback | M10.5, M10.6 | Not started |
 | M10.8 | `MissionReportView.tsx` + print CSS + `report` i18n namespace (both locales) | M10.6 | Not started |

@@ -25,6 +25,7 @@ import {
   type ScenarioId,
   type ShieldingApproach,
 } from "@sol-keeper/sim";
+import { MAX_CREW_SIZE, MAX_SEED, MIN_CREW_SIZE } from "../share/runLink.js";
 import { useRun } from "./run.js";
 
 /** The six choice steps (M9.2a/b/c) plus two review/flourish steps that read the choices
@@ -43,14 +44,6 @@ export const SETUP_STEPS = [
   "launchPacking",
 ] as const;
 export type SetupStepId = (typeof SETUP_STEPS)[number];
-
-const MIN_CREW_SIZE = 2;
-const MAX_CREW_SIZE = 6;
-
-// A uint32, matching what `createRngState`/M10.5's URL codec both expect — the sim's own
-// `seedStream` works with any JS number (it coerces via `>>> 0`), but a shareable link needs
-// one canonical range so a decoded seed can be range-checked rather than silently wrapping.
-const MAX_SEED = 0xffffffff;
 
 /** M10.2: every mission needs a real, player-visible seed, not the historical implicit
  *  default (`store/run.ts`'s own `DEFAULT_PARAMS.seed = 1`, which every browser mission ran
