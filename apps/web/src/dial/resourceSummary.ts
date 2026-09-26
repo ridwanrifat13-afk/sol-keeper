@@ -26,7 +26,7 @@ import {
   presentWater,
   type GaugeText,
 } from "./present.js";
-import type { DialLevel } from "./types.js";
+import type { DialLevel, Language } from "./types.js";
 
 export interface ResourceReadout {
   readonly status: StatusPresentation;
@@ -46,7 +46,7 @@ export interface ResourceSummary {
   readonly cabin: ResourceReadout;
 }
 
-export function buildResourceSummary(state: SimState, level: DialLevel): ResourceSummary {
+export function buildResourceSummary(state: SimState, level: DialLevel, language: Language = "en"): ResourceSummary {
   const living = state.crew.filter((c) => c.alive).length;
   const mode = survivalModes[state.food.mode];
 
@@ -79,7 +79,12 @@ export function buildResourceSummary(state: SimState, level: DialLevel): Resourc
     co2: {
       status: co2Status,
       fraction: state.atmosphere.co2PartialPressureMmHg / mode.co2LimitMmHg.value,
-      text: presentCo2(level, co2Status.level, mode.co2LimitMmHg.value, survivalModeLabel(state.food.mode, level)),
+      text: presentCo2(
+        level,
+        co2Status.level,
+        mode.co2LimitMmHg.value,
+        survivalModeLabel(state.food.mode, level, language),
+      ),
     },
     water: {
       status: waterStatus,

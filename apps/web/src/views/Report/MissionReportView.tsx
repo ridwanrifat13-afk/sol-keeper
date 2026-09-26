@@ -3,12 +3,13 @@ import { causalCascade, directEffects, runFingerprint, type Body, type LogEntry,
 import { useDial } from "../../store/dial.js";
 import { useRun } from "../../store/run.js";
 import { logText } from "../../i18n/logText.js";
+import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { groupIncidents, majorIncidents, type IncidentGroup } from "../../dial/blackBox.js";
 import { decisionTimeline } from "../../dial/decisionTimeline.js";
 import { whatNasaDidCards } from "../../dial/whatNasaDid.js";
 import { durationLabel, elapsedValue, timeUnitWord, timestampLabel } from "../../dial/missionTime.js";
 import { stationLabel } from "../../dial/labels.js";
-import type { DialLevel } from "../../dial/types.js";
+import type { DialLevel, Language } from "../../dial/types.js";
 import { ReportLinkButton } from "../../components/ReportLinkButton.js";
 import { ReplayControls } from "../../components/ReplayControls.js";
 
@@ -22,11 +23,12 @@ import { ReplayControls } from "../../components/ReplayControls.js";
  * for an inbound report link, not a mid-app tab — `App.tsx` renders it as a third takeover
  * alongside Setup, never inside the station-console shell).
  *
- * Bilingual scope, disclosed on the page itself (`report.disclosureNote`) and in the M10.8
- * summary: this file's own headings/labels/outcome text are real `t()` calls, translated in
- * both `locales/en.json` and `locales/bn.json`. Everything below that comes from `logText()`
- * (station names, decision text, causal-chain descriptions) stays English-only — the same
- * scope boundary M10 plan's user decision 2 drew, unchanged by this milestone.
+ * Bilingual scope: this file's own headings/labels/outcome text are real `t()` calls
+ * (`locales/en.json`/`bn.json`, M10.8). M11 closes the gap M10.8 disclosed
+ * (`report.disclosureNote`) for station names, decision text, and causal-chain descriptions:
+ * `logText()`/`stationLabel()` now take the same `language` this page reads via
+ * `useAppLanguage()`, so a Bangla-reading player sees the whole page in Bangla, DRAFT quality
+ * where noted (`docs/i18n/bn_review.csv`) rather than half the page silently staying English.
  *
  * M10.9: `<ReplayControls />` renders itself only while `store/replay.ts`'s `useReplay` is
  * mid-replay (a report/replay link opened via `share/bootRunLink.ts`) — every section below it
@@ -37,6 +39,7 @@ export function MissionReportView({ onBack }: { onBack: () => void }) {
   const state = useRun((s) => s.state);
   const scenario = useRun((s) => s.scenario);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
   const { t } = useTranslation();
 
   const body = scenario.body;
@@ -93,8 +96,8 @@ export function MissionReportView({ onBack }: { onBack: () => void }) {
               <tr key={member.id}>
                 <td>{member.name}</td>
                 <td>{member.alive ? t("report.crewAlive") : t("report.crewLost")}</td>
-                <td>{stationLabel(member.primaryStation, level)}</td>
-                <td>{stationLabel(member.backupStation, level)}</td>
+                <td>{stationLabel(member.primaryStation, level, language)}</td>
+                <td>{stationLabel(member.backupStation, level, language)}</td>
               </tr>
             ))}
           </tbody>
@@ -118,10 +121,10 @@ export function MissionReportView({ onBack }: { onBack: () => void }) {
             {decisions.map(({ entry, station }) => (
               <li key={entry.id} className="report-decision-row">
                 <span className="report-decision-station">
-                  {station !== undefined ? stationLabel(station, level) : "—"}
+                  {station !== undefined ? stationLabel(station, level, language) : "—"}
                 </span>
                 <span className="report-decision-time">{timestampLabel(entry.hour, body)}</span>
-                <span className="report-decision-text">{logText(entry, level)}</span>
+                <span className="report-decision-text">{logText(entry, level, language)}</span>
               </li>
             ))}
           </ul>
@@ -136,7 +139,14 @@ export function MissionReportView({ onBack }: { onBack: () => void }) {
         ) : (
           <ul className="incident-list">
             {incidentGroups.map((group) => (
-              <ReportIncidentRow key={`${group.sample.id}-${group.count}`} group={group} log={log} level={level} body={body} />
+              <ReportIncidentRow
+                key={`${group.sample.id}-${group.count}`}
+                group={group}
+                log={log}
+                level={level}
+                language={language}
+                body={body}
+              />
             ))}
           </ul>
         )}
@@ -203,11 +213,13 @@ function ReportIncidentRow({
   group,
   log,
   level,
+  language,
   body,
 }: {
   group: IncidentGroup;
   log: readonly LogEntry[];
   level: DialLevel;
+  language: Language;
   body: Body;
 }) {
   const effects = directEffects(log, group.sample.id);
@@ -222,7 +234,7 @@ function ReportIncidentRow({
       <div className="incident-head">
         <span className="incident-time">{when}</span>
         <span className="incident-text">
-          {logText(group.sample, level)}
+          {logText(group.sample, level, language)}
           {group.count > 1 ? ` (recurred ${group.count} times)` : ""}
         </span>
       </div>
@@ -235,7 +247,7 @@ function ReportIncidentRow({
             {cascadeSize !== effects.length ? `, ${cascadeSize} total downstream` : ""}:{" "}
             {effects
               .slice(0, 6)
-              .map((e) => logText(e, level))
+              .map((e) => logText(e, level, language))
               .join("; ")}
             {effects.length > 6 ? "; …" : ""}
           </>

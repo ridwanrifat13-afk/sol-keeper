@@ -455,8 +455,9 @@ describe("MissionReportView, mission ended (first frame, M10.8)", () => {
       expect(out).toContain("What NASA did");
       expect(out).toContain("Replay this mission");
       expect(out).toContain("Data sources");
-      // Bilingual-scope disclosure (user decision 2) has to be visible on the page itself.
-      expect(out).toContain("English-only for now");
+      // M11: the whole page, including station names/decision text, is now in the player's
+      // chosen language — the disclosure note says so (and flags Bangla as still DRAFT).
+      expect(out).toContain("first-pass draft awaiting a native reviewer");
       // Rule 5: never a NASA logo/insignia — spot-check no bare "NASA" without the
       // not-affiliated disclosure right there on the same page.
       expect(out).toContain("Not affiliated with or endorsed by NASA");

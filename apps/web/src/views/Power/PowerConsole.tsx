@@ -10,6 +10,7 @@ import { AlarmBanner } from "../../components/AlarmBanner.js";
 import { statusWord } from "../../dial/statusWords.js";
 import { spaceWeatherTypeLabel } from "../../dial/spaceWeatherLabels.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
+import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import type { ImageQueryKey } from "../../../server-lib/validate.js";
 
 const MAX_EVENTS_SHOWN = 8;
@@ -31,9 +32,10 @@ export function PowerConsole() {
   const state = useRun((s) => s.state);
   const scenario = useRun((s) => s.scenario);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
   const { t } = useTranslation();
 
-  const summary = buildResourceSummary(state, level);
+  const summary = buildResourceSummary(state, level, language);
   const powerServedFraction = state.power.demandKw > 0 ? state.power.servedKw / state.power.demandKw : 1;
   const spaceWeather = useSpaceWeather();
 

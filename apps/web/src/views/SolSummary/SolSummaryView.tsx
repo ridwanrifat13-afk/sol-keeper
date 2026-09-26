@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { solSummaryLines } from "../../dial/solSummary.js";
 import { stationLabel } from "../../dial/labels.js";
 import { logText } from "../../i18n/logText.js";
+import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { statusFromSeverity } from "../../components/status.js";
 import { timestampLabel } from "../../dial/missionTime.js";
 
@@ -24,6 +26,8 @@ export function SolSummaryView() {
   const scenario = useRun((s) => s.scenario);
   const dismissSolSummary = useRun((s) => s.dismissSolSummary);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
+  const { t } = useTranslation();
 
   if (justEndedSol === undefined) return null;
 
@@ -33,19 +37,19 @@ export function SolSummaryView() {
     <div className="overlay-backdrop">
       <div className="overlay-panel" role="dialog" aria-modal="true" aria-labelledby="sol-summary-heading">
         <h2 id="sol-summary-heading">
-          {timestampLabel(justEndedSol.endHour, scenario.body)} complete
+          {t("solSummary.heading", { timestamp: timestampLabel(justEndedSol.endHour, scenario.body) })}
         </h2>
         {lines.length === 0 ? (
-          <p className="panel-hint">A quiet sol — nothing significant to report.</p>
+          <p className="panel-hint">{t("solSummary.quiet")}</p>
         ) : (
           <ul className="status-list">
             {lines.map((line) => {
               const status = statusFromSeverity(line.entry.severity);
               return (
                 <li key={line.entry.id}>
-                  <span className="status-list-label">{stationLabel(line.station, level)}</span>
+                  <span className="status-list-label">{stationLabel(line.station, level, language)}</span>
                   <span className={`status-list-value ${status.className}`}>
-                    <span aria-hidden="true">{status.glyph}</span> {logText(line.entry, level)}
+                    <span aria-hidden="true">{status.glyph}</span> {logText(line.entry, level, language)}
                   </span>
                 </li>
               );
@@ -60,7 +64,7 @@ export function SolSummaryView() {
               dismissSolSummary();
             }}
           >
-            Continue to Sol Planning
+            {t("solSummary.continue")}
           </button>
         </div>
       </div>

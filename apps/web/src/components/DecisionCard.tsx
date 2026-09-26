@@ -25,6 +25,7 @@ import { useRun } from "../store/run.js";
 import { useDial } from "../store/dial.js";
 import { selectPendingIncident } from "../incidents/pendingIncident.js";
 import { stationLabel, systemLabel } from "../dial/labels.js";
+import { useAppLanguage } from "../i18n/useAppLanguage.js";
 import {
   crewHoursCostPhrase,
   decisionText,
@@ -46,6 +47,7 @@ export function DecisionCard() {
   const scenario = useRun((s) => s.scenario);
   const resolveIncident = useRun((s) => s.resolveIncident);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
   const dialogRef = useRef<HTMLDivElement>(null);
 
   const pending = selectPendingIncident(state);
@@ -107,9 +109,9 @@ export function DecisionCard() {
         onKeyDown={handleKeyDown}
       >
         <p className="decision-card-station">
-          <span aria-hidden="true">▲</span> {stationLabel(definition.station, level)}
+          <span aria-hidden="true">▲</span> {stationLabel(definition.station, level, language)}
         </p>
-        <h2 id="decision-card-title">{decisionText(definition.briefKey, level, definition.analogue)}</h2>
+        <h2 id="decision-card-title">{decisionText(definition.briefKey, level, definition.analogue, language)}</h2>
         <p className="decision-card-countdown">
           <span aria-hidden="true">⧗</span>{" "}
           {level === "cadet" ? `${hoursRemaining} hour(s) to decide` : `${hoursRemaining} h left to decide`}
@@ -127,21 +129,26 @@ export function DecisionCard() {
                   resolveIncident(incident.id, response.id);
                 }}
               >
-                <span className="decision-card-response-text">{decisionText(response.i18nKey, level)}</span>
+                <span className="decision-card-response-text">{decisionText(response.i18nKey, level, undefined, language)}</span>
                 <span className="decision-card-response-tradeoffs">
                   {response.crewHoursCost !== undefined && response.crewHoursCost > 0 && (
-                    <span>{crewHoursCostPhrase(level, response.crewHoursCost)}</span>
+                    <span>{crewHoursCostPhrase(level, response.crewHoursCost, language)}</span>
                   )}
                   {response.sparesCost !== undefined &&
                     response.sparesCost > 0 &&
                     response.sparesFromSystem !== undefined && (
                       <span>
-                        {sparesCostPhrase(level, response.sparesCost, systemLabel(response.sparesFromSystem, level))}
+                        {sparesCostPhrase(
+                          level,
+                          response.sparesCost,
+                          systemLabel(response.sparesFromSystem, level, language),
+                          language,
+                        )}
                       </span>
                     )}
-                  {response.permanentPenalty === true && <span>{permanentPenaltyPhrase(level)}</span>}
-                  {response.leavesOngoing === true && <span>{leavesOngoingPhrase(level)}</span>}
-                  <span>{willResolveThisHourPhrase(level, willResolve)}</span>
+                  {response.permanentPenalty === true && <span>{permanentPenaltyPhrase(level, language)}</span>}
+                  {response.leavesOngoing === true && <span>{leavesOngoingPhrase(level, language)}</span>}
+                  <span>{willResolveThisHourPhrase(level, willResolve, language)}</span>
                 </span>
               </button>
             );
@@ -150,7 +157,8 @@ export function DecisionCard() {
 
         {defaultResponse !== undefined && (
           <p className="decision-card-default">
-            <strong>{noChoicePhrase(level)}</strong> {decisionText(defaultResponse.i18nKey, level)}
+            <strong>{noChoicePhrase(level, language)}</strong>{" "}
+            {decisionText(defaultResponse.i18nKey, level, undefined, language)}
           </p>
         )}
       </div>

@@ -1,6 +1,7 @@
 import { useRun } from "../store/run.js";
 import { useDial } from "../store/dial.js";
 import { logText } from "../i18n/logText.js";
+import { useAppLanguage } from "../i18n/useAppLanguage.js";
 import { statusFromSeverity } from "./status.js";
 import { timestampLabel } from "../dial/missionTime.js";
 
@@ -20,6 +21,7 @@ export function EventFeed() {
   const log = useRun((s) => s.state.log);
   const body = useRun((s) => s.scenario.body);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
 
   const byId = new Map(log.map((e) => [e.id, e]));
   const recent = log.slice(-MAX_CARDS).reverse();
@@ -50,12 +52,12 @@ export function EventFeed() {
                 </span>
                 <span className="event-time">{timestampLabel(entry.hour, body)}</span>
               </div>
-              <p className="event-text">{logText(entry, level)}</p>
+              <p className="event-text">{logText(entry, level, language)}</p>
               {causes.length > 0 && (
                 <p className="event-cause">
                   <span aria-hidden="true">↳ </span>
                   {CAUSE_PREFIX[level]}
-                  {causes.map((c) => logText(c, level)).join("; ")}
+                  {causes.map((c) => logText(c, level, language)).join("; ")}
                 </p>
               )}
             </li>

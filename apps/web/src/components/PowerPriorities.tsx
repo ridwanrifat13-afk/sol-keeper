@@ -1,6 +1,7 @@
 import { useRun } from "../store/run.js";
 import { useDial } from "../store/dial.js";
 import { systemLabel } from "../dial/labels.js";
+import { useAppLanguage } from "../i18n/useAppLanguage.js";
 import { systemStatusInfo } from "../dial/systemStatus.js";
 
 const CADET_WORDS: Record<string, string> = {
@@ -25,6 +26,7 @@ export function PowerPriorities() {
   const setPriority = useRun((s) => s.setPriority);
   const phase = useRun((s) => s.phase);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
 
   const ordered = Object.values(systems)
     .filter((s) => s !== undefined)
@@ -54,7 +56,7 @@ export function PowerPriorities() {
         {ordered.map((system, index) => {
           const info = systemStatusInfo(system, missionStarted);
           const word = level === "cadet" ? (CADET_WORDS[info.word] ?? info.word) : info.word;
-          const name = systemLabel(system.id, level);
+          const name = systemLabel(system.id, level, language);
 
           return (
             <li key={system.id} className={`priority-row ${info.className}`}>

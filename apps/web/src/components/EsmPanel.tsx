@@ -2,6 +2,7 @@ import { scenarioEsmBreakdown } from "@sol-keeper/sim";
 import { useRun } from "../store/run.js";
 import { useDial } from "../store/dial.js";
 import { systemLabel } from "../dial/labels.js";
+import { useAppLanguage } from "../i18n/useAppLanguage.js";
 import { esmCadetHeadline, esmIntro, ESM_PARTIAL_DISCLOSURE } from "../dial/esmPresent.js";
 
 /**
@@ -17,6 +18,7 @@ import { esmCadetHeadline, esmIntro, ESM_PARTIAL_DISCLOSURE } from "../dial/esmP
 export function EsmPanel() {
   const scenario = useRun((s) => s.scenario);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
   const breakdown = scenarioEsmBreakdown(scenario);
 
   return (
@@ -48,7 +50,7 @@ export function EsmPanel() {
               {breakdown.perSystem.map((line) => (
                 <tr key={line.system} className={line.fullySourced ? undefined : "esm-partial-row"}>
                   <td>
-                    {systemLabel(line.system, level)}
+                    {systemLabel(line.system, level, language)}
                     {!line.fullySourced && (
                       <span aria-hidden="true" className="esm-partial-mark">
                         {" "}

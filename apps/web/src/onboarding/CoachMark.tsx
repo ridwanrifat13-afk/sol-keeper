@@ -4,6 +4,7 @@ import { useOnboarding } from "../store/onboarding.js";
 import { useRun } from "../store/run.js";
 import { useDial } from "../store/dial.js";
 import { COACH_MARK_ORDER, coachMarkText } from "../i18n/onboardingText.js";
+import { useAppLanguage } from "../i18n/useAppLanguage.js";
 import { stationLabel } from "../dial/labels.js";
 
 interface CoachMarkProps {
@@ -34,6 +35,7 @@ export function CoachMark({ view, onNavigate }: CoachMarkProps) {
   const skip = useOnboarding((s) => s.skip);
   const setPhase = useRun((s) => s.setPhase);
   const level = useDial((s) => s.level);
+  const language = useAppLanguage();
 
   const totalSteps = COACH_MARK_ORDER.length;
   const station = COACH_MARK_ORDER[step] ?? COACH_MARK_ORDER[totalSteps - 1];
@@ -57,10 +59,10 @@ export function CoachMark({ view, onNavigate }: CoachMarkProps) {
   return (
     <div className="coach-mark" role="dialog" aria-label="First Light tutorial" aria-describedby="coach-mark-text">
       <p className="coach-mark-step">
-        Step {step + 1} of {totalSteps} · {stationLabel(station, level)}
+        Step {step + 1} of {totalSteps} · {stationLabel(station, level, language)}
       </p>
       <p id="coach-mark-text" className="coach-mark-text">
-        {coachMarkText(station, level)}
+        {coachMarkText(station, level, language)}
       </p>
       <div className="coach-mark-actions">
         <button type="button" className="btn btn-quiet" onClick={skip}>
