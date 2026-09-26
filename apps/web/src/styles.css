@@ -688,6 +688,28 @@ code {
   float: right;
 }
 
+/* M11: `?debug=1`'s FPS/memory/tick panel (docs/DEVICE_TEST.md). Fixed, small, and out of the
+   way of the real UI it's measuring — a corner readout, not a dialog. */
+.debug-overlay {
+  position: fixed;
+  bottom: 8px;
+  right: 8px;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 6px 10px;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.debug-overlay-row {
+  margin: 0;
+  white-space: nowrap;
+}
+
 /* ---------------------------------------------------------------- run-link banner (M10.6) */
 .run-link-banner {
   display: flex;

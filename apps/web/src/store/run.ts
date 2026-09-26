@@ -34,6 +34,7 @@ import {
 import { buildResourceSummary } from "../dial/resourceSummary.js";
 import type { StatusLevel } from "../components/status.js";
 import type { RunLinkConfig } from "../share/runLink.js";
+import { useDebugStats } from "./debugStats.js";
 
 const STATUS_RANK: Record<StatusLevel, number> = { nominal: 0, caution: 1, critical: 2 };
 
@@ -201,7 +202,12 @@ export const useRun = create<RunStore>((set, get) => ({
         state.activeIncidents.filter((inc) => inc.detectedAtHour !== undefined).map((inc) => inc.id),
       );
 
+      // `?debug=1`'s own tick-time metric (M11) — timed here, the one place every real tick
+      // actually goes through, rather than guessed from an overall frame rate that a paused
+      // clock or a quiet hour would show as fine regardless.
+      const tickStart = performance.now();
       simTick(state, params, scenario);
+      useDebugStats.getState().recordTick(performance.now() - tickStart);
 
       // A day boundary always halts the clock immediately (Sol Planning locks it, M8.4 Part
       // A) — crossing more than one in a single step() call would otherwise be possible at

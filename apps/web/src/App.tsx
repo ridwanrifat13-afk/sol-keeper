@@ -24,6 +24,7 @@ import { durationLabel } from "./dial/missionTime.js";
 import { SetupWizard } from "./views/Setup/SetupWizard.js";
 import { MissionReportView } from "./views/Report/MissionReportView.js";
 import { applyRunLinkFromLocation, type BootRunLinkResult } from "./share/bootRunLink.js";
+import { DebugOverlay } from "./components/DebugOverlay.js";
 import "./i18n/config.js";
 
 /** The tab-nav's own eight destinations — seven since M8.3, plus Habitat (M9.4a) as the
@@ -123,6 +124,7 @@ export function App() {
   const [view, setView] = useState<View>("setup");
   const [dataSourcesOpen, setDataSourcesOpen] = useState(false);
   const [linkBanner, setLinkBanner] = useState<BootRunLinkResult | undefined>(undefined);
+  const [debugOverlay, setDebugOverlay] = useState(false);
   const status = useRun((s) => s.state.status);
   const scenario = useRun((s) => s.scenario);
   const crew = useRun((s) => s.state.crew);
@@ -138,6 +140,13 @@ export function App() {
   useEffect(() => {
     document.documentElement.classList.toggle("low-power-mode", lowPowerMode);
   }, [lowPowerMode]);
+
+  // M11: `?debug=1` shows docs/DEVICE_TEST.md's FPS/memory/tick overlay. Read the same way
+  // the run-link query is (a `useEffect`, never at render time — `window` doesn't exist under
+  // this app's own SSR-based render tests, see the note above `applyRunLinkFromLocation`).
+  useEffect(() => {
+    setDebugOverlay(new URLSearchParams(window.location.search).get("debug") === "1");
+  }, []);
 
   // M10.6: read once, at boot — a run link is a landing-page concern, not something to
   // re-decode on every navigation, and re-running this after the player has started making
@@ -162,6 +171,7 @@ export function App() {
 
   return (
     <main className="app">
+      {debugOverlay && <DebugOverlay />}
       <div className="app-head-row">
         <nav className="tab-nav" aria-label={t("tabs.nav")}>
           {TAB_IDS.map((id) => (
