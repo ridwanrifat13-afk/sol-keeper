@@ -1521,6 +1521,15 @@ code {
   font-weight: 600;
 }
 
+.decision-card-response-mechanism {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-dim);
+}
+
 .decision-card-response-tradeoffs {
   display: flex;
   flex-direction: column;

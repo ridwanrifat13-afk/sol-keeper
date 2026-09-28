@@ -29,6 +29,7 @@ import { useAppLanguage } from "../i18n/useAppLanguage.js";
 import {
   crewHoursCostPhrase,
   decisionText,
+  hasDecisionTemplate,
   leavesOngoingPhrase,
   noChoicePhrase,
   permanentPenaltyPhrase,
@@ -120,6 +121,8 @@ export function DecisionCard() {
         <div className="decision-card-responses">
           {definition.responses.map((response) => {
             const willResolve = wouldResolveThisHour(ctx, definition, response.id);
+            const mechanismKey = `${response.i18nKey}.mechanism`;
+            const hasMechanism = hasDecisionTemplate(mechanismKey, level, language);
             return (
               <button
                 key={response.id}
@@ -130,6 +133,11 @@ export function DecisionCard() {
                 }}
               >
                 <span className="decision-card-response-text">{decisionText(response.i18nKey, level, undefined, language)}</span>
+                {hasMechanism && (
+                  <span className="decision-card-response-mechanism">
+                    <span aria-hidden="true">⚙</span> {decisionText(mechanismKey, level, undefined, language)}
+                  </span>
+                )}
                 <span className="decision-card-response-tradeoffs">
                   {response.crewHoursCost !== undefined && response.crewHoursCost > 0 && (
                     <span>{crewHoursCostPhrase(level, response.crewHoursCost, language)}</span>
