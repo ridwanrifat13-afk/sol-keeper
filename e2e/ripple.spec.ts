@@ -79,7 +79,12 @@ test.describe("Mission Command console (M8.4 Part E)", () => {
 
     await page.getByRole("button", { name: "Run the sol" }).click();
     await expect(firstRow.getByRole("button", { name: "Power", exact: true })).toBeDisabled();
-    await expect(page.getByText("Locked while the sol is running")).toBeVisible();
+    // Not a bare page-wide getByText: M9.x batch 2's own "Crew schedule" panel (same console)
+    // carries the identical "Locked while..." phrase in its own hint text, so an unscoped
+    // match is now ambiguous — scoped to the crew-assignment panel this test is actually about.
+    await expect(
+      page.locator("#crew-assignment-heading").locator("..").getByText("Locked while the sol is running"),
+    ).toBeVisible();
   });
 });
 

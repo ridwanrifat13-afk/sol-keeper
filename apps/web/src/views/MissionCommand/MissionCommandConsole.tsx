@@ -1,5 +1,6 @@
 import {
   checkGoal,
+  crew as crewConstants,
   crewCondition,
   isDoubleCovering,
   stationCoverer,
@@ -16,7 +17,13 @@ import { CrewPanel } from "../../components/CrewPanel.js";
 import { ScenarioSwitch } from "../../components/ScenarioSwitch.js";
 import { EsmPanel } from "../../components/EsmPanel.js";
 import { STATUS } from "../../components/status.js";
-import { stationLabel, survivalModeLabel } from "../../dial/labels.js";
+import {
+  co2ScrubberModeLabel,
+  stationLabel,
+  survivalModeLabel,
+  thermalControlModeLabel,
+  waterReclamationModeLabel,
+} from "../../dial/labels.js";
 import { goalText } from "../../i18n/goalText.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 
@@ -32,6 +39,13 @@ import { useAppLanguage } from "../../i18n/useAppLanguage.js";
  * assignment rather than an invented hypothetical-hover preview, a read-only daily-plan
  * rollup of what the other four consoles currently have set, and a real goals readout
  * (checkGoal, live against the scenario's own primary/stretch goal).
+ *
+ * M9.x (player request, batch 2): "Crew schedule" — the overtime-authorization toggle, the
+ * fourth of four new nominal-conditions levers this batch adds (the other three are the Life
+ * Support console's water reclamation and thermal control dials). Reads
+ * crew.overtimeCeilingFractionOfAverage/crew.overtimeFatiguePerHourAboveCeiling
+ * (BVAD-2022, already sourced, never read by any model before this) via
+ * engine/crewHours.ts's own day-boundary bookkeeping.
  */
 export function MissionCommandConsole() {
   // `state` is mutated in place (store/run.ts's own doc comment) — subscribing to `version`
@@ -43,6 +57,7 @@ export function MissionCommandConsole() {
   const scenario = useRun((s) => s.scenario);
   const phase = useRun((s) => s.phase);
   const assignStation = useRun((s) => s.assignStation);
+  const setOvertimeAuthorized = useRun((s) => s.setOvertimeAuthorized);
   const level = useDial((s) => s.level);
   const language = useAppLanguage();
   const locked = phase !== "planning";
@@ -126,6 +141,49 @@ export function MissionCommandConsole() {
         </ul>
       </section>
 
+      <section className="panel" aria-labelledby="crew-schedule-heading">
+        <h2 id="crew-schedule-heading">Crew schedule</h2>
+        <p className="panel-hint">
+          A fourth real lever: authorizing overtime raises today's crew-hours ceiling by{" "}
+          {Math.round((crewConstants.overtimeCeilingFractionOfAverage.value - 1) * 100)}%
+          (BVAD-2022's own "maximum available VST" figure) — more room for incident response and
+          repairs — but any hours actually worked past the ordinary budget cost the whole crew
+          real, felt fatigue once the sol ends. Costs nothing if the extra hours go unused.
+          {locked && " Locked while the sol is running — adjust it during Sol Planning."}
+        </p>
+        <div className="button-row" role="group" aria-label="Overtime authorization">
+          <button
+            type="button"
+            className={`btn ${!state.crewHours.overtimeAuthorized ? "btn-active" : ""}`}
+            aria-pressed={!state.crewHours.overtimeAuthorized}
+            disabled={locked}
+            onClick={() => {
+              setOvertimeAuthorized(false);
+            }}
+          >
+            Standard hours
+            <span className="btn-sub">no fatigue risk</span>
+          </button>
+          <button
+            type="button"
+            className={`btn ${state.crewHours.overtimeAuthorized ? "btn-active" : ""}`}
+            aria-pressed={state.crewHours.overtimeAuthorized}
+            disabled={locked}
+            onClick={() => {
+              setOvertimeAuthorized(true);
+            }}
+          >
+            Authorize overtime
+            <span className="btn-sub">
+              up to {(state.crewHours.unboostedBudgetTodayHours * crewConstants.overtimeCeilingFractionOfAverage.value).toFixed(1)} h today
+            </span>
+          </button>
+        </div>
+        <p className="panel-hint">
+          Today: {state.crewHours.spentTodayHours.toFixed(1)} / {state.crewHours.budgetTodayHours.toFixed(1)} h spent.
+        </p>
+      </section>
+
       <section className="panel" aria-labelledby="daily-plan-heading">
         <h2 id="daily-plan-heading">Daily plan</h2>
         <ul className="status-list">
@@ -138,6 +196,22 @@ export function MissionCommandConsole() {
             <span className="status-list-value">
               {state.comms.priority === "personal" ? "Personal correspondence" : "Science downlink"}
             </span>
+          </li>
+          <li>
+            <span className="status-list-label">Air cleaner</span>
+            <span className="status-list-value">{co2ScrubberModeLabel(state.atmosphere.co2ScrubberMode, level, language)}</span>
+          </li>
+          <li>
+            <span className="status-list-label">Water reclamation</span>
+            <span className="status-list-value">{waterReclamationModeLabel(state.water.reclamationMode, level, language)}</span>
+          </li>
+          <li>
+            <span className="status-list-label">Thermal control</span>
+            <span className="status-list-value">{thermalControlModeLabel(state.thermal.controlMode, level, language)}</span>
+          </li>
+          <li>
+            <span className="status-list-label">Overtime</span>
+            <span className="status-list-value">{state.crewHours.overtimeAuthorized ? "Authorized" : "Standard hours"}</span>
           </li>
           <li>
             <span className="status-list-label">Repair queue</span>

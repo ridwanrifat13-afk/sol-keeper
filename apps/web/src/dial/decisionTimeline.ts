@@ -23,6 +23,13 @@ const DECISION_CODE_STATION: Readonly<Record<string, StationId>> = {
   // Player request (M9.x): routine array cleaning, a Power console action.
   "decision.cleanSolarArrays.performed": "power",
   "decision.cleanSolarArrays.insufficientTime": "power",
+  // Player request (M9.x batch 2): the Brine Processor Assembly toggle, on the same console
+  // rations/the CO2 scrubber live on.
+  "decision.waterReclamationMode.set": "lifeSupport",
+  // Player request (M9.x batch 2): thermalControl's duty-cycle toggle, same console.
+  "decision.thermalControlMode.set": "lifeSupport",
+  // Player request (M9.x batch 2): a whole-crew scheduling policy, Mission Command's console.
+  "decision.overtimeAuthorized.set": "missionCommand",
 };
 
 /** An incident-response decision (`incident.<id>.resolved`/`.detected`/`.queued`/

@@ -7,7 +7,9 @@
  * crewtime figures are stated per Earth-CM-day, not per sol — the same reasoning
  * `units.ts`'s `perDayToPerHour` already uses everywhere else).
  */
+import { crew as crewConstants, lifeSupport } from "../data/constants.js";
 import { availableCrewHours } from "../models/crew.js";
+import { clamp } from "../units.js";
 import type { TickContext } from "./context.js";
 import { INCIDENT_CATALOG, resolveResponseAttempt } from "./incidents.js";
 
@@ -40,14 +42,49 @@ function payDownQueue(ctx: TickContext): void {
   }
 }
 
+/** M9.x (player request, batch 2): applies real fatigue for the day just ending, before its
+ *  own budget/spent figures are overwritten by the next day's reset. Reads
+ *  crew.overtimeFatiguePerHourAboveCeiling (BVAD-2022, already sourced and declared, never
+ *  read by any model until now) against however many hours were actually spent past that
+ *  day's own un-boosted ceiling — authorizing overtime that goes unused costs nothing; only
+ *  hours actually worked above the ordinary budget do. */
+function applyOvertimeFatigue(ctx: TickContext): void {
+  const { state } = ctx;
+  if (!state.crewHours.overtimeAuthorized) return;
+
+  const excessHours = Math.max(
+    0,
+    state.crewHours.spentTodayHours - state.crewHours.unboostedBudgetTodayHours,
+  );
+  if (excessHours <= 0) return;
+
+  const fatigueGain = crewConstants.overtimeFatiguePerHourAboveCeiling.value * excessHours;
+  for (const member of state.crew) {
+    if (!member.alive) continue;
+    member.fatigueFraction = clamp(member.fatigueFraction + fatigueGain, 0, 1);
+  }
+}
+
 export function crewHoursStage(ctx: TickContext): void {
   const { state } = ctx;
 
   // Day 0's budget is already set by engine/state.ts's createInitialState; only reset on
   // later boundaries so hour 0 isn't double-applied.
   if (state.hour > 0 && state.hour % 24 === 0) {
-    state.crewHours.budgetTodayHours = availableCrewHours(ctx);
-    state.crewHours.spentTodayHours = 0;
+    applyOvertimeFatigue(ctx);
+    const baseline = availableCrewHours(ctx);
+    state.crewHours.unboostedBudgetTodayHours = baseline;
+    state.crewHours.budgetTodayHours = state.crewHours.overtimeAuthorized
+      ? baseline * crewConstants.overtimeCeilingFractionOfAverage.value
+      : baseline;
+    // M9.x (batch 2): running the Brine Processor Assembly (WaterReclamationMode) is a
+    // recurring daily commitment, pre-spent the moment the new day's budget exists — the
+    // same "felt against the pool, not a separate ledger" treatment the queue payout below
+    // already gets.
+    state.crewHours.spentTodayHours =
+      state.water.reclamationMode === "brineProcessor"
+        ? Math.min(state.crewHours.budgetTodayHours, lifeSupport.brineProcessorCrewHoursPerDay.value)
+        : 0;
   }
 
   payDownQueue(ctx);

@@ -8,6 +8,7 @@
  */
 import { habitat, lifeSupport, survivalModes } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
+import type { WaterReclamationMode } from "../types.js";
 import { clamp, perDayToPerHour } from "../units.js";
 
 const clamp01 = (x: number): number => clamp(x, 0, 1);
@@ -39,6 +40,17 @@ export function waterRationKgPerCrewDay(mode: keyof typeof survivalModes): numbe
   return survivalModes[mode].waterLitersPerCrewDay.value;
 }
 
+/** Player request (M9.x, batch 2): the real capacity behind WaterReclamationMode — both
+ *  figures were already sourced and declared in constants.ts (NASA-WATER-2023) but never
+ *  read by any model until now. Exported so the Life Support console can show the exact
+ *  recovery percentage each mode promises, the same pattern
+ *  models/atmosphere.ts's own co2ScrubberDutyCycleFraction already uses. */
+export function waterReclamationFraction(mode: WaterReclamationMode): number {
+  return mode === "brineProcessor"
+    ? lifeSupport.waterRecoveryFractionWithBrineProcessor.value
+    : lifeSupport.waterRecoveryFractionBaseline.value;
+}
+
 export function waterStage(ctx: TickContext): void {
   const { state, log } = ctx;
   const w = state.water;
@@ -46,10 +58,11 @@ export function waterStage(ctx: TickContext): void {
 
   const recovery = state.systems.waterRecovery;
   // M7.7 §2: an improvised (spares-short) repair leaves a permanent efficiencyPenaltyFraction
-  // on the repaired system — consumed here as the recovery loop's own output cut.
+  // on the repaired system — consumed here as the recovery loop's own output cut. M9.x (batch
+  // 2): the baseline fraction is now whichever WaterReclamationMode the player has chosen.
   w.recoveryFraction =
     recovery !== undefined && recovery.operational && recovery.poweredThisHour
-      ? lifeSupport.waterRecoveryFractionBaseline.value * (1 - recovery.efficiencyPenaltyFraction)
+      ? waterReclamationFraction(w.reclamationMode) * (1 - recovery.efficiencyPenaltyFraction)
       : 0;
 
   // M9.x (player request #7): rationing already had a real, sourced per-mode water figure

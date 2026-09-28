@@ -10,7 +10,18 @@
  * printed as the raw machine id the sim actually stores (`"co2Scrubber"`, `"stormShelter"`).
  * Every other placeholder is printed as the sim gave it.
  */
-import type { CommsPriority, Co2ScrubberMode, CropTray, CrewLocation, LogEntry, StationId, SurvivalMode, SystemId } from "@sol-keeper/sim";
+import type {
+  CommsPriority,
+  Co2ScrubberMode,
+  CropTray,
+  CrewLocation,
+  LogEntry,
+  StationId,
+  SurvivalMode,
+  SystemId,
+  ThermalControlMode,
+  WaterReclamationMode,
+} from "@sol-keeper/sim";
 import {
   co2ScrubberModeLabel,
   commsPriorityLabel,
@@ -19,6 +30,8 @@ import {
   stationLabel,
   survivalModeLabel,
   systemLabel,
+  thermalControlModeLabel,
+  waterReclamationModeLabel,
 } from "../dial/labels.js";
 import type { DialLevel, Language } from "../dial/types.js";
 import enTemplates from "./en/logText.json" with { type: "json" };
@@ -57,6 +70,14 @@ const DIRECTION_WORDS: Record<Language, { up: string; down: string }> = {
   bn: { up: "উপরে", down: "নিচে" },
 };
 
+/** decision.overtimeAuthorized.set's own boolean field — data.authorized is 1|0 (LogEntry.data
+ *  only ever stores number|string, brief rule 4), rendered the same "one small lookup table"
+ *  way DIRECTION_WORDS above handles priority's own -1|1. */
+const OVERTIME_WORDS: Record<Language, { on: string; off: string }> = {
+  en: { on: "authorized", off: "stood down" },
+  bn: { on: "অনুমোদিত", off: "বাতিল" },
+};
+
 function resolveField(entry: LogEntry, key: string, level: DialLevel, language: Language): string {
   if (key === "system") {
     const id = entry.system ?? (entry.data["system"] as SystemId | undefined);
@@ -85,6 +106,19 @@ function resolveField(entry: LogEntry, key: string, level: DialLevel, language: 
   if (key === "co2ScrubberMode") {
     const mode = entry.data["co2ScrubberMode"];
     return typeof mode === "string" ? co2ScrubberModeLabel(mode as Co2ScrubberMode, level, language) : "";
+  }
+  if (key === "waterReclamationMode") {
+    const mode = entry.data["waterReclamationMode"];
+    return typeof mode === "string" ? waterReclamationModeLabel(mode as WaterReclamationMode, level, language) : "";
+  }
+  if (key === "thermalControlMode") {
+    const mode = entry.data["thermalControlMode"];
+    return typeof mode === "string" ? thermalControlModeLabel(mode as ThermalControlMode, level, language) : "";
+  }
+  if (key === "authorized") {
+    const authorized = entry.data["authorized"];
+    const words = OVERTIME_WORDS[language];
+    return authorized === 1 ? words.on : authorized === 0 ? words.off : "";
   }
   if (key === "direction") {
     // `decision.priority.changed`'s own data: -1 means "shed later" (moved up the list),

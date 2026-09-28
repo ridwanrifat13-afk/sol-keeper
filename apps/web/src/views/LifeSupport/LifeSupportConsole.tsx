@@ -4,22 +4,35 @@ import {
   co2ScrubberDutyCycleFraction,
   cropRequiredLightHours,
   habitat,
+  lifeSupport,
   physiology,
   survivalModes,
+  thermalControlDutyCycleFraction,
+  waterReclamationFraction,
   type Co2ScrubberMode,
   type SurvivalMode,
+  type ThermalControlMode,
+  type WaterReclamationMode,
 } from "@sol-keeper/sim";
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { Gauge } from "../../components/Gauge.js";
 import { FactCardGallery } from "../../components/FactCardGallery.js";
 import { statusWord } from "../../dial/statusWords.js";
-import { co2ScrubberModeLabel, cropLabel, survivalModeLabel } from "../../dial/labels.js";
+import {
+  co2ScrubberModeLabel,
+  cropLabel,
+  survivalModeLabel,
+  thermalControlModeLabel,
+  waterReclamationModeLabel,
+} from "../../dial/labels.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
 
 const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
 const CO2_SCRUBBER_MODES: readonly Co2ScrubberMode[] = ["full", "balanced", "eco"];
+const WATER_RECLAMATION_MODES: readonly WaterReclamationMode[] = ["baseline", "brineProcessor"];
+const THERMAL_CONTROL_MODES: readonly ThermalControlMode[] = ["comfort", "powerSave"];
 
 /**
  * The Life Support console (M8.3): oxygen, CO2, water, food and cabin temperature, plus the
@@ -34,6 +47,8 @@ export function LifeSupportConsole() {
   const state = useRun((s) => s.state);
   const setSurvivalMode = useRun((s) => s.setSurvivalMode);
   const setCo2ScrubberMode = useRun((s) => s.setCo2ScrubberMode);
+  const setWaterReclamationMode = useRun((s) => s.setWaterReclamationMode);
+  const setThermalControlMode = useRun((s) => s.setThermalControlMode);
   const phase = useRun((s) => s.phase);
   const level = useDial((s) => s.level);
   const language = useAppLanguage();
@@ -164,6 +179,74 @@ export function LifeSupportConsole() {
         </p>
       </section>
 
+      <section className="panel" aria-labelledby="water-reclamation-heading">
+        <h2 id="water-reclamation-heading">Water reclamation</h2>
+        <p className="panel-hint">
+          Another real lever in ordinary conditions: the ISS&apos;s own Brine Processor Assembly
+          recovers far more water than the baseline loop, at the cost of a recurring daily share
+          of the crew-hours budget — competing with incident response and repairs for the same
+          hours, not a free upgrade.
+          {locked && " Locked while the sol is running — adjust it during Sol Planning."}
+        </p>
+        <div className="button-row" role="group" aria-label="Water reclamation mode">
+          {WATER_RECLAMATION_MODES.map((m) => (
+            <button
+              key={m}
+              type="button"
+              className={`btn ${state.water.reclamationMode === m ? "btn-active" : ""}`}
+              aria-pressed={state.water.reclamationMode === m}
+              disabled={locked}
+              onClick={() => {
+                setWaterReclamationMode(m);
+              }}
+            >
+              {waterReclamationModeLabel(m, level, language)}
+              <span className="btn-sub">
+                {Math.round(waterReclamationFraction(m) * 100)}% recovered
+                {m === "brineProcessor" && ` · ${lifeSupport.brineProcessorCrewHoursPerDay.value} crew-h/day`}
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="panel-hint">
+          Currently recovering {Math.round(state.water.recoveryFraction * 100)}% ·{" "}
+          {state.water.potableKg.toFixed(0)} kg stored.
+        </p>
+      </section>
+
+      <section className="panel" aria-labelledby="thermal-heading">
+        <h2 id="thermal-heading">Heating &amp; cooling</h2>
+        <p className="panel-hint">
+          A third real lever: trimming the heater/cooler&apos;s rated capacity saves power for
+          everything else, but the cabin drifts away from the current mode&apos;s comfort target
+          for real, felt stretches — checked by direct simulation across every mission, this
+          costs real cold-penalty hours without ever crossing the freeze-risk threshold, not a
+          hidden trap.
+          {locked && " Locked while the sol is running — adjust it during Sol Planning."}
+        </p>
+        <div className="button-row" role="group" aria-label="Thermal control mode">
+          {THERMAL_CONTROL_MODES.map((m) => (
+            <button
+              key={m}
+              type="button"
+              className={`btn ${state.thermal.controlMode === m ? "btn-active" : ""}`}
+              aria-pressed={state.thermal.controlMode === m}
+              disabled={locked}
+              onClick={() => {
+                setThermalControlMode(m);
+              }}
+            >
+              {thermalControlModeLabel(m, level, language)}
+              <span className="btn-sub">{Math.round(thermalControlDutyCycleFraction(m) * 100)}% capacity</span>
+            </button>
+          ))}
+        </div>
+        <p className="panel-hint">
+          Cabin currently {state.thermal.habitatTempC.toFixed(1)} °C, target{" "}
+          {survivalModes[state.food.mode].habitatTempC.value} °C.
+        </p>
+      </section>
+
       <section className="panel" aria-labelledby="rations-heading">
         <h2 id="rations-heading">Rations</h2>
         <p className="panel-hint">
@@ -193,11 +276,13 @@ export function LifeSupportConsole() {
         <details className="panel-detail">
           <summary>Why not oxygen too?</summary>
           <p>
-            Rations and the CO₂ scrubber's duty cycle (below) are both real trade-off dials — eating less,
-            drinking less, running colder, and easing off the scrubber are all choices a crew can actually
-            make, each at a real and survivable cost. Oxygen isn't — the life-support loop's whole job is to
-            hold it at a fixed safety threshold regardless of what a trainee would prefer, so there's no
-            "loosen it a bit" setting: past that threshold is system failure, not a comfort trade-off.
+            Rations, the CO₂ scrubber's duty cycle, water reclamation, and thermal control are all real
+            trade-off dials — eating less, drinking less, running colder, easing off the scrubber, recycling
+            more water for a crew-hours cost, and trimming heater/cooler capacity are all choices a crew can
+            actually make, each at a real and survivable cost. Oxygen isn't — the life-support loop's whole
+            job is to hold it at a fixed safety threshold regardless of what a trainee would prefer, so
+            there's no "loosen it a bit" setting: past that threshold is system failure, not a comfort
+            trade-off.
           </p>
           <ul className="status-list">
             <li>

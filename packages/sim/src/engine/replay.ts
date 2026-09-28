@@ -25,6 +25,8 @@ import type {
   StationId,
   SurvivalMode,
   SystemId,
+  ThermalControlMode,
+  WaterReclamationMode,
 } from "../types.js";
 import { power as powerConstants } from "../data/constants.js";
 import type { TickContext } from "./context.js";
@@ -47,7 +49,12 @@ export type RunInput =
   | { readonly kind: "commsPriority"; readonly priority: CommsPriority }
   | { readonly kind: "incidentResponse"; readonly incidentId: string; readonly responseId: string }
   | { readonly kind: "co2ScrubberMode"; readonly mode: Co2ScrubberMode }
-  | { readonly kind: "cleanSolarArrays" };
+  | { readonly kind: "cleanSolarArrays" }
+  // Appended (player request, M9.x batch 2), not inserted — see share/runLink.ts's own
+  // KIND_TAGS append-only rule for why order here matters just as much as it does there.
+  | { readonly kind: "waterReclamationMode"; readonly mode: WaterReclamationMode }
+  | { readonly kind: "thermalControlMode"; readonly mode: ThermalControlMode }
+  | { readonly kind: "overtimeAuthorized"; readonly authorized: boolean };
 
 /** One `RunInput` plus the `state.hour` it was applied at — what `store/run.ts`'s new
  *  `inputLog` records, and all `replayRun` needs to reproduce a run byte-identically: no
@@ -205,6 +212,41 @@ export function applyInput(ctx: TickContext, input: RunInput): void {
           obscurationBeforePct: Math.round(before * 1000) / 10,
           obscurationAfterPct: Math.round(state.environment.dustObscurationFraction * 1000) / 10,
         },
+      });
+      return;
+    }
+
+    case "waterReclamationMode": {
+      state.water.reclamationMode = input.mode;
+      log.log({
+        kind: "decision",
+        severity: "info",
+        code: "decision.waterReclamationMode.set",
+        // Not `data: { mode }` — same reason co2ScrubberMode's own case gives: resolveField
+        // already hardcodes the bare "mode" key to survivalModeLabel.
+        data: { waterReclamationMode: input.mode },
+      });
+      return;
+    }
+
+    case "thermalControlMode": {
+      state.thermal.controlMode = input.mode;
+      log.log({
+        kind: "decision",
+        severity: "info",
+        code: "decision.thermalControlMode.set",
+        data: { thermalControlMode: input.mode },
+      });
+      return;
+    }
+
+    case "overtimeAuthorized": {
+      state.crewHours.overtimeAuthorized = input.authorized;
+      log.log({
+        kind: "decision",
+        severity: "info",
+        code: "decision.overtimeAuthorized.set",
+        data: { authorized: input.authorized ? 1 : 0 },
       });
       return;
     }

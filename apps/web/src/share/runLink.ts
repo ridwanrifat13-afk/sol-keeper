@@ -51,6 +51,8 @@ import {
   type ShieldingApproach,
   type SurvivalMode,
   type SystemId,
+  type ThermalControlMode,
+  type WaterReclamationMode,
 } from "@sol-keeper/sim";
 import { ByteReader, fromBase64Url, toBase64Url, writeVarint } from "./binaryCodec.js";
 
@@ -243,11 +245,17 @@ const KIND_TAGS: readonly RunInput["kind"][] = [
   // request (M9.x), two new levers added well after every kind above them.
   "co2ScrubberMode",
   "cleanSolarArrays",
+  // Appended again (M9.x batch 2) — three more real, nominal-conditions levers.
+  "waterReclamationMode",
+  "thermalControlMode",
+  "overtimeAuthorized",
 ];
 const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
 const CREW_LOCATIONS: readonly CrewLocation[] = ["habitat", "stormShelter", "eva"];
 const COMMS_PRIORITIES: readonly CommsPriority[] = ["personal", "science"];
 const CO2_SCRUBBER_MODES: readonly Co2ScrubberMode[] = ["full", "balanced", "eco"];
+const WATER_RECLAMATION_MODES: readonly WaterReclamationMode[] = ["baseline", "brineProcessor"];
+const THERMAL_CONTROL_MODES: readonly ThermalControlMode[] = ["comfort", "powerSave"];
 /** Not exported anywhere in `@sol-keeper/sim` (unlike `STATION_IDS`) — mirrors the
  *  `SystemId` union in `packages/sim/src/types.ts` exactly; a change to that union already
  *  requires touching `data/scenarios/*.ts` or `constants.ts`, both `SIM_VERSION` bump
@@ -339,6 +347,15 @@ function writeRunInput(bytes: number[], input: RunInput): void {
       return;
     case "cleanSolarArrays":
       return; // no payload — the kind byte alone is the whole input
+    case "waterReclamationMode":
+      bytes.push(tableIndexOf(WATER_RECLAMATION_MODES, input.mode, "water reclamation mode"));
+      return;
+    case "thermalControlMode":
+      bytes.push(tableIndexOf(THERMAL_CONTROL_MODES, input.mode, "thermal control mode"));
+      return;
+    case "overtimeAuthorized":
+      bytes.push(input.authorized ? 1 : 0);
+      return;
   }
 }
 
@@ -380,6 +397,15 @@ function readRunInput(reader: ByteReader): RunInput {
       return { kind, mode: tableAt(CO2_SCRUBBER_MODES, reader.readByte(), "co2 scrubber mode") };
     case "cleanSolarArrays":
       return { kind };
+    case "waterReclamationMode":
+      return { kind, mode: tableAt(WATER_RECLAMATION_MODES, reader.readByte(), "water reclamation mode") };
+    case "thermalControlMode":
+      return { kind, mode: tableAt(THERMAL_CONTROL_MODES, reader.readByte(), "thermal control mode") };
+    case "overtimeAuthorized": {
+      const byte = reader.readByte();
+      if (byte !== 0 && byte !== 1) throw new Error("malformed overtimeAuthorized flag");
+      return { kind, authorized: byte === 1 };
+    }
   }
 }
 

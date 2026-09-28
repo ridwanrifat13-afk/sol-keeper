@@ -191,6 +191,19 @@ export const lifeSupport = {
     confidence: "measured",
     note: "ISS 2023 milestone, with the Brine Processor Assembly.",
   }),
+  // M9.x (player request, batch 2): the crew-hours cost of actually running the BPA once a
+  // player switches waterReclamationMode to "brineProcessor" — the real trade-off's own dial
+  // position, not a physiological figure (same GAME-DESIGN category as
+  // power.routineArrayCleaningCrewHours). No NASA figure quantifies ISS BPA daily crew
+  // monitoring/maintenance load; tuned to read as roughly a third of a Jezero-sized (4-crew)
+  // day's worth of a single crew-member's shift — felt against the pooled crewHours budget
+  // (engine/crewHours.ts) without dominating it outright.
+  brineProcessorCrewHoursPerDay: c({
+    value: 3,
+    unit: "CM-h/day",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+  }),
   o2RecoveryFromCo2FractionCurrent: c({
     value: 0.51,
     unit: "fraction",
@@ -1246,6 +1259,26 @@ export const habitat = {
     source: "GAME-DESIGN",
     confidence: "tuned",
     note: "Stored water doubles as shielding. Tuned so a full 2000 kg tank adds about 5 g/cm^2.",
+  }),
+  // M9.x (player request, batch 2): thermalControl's own duty-cycle dial (models/thermal.ts's
+  // thermalControlDutyCycleFraction), applied symmetrically to both heater and radiator-
+  // cooling capacity. thermalStage's own heater/radiator law is bang-bang (full rated
+  // capacity whenever off-setpoint, not a proportional controller matching the loss) rather
+  // than the simple steady-state balance a first hand derivation assumed — that assumption
+  // was checked against, and corrected by, direct simulation of all three scenarios' own full
+  // durations across several seeds before this value was chosen, not shipped as a guess.
+  // At this fraction, every scenario tested shows real, felt "crew.cold" morale-penalty hours
+  // (models/crew.ts, below comfort - 5 degC) on at least some seeds, but freezeRiskTempC is
+  // never crossed within any scenario's own real duration — a real, felt cost, not a hidden
+  // trap. Simulation also surfaced a second, qualitatively different failure mode below
+  // roughly 0.45: the shared capacity becomes too weak to counter passive heat gain during a
+  // hot daytime phase (Mars midday, lunar day) and the cabin runs away upward instead of
+  // down — chaotic and scenario-timing-dependent, deliberately avoided by staying at 0.6.
+  thermalPowerSaveDutyCycleFraction: c({
+    value: 0.6,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
   }),
   // M9: engine/shielding.ts's regolithBerm approach.
   regolithBermShieldingGPerCm2: c({

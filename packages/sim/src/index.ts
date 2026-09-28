@@ -49,7 +49,9 @@ export type {
   SystemId,
   SystemSpec,
   SystemState,
+  ThermalControlMode,
   ThermalState,
+  WaterReclamationMode,
   WaterState,
 } from "./types.js";
 export { legacyDifficultyToMissionDifficulty } from "./types.js";
@@ -136,7 +138,7 @@ export {
   riskBand,
 } from "./engine/risk.js";
 
-export { missionWaterLossKg } from "./models/water.js";
+export { missionWaterLossKg, waterReclamationFraction } from "./models/water.js";
 export {
   co2GrowthBonusFraction,
   co2Ppm,
@@ -146,7 +148,7 @@ export {
 } from "./models/food.js";
 export { gcrTransmission, speTransmission, effectiveShieldingGPerCm2 } from "./models/radiation.js";
 export { hourlyCrewO2Grams, moxiesPerCrewMember } from "./models/isru.js";
-export { crewHeatKwPerPerson } from "./models/thermal.js";
+export { crewHeatKwPerPerson, thermalControlDutyCycleFraction } from "./models/thermal.js";
 export { solarGenerationKw } from "./models/power.js";
 export { sunFactor, dayLengthHours } from "./models/environment.js";
 export { crewCondition, feverMetabolicMultiplier, availableCrewHours, worstCauseCode } from "./models/crew.js";

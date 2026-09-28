@@ -108,7 +108,10 @@
     "decision.commsPriority.set": "এখন {priority} পাঠানো হচ্ছে।",
     "decision.co2ScrubberMode.set": "বাতাস পরিষ্কারক {co2ScrubberMode}-এ সেট করা হয়েছে।",
     "decision.cleanSolarArrays.performed": "কেউ বাইরে গিয়ে প্যানেল থেকে ধুলা মুছে দিয়েছে।",
-    "decision.cleanSolarArrays.insufficientTime": "আজ কাউকে বাইরে পাঠানোর মতো যথেষ্ট সময় নেই।"
+    "decision.cleanSolarArrays.insufficientTime": "আজ কাউকে বাইরে পাঠানোর মতো যথেষ্ট সময় নেই।",
+    "decision.waterReclamationMode.set": "পানি পুনর্ব্যবহার {waterReclamationMode}-এ সেট করা হয়েছে।",
+    "decision.thermalControlMode.set": "কেবিন হিটার {thermalControlMode}-এ সেট করা হয়েছে।",
+    "decision.overtimeAuthorized.set": "অতিরিক্ত কাজের সময় {authorized}।"
   },
   "specialist": {
     "power.brownout": "লোড শেডিং: চাহিদা {demandKw} কিলোওয়াট, মাত্র {servedKw} কিলোওয়াট সরবরাহ করা যাচ্ছে। {shedCount}টি সিস্টেম বন্ধ করা হয়েছে।",
@@ -219,7 +222,10 @@
     "decision.commsPriority.set": "ডাউনলিংক অগ্রাধিকার {priority}-এ সেট করা হয়েছে।",
     "decision.co2ScrubberMode.set": "CO₂ স্ক্রাবার {co2ScrubberMode}-এ সেট করা হয়েছে।",
     "decision.cleanSolarArrays.performed": "ইভিএ সোলার অ্যারে থেকে ধুলা পরিষ্কার করেছে: {obscurationBeforePct}% -> {obscurationAfterPct}% আচ্ছাদন।",
-    "decision.cleanSolarArrays.insufficientTime": "আজ যথেষ্ট ক্রু-সময় নেই ({remainingHours} ঘণ্টা আছে, {neededHours} ঘণ্টা দরকার)।"
+    "decision.cleanSolarArrays.insufficientTime": "আজ যথেষ্ট ক্রু-সময় নেই ({remainingHours} ঘণ্টা আছে, {neededHours} ঘণ্টা দরকার)।",
+    "decision.waterReclamationMode.set": "পানি পুনরুদ্ধার মোড {waterReclamationMode}-এ সেট করা হয়েছে।",
+    "decision.thermalControlMode.set": "তাপ নিয়ন্ত্রণ {thermalControlMode}-এ সেট করা হয়েছে।",
+    "decision.overtimeAuthorized.set": "ক্রু ওভারটাইম {authorized}।"
   },
   "commander": {
     "power.brownout": "লোড শেড: চাহিদা {demandKw} kW বনাম সরবরাহ {servedKw} kW, ব্যাটারি {batteryKwh} kWh। {shedCount}টি সিস্টেম বিচ্ছিন্ন।",
@@ -330,6 +336,9 @@
     "decision.commsPriority.set": "ডাউনলিংক অগ্রাধিকার পুনর্নির্ধারিত: {priority}।",
     "decision.co2ScrubberMode.set": "CO₂ স্ক্রাবার ডিউটি সাইকেল সেট: {co2ScrubberMode}।",
     "decision.cleanSolarArrays.performed": "রুটিন অ্যারে-পরিষ্কার ইভিএ: আচ্ছাদন {obscurationBeforePct}% -> {obscurationAfterPct}%।",
-    "decision.cleanSolarArrays.insufficientTime": "অ্যারে-পরিষ্কার ইভিএ প্রত্যাখ্যাত: অপর্যাপ্ত ক্রু-সময় বাজেট ({remainingHours} ঘণ্টা অবশিষ্ট, {neededHours} ঘণ্টা প্রয়োজন)।"
+    "decision.cleanSolarArrays.insufficientTime": "অ্যারে-পরিষ্কার ইভিএ প্রত্যাখ্যাত: অপর্যাপ্ত ক্রু-সময় বাজেট ({remainingHours} ঘণ্টা অবশিষ্ট, {neededHours} ঘণ্টা প্রয়োজন)।",
+    "decision.waterReclamationMode.set": "পানি পুনরুদ্ধার মোড নির্ধারিত: {waterReclamationMode}।",
+    "decision.thermalControlMode.set": "তাপ নিয়ন্ত্রণ ডিউটি সাইকেল নির্ধারিত: {thermalControlMode}।",
+    "decision.overtimeAuthorized.set": "ক্রু ওভারটাইম অনুমোদন: {authorized}।"
   }
 }

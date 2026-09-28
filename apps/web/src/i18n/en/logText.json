@@ -108,7 +108,10 @@
     "decision.commsPriority.set": "Now sending {priority}.",
     "decision.co2ScrubberMode.set": "Air cleaner set to {co2ScrubberMode}.",
     "decision.cleanSolarArrays.performed": "Someone went out and wiped the dust off the panels.",
-    "decision.cleanSolarArrays.insufficientTime": "Not enough time left today to send someone out."
+    "decision.cleanSolarArrays.insufficientTime": "Not enough time left today to send someone out.",
+    "decision.waterReclamationMode.set": "Water recycler set to {waterReclamationMode}.",
+    "decision.thermalControlMode.set": "Cabin heater set to {thermalControlMode}.",
+    "decision.overtimeAuthorized.set": "Extra work hours {authorized}."
   },
   "specialist": {
     "power.brownout": "Brownout: demand {demandKw} kW, only {servedKw} kW available. {shedCount} system(s) shut down.",
@@ -219,7 +222,10 @@
     "decision.commsPriority.set": "Downlink priority set to {priority}.",
     "decision.co2ScrubberMode.set": "CO2 scrubber set to {co2ScrubberMode}.",
     "decision.cleanSolarArrays.performed": "EVA cleaned dust from the solar arrays: {obscurationBeforePct}% -> {obscurationAfterPct}% obscuration.",
-    "decision.cleanSolarArrays.insufficientTime": "Not enough crew-hours left today ({remainingHours} h available, {neededHours} h needed)."
+    "decision.cleanSolarArrays.insufficientTime": "Not enough crew-hours left today ({remainingHours} h available, {neededHours} h needed).",
+    "decision.waterReclamationMode.set": "Water reclamation set to {waterReclamationMode}.",
+    "decision.thermalControlMode.set": "Thermal control set to {thermalControlMode}.",
+    "decision.overtimeAuthorized.set": "Crew overtime {authorized}."
   },
   "commander": {
     "power.brownout": "Load shed: demand {demandKw} kW vs. {servedKw} kW served, battery at {batteryKwh} kWh. {shedCount} system(s) dropped.",
@@ -330,6 +336,9 @@
     "decision.commsPriority.set": "Downlink priority reassigned: {priority}.",
     "decision.co2ScrubberMode.set": "CO2 scrubber duty cycle set: {co2ScrubberMode}.",
     "decision.cleanSolarArrays.performed": "Routine array-cleaning EVA: obscuration {obscurationBeforePct}% -> {obscurationAfterPct}%.",
-    "decision.cleanSolarArrays.insufficientTime": "Array-cleaning EVA declined: insufficient crew-hours budget ({remainingHours} h remaining, {neededHours} h required)."
+    "decision.cleanSolarArrays.insufficientTime": "Array-cleaning EVA declined: insufficient crew-hours budget ({remainingHours} h remaining, {neededHours} h required).",
+    "decision.waterReclamationMode.set": "Water reclamation mode set: {waterReclamationMode}.",
+    "decision.thermalControlMode.set": "Thermal control duty cycle set: {thermalControlMode}.",
+    "decision.overtimeAuthorized.set": "Crew overtime authorization {authorized}."
   }
 }

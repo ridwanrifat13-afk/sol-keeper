@@ -7,11 +7,21 @@
  */
 import { crew as crewConstants, habitat, survivalModes } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
+import type { ThermalControlMode } from "../types.js";
 import { mjPerDayToWatts, mjToKwh, wattsToKw } from "../units.js";
 
 /** Metabolic heat per crew member, in kW. BVAD gives 11.82 MJ/CM-day; that is 136.8 W. */
 export function crewHeatKwPerPerson(): number {
   return wattsToKw(mjPerDayToWatts(crewConstants.metabolicRateMjPerCrewDay.value));
+}
+
+/** Player request (M9.x, batch 2): the real capacity fraction behind ThermalControlMode.
+ *  Exported so the Life Support console can show it directly, the same pattern
+ *  models/atmosphere.ts's own co2ScrubberDutyCycleFraction already uses. See
+ *  habitat.thermalPowerSaveDutyCycleFraction's own note for the real, scenario-dependent
+ *  risk this trades against. */
+export function thermalControlDutyCycleFraction(mode: ThermalControlMode): number {
+  return mode === "powerSave" ? habitat.thermalPowerSaveDutyCycleFraction.value : 1;
 }
 
 export function thermalStage(ctx: TickContext): void {
@@ -40,7 +50,7 @@ export function thermalStage(ctx: TickContext): void {
   const thermalControl = state.systems.thermalControl;
   const capacityKw =
     thermalControl !== undefined && thermalControl.operational && thermalControl.poweredThisHour
-      ? thermalControl.nominalPowerKw
+      ? thermalControl.nominalPowerKw * thermalControlDutyCycleFraction(t.controlMode)
       : 0;
   const comfortTempC = survivalModes[state.food.mode].habitatTempC.value;
 

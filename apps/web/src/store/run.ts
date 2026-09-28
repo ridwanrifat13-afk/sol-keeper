@@ -30,7 +30,9 @@ import {
   type StationId,
   type SurvivalMode,
   type SystemId,
+  type ThermalControlMode,
   type TickContext,
+  type WaterReclamationMode,
 } from "@sol-keeper/sim";
 import { buildResourceSummary } from "../dial/resourceSummary.js";
 import type { StatusLevel } from "../components/status.js";
@@ -142,6 +144,16 @@ interface RunStore {
    *  or when today's crew-hours budget can't cover it — the console only offers the button when
    *  it would actually do something. */
   cleanSolarArrays: () => void;
+  /** Player request (M9.x batch 2): the Brine Processor Assembly toggle — see
+   *  WaterReclamationMode's own doc comment (@sol-keeper/sim) for the trade-off. */
+  setWaterReclamationMode: (mode: WaterReclamationMode) => void;
+  /** Player request (M9.x batch 2): the thermalControl duty-cycle toggle — see
+   *  ThermalControlMode's own doc comment (@sol-keeper/sim) for the scenario-dependent risk. */
+  setThermalControlMode: (mode: ThermalControlMode) => void;
+  /** Player request (M9.x batch 2): raises the day's crew-hours ceiling at the real cost of
+   *  fatigue on whatever's actually spent above the un-boosted budget — see
+   *  CrewHoursState.overtimeAuthorized's own doc comment (@sol-keeper/sim). */
+  setOvertimeAuthorized: (authorized: boolean) => void;
   setPriority: (id: SystemId, direction: -1 | 1) => void;
   /** M8.1: the player-driven counterpart to `tickWithBot`'s bot-driven incident resolution
    *  (packages/sim/src/engine/runWithBot.ts) — the exact seam that file's own doc comment
@@ -284,6 +296,18 @@ export const useRun = create<RunStore>((set, get) => ({
 
   cleanSolarArrays: () => {
     applyAndRecord(get, set, { kind: "cleanSolarArrays" });
+  },
+
+  setWaterReclamationMode: (mode) => {
+    applyAndRecord(get, set, { kind: "waterReclamationMode", mode });
+  },
+
+  setThermalControlMode: (mode) => {
+    applyAndRecord(get, set, { kind: "thermalControlMode", mode });
+  },
+
+  setOvertimeAuthorized: (authorized) => {
+    applyAndRecord(get, set, { kind: "overtimeAuthorized", authorized });
   },
 
   /**

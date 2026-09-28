@@ -145,6 +145,7 @@ export function createInitialState(params: Params, scenario: Scenario = getScena
       radiatorKw: 0,
       crewHeatKw: 0,
       lossKw: 0,
+      controlMode: "comfort",
     },
 
     atmosphere: {
@@ -165,6 +166,7 @@ export function createInitialState(params: Params, scenario: Scenario = getScena
       recoveryFraction: 0, // set by the water model on the first tick
       cumulativeLossKg: 0,
       intakeFraction: 1,
+      reclamationMode: "baseline",
     },
 
     food: {
@@ -214,6 +216,8 @@ export function createInitialState(params: Params, scenario: Scenario = getScena
       budgetTodayHours: params.crewSize * crewConstants.dailyAssignableWorkHoursPerCrew.value,
       spentTodayHours: 0,
       queue: [],
+      overtimeAuthorized: false,
+      unboostedBudgetTodayHours: params.crewSize * crewConstants.dailyAssignableWorkHoursPerCrew.value,
     },
     crewActivityFraction: 1,
 

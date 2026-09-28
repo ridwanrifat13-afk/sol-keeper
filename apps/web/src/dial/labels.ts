@@ -13,7 +13,17 @@
  * (station consoles, DecisionCard, EsmPanel, ...) compiling unchanged; only the log/decision
  * text renderers pass `"bn"` explicitly once the player has chosen Bangla.
  */
-import type { CommsPriority, Co2ScrubberMode, CropTray, CrewLocation, StationId, SurvivalMode, SystemId } from "@sol-keeper/sim";
+import type {
+  CommsPriority,
+  Co2ScrubberMode,
+  CropTray,
+  CrewLocation,
+  StationId,
+  SurvivalMode,
+  SystemId,
+  ThermalControlMode,
+  WaterReclamationMode,
+} from "@sol-keeper/sim";
 import type { DialLevel, Language } from "./types.js";
 
 /** Full names, used at the specialist and commander levels. */
@@ -183,6 +193,72 @@ export function co2ScrubberModeLabel(mode: Co2ScrubberMode, level: DialLevel, la
   if (language === "bn")
     return level === "cadet" ? CO2_SCRUBBER_MODE_LABELS_CADET_BN[mode] : CO2_SCRUBBER_MODE_LABELS_BN[mode];
   return level === "cadet" ? CO2_SCRUBBER_MODE_LABELS_CADET[mode] : CO2_SCRUBBER_MODE_LABELS[mode];
+}
+
+/** Player request (M9.x batch 2): the water reclamation toggle's own label — same pattern as
+ *  co2ScrubberModeLabel above. */
+const WATER_RECLAMATION_MODE_LABELS: Record<WaterReclamationMode, string> = {
+  baseline: "Standard recovery",
+  brineProcessor: "Brine Processor Assembly",
+};
+
+const WATER_RECLAMATION_MODE_LABELS_CADET: Record<WaterReclamationMode, string> = {
+  baseline: "recycle water normally",
+  brineProcessor: "recycle almost all the water",
+};
+
+const WATER_RECLAMATION_MODE_LABELS_BN: Record<WaterReclamationMode, string> = {
+  baseline: "মানক পুনরুদ্ধার",
+  brineProcessor: "ব্রাইন প্রসেসর অ্যাসেম্বলি",
+};
+
+const WATER_RECLAMATION_MODE_LABELS_CADET_BN: Record<WaterReclamationMode, string> = {
+  baseline: "স্বাভাবিকভাবে পানি পুনর্ব্যবহার করুন",
+  brineProcessor: "প্রায় সব পানি পুনর্ব্যবহার করুন",
+};
+
+export function waterReclamationModeLabel(
+  mode: WaterReclamationMode,
+  level: DialLevel,
+  language: Language = "en",
+): string {
+  if (language === "bn")
+    return level === "cadet"
+      ? WATER_RECLAMATION_MODE_LABELS_CADET_BN[mode]
+      : WATER_RECLAMATION_MODE_LABELS_BN[mode];
+  return level === "cadet" ? WATER_RECLAMATION_MODE_LABELS_CADET[mode] : WATER_RECLAMATION_MODE_LABELS[mode];
+}
+
+/** Player request (M9.x batch 2): the thermalControl duty-cycle toggle's own label — same
+ *  pattern as co2ScrubberModeLabel above. */
+const THERMAL_CONTROL_MODE_LABELS: Record<ThermalControlMode, string> = {
+  comfort: "Comfort",
+  powerSave: "Power-save",
+};
+
+const THERMAL_CONTROL_MODE_LABELS_CADET: Record<ThermalControlMode, string> = {
+  comfort: "keep the cabin at the normal temperature",
+  powerSave: "let the cabin run cooler to save power",
+};
+
+const THERMAL_CONTROL_MODE_LABELS_BN: Record<ThermalControlMode, string> = {
+  comfort: "আরাম",
+  powerSave: "বিদ্যুৎ সাশ্রয়",
+};
+
+const THERMAL_CONTROL_MODE_LABELS_CADET_BN: Record<ThermalControlMode, string> = {
+  comfort: "কেবিন স্বাভাবিক তাপমাত্রায় রাখুন",
+  powerSave: "বিদ্যুৎ বাঁচাতে কেবিন ঠান্ডা থাকতে দিন",
+};
+
+export function thermalControlModeLabel(
+  mode: ThermalControlMode,
+  level: DialLevel,
+  language: Language = "en",
+): string {
+  if (language === "bn")
+    return level === "cadet" ? THERMAL_CONTROL_MODE_LABELS_CADET_BN[mode] : THERMAL_CONTROL_MODE_LABELS_BN[mode];
+  return level === "cadet" ? THERMAL_CONTROL_MODE_LABELS_CADET[mode] : THERMAL_CONTROL_MODE_LABELS[mode];
 }
 
 /** M8.2: the crew role that owns an incident's Decision Card (IncidentDefinition.station). */

@@ -116,6 +116,26 @@ export type SurvivalMode = "nominal" | "mode1" | "mode2";
  *  co2ScrubberDutyCycleFraction for the exact multiplier each mode applies. */
 export type Co2ScrubberMode = "full" | "balanced" | "eco";
 
+/** Player request (M9.x, batch 2): another real lever in nominal conditions.
+ *  `lifeSupport.waterRecoveryFractionBaseline` (93.5%, ISS without the Brine Processor
+ *  Assembly) is this sim's original, only-ever behaviour. "brineProcessor" switches to
+ *  `lifeSupport.waterRecoveryFractionWithBrineProcessor` (98%, ISS's real 2023 milestone) —
+ *  both figures were already sourced and declared in constants.ts, just never read by any
+ *  model until now. The real cost is crew-hours: running the BPA draws a recurring daily
+ *  share of the pooled crew-hours budget (engine/crewHours.ts), competing directly with
+ *  incident response and repair work for the same hours — a real trade, not a free upgrade. */
+export type WaterReclamationMode = "baseline" | "brineProcessor";
+
+/** Player request (M9.x, batch 2): a third real lever in nominal conditions — trims
+ *  thermalControl's rated capacity (both the heater and, symmetrically, the radiator-cooling
+ *  side) to save power, at the real risk of the cabin drifting away from the current survival
+ *  mode's own comfort target. habitat.thermalPowerSaveDutyCycleFraction's own note has the
+ *  full story: its value was set by direct simulation of all three scenarios' full durations
+ *  (not a hand-derived guess), landing on a fraction where "powerSave" produces real, felt
+ *  "crew.cold" morale-penalty hours on every scenario tested without ever crossing
+ *  habitat.freezeRiskTempC — a real, disclosed cost, not a hidden trap or a free saving. */
+export type ThermalControlMode = "comfort" | "powerSave";
+
 /** Where a crew member is, which decides how much shielding they are behind. */
 export type CrewLocation = "habitat" | "stormShelter" | "eva";
 
@@ -229,6 +249,10 @@ export interface ThermalState {
   radiatorKw: number;
   crewHeatKw: number;
   lossKw: number;
+  /** Player-set thermal duty cycle (M9.x, player request batch 2) — "comfort" reproduces
+   *  this sim's original always-at-rated-capacity behaviour exactly. See ThermalControlMode's
+   *  own doc comment for what "powerSave" trades away, and why the risk is scenario-dependent. */
+  controlMode: ThermalControlMode;
 }
 
 export interface AtmosphereState {
@@ -266,6 +290,10 @@ export interface WaterState {
   /** This hour's actual intake / required intake, 0-1. What the hydration clock (crewStage)
    *  reads — potableKg alone can't say whether *this hour's* ration was actually met. */
   intakeFraction: number;
+  /** Player-set water reclamation mode (M9.x, player request batch 2) — "baseline" reproduces
+   *  this sim's original always-93.5%-recovery behaviour exactly. See WaterReclamationMode's
+   *  own doc comment for what "brineProcessor" trades away, and why. */
+  reclamationMode: WaterReclamationMode;
 }
 
 export interface CropTray {
@@ -409,6 +437,22 @@ export interface CrewHoursState {
   budgetTodayHours: number;
   spentTodayHours: number;
   queue: QueuedWork[];
+  /** Player-set overtime authorization (M9.x, player request batch 2) — reads
+   *  crew.overtimeCeilingFractionOfAverage/crew.overtimeFatiguePerHourAboveCeiling, both
+   *  already sourced (BVAD-2022) and declared but, until now, never read by any model.
+   *  Authorizing overtime raises each new day's `budgetTodayHours` to
+   *  `unboostedBudgetTodayHours * overtimeCeilingFractionOfAverage` — more crew-hours for
+   *  incident response, repairs, and the other quiet-sol levers — but any hours actually
+   *  spent above `unboostedBudgetTodayHours` accrue real, felt fatigue (models/crew.ts's
+   *  crewCondition() treats fatigueFraction >= 0.5 as "impaired") to every living crew member
+   *  once that day ends (engine/crewHours.ts). Off by default: the original, only-ever
+   *  budget behaviour. */
+  overtimeAuthorized: boolean;
+  /** The un-boosted daily budget (`availableCrewHours`) computed at the start of the day
+   *  currently in progress — kept alongside the (possibly boosted) `budgetTodayHours` so
+   *  engine/crewHours.ts can tell, at the next day boundary, how many of the hours actually
+   *  spent were genuine overtime rather than just a larger ordinary budget. */
+  unboostedBudgetTodayHours: number;
 }
 
 /**
