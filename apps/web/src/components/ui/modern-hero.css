@@ -1,0 +1,374 @@
+/* Modern Hero & Parallax Scroll Styles */
+.modern-hero-root {
+  background-color: #09090b;
+  color: #fafafa;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  font-family: inherit;
+}
+
+/* Navigation bar - completely transparent */
+.modern-hero-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 2rem;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: none;
+}
+
+.modern-hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  color: #fff;
+  /* A single dark pill instead of plain text floating over whatever part of the hero image
+     is behind it — the logo already carries its own dark badge baked into the asset, so this
+     makes the whole "Sol Keeper · by · [logo]" lockup read as one unit sitting on a
+     consistent background, legible regardless of scroll position, instead of text that goes
+     low-contrast over a light patch of sky and a separate box beside it. */
+  background: rgba(9, 9, 11, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem 0.4rem 0.9rem;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.modern-hero-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.modern-hero-by {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #a8b0c2;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  margin-left: 0.15rem;
+}
+
+.modern-hero-team-logo {
+  height: 26px;
+  width: auto;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-left: 0.2rem;
+  transition: transform 0.2s ease;
+}
+
+.modern-hero-team-logo:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 4px 12px rgba(30, 91, 198, 0.5));
+}
+
+.modern-hero-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.modern-hero-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #a1a1aa;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
+}
+
+.modern-hero-nav-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.modern-hero-cta-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #0b3d91 0%, #1e5bc6 100%);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 20px rgba(11, 61, 145, 0.4);
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.2s;
+}
+
+.modern-hero-cta-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 28px rgba(30, 91, 198, 0.65);
+}
+
+/* Center hero and image */
+.modern-hero-section {
+  position: relative;
+  width: 100%;
+}
+
+.modern-hero-center-img {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  will-change: clip-path, opacity, transform;
+}
+
+.modern-hero-gradient-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 24rem;
+  background: linear-gradient(to bottom, rgba(9, 9, 11, 0) 0%, rgba(9, 9, 11, 1) 100%);
+  pointer-events: none;
+}
+
+/* Parallax gallery */
+.modern-hero-parallax-container {
+  margin: 0 auto;
+  max-width: 68rem;
+  padding: 200px 1rem 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.modern-hero-parallax-img {
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  object-fit: cover;
+  display: block;
+}
+
+.parallax-w-1-3 {
+  width: 33.333%;
+}
+
+.parallax-w-2-3 {
+  width: 66.666%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.parallax-w-1-3-ml-auto {
+  width: 33.333%;
+  margin-left: auto;
+}
+
+.parallax-w-5-12 {
+  width: 41.666%;
+  margin-left: 6rem;
+}
+
+/* Launch Schedule section */
+.modern-hero-schedule {
+  margin: 0 auto;
+  max-width: 68rem;
+  padding: 8rem 1.5rem 10rem;
+  color: #fff;
+  position: relative;
+  z-index: 10;
+}
+
+.modern-hero-schedule-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 4rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.modern-hero-schedule-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  color: #fafafa;
+  margin: 0;
+}
+
+.modern-hero-schedule-subtitle {
+  color: #a1a1aa;
+  font-size: 0.95rem;
+  margin: 0.5rem 0 0;
+}
+
+.modern-hero-schedule-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.75rem 0.75rem;
+  border-bottom: 1px solid #27272a;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+
+.modern-hero-schedule-item:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+  border-color: #3f3f46;
+}
+
+.modern-hero-item-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fafafa;
+  margin: 0 0 0.35rem;
+}
+
+.modern-hero-item-date {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: #71717a;
+  margin: 0;
+  letter-spacing: 0.05em;
+}
+
+.modern-hero-item-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: #a1a1aa;
+  letter-spacing: 0.04em;
+}
+
+.modern-hero-item-action {
+  margin-left: 1.5rem;
+}
+
+.modern-hero-item-btn {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.modern-hero-item-btn:hover {
+  background: var(--shell-accent, #0b3d91);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Reduced motion & low-power overrides */
+@media (prefers-reduced-motion: reduce) {
+  .modern-hero-center-img,
+  .modern-hero-parallax-img {
+    transform: none !important;
+  }
+}
+
+.low-power-mode .modern-hero-center-img,
+.low-power-mode .modern-hero-parallax-img {
+  transform: none !important;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .modern-hero-schedule-title {
+    font-size: 1.75rem;
+  }
+
+  .parallax-w-1-3,
+  .parallax-w-2-3,
+  .parallax-w-1-3-ml-auto,
+  .parallax-w-5-12 {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .modern-hero-nav {
+    padding: 0.75rem 1rem;
+  }
+
+  .modern-hero-team-logo {
+    height: 26px;
+  }
+
+  .modern-hero-title {
+    font-size: 0.95rem;
+  }
+
+  .modern-hero-by {
+    font-size: 0.75rem;
+  }
+
+  .modern-hero-nav-actions {
+    gap: 0.5rem;
+  }
+
+  .modern-hero-cta-btn {
+    font-size: 0.68rem;
+    padding: 0.5rem 0.7rem;
+    white-space: nowrap;
+  }
+
+  .modern-hero-schedule-head {
+    margin-bottom: 2rem;
+  }
+
+  .modern-hero-schedule-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .modern-hero-item-action {
+    margin-left: 0;
+  }
+}
+
+/* Below this, even the shrunk brand pill + CTA alone don't both fit one row (verified against
+   a real 412px-wide low-end-Android viewport, CLAUDE.md rule 6) — the secondary "Launch
+   Windows" scroll link is the one safe thing to drop: it only jumps to content already one
+   scroll away, unlike "Launch Outpost", which is the page's one real action. */
+@media (max-width: 480px) {
+  .modern-hero-nav-btn {
+    display: none;
+  }
+}

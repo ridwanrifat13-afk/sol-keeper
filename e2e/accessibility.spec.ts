@@ -5,11 +5,11 @@
  * effect: the establishing shot's transit animation actually stops running, not just a class
  * being present with no real consequence.
  */
-import { expect, test } from "./fixtures.js";
+import { expect, gotoApp, reloadApp, test } from "./fixtures.js";
 
 test.describe("Low-power mode", () => {
   test("toggling it sets the root class and persists across a reload", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     const toggle = page.getByRole("button", { name: "Low-power mode" });
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await expect(page.locator("html")).not.toHaveClass(/low-power-mode/);
@@ -18,7 +18,7 @@ test.describe("Low-power mode", () => {
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
     await expect(page.locator("html")).toHaveClass(/low-power-mode/);
 
-    await page.reload();
+    await reloadApp(page);
     await expect(page.getByRole("button", { name: "Low-power mode" })).toHaveAttribute("aria-pressed", "true");
     await expect(page.locator("html")).toHaveClass(/low-power-mode/);
   });
@@ -26,7 +26,7 @@ test.describe("Low-power mode", () => {
   test("actually stops the establishing shot's transit animation, not just a class with no effect", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Low-power mode" }).click();
     for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Step 5 of 8: Transit")).toBeVisible();
@@ -37,7 +37,7 @@ test.describe("Low-power mode", () => {
   });
 
   test("off by default, the craft's animation is genuinely running", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Step 5 of 8: Transit")).toBeVisible();
 

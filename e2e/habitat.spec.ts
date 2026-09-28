@@ -9,7 +9,7 @@
  * update the view.
  */
 import type { Page } from "@playwright/test";
-import { expect, skipSetup, test } from "./fixtures.js";
+import { expect, gotoApp, skipSetup, test } from "./fixtures.js";
 
 /**
  * Advances the clock to at least `targetHour`, handling Decision Cards, the end-of-sol
@@ -36,7 +36,7 @@ async function advanceToHour(page: Page, targetHour: number): Promise<void> {
 
 test.describe("Habitat view", () => {
   test("reachable as the 6th tab, shows the real mission site and body", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await skipSetup(page, "Habitat");
     await expect(page.getByRole("heading", { name: "Habitat", exact: true })).toBeVisible();
     // Jezero Outpost is the default mission (store/run.ts).
@@ -44,7 +44,7 @@ test.describe("Habitat view", () => {
   });
 
   test("shows the animated scene followed by a real text table (Ripple pattern)", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await skipSetup(page, "Habitat");
 
     await expect(page.getByRole("img", { name: /at Jezero Crater, Mars/ })).toBeVisible();
@@ -56,7 +56,7 @@ test.describe("Habitat view", () => {
   });
 
   test("a Moon scenario shows no dust storm text and the Moon's own body name", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: /First Light/ }).click();
     for (let i = 0; i < 7; i++) await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "▶ Launch Mission" }).click();
@@ -67,13 +67,13 @@ test.describe("Habitat view", () => {
   });
 
   test("no NASA logo or insignia is present (brief rule 5)", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await skipSetup(page, "Habitat");
     await expect(page.locator("img[src*='nasa' i], img[alt*='nasa' i]")).toHaveCount(0);
   });
 
   test("lists the real crew in the crew table, station and condition included", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await skipSetup(page, "Habitat");
 
     const crewSection = page.locator("section", { has: page.getByRole("heading", { name: "Crew" }) });
@@ -86,7 +86,7 @@ test.describe("Habitat view", () => {
   test("sending a crew member to the storm shelter or on EVA moves their sprite and table row", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await skipSetup(page, "Incident Command");
 
     const crewLocationSection = page.locator("section", { has: page.getByRole("heading", { name: "Crew location" }) });
@@ -106,7 +106,7 @@ test.describe("Habitat view", () => {
     page,
   }) => {
     test.setTimeout(90000);
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: /First Light/ }).click();
     for (let i = 0; i < 7; i++) await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "▶ Launch Mission" }).click();

@@ -6,7 +6,7 @@
  * the page actually paints, the CSS actually applies, and a click actually reaches the
  * store and comes back out as a DOM change — in a real Chromium, at a phone viewport.
  */
-import { expect, skipSetup, test } from "./fixtures.js";
+import { expect, gotoApp, skipSetup, test } from "./fixtures.js";
 import type { Page } from "@playwright/test";
 
 /**
@@ -55,7 +55,7 @@ async function advanceSol(page: Page, times: number): Promise<void> {
 
 test.describe("App shell", () => {
   test("opens on Setup, and Briefing (reachable from it) shows the mission header", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await expect(page.getByText("Mission Setup")).toBeVisible();
 
     await skipSetup(page);
@@ -67,7 +67,7 @@ test.describe("App shell", () => {
 
 test.describe("Power console", () => {
   test("shows the battery gauge and the priority list", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Power", exact: true }).click();
 
     await expect(page.getByRole("heading", { name: "Battery" })).toBeVisible();
@@ -75,7 +75,7 @@ test.describe("Power console", () => {
   });
 
   test("reactor and array status is explicitly labelled read-only, not a dead control", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Power", exact: true }).click();
 
     await expect(page.getByRole("heading", { name: "Reactor & array status" })).toBeVisible();
@@ -97,7 +97,7 @@ test.describe("Power console", () => {
   test("the power priority list reads Standby before the clock runs, then resolves", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Power", exact: true }).click();
 
     // Scoped to .priority-state, not a page-wide text search: "Shed" matches
@@ -121,7 +121,7 @@ test.describe("Power console", () => {
   test("Sol Planning locks the clock and the priority list until Run the sol is clicked", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Power", exact: true }).click();
 
     // A fresh mission opens in Sol Planning (phase "planning", store/run.ts) — the clock
@@ -144,7 +144,7 @@ test.describe("Power console", () => {
   });
 
   test("reordering a power priority moves it in the visible list", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Power", exact: true }).click();
 
     const rows = page.locator(".priority-row");
@@ -157,7 +157,7 @@ test.describe("Power console", () => {
   });
 
   test("full-page screenshot for a human to look at", async ({ page }, testInfo) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Power", exact: true }).click();
     await page.waitForTimeout(200);
     await page.screenshot({
@@ -169,7 +169,7 @@ test.describe("Power console", () => {
 
 test.describe("Life Support console", () => {
   test("shows every resource gauge", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Life Support" }).click();
 
     for (const label of ["Oxygen", "Carbon dioxide", "Water", "Food", "Cabin"]) {
@@ -178,7 +178,7 @@ test.describe("Life Support console", () => {
   });
 
   test("shows read-only ISRU and crop status, no invented controls", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Life Support" }).click();
 
     await expect(page.getByText("ISRU & crops")).toBeVisible();
@@ -193,7 +193,7 @@ test.describe("Life Support console", () => {
   });
 
   test("Sol Planning locks rations until Run the sol is clicked", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Life Support" }).click();
 
     await expect(page.getByRole("button", { name: "Survival", exact: false })).toBeEnabled();
@@ -205,7 +205,7 @@ test.describe("Life Support console", () => {
   });
 
   test("advancing the clock changes the sol counter and fills the log", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await skipSetup(page);
 
     await expect(page.getByText("Nothing has happened yet.")).toBeVisible();
@@ -219,7 +219,7 @@ test.describe("Life Support console", () => {
   });
 
   test("changing survival mode updates the CO2 limit shown on the gauge", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Life Support" }).click();
 
     await expect(page.getByText("limit 3 mmHg in Nominal mode")).toBeVisible();
@@ -232,7 +232,7 @@ test.describe("Life Support console", () => {
   test("status is never carried by colour alone: every gauge has a status word", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Life Support" }).click();
 
     // Each .gauge-status element pairs an aria-hidden glyph with the status word as sibling
@@ -247,7 +247,7 @@ test.describe("Life Support console", () => {
   });
 
   test("no NASA logo or insignia is present (brief rule 5)", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Life Support" }).click();
 
     await expect(page.getByText("Not affiliated with or endorsed by NASA")).toBeVisible();
@@ -260,7 +260,7 @@ test.describe("Life Support console", () => {
   });
 
   test("full-page screenshot for a human to look at", async ({ page }, testInfo) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Life Support" }).click();
     await page.waitForTimeout(200);
     await page.screenshot({

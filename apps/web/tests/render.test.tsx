@@ -57,26 +57,34 @@ beforeEach(() => {
   useOnboarding.setState({ seen: false, step: 0 });
 });
 
-describe("App shell, first frame (M9: Setup is the true entry point)", () => {
-  it("opens on Setup, not Briefing — a real mission-configuration step before the first one", () => {
+describe("App shell, first frame (Home page with hero section is the entry point)", () => {
+  it("opens on Home with the modern hero section and launch schedule", () => {
     const out = render();
     expect(out).toContain("Sol Keeper");
-    expect(out).toContain("Mission Setup");
-    expect(out).toContain("Choose a mission");
+    expect(out).toContain("Launch Windows");
+    expect(out).toContain("Launch Outpost");
     expect(out).not.toContain("Mission Briefing");
   });
 
-  it("the tab nav, New Mission, and Data Sources stay reachable even while Setup is open", () => {
-    const out = render();
+  it("the tab nav, New Mission, and Data Sources stay reachable while Setup is open", () => {
+    const out = render(<App initialView="setup" />);
     expect(out).toContain("New Mission");
     expect(out).toContain("Data Sources");
-    for (const label of ["Power", "Life Support", "Comms", "Incident Command", "Mission Command", "Briefing", "Debrief"]) {
+    for (const label of [
+      "Power",
+      "Life Support",
+      "Comms",
+      "Incident Command",
+      "Mission Command",
+      "Briefing",
+      "Debrief",
+    ]) {
       expect(out, `missing tab: ${label}`).toContain(`>${label}<`);
     }
   });
 
-  it("carries the credit line and no NASA insignia (brief rule 5)", () => {
-    const out = render();
+  it("carries the credit line and no NASA insignia on Setup (brief rule 5)", () => {
+    const out = render(<App initialView="setup" />);
     expect(out).toContain("Not affiliated with or endorsed by NASA");
     expect(out.toLowerCase()).not.toContain("meatball");
     expect(out).not.toMatch(/nasa[-_]?logo|insignia/i);
@@ -84,12 +92,12 @@ describe("App shell, first frame (M9: Setup is the true entry point)", () => {
   });
 
   it("no tab reads as the current page — Setup is deliberately not one of the seven tab-nav destinations", () => {
-    const out = render();
+    const out = render(<App initialView="setup" />);
     expect((out.match(/aria-current="page"/g) ?? []).length).toBe(0);
   });
 
   it("mission-runtime chrome (clock, Decision Card, event feed) is hidden while Setup is open", () => {
-    const out = render();
+    const out = render(<App initialView="setup" />);
     expect(out).not.toContain("Sol 0.00");
     expect(out).not.toContain("Mission log");
   });
@@ -281,7 +289,7 @@ describe("Briefing view, first frame", () => {
 
 describe("App shell: tab nav, first frame", () => {
   it("renders the five station consoles plus Briefing and Debrief as real tab destinations", () => {
-    const out = render();
+    const out = render(<App initialView="setup" />);
     expect(out).toContain("Power");
     expect(out).toContain("Life Support");
     expect(out).toContain("Comms");
@@ -466,7 +474,7 @@ describe("MissionReportView, mission ended (first frame, M10.8)", () => {
     }
   });
 
-  it("shows a real \"What NASA did\" card for every incident that actually triggered", () => {
+  it('shows a real "What NASA did" card for every incident that actually triggered', () => {
     const initialState = useRun.getInitialState().state;
     initialState.status = "success";
     const cause = initialState.log[0]?.id ?? "0:0";

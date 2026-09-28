@@ -6,12 +6,12 @@
  * note in apps/web/tests/render.test.tsx) — a real page load and real clicks don't have that
  * limitation, so switching the dial and finishing a mission can actually be observed here.
  */
-import { expect, skipSetup, test } from "./fixtures.js";
+import { expect, gotoApp, reloadApp, skipSetup, test } from "./fixtures.js";
 import type { Page } from "@playwright/test";
 
 test.describe("Reality Dial", () => {
   test("switching level changes gauge text without changing status colour", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Life Support" }).click();
 
     await expect(page.getByText("161 mmHg")).toBeVisible();
@@ -29,7 +29,7 @@ test.describe("Reality Dial", () => {
   });
 
   test("the choice persists across a reload", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Life Support" }).click();
     await page.getByRole("button", { name: /^Cadet/ }).click();
     await expect(page.getByText(/Plenty of air/)).toBeVisible();
@@ -37,7 +37,7 @@ test.describe("Reality Dial", () => {
     // A reload always lands back on Setup (App.tsx's `view` state doesn't persist, only the
     // Reality Dial's own choice does) — DialSwitch is hidden there, so the Cadet button isn't
     // reachable until Setup is bypassed again.
-    await page.reload();
+    await reloadApp(page);
     await skipSetup(page);
     await expect(page.getByRole("button", { name: /^Cadet/ })).toHaveAttribute("aria-pressed", "true");
   });
@@ -45,7 +45,7 @@ test.describe("Reality Dial", () => {
   test("cadet status words differ from Nominal/Caution/Critical, and are still present", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Life Support" }).click();
     await page.getByRole("button", { name: /^Cadet/ }).click();
 
@@ -59,7 +59,7 @@ test.describe("Reality Dial", () => {
 
 test.describe("Tab navigation", () => {
   test("switches between station consoles, Debrief, and Briefing", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await skipSetup(page);
     await expect(page.locator("h1")).toHaveText("Sol Keeper");
     await expect(page.getByText("Mission Briefing")).toBeVisible();
@@ -72,7 +72,7 @@ test.describe("Tab navigation", () => {
   });
 
   test("Data Sources opens as an overlay from any tab, and closes again", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Power", exact: true }).click();
 
     await page.getByRole("button", { name: "Data Sources" }).click();
@@ -87,7 +87,7 @@ test.describe("Tab navigation", () => {
   });
 
   test("Data Sources lists real sources and states the unsourced count plainly", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Data Sources" }).click();
 
     const overlay = page.getByRole("dialog", { name: "Data Sources" });
@@ -150,7 +150,7 @@ async function finishMission(page: Page): Promise<void> {
 test.describe("Black Box debrief", () => {
   test("fills in once a mission actually ends", async ({ page }) => {
     test.setTimeout(60000); // auto-pause can make finishMission take more clicks than before
-    await page.goto("/");
+    await gotoApp(page);
     await finishMission(page);
 
     await page.getByRole("button", { name: /^Debrief/ }).click();
@@ -168,7 +168,7 @@ test.describe("Black Box debrief", () => {
     testInfo,
   ) => {
     test.setTimeout(60000); // auto-pause can make finishMission take more clicks than before
-    await page.goto("/");
+    await gotoApp(page);
     await finishMission(page);
     await page.getByRole("button", { name: /^Debrief/ }).click();
     await page.waitForTimeout(200);

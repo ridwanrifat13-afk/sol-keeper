@@ -8,11 +8,11 @@
  * reach the "live succeeded" branch (that would need `vercel dev`, a separate manual check
  * the lead developer can run).
  */
-import { expect, test } from "./fixtures.js";
+import { expect, gotoApp, test } from "./fixtures.js";
 
 test.describe("Comms console", () => {
   test("falls back to the real committed snapshot when /api is unavailable, and says so", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Comms" }).click();
 
     await expect(page.getByRole("heading", { level: 2, name: "Comms" })).toBeVisible();
@@ -25,14 +25,14 @@ test.describe("Comms console", () => {
   });
 
   test("full-page screenshot for a human to look at", async ({ page }, testInfo) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Comms" }).click();
     await page.waitForTimeout(3500); // let the failed live fetch time out and settle
     await page.screenshot({ path: testInfo.outputPath("comms-console.png"), fullPage: true });
   });
 
   test("downlink priority defaults to science and is locked to Sol Planning", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Comms" }).click();
 
     const science = page.getByRole("button", { name: "Science downlink", exact: false });
@@ -51,7 +51,7 @@ test.describe("Comms console", () => {
 
 test.describe("Power console: space weather", () => {
   test("falls back to the real committed snapshot when /api is unavailable, and says so", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Power", exact: true }).click();
 
     // The committed snapshot is the real May 2024 storm window, which is never empty, so
@@ -64,7 +64,7 @@ test.describe("Power console: space weather", () => {
   });
 
   test("full-page screenshot for a human to look at", async ({ page }, testInfo) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Power", exact: true }).click();
     await page.waitForTimeout(3500); // let the failed live fetch time out and settle
     await page.screenshot({ path: testInfo.outputPath("power-console-weather.png"), fullPage: true });

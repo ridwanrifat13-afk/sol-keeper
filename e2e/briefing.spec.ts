@@ -6,7 +6,7 @@
  * widget itself (not just the surrounding text) comes up and requests real tiles from
  * trek.nasa.gov.
  */
-import { expect, skipSetup, test } from "./fixtures.js";
+import { expect, gotoApp, skipSetup, test } from "./fixtures.js";
 
 test.describe("Mission Briefing", () => {
   test("reachable straight from Setup, with a real Leaflet map requesting actual Trek tiles for Jezero", async ({
@@ -17,7 +17,7 @@ test.describe("Mission Briefing", () => {
       if (req.url().includes("trek.nasa.gov")) tileRequests.push(req.url());
     });
 
-    await page.goto("/");
+    await gotoApp(page);
     await skipSetup(page);
     await expect(page.getByText("Mission Briefing")).toBeVisible();
     await expect(page.getByText("Jezero Crater", { exact: false }).first()).toBeVisible();
@@ -41,7 +41,7 @@ test.describe("Mission Briefing", () => {
       if (req.url().includes("trek.nasa.gov")) tileRequests.push(req.url());
     });
 
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Mission Command" }).click();
     await page.getByRole("button", { name: /^First Light/ }).click();
     await page.getByRole("button", { name: "Briefing" }).click();
@@ -54,7 +54,7 @@ test.describe("Mission Briefing", () => {
   });
 
   test("shows real crew, goals, and failure-outcome content, not placeholders", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await skipSetup(page);
 
     await expect(page.getByText("Crew", { exact: true })).toBeVisible();
@@ -73,7 +73,7 @@ test.describe("Mission Briefing", () => {
   test("its real map-tile images are Trek imagery only, no NASA logo or insignia (brief rule 5)", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await skipSetup(page);
     await expect(page.locator(".leaflet-tile.leaflet-tile-loaded").first()).toBeVisible({ timeout: 5000 });
 
@@ -90,7 +90,7 @@ test.describe("Mission Briefing", () => {
   });
 
   test("cadet level swaps in icon-led, shorter briefing text", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await skipSetup(page);
     await page.getByRole("button", { name: /^Cadet/ }).click();
 
@@ -99,7 +99,7 @@ test.describe("Mission Briefing", () => {
   });
 
   test("full-page screenshot for a human to look at", async ({ page }, testInfo) => {
-    await page.goto("/");
+    await gotoApp(page);
     await skipSetup(page);
     await page.waitForTimeout(1500);
     await page.screenshot({ path: testInfo.outputPath("briefing.png"), fullPage: true });

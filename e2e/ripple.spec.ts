@@ -7,13 +7,13 @@
  * switching scenarios exercises the same zustand-store-mutation-after-mount path that a
  * server render can't observe either.
  */
-import { expect, test } from "./fixtures.js";
+import { expect, gotoApp, test } from "./fixtures.js";
 
 test.describe("Scenario switch (Mission Command console)", () => {
   test("switching to a Moon scenario changes the mission header and system list", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Mission Command" }).click();
     await expect(page.getByText("Jezero Crater")).toBeVisible();
 
@@ -31,7 +31,7 @@ test.describe("Scenario switch (Mission Command console)", () => {
   test("switching scenario changes the system list on the Power console too", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Mission Command" }).click();
     await page.getByRole("button", { name: /^First Light/ }).click();
 
@@ -45,7 +45,7 @@ test.describe("Scenario switch (Mission Command console)", () => {
 
 test.describe("Mission Command console (M8.4 Part E)", () => {
   test("shows station coverage, the daily plan, and real goal status", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Mission Command" }).click();
 
     await expect(page.getByText("Station coverage")).toBeVisible();
@@ -67,7 +67,7 @@ test.describe("Mission Command console (M8.4 Part E)", () => {
   });
 
   test("crew assignment is real and locked to Sol Planning", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Mission Command" }).click();
 
     const firstRow = page.locator(".crew-location-row").first();
@@ -87,7 +87,7 @@ test.describe("Incident Command console", () => {
   test("renders a settled dependency graph with every system node visible and positioned", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Incident Command" }).click();
 
     await expect(page.getByRole("heading", { level: 2, name: "Incident Command" })).toBeVisible();
@@ -109,7 +109,7 @@ test.describe("Incident Command console", () => {
   test("the text table carries the same nodes as the graph, with real status words", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Incident Command" }).click();
 
     await expect(page.getByRole("cell", { name: "Life support", exact: true })).toBeVisible();
@@ -122,14 +122,14 @@ test.describe("Incident Command console", () => {
   });
 
   test("full-page screenshot for a human to look at", async ({ page }, testInfo) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Incident Command" }).click();
     await page.waitForTimeout(300);
     await page.screenshot({ path: testInfo.outputPath("incident-command.png"), fullPage: true });
   });
 
   test("switches to reflect a different scenario's system list", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Mission Command" }).click();
     await page.getByRole("button", { name: /^The Long Night/ }).click();
     // Scoped to .tab-nav: Mission Command's own crew-assignment control (M8.4 Part E) also has
@@ -143,7 +143,7 @@ test.describe("Incident Command console", () => {
   test("shows an empty repair queue and every living crew member's real location control", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Incident Command" }).click();
 
     await expect(page.getByText("Nothing queued.")).toBeVisible();
@@ -159,7 +159,7 @@ test.describe("Incident Command console", () => {
   test("sending a crew member to the storm shelter is real and locked to Sol Planning", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Incident Command" }).click();
 
     const firstRow = page.locator(".crew-location-row").first();

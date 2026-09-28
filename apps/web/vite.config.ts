@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
@@ -60,6 +62,11 @@ export default defineConfig({
     // modern enough to avoid heavy transpilation but old enough for a 2020-era browser.
     target: "es2020",
     sourcemap: true,
+  },
+  resolve: {
+    alias: {
+      "@": resolve(dirname(fileURLToPath(import.meta.url)), "src"),
+    },
   },
   server: {
     port: 5173,

@@ -12,6 +12,7 @@
  * meaningless for that comparison.
  */
 import { expect, test, type Page } from "@playwright/test";
+import { gotoApp } from "./fixtures.js";
 
 const CPU_THROTTLE_RATE = 4;
 const MEASURE_MS = 1000;
@@ -47,7 +48,7 @@ async function measureFps(page: Page, ms: number): Promise<number> {
 
 test.describe("Mobile performance (M9.7)", () => {
   test("Habitat view sustains 30+ FPS on a throttled CPU while idle", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await throttleCpu(page);
     for (let i = 0; i < 7; i++) await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "▶ Launch Mission" }).click();
@@ -61,7 +62,7 @@ test.describe("Mobile performance (M9.7)", () => {
   test("the establishing shot's transit animation sustains 30+ FPS while actually playing, on a throttled CPU", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await throttleCpu(page);
     for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Step 5 of 8: Transit")).toBeVisible();
@@ -76,7 +77,7 @@ test.describe("Mobile performance (M9.7)", () => {
   test("low-power mode measurably reduces work: the transit animation genuinely stops producing frames of its own", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Low-power mode" }).click();
     for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Step 5 of 8: Transit")).toBeVisible();
@@ -94,7 +95,7 @@ test.describe("Mobile performance (M9.7)", () => {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
+    await gotoApp(page);
     for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Step 5 of 8: Transit")).toBeVisible();
 

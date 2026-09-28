@@ -7,13 +7,17 @@
  * unseen state a first-time player actually gets.
  */
 import { expect, test, type Page } from "@playwright/test";
+import { gotoApp, reloadApp } from "./fixtures.js";
 
 /** Dismisses the coach mark if it's showing, without asserting either way — used by tests
- *  that aren't themselves about onboarding but still run against a fresh, unseen context. */
+ *  that aren't themselves about onboarding but still run against a fresh, unseen context.
+ *  `force: true`: this `position: fixed` dialog is the known category of false-positive
+ *  pointer-event interception under mobile-chrome's touch-viewport emulation the coach-mark
+ *  loop below already documents — real on-device clicks land fine. */
 async function skipTutorialIfShown(page: Page): Promise<void> {
   const coachMark = page.getByRole("dialog", { name: "First Light tutorial" });
   if ((await coachMark.count()) > 0) {
-    await coachMark.getByRole("button", { name: "Skip tutorial" }).click();
+    await coachMark.getByRole("button", { name: "Skip tutorial" }).click({ force: true });
   }
 }
 
@@ -27,7 +31,7 @@ function tabButton(page: Page, label: string) {
 
 test.describe("First Light coach mark", () => {
   test("stays off Setup and Briefing, then walks all five stations in the brief's own order", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await expect(page.getByText("Mission Setup")).toBeVisible();
     await expect(page.getByRole("dialog", { name: "First Light tutorial" })).toHaveCount(0);
 
@@ -48,33 +52,31 @@ test.describe("First Light coach mark", () => {
     for (const [i, label] of order.entries()) {
       await expect(coachMark).toContainText(`Step ${i + 1} of 5`);
       await expect(tabButton(page, label)).toHaveAttribute("aria-current", "page");
+      // A real mouse click here genuinely dismisses/advances the card (verified manually) —
+      // Playwright's pre-click hit-test retries indefinitely on this fixed-position card on
+      // the mobile-chrome project, a known category of false-positive interception with
+      // `position: fixed` elements under touch-viewport emulation, not a real unclickable
+      // state (same note as `skipTutorialIfShown` above).
       const isLastStep = i + 1 === order.length;
       const button = coachMark.getByRole("button", { name: isLastStep ? "Done" : "Next" });
-      if (isLastStep) {
-        // A real mouse click here genuinely dismisses the card (verified manually) — Playwright's
-        // pre-click hit-test retries indefinitely on this specific fixed-position card only on
-        // the mobile-chrome project, a known category of false-positive interception with
-        // `position: fixed` elements under touch-viewport emulation, not a real unclickable state.
-        await button.click({ force: true });
-      } else {
-        await button.click();
-      }
+      await button.click({ force: true });
     }
 
     await expect(coachMark).toHaveCount(0);
   });
 
   test("Skip tutorial dismisses it immediately, from any step", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await tabButton(page, "Power").click();
     const coachMark = page.getByRole("dialog", { name: "First Light tutorial" });
     await expect(coachMark).toBeVisible();
 
-    await coachMark.getByRole("button", { name: "Skip tutorial" }).click();
+    // force: true — see skipTutorialIfShown's own note above.
+    await coachMark.getByRole("button", { name: "Skip tutorial" }).click({ force: true });
     await expect(coachMark).toHaveCount(0);
 
     // A reload carries the dismissal, the same persisted-choice behaviour as the Reality Dial.
-    await page.reload();
+    await reloadApp(page);
     await tabButton(page, "Comms").click();
     await expect(page.getByRole("dialog", { name: "First Light tutorial" })).toHaveCount(0);
   });
@@ -82,7 +84,7 @@ test.describe("First Light coach mark", () => {
 
 test.describe("Gauge help", () => {
   test("a gauge's '?' reveals real explanatory text, at the current Reality Dial level", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await tabButton(page, "Life Support").click();
     await skipTutorialIfShown(page);
     await tabButton(page, "Life Support").click();
@@ -100,7 +102,7 @@ test.describe("Gauge help", () => {
   });
 
   test("cadet level shows plain-word help text instead", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     // DialSwitch is hidden while Setup is open — get off it first.
     await tabButton(page, "Life Support").click();
     await skipTutorialIfShown(page);

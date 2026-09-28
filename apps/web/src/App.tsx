@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useRun } from "./store/run.js";
+import { useSetup } from "./store/setup.js";
 import { useAccessibility } from "./store/accessibility.js";
 import { PowerConsole } from "./views/Power/PowerConsole.js";
 import { LifeSupportConsole } from "./views/LifeSupport/LifeSupportConsole.js";
@@ -23,6 +24,7 @@ import { EventFeed } from "./components/EventFeed.js";
 import { durationLabel } from "./dial/missionTime.js";
 import { SetupWizard } from "./views/Setup/SetupWizard.js";
 import { MissionReportView } from "./views/Report/MissionReportView.js";
+import { HomeView } from "./views/Home/HomeView.js";
 import { applyRunLinkFromLocation, type BootRunLinkResult } from "./share/bootRunLink.js";
 import { DebugOverlay } from "./components/DebugOverlay.js";
 import "./i18n/config.js";
@@ -44,7 +46,7 @@ type TabView =
  *  `Record<TabView, ...>` below. M10.8's Mission Report joins it for the same reason: a
  *  standalone landing page for an inbound report link, not a mid-app tab (M10 plan's own
  *  finding #5). */
-type View = TabView | "setup" | "report";
+type View = TabView | "setup" | "report" | "home";
 
 const TAB_IDS: readonly TabView[] = [
   "power",
@@ -120,8 +122,12 @@ const TAB_KEYS: Record<TabView, string> = {
  * link shows a dismissible banner and otherwise behaves exactly like opening the app with no
  * link at all.
  */
-export function App() {
-  const [view, setView] = useState<View>("setup");
+export interface AppProps {
+  initialView?: View | undefined;
+}
+
+export function App({ initialView = "home" }: AppProps = {}) {
+  const [view, setView] = useState<View>(initialView);
   const [dataSourcesOpen, setDataSourcesOpen] = useState(false);
   const [linkBanner, setLinkBanner] = useState<BootRunLinkResult | undefined>(undefined);
   const [debugOverlay, setDebugOverlay] = useState(false);
@@ -133,6 +139,18 @@ export function App() {
   const { t } = useTranslation();
 
   const livingCrew = crew.filter((c) => c.alive).length;
+
+  // Home is a genuinely tall scrolling page (Launch Windows sits well below the fold); every
+  // other view is a short, fixed-height app screen. Without this, leaving Home mid-scroll (or
+  // even at rest — Lenis's own virtual-scroll handling can leave the real window scroll
+  // position non-zero) carries that scroll offset straight into whatever view comes next, so
+  // its header renders far above the visible viewport instead of at the top — confirmed via a
+  // real browser: the language switch measured at y ≈ -1518px on Briefing after leaving Home,
+  // fully off-screen, and every click on it landed on whatever real element happened to be
+  // sitting at that same screen position instead.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [view]);
 
   // M9.4c: a single class on the root element, read by the same selectors that already
   // respond to the OS's own `prefers-reduced-motion` (styles.css) — this is the one DOM
@@ -152,7 +170,10 @@ export function App() {
   // re-decode on every navigation, and re-running this after the player has started making
   // their own decisions would silently overwrite them with whatever the URL still says.
   useEffect(() => {
-    const result = applyRunLinkFromLocation({ search: window.location.search, hash: window.location.hash });
+    const result = applyRunLinkFromLocation({
+      search: window.location.search,
+      hash: window.location.hash,
+    });
     switch (result.kind) {
       case "none":
         return;
@@ -170,72 +191,99 @@ export function App() {
   }, []);
 
   return (
-    <main className="app">
+    <main className={`app ${view === "home" ? "app-full-bleed" : ""}`}>
       {debugOverlay && <DebugOverlay />}
-      <div className="app-head-row">
-        <nav className="tab-nav" aria-label={t("tabs.nav")}>
-          {TAB_IDS.map((id) => (
+      {view !== "home" && (
+        <div className="app-head-row">
+          <nav className="tab-nav" aria-label={t("tabs.nav")}>
+            {TAB_IDS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={`tab-button ${view === id ? "tab-button-active" : ""}`}
+                aria-current={view === id ? "page" : undefined}
+                onClick={() => {
+                  setView(id);
+                }}
+              >
+                {t(TAB_KEYS[id])}
+                {id === "debrief" && status !== "running" && (
+                  <span className="tab-badge" aria-label={t("tabs.debriefReady")}>
+                    ●
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+          <div className="app-head-actions">
             <button
-              key={id}
               type="button"
-              className={`tab-button ${view === id ? "tab-button-active" : ""}`}
-              aria-current={view === id ? "page" : undefined}
+              className="btn btn-quiet"
               onClick={() => {
-                setView(id);
+                setView("home");
               }}
             >
-              {t(TAB_KEYS[id])}
-              {id === "debrief" && status !== "running" && (
-                <span className="tab-badge" aria-label={t("tabs.debriefReady")}>
-                  ●
-                </span>
-              )}
+              Home
             </button>
-          ))}
-        </nav>
-        <div className="app-head-actions">
-          <button
-            type="button"
-            className="btn btn-quiet"
-            onClick={() => {
-              setView("setup");
-            }}
-          >
-            New Mission
-          </button>
-          <button
-            type="button"
-            className="btn btn-quiet"
-            aria-haspopup="dialog"
-            aria-expanded={dataSourcesOpen}
-            onClick={() => {
-              setDataSourcesOpen(true);
-            }}
-          >
-            {t("tabs.dataSources")}
-          </button>
-          <LowPowerToggle />
-          <LanguageSwitch />
-        </div>
-      </div>
-
-      {linkBanner !== undefined && (linkBanner.kind === "versionMismatch" || linkBanner.kind === "invalid") && (
-        <div className="run-link-banner" role="status">
-          <p>{t(linkBanner.kind === "versionMismatch" ? "shareLink.versionMismatch" : "shareLink.invalid")}</p>
-          <button
-            type="button"
-            className="btn btn-quiet run-link-banner-close"
-            aria-label={t("shareLink.dismiss")}
-            onClick={() => {
-              setLinkBanner(undefined);
-            }}
-          >
-            ✕
-          </button>
+            <button
+              type="button"
+              className="btn btn-quiet"
+              onClick={() => {
+                setView("setup");
+              }}
+            >
+              New Mission
+            </button>
+            <button
+              type="button"
+              className="btn btn-quiet"
+              aria-haspopup="dialog"
+              aria-expanded={dataSourcesOpen}
+              onClick={() => {
+                setDataSourcesOpen(true);
+              }}
+            >
+              {t("tabs.dataSources")}
+            </button>
+            <LowPowerToggle />
+            <LanguageSwitch />
+          </div>
         </div>
       )}
 
-      {view === "setup" ? (
+      {linkBanner !== undefined &&
+        (linkBanner.kind === "versionMismatch" || linkBanner.kind === "invalid") && (
+          <div className="run-link-banner" role="status">
+            <p>
+              {t(
+                linkBanner.kind === "versionMismatch"
+                  ? "shareLink.versionMismatch"
+                  : "shareLink.invalid",
+              )}
+            </p>
+            <button
+              type="button"
+              className="btn btn-quiet run-link-banner-close"
+              aria-label={t("shareLink.dismiss")}
+              onClick={() => {
+                setLinkBanner(undefined);
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+      {view === "home" ? (
+        <HomeView
+          onEnterSetup={(scenarioId) => {
+            if (scenarioId !== undefined) {
+              useSetup.getState().setScenarioId(scenarioId);
+            }
+            setView("setup");
+          }}
+        />
+      ) : view === "setup" ? (
         <SetupWizard
           onLaunch={() => {
             setView("briefing");
@@ -254,7 +302,8 @@ export function App() {
               <h1>Sol Keeper</h1>
               <p className="mission-site">
                 {scenario.site.name} · {scenario.body === "mars" ? "Mars" : "Moon"} ·{" "}
-                {durationLabel(scenario.durationHours, scenario.body)} · {livingCrew}/{crew.length} crew
+                {durationLabel(scenario.durationHours, scenario.body)} · {livingCrew}/{crew.length}{" "}
+                crew
               </p>
             </div>
             <RunStatusBadge />
@@ -285,16 +334,18 @@ export function App() {
         </>
       )}
 
-      <footer className="credits">
-        <p>
-          Every number in this simulation comes from published NASA data. See Data Sources
-          (above) for the full list and what is tuned for gameplay.
-        </p>
-        <p className="credits-fine">
-          Not affiliated with or endorsed by NASA. Data credited to NASA and the cited
-          researchers.
-        </p>
-      </footer>
+      {view !== "home" && (
+        <footer className="credits">
+          <p>
+            Every number in this simulation comes from published NASA data. See Data Sources (above)
+            for the full list and what is tuned for gameplay.
+          </p>
+          <p className="credits-fine">
+            Not affiliated with or endorsed by NASA. Data credited to NASA and the cited
+            researchers.
+          </p>
+        </footer>
+      )}
 
       {dataSourcesOpen && (
         <div

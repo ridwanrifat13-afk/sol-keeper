@@ -61,6 +61,16 @@ body {
   padding: 16px;
 }
 
+/* Home (the marketing/launch page) is meant to run edge to edge, unlike every other view's
+   1100px reading column — App.tsx already applies this class only when view === "home", this
+   is just the rule that class needed but never had, which is why the hero used to render in
+   a narrow centered strip with the shell's own light background showing on both sides. */
+.app.app-full-bleed {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
 h1 {
   font-size: 1.4rem;
   margin: 0;

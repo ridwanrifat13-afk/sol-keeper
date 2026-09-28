@@ -4,7 +4,7 @@
  * transit/power/shielding/launch-packing) has real UI now (M9.2a-d, M9.3) — the wizard
  * is complete.
  */
-import { expect, test } from "./fixtures.js";
+import { expect, gotoApp, test } from "./fixtures.js";
 import type { Page } from "@playwright/test";
 
 /** Clicks Next `times` times from wherever the wizard currently is. */
@@ -16,7 +16,7 @@ async function clickNext(page: Page, times: number): Promise<void> {
 
 test.describe("Mission Setup", () => {
   test("is the app's default screen, with all three scenarios offered", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await expect(page.getByText("Mission Setup")).toBeVisible();
     await expect(page.getByText("Step 1 of 8: Scenario")).toBeVisible();
 
@@ -30,7 +30,7 @@ test.describe("Mission Setup", () => {
   test("Back is disabled on the first step; walking Next through all eight steps and back again works", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await expect(page.getByRole("button", { name: "Back" })).toBeDisabled();
 
     const steps = ["Difficulty", "Crew size", "Landing site", "Transit", "Power", "Shielding", "Launch Packing"];
@@ -51,7 +51,7 @@ test.describe("Mission Setup", () => {
   });
 
   test("crew size step: stepper is clamped to 2-6, and consequence text is real", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Step 3 of 8: Crew size")).toBeVisible();
@@ -80,7 +80,7 @@ test.describe("Mission Setup", () => {
   test("landing site step: offers the real catalogued sites for the chosen scenario's body, each with a confidence badge", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "Next" }).click();
@@ -107,7 +107,7 @@ test.describe("Mission Setup", () => {
   test("transit step: shows the real Earth-body distance and light time for the chosen scenario's body", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await clickNext(page, 4);
     await expect(page.getByText("Step 5 of 8: Transit")).toBeVisible();
     await expect(page.getByText("Earth to Mars")).toBeVisible();
@@ -122,7 +122,7 @@ test.describe("Mission Setup", () => {
   test("power architecture step: shows real, live-sized numbers, not the same figure for every choice", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await clickNext(page, 5);
     await expect(page.getByText("Step 6 of 8: Power")).toBeVisible();
 
@@ -141,7 +141,7 @@ test.describe("Mission Setup", () => {
   });
 
   test("shielding step: shows the real per-approach trade-off (mass vs. crew-hours)", async ({ page }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await clickNext(page, 6);
     await expect(page.getByText("Step 7 of 8: Shielding")).toBeVisible();
 
@@ -163,7 +163,7 @@ test.describe("Mission Setup", () => {
   test("launch packing step: previews the real grand total, and reflects the regolith berm's crew-hours line", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await clickNext(page, 6);
     // Choose Regolith berm on the Shielding step so the crew-time line is non-zero.
     await page.getByRole("button", { name: /Regolith berm/ }).click();
@@ -182,7 +182,7 @@ test.describe("Mission Setup", () => {
   test("choosing a different scenario, difficulty, crew size, site, power, and shielding, then launching, actually starts that mission", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await page.getByRole("button", { name: /First Light/ }).click();
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: /Flight-Rated/ }).click();
@@ -219,7 +219,7 @@ test.describe("Mission Setup", () => {
   test("New Mission reopens Setup from any tab, without losing the in-progress run silently", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoApp(page);
     await clickNext(page, 7);
     await page.getByRole("button", { name: "▶ Launch Mission" }).click(); // launch with defaults
     await expect(page.getByText("Mission Briefing")).toBeVisible();

@@ -1,16 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { SCENARIOS, type ScenarioId } from "@sol-keeper/sim";
+import { SCENARIOS } from "@sol-keeper/sim";
 import { useSetup } from "../../store/setup.js";
 import { useDial } from "../../store/dial.js";
-
-// Mirrors components/ScenarioSwitch.tsx's own local display names/hints (the scenario's
-// thematic mission name isn't a field on Scenario itself, only its landing site's name is)
-// — kept in sync by hand, same as that file already does.
-const SCENARIO_LABELS: Record<ScenarioId, { label: string; hint: string }> = {
-  "jezero-outpost": { label: "Jezero Outpost", hint: "Mars · 30 sols · dust storm" },
-  "first-light": { label: "First Light", hint: "Moon · one 354 h night" },
-  "the-long-night": { label: "The Long Night", hint: "Moon · 3 lunar nights, reactor-powered" },
-};
+import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
 
 /** M9.2a's first setup step. Reuses BriefingView's own real, sourced hazard teaser text
  *  (each scenario's own `briefingKey`) so a player sees what they're choosing, not a

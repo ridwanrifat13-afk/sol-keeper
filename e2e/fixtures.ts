@@ -36,3 +36,28 @@ export { expect };
 export async function skipSetup(page: Page, tab = "Briefing"): Promise<void> {
   await page.locator(".tab-nav").getByRole("button", { name: tab }).click();
 }
+
+/**
+ * The Home launch page (`App.tsx`'s own `initialView = "home"` default) landed ahead of
+ * Setup as the real app's first screen, but no spec was updated for it — every existing
+ * `page.goto("/")` call still expected to land straight on Setup's own "Choose a mission"
+ * step. Rather than editing `App.tsx` to skip Home for tests (which would mean the suite no
+ * longer exercises the same first screen a real visitor sees), this drives the real button
+ * a real visitor would click. A run-link URL (`e2e/share.spec.ts`) is unaffected — it never
+ * calls this, and `App.tsx`'s own boot-time effect already redirects a valid link straight
+ * to Briefing/Report before Home would ever be visible for long enough to matter.
+ */
+export async function gotoApp(page: Page, path = "/"): Promise<void> {
+  await page.goto(path);
+  await page.getByRole("button", { name: "Launch Outpost" }).click();
+}
+
+/** The same Home gate reappears after any `page.reload()` — `view` is plain `useState`, so a
+ *  reload always re-mounts on Home, same as first load. Every header control a persisted-
+ *  choice test needs to re-check (the language switch, the low-power toggle, the Reality
+ *  Dial) is itself hidden while `view === "home"`, so a reload-then-assert test needs this,
+ *  not just a bare `page.reload()`. */
+export async function reloadApp(page: Page): Promise<void> {
+  await page.reload();
+  await page.getByRole("button", { name: "Launch Outpost" }).click();
+}

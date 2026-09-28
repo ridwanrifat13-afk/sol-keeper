@@ -1,11 +1,8 @@
 import { getScenario, type ScenarioId } from "@sol-keeper/sim";
 import { useRun } from "../store/run.js";
+import { SCENARIO_LABELS } from "../dial/scenarioLabels.js";
 
-const SCENARIOS: readonly { id: ScenarioId; label: string; hint: string }[] = [
-  { id: "jezero-outpost", label: "Jezero Outpost", hint: "Mars · 30 sols · dust storm" },
-  { id: "first-light", label: "First Light", hint: "Moon · one 354 h night" },
-  { id: "the-long-night", label: "The Long Night", hint: "Moon · 3 lunar nights, reactor-powered" },
-];
+const SCENARIO_IDS: readonly ScenarioId[] = ["jezero-outpost", "first-light", "the-long-night"];
 
 /**
  * Picks which scenario is running. Starting a different scenario is the same act as
@@ -22,21 +19,24 @@ export function ScenarioSwitch() {
 
   return (
     <div className="scenario-switch" role="group" aria-label="Mission scenario">
-      {SCENARIOS.map((s) => (
-        <button
-          key={s.id}
-          type="button"
-          className={`btn btn-scenario ${scenarioId === s.id ? "btn-active" : ""}`}
-          aria-pressed={scenarioId === s.id}
-          onClick={() => {
-            if (s.id === scenarioId) return;
-            reset({ scenarioId: s.id, crewSize: getScenario(s.id).crewSize });
-          }}
-        >
-          {s.label}
-          <span className="btn-sub">{s.hint}</span>
-        </button>
-      ))}
+      {SCENARIO_IDS.map((id) => {
+        const meta = SCENARIO_LABELS[id];
+        return (
+          <button
+            key={id}
+            type="button"
+            className={`btn btn-scenario ${scenarioId === id ? "btn-active" : ""}`}
+            aria-pressed={scenarioId === id}
+            onClick={() => {
+              if (id === scenarioId) return;
+              reset({ scenarioId: id, crewSize: getScenario(id).crewSize });
+            }}
+          >
+            {meta.label}
+            <span className="btn-sub">{meta.hint}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
