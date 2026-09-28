@@ -61,6 +61,14 @@ body {
   padding: 16px;
 }
 
+@media (min-width: 860px) {
+  /* Room for the left sidebar nav (player request) without squeezing the reading column it
+     used to have all to itself. */
+  .app {
+    max-width: 1320px;
+  }
+}
+
 /* Home (the marketing/launch page) is meant to run edge to edge, unlike every other view's
    1100px reading column — App.tsx already applies this class only when view === "home", this
    is just the rule that class needed but never had, which is why the hero used to render in
@@ -624,12 +632,31 @@ code {
 }
 
 /* ---------------------------------------------------------------- tab nav */
-.app-head-row {
+/* Player request: the station/tab destinations sit in a left sidebar, serially, not a top
+   row. .app-shell is the two-column layout (nav | main); below the sidebar breakpoint it
+   stacks into the original top-row arrangement instead — a real low-end-Android phone (rule
+   6) does not have the width for a persistent sidebar, so this is a genuine layout switch,
+   not just a visual reflow. */
+.app-shell {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.app-main {
+  min-width: 0;
+}
+
+@media (min-width: 860px) {
+  .app-shell {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .app-main {
+    flex: 1;
+  }
 }
 
 .tab-nav {
@@ -646,6 +673,25 @@ code {
      a sliver instead of wrapping .app-head-actions onto its own line. A real minimum width
      (not 0) is what makes flex-wrap actually engage when it should. */
   min-width: 220px;
+}
+
+@media (min-width: 860px) {
+  .tab-nav {
+    flex-direction: column;
+    flex: none;
+    width: 190px;
+    min-width: 190px;
+    gap: 2px;
+    margin-bottom: 0;
+    padding-bottom: 4px;
+    border-bottom: none;
+    border-right: 1px solid var(--line);
+    overflow-x: visible;
+    /* Stays on screen while a long console scrolls — the whole reason a sidebar is more
+       useful than a top row once there's room for one. */
+    position: sticky;
+    top: 16px;
+  }
 }
 
 .language-switch {
@@ -685,6 +731,24 @@ code {
   border-bottom-color: var(--shell-accent);
 }
 
+@media (min-width: 860px) {
+  /* A bottom-border active indicator reads fine in a horizontal row; in a vertical list a
+     left border + a filled background is the equivalent, legible mark (still never colour
+     alone — the bold text weight and the fill both carry it too, rule 6). */
+  .tab-button {
+    border-bottom: none;
+    border-left: 3px solid transparent;
+    border-radius: 0 6px 6px 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .tab-button-active {
+    border-left-color: var(--shell-accent);
+    background: rgba(11, 61, 145, 0.09);
+  }
+}
+
 .tab-badge {
   color: var(--nominal);
   font-size: 0.6rem;
@@ -696,6 +760,8 @@ code {
   align-items: center;
   gap: 8px;
   padding-top: 4px;
+  margin-bottom: var(--gap);
+  flex-wrap: wrap;
 }
 
 .overlay-backdrop {
@@ -1899,7 +1965,8 @@ code {
      data-sources footer replaces it), the version-mismatch/invalid banner, and the Report
      page's own "Back"/print-hint toolbar and its "Copy report link" section — a link is
      useless once already on paper. */
-  .app-head-row,
+  .tab-nav,
+  .app-head-actions,
   .decision-card-overlay,
   .event-feed-panel,
   .coach-mark,

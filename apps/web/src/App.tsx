@@ -193,8 +193,22 @@ export function App({ initialView = "home" }: AppProps = {}) {
   return (
     <main className={`app ${view === "home" ? "app-full-bleed" : ""}`}>
       {debugOverlay && <DebugOverlay />}
-      {view !== "home" && (
-        <div className="app-head-row">
+
+      {view === "home" ? (
+        <HomeView
+          onEnterSetup={(scenarioId) => {
+            if (scenarioId !== undefined) {
+              useSetup.getState().setScenarioId(scenarioId);
+            }
+            setView("setup");
+          }}
+        />
+      ) : (
+        <div className="app-shell">
+          {/* Player request: the station/tab destinations sit in a left sidebar, not a top
+           *  row — same .tab-nav class and button markup as before (nothing here changed for
+           *  any test or a11y tree that already targets it), just laid out as a vertical list
+           *  via CSS rather than a horizontal one. */}
           <nav className="tab-nav" aria-label={t("tabs.nav")}>
             {TAB_IDS.map((id) => (
               <button
@@ -215,136 +229,128 @@ export function App({ initialView = "home" }: AppProps = {}) {
               </button>
             ))}
           </nav>
-          <div className="app-head-actions">
-            <button
-              type="button"
-              className="btn btn-quiet"
-              onClick={() => {
-                setView("home");
-              }}
-            >
-              Home
-            </button>
-            <button
-              type="button"
-              className="btn btn-quiet"
-              onClick={() => {
-                setView("setup");
-              }}
-            >
-              New Mission
-            </button>
-            <button
-              type="button"
-              className="btn btn-quiet"
-              aria-haspopup="dialog"
-              aria-expanded={dataSourcesOpen}
-              onClick={() => {
-                setDataSourcesOpen(true);
-              }}
-            >
-              {t("tabs.dataSources")}
-            </button>
-            <LowPowerToggle />
-            <LanguageSwitch />
+
+          <div className="app-main">
+            <div className="app-head-actions">
+              <button
+                type="button"
+                className="btn btn-quiet"
+                onClick={() => {
+                  setView("home");
+                }}
+              >
+                Home
+              </button>
+              <button
+                type="button"
+                className="btn btn-quiet"
+                onClick={() => {
+                  setView("setup");
+                }}
+              >
+                New Mission
+              </button>
+              <button
+                type="button"
+                className="btn btn-quiet"
+                aria-haspopup="dialog"
+                aria-expanded={dataSourcesOpen}
+                onClick={() => {
+                  setDataSourcesOpen(true);
+                }}
+              >
+                {t("tabs.dataSources")}
+              </button>
+              <LowPowerToggle />
+              <LanguageSwitch />
+            </div>
+
+            {linkBanner !== undefined &&
+              (linkBanner.kind === "versionMismatch" || linkBanner.kind === "invalid") && (
+                <div className="run-link-banner" role="status">
+                  <p>
+                    {t(
+                      linkBanner.kind === "versionMismatch"
+                        ? "shareLink.versionMismatch"
+                        : "shareLink.invalid",
+                    )}
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-quiet run-link-banner-close"
+                    aria-label={t("shareLink.dismiss")}
+                    onClick={() => {
+                      setLinkBanner(undefined);
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+            {view === "setup" ? (
+              <SetupWizard
+                onLaunch={() => {
+                  setView("briefing");
+                }}
+              />
+            ) : view === "report" ? (
+              <MissionReportView
+                onBack={() => {
+                  setView("debrief");
+                }}
+              />
+            ) : (
+              <>
+                <header className="mission-head" key={version}>
+                  <div>
+                    <h1>Sol Keeper</h1>
+                    <p className="mission-site">
+                      {scenario.site.name} · {scenario.body === "mars" ? "Mars" : "Moon"} ·{" "}
+                      {durationLabel(scenario.durationHours, scenario.body)} · {livingCrew}/
+                      {crew.length} crew
+                    </p>
+                  </div>
+                  <RunStatusBadge />
+                </header>
+
+                <DialSwitch />
+                <TimeControls />
+                <DecisionCard />
+                <SolSummaryView />
+                <CoachMark view={view} onNavigate={setView} />
+
+                {view === "power" && <PowerConsole />}
+                {view === "lifeSupport" && <LifeSupportConsole />}
+                {view === "comms" && <CommsConsole />}
+                {view === "incidentCommand" && <IncidentCommandConsole />}
+                {view === "missionCommand" && <MissionCommandConsole />}
+                {view === "habitat" && <HabitatView />}
+                {view === "briefing" && <BriefingView />}
+                {view === "debrief" && (
+                  <DebriefView
+                    onViewReport={() => {
+                      setView("report");
+                    }}
+                  />
+                )}
+
+                <EventFeed />
+              </>
+            )}
+
+            <footer className="credits">
+              <p>
+                Every number in this simulation comes from published NASA data. See Data Sources
+                (above) for the full list and what is tuned for gameplay.
+              </p>
+              <p className="credits-fine">
+                Not affiliated with or endorsed by NASA. Data credited to NASA and the cited
+                researchers.
+              </p>
+            </footer>
           </div>
         </div>
-      )}
-
-      {linkBanner !== undefined &&
-        (linkBanner.kind === "versionMismatch" || linkBanner.kind === "invalid") && (
-          <div className="run-link-banner" role="status">
-            <p>
-              {t(
-                linkBanner.kind === "versionMismatch"
-                  ? "shareLink.versionMismatch"
-                  : "shareLink.invalid",
-              )}
-            </p>
-            <button
-              type="button"
-              className="btn btn-quiet run-link-banner-close"
-              aria-label={t("shareLink.dismiss")}
-              onClick={() => {
-                setLinkBanner(undefined);
-              }}
-            >
-              ✕
-            </button>
-          </div>
-        )}
-
-      {view === "home" ? (
-        <HomeView
-          onEnterSetup={(scenarioId) => {
-            if (scenarioId !== undefined) {
-              useSetup.getState().setScenarioId(scenarioId);
-            }
-            setView("setup");
-          }}
-        />
-      ) : view === "setup" ? (
-        <SetupWizard
-          onLaunch={() => {
-            setView("briefing");
-          }}
-        />
-      ) : view === "report" ? (
-        <MissionReportView
-          onBack={() => {
-            setView("debrief");
-          }}
-        />
-      ) : (
-        <>
-          <header className="mission-head" key={version}>
-            <div>
-              <h1>Sol Keeper</h1>
-              <p className="mission-site">
-                {scenario.site.name} · {scenario.body === "mars" ? "Mars" : "Moon"} ·{" "}
-                {durationLabel(scenario.durationHours, scenario.body)} · {livingCrew}/{crew.length}{" "}
-                crew
-              </p>
-            </div>
-            <RunStatusBadge />
-          </header>
-
-          <DialSwitch />
-          <TimeControls />
-          <DecisionCard />
-          <SolSummaryView />
-          <CoachMark view={view} onNavigate={setView} />
-
-          {view === "power" && <PowerConsole />}
-          {view === "lifeSupport" && <LifeSupportConsole />}
-          {view === "comms" && <CommsConsole />}
-          {view === "incidentCommand" && <IncidentCommandConsole />}
-          {view === "missionCommand" && <MissionCommandConsole />}
-          {view === "habitat" && <HabitatView />}
-          {view === "briefing" && <BriefingView />}
-          {view === "debrief" && (
-            <DebriefView
-              onViewReport={() => {
-                setView("report");
-              }}
-            />
-          )}
-
-          <EventFeed />
-        </>
-      )}
-
-      {view !== "home" && (
-        <footer className="credits">
-          <p>
-            Every number in this simulation comes from published NASA data. See Data Sources (above)
-            for the full list and what is tuned for gameplay.
-          </p>
-          <p className="credits-fine">
-            Not affiliated with or endorsed by NASA. Data credited to NASA and the cited
-            researchers.
-          </p>
-        </footer>
       )}
 
       {dataSourcesOpen && (
