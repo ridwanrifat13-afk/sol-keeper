@@ -157,6 +157,81 @@
   pointer-events: none;
 }
 
+/* Hero headline — sticky-pinned over the center image, same as the image itself, so it reads
+   clearly at rest and fades out fast once the player starts scrolling. */
+.modern-hero-headline {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.9rem;
+  padding: 0 1.5rem;
+  margin-top: -100vh;
+  z-index: 5;
+  pointer-events: none;
+  /* A soft scrim behind the text block itself (not the whole viewport) so the headline reads
+     cleanly regardless of what's under it at rest, when the center image is still a small
+     clipped box directly behind this centered text. */
+  background: radial-gradient(ellipse 60% 55% at center, rgba(5, 6, 10, 0.72) 0%, rgba(5, 6, 10, 0) 72%);
+}
+
+.modern-hero-headline-eyebrow {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9fd0ff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.85);
+}
+
+.modern-hero-headline-title {
+  font-size: clamp(2rem, 5.5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.08;
+  color: #ffffff;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.85);
+  max-width: 20ch;
+}
+
+.modern-hero-headline-sub {
+  font-size: clamp(0.95rem, 1.6vw, 1.2rem);
+  color: #e3e8f5;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.85);
+  max-width: 46ch;
+}
+
+.modern-hero-headline-missions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(9, 9, 11, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.modern-hero-headline-missions span[aria-hidden] {
+  color: #6b7280;
+}
+
+@media (max-width: 640px) {
+  .modern-hero-headline-missions {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
 /* Parallax gallery */
 .modern-hero-parallax-container {
   margin: 0 auto;
@@ -292,6 +367,76 @@
 .modern-hero-item-btn:hover {
   background: var(--shell-accent, #0b3d91);
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The 4th shortcut — a dropdown mission-guide picker, in the same schedule-item list but its
+   own layout (a select + toggle button instead of a single "Select" action, and an optional
+   expanded guide body below). */
+.modern-hero-guide-item {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.modern-hero-guide-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.modern-hero-item-title svg {
+  vertical-align: -2px;
+  margin-right: 0.4rem;
+}
+
+.modern-hero-guide-select {
+  padding: 0.45rem 0.7rem;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.modern-hero-guide-body {
+  border-top: 1px solid #27272a;
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.modern-hero-guide-tagline {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9fd0ff;
+  margin: 0;
+}
+
+.modern-hero-guide-body p {
+  color: #d4d4d8;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.modern-hero-guide-body .modern-hero-cta-btn {
+  align-self: flex-start;
+  margin-top: 0.25rem;
 }
 
 /* Reduced motion & low-power overrides */

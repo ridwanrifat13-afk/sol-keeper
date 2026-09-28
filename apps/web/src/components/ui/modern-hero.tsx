@@ -1,9 +1,10 @@
 import { ReactLenis } from "lenis/react";
 import { motion, useMotionTemplate, useScroll, useTransform } from "framer-motion";
-import { FiArrowRight, FiMapPin } from "react-icons/fi";
-import { useRef } from "react";
+import { FiArrowRight, FiBookOpen, FiMapPin } from "react-icons/fi";
+import { useRef, useState } from "react";
 import { SCENARIOS, type ScenarioId } from "@sol-keeper/sim";
 import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
+import { MISSION_GUIDES } from "../../dial/missionGuides.js";
 import { durationLabel } from "../../dial/missionTime.js";
 import "./modern-hero.css";
 
@@ -14,7 +15,9 @@ export interface SmoothScrollHeroProps {
 export const SmoothScrollHero = ({ onLaunchMission }: SmoothScrollHeroProps) => {
   return (
     <div className="modern-hero-root">
-      <ReactLenis root>
+      {/* Faster, snappier smoothing (default Lenis duration ~1.2s) — player request: "make
+       *  the homepage hero section scroll animation faster." */}
+      <ReactLenis root options={{ duration: 0.7 }}>
         <Nav onLaunchMission={onLaunchMission} />
         <Hero />
         <Schedule onLaunchMission={onLaunchMission} />
@@ -63,23 +66,57 @@ const Nav = ({ onLaunchMission }: { onLaunchMission?: ((scenarioId?: ScenarioId)
   );
 };
 
-const SECTION_HEIGHT = 1500;
+// Player request: "make the homepage hero section scroll animation faster" — shortened from
+// 1500 so the whole reveal (headline fade, image un-clip, parallax) resolves over noticeably
+// less scroll distance, on top of the snappier Lenis smoothing above.
+const SECTION_HEIGHT = 950;
 
 const Hero = () => {
   return (
     <div style={{ height: `calc(${SECTION_HEIGHT}px + 100vh)` }} className="modern-hero-section">
       <CenterImage />
+      <HeroHeadline />
       <ParallaxImages />
       <div className="modern-hero-gradient-overlay" />
     </div>
   );
 };
 
+/**
+ * Player request: hero text that names all three real missions, for attention. Sticky-pinned
+ * over the center image (same `position: sticky` trick that pins the image itself) and faded
+ * out over the first 300px of scroll, so it reads clearly at rest and gets out of the way fast
+ * once the player starts scrolling toward the parallax/launch-windows content below.
+ */
+const HeroHeadline = () => {
+  const { scrollY } = useScroll();
+  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+  const y = useTransform(scrollY, [0, 300], [0, -40]);
+
+  return (
+    <motion.div className="modern-hero-headline" style={{ opacity, y }}>
+      <p className="modern-hero-headline-eyebrow">Junior Astronaut Mission Trainer</p>
+      <h1 className="modern-hero-headline-title">Run an outpost on real NASA numbers.</h1>
+      <p className="modern-hero-headline-sub">
+        Three real missions. One dust storm, one 354-hour night, one reactor that has to last
+        three of them.
+      </p>
+      <div className="modern-hero-headline-missions">
+        <span>Jezero Outpost</span>
+        <span aria-hidden="true">·</span>
+        <span>First Light</span>
+        <span aria-hidden="true">·</span>
+        <span>The Long Night</span>
+      </div>
+    </motion.div>
+  );
+};
+
 const CenterImage = () => {
   const { scrollY } = useScroll();
 
-  const clip1 = useTransform(scrollY, [0, 1500], [25, 0]);
-  const clip2 = useTransform(scrollY, [0, 1500], [75, 100]);
+  const clip1 = useTransform(scrollY, [0, SECTION_HEIGHT], [25, 0]);
+  const clip2 = useTransform(scrollY, [0, SECTION_HEIGHT], [75, 100]);
 
   const clipPath = useMotionTemplate`polygon(${clip1}% ${clip1}%, ${clip2}% ${clip1}%, ${clip2}% ${clip2}%, ${clip1}% ${clip2}%)`;
 
@@ -232,7 +269,89 @@ const Schedule = ({ onLaunchMission }: ScheduleProps) => {
           />
         );
       })}
+
+      <GuideShortcut onLaunchMission={onLaunchMission} />
     </section>
+  );
+};
+
+/**
+ * The 4th shortcut, player-requested: a dropdown to pick which mission's guide to read, right
+ * here on the launch page — no need to run Setup first. The same guide content
+ * (dial/missionGuides.ts) also appears on the Briefing screen once a mission is actually
+ * launched; this is the browse-before-you-commit path into the identical text.
+ */
+const GuideShortcut = ({ onLaunchMission }: ScheduleProps) => {
+  const [selected, setSelected] = useState<ScenarioId>("jezero-outpost");
+  const [open, setOpen] = useState(false);
+  const guide = MISSION_GUIDES[selected];
+
+  return (
+    <motion.div
+      initial={{ y: 32, opacity: 0 }}
+      whileInView={{ y: 0, opacity: 1 }}
+      transition={{ ease: "easeInOut", duration: 0.55 }}
+      viewport={{ once: true }}
+      className="modern-hero-schedule-item modern-hero-guide-item"
+    >
+      <div className="modern-hero-guide-head">
+        <div>
+          <h3 className="modern-hero-item-title">
+            <FiBookOpen aria-hidden="true" /> Mission Guides
+          </h3>
+          <p className="modern-hero-item-date">Real hazard timing and strategy, per mission.</p>
+        </div>
+        <label className="modern-hero-guide-select-label">
+          <span className="sr-only">Choose a mission guide</span>
+          <select
+            className="modern-hero-guide-select"
+            value={selected}
+            onChange={(e) => {
+              setSelected(e.target.value as ScenarioId);
+              setOpen(true);
+            }}
+          >
+            {SCENARIO_ORDER.map((id) => (
+              <option key={id} value={id}>
+                {SCENARIO_LABELS[id].label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="modern-hero-item-action">
+          <button
+            type="button"
+            className="modern-hero-item-btn"
+            aria-expanded={open}
+            onClick={() => {
+              setOpen((o) => !o);
+            }}
+          >
+            {open ? "Hide guide" : "Read guide"}
+          </button>
+        </div>
+      </div>
+
+      {open && (
+        <div className="modern-hero-guide-body">
+          <p className="modern-hero-guide-tagline">{guide.tagline}</p>
+          {guide.paragraphs.map((paragraph, i) => (
+            <p key={i}>{paragraph}</p>
+          ))}
+          {onLaunchMission && (
+            <button
+              type="button"
+              className="modern-hero-cta-btn"
+              onClick={() => {
+                onLaunchMission(selected);
+              }}
+            >
+              Launch {guide.title}
+            </button>
+          )}
+        </div>
+      )}
+    </motion.div>
   );
 };
 

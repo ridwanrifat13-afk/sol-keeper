@@ -61,13 +61,17 @@ test.describe("Mission Briefing", () => {
     await expect(page.getByText("Ayesha")).toBeVisible();
 
     await expect(page.getByText("What to expect")).toBeVisible();
-    await expect(page.getByText(/dust storm/)).toBeVisible();
+    // Scoped to the hazard section specifically: the new Mission Guide section below (player
+    // request, guides per mission) also mentions "dust storm" in its own strategy prose.
+    const hazardSection = page.locator("section", { has: page.getByRole("heading", { name: "What to expect" }) });
+    await expect(hazardSection.getByText(/dust storm/)).toBeVisible();
 
     await expect(page.getByText("Primary goal:")).toBeVisible();
     await expect(page.getByText("Stretch goal:")).toBeVisible();
 
     await expect(page.getByText("What failure looks like")).toBeVisible();
     await expect(page.getByText("Packed mass")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Mission Guide" })).toBeVisible();
   });
 
   test("its real map-tile images are Trek imagery only, no NASA logo or insignia (brief rule 5)", async ({

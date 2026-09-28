@@ -5,6 +5,7 @@ import { useDial } from "../../store/dial.js";
 import { LandingSiteMap } from "../../components/LandingSiteMap.js";
 import { stationLabel } from "../../dial/labels.js";
 import { durationLabel } from "../../dial/missionTime.js";
+import { MISSION_GUIDES } from "../../dial/missionGuides.js";
 import { goalText } from "../../i18n/goalText.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 
@@ -104,6 +105,14 @@ export function BriefingView() {
       <section className="panel" aria-labelledby="briefing-mass-heading">
         <h2 id="briefing-mass-heading">{t("briefing.massHeading")}</h2>
         <p>{t(cadet ? "briefing.massLineCadet" : "briefing.massLine", { kg: packedMassKg.toLocaleString() })}</p>
+      </section>
+
+      <section className="panel" aria-labelledby="briefing-guide-heading">
+        <h2 id="briefing-guide-heading">Mission Guide</h2>
+        <p className="panel-hint">{MISSION_GUIDES[scenario.id].tagline}</p>
+        {MISSION_GUIDES[scenario.id].paragraphs.map((paragraph, i) => (
+          <p key={i}>{paragraph}</p>
+        ))}
       </section>
     </div>
   );
