@@ -4,10 +4,17 @@ import { logText } from "../i18n/logText.js";
 import { useAppLanguage } from "../i18n/useAppLanguage.js";
 import { statusFromSeverity } from "./status.js";
 import { timestampLabel } from "../dial/missionTime.js";
+import { decisionAlternatives } from "../dial/decisionAlternatives.js";
 
 const MAX_CARDS = 40;
 
 const CAUSE_PREFIX = { cadet: "why: ", specialist: "because: ", commander: "caused by: " } as const;
+
+const ALTERNATIVES_LABEL = {
+  cadet: "You could have instead:",
+  specialist: "Alternatives not chosen:",
+  commander: "Declared alternatives not taken:",
+} as const;
 
 /**
  * The event feed — recent history, at whatever Reality Dial level the player has chosen.
@@ -43,6 +50,7 @@ export function EventFeed() {
           const causes = (entry.causedBy ?? [])
             .map((id) => byId.get(id))
             .filter((e): e is NonNullable<typeof e> => e !== undefined);
+          const alternatives = decisionAlternatives(entry, level, language);
 
           return (
             <li key={entry.id} className={`event-card ${status.className}`}>
@@ -59,6 +67,27 @@ export function EventFeed() {
                   {CAUSE_PREFIX[level]}
                   {causes.map((c) => logText(c, level, language)).join("; ")}
                 </p>
+              )}
+              {alternatives !== undefined && alternatives.length > 0 && (
+                <div className="event-alternatives">
+                  <p className="event-alternatives-label">
+                    <span aria-hidden="true">⇄ </span>
+                    {ALTERNATIVES_LABEL[level]}
+                  </p>
+                  <ul>
+                    {alternatives.map((alt) => (
+                      <li key={alt.id}>
+                        <span className="event-alternative-text">{alt.text}</span>
+                        {alt.mechanism !== undefined && (
+                          <span className="event-alternative-mechanism"> — {alt.mechanism}</span>
+                        )}
+                        {alt.tradeoffs.length > 0 && (
+                          <span className="event-alternative-tradeoffs"> ({alt.tradeoffs.join("; ")})</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </li>
           );
