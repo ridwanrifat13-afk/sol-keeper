@@ -136,7 +136,13 @@ export {
 } from "./engine/risk.js";
 
 export { missionWaterLossKg } from "./models/water.js";
-export { cropCycleDays, cropRequiredLightHours, rationKgPerCrewDay } from "./models/food.js";
+export {
+  co2GrowthBonusFraction,
+  co2Ppm,
+  cropCycleDays,
+  cropRequiredLightHours,
+  rationKgPerCrewDay,
+} from "./models/food.js";
 export { gcrTransmission, speTransmission, effectiveShieldingGPerCm2 } from "./models/radiation.js";
 export { hourlyCrewO2Grams, moxiesPerCrewMember } from "./models/isru.js";
 export { crewHeatKwPerPerson } from "./models/thermal.js";

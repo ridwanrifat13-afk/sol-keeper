@@ -326,6 +326,33 @@ export const food = {
     confidence: "tuned",
     note: "Photoperiod the grow lights run. Tuned; drives crop power draw.",
   }),
+  // M9.x (player request #8): "visible lunar/mars environmental effects on food
+  // production" — cabin CO2 (a real environmental condition this sim already tracks, driven
+  // by survival mode and scrubber health) speeds crop growth toward a real documented
+  // beneficial range, and stops helping past a real documented super-elevated range.
+  co2EnrichmentBeneficialPpm: c({
+    value: 1500,
+    unit: "ppm",
+    min: 1000,
+    max: 2000,
+    source: "WHEELER-2024-CO2-SALAD",
+    confidence: "measured",
+    note: "Midpoint of the paper's own tested range where elevated CO2 (vs ~400 ppm ambient) increased growth/yield for most salad crops.",
+  }),
+  co2SuperElevatedPpm: c({
+    value: 5000,
+    unit: "ppm",
+    source: "WHEELER-2024-CO2-SALAD",
+    confidence: "measured",
+    note: "The paper's own lower super-elevated test point where radish/lettuce yield dropped versus 1,000 ppm — the point past which this sim's bonus stops growing rather than continuing to climb.",
+  }),
+  co2EnrichmentMaxGrowthBonusFraction: c({
+    value: 0.15,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "The paper reports yield/biomass changes, not a light-hours-accumulation-rate multiplier compatible with this sim's own crop-growth mechanic (models/food.ts) — 15% faster growth at the beneficial range is a disclosed, modest game-scaled interpretation of 'increased growth and yield,' not the paper's own reported percentage, which this project could not access past its abstract.",
+  }),
 } as const;
 
 /** Ionising radiation environment and exposure limits. */

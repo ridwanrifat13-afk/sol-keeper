@@ -92,6 +92,9 @@ export const SOURCE_IDS = [
   "WUELLER-2026",
   // M9: the regolith-berm shielding delta (engine/constants.ts's habitat group).
   "AIP-2023-REGOLITH-SHIELD",
+  // M9.x (player request #8): elevated cabin CO2's real, documented effect on crop growth —
+  // the food group's co2 enrichment constants.
+  "WHEELER-2024-CO2-SALAD",
 ] as const;
 
 export type SourceId = (typeof SOURCE_IDS)[number];

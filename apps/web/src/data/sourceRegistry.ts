@@ -263,4 +263,9 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     url: "https://pubs.aip.org/aip/adv/article/13/8/085108/2905736",
     usedFor: "the regolithBerm shielding approach's g/cm² delta (a 15 g/cm² regolith+polymer combination shield)",
   },
+  "WHEELER-2024-CO2-SALAD": {
+    title: "Wheeler et al. (2024), \"Effects of elevated and super-elevated carbon dioxide on salad crops for space\", Journal of Plant Interactions 19(1)",
+    url: "https://www.tandfonline.com/doi/full/10.1080/17429145.2023.2292219",
+    usedFor: "the cabin-CO2 crop-growth-rate bonus range (real beneficial/super-elevated ppm thresholds; the in-sim bonus magnitude itself is a disclosed game-scaled choice)",
+  },
 };

@@ -1,4 +1,12 @@
-import { cropRequiredLightHours, habitat, physiology, survivalModes, type SurvivalMode } from "@sol-keeper/sim";
+import {
+  co2GrowthBonusFraction,
+  co2Ppm,
+  cropRequiredLightHours,
+  habitat,
+  physiology,
+  survivalModes,
+  type SurvivalMode,
+} from "@sol-keeper/sim";
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { Gauge } from "../../components/Gauge.js";
@@ -172,6 +180,17 @@ export function LifeSupportConsole() {
       <section className="panel" aria-labelledby="isru-heading">
         <h2 id="isru-heading">ISRU &amp; crops</h2>
         <p className="panel-hint">Status only — no adjustable MOXIE or crop-task control exists yet.</p>
+        {(() => {
+          const growthBonus = co2GrowthBonusFraction(
+            co2Ppm(state.atmosphere.o2PartialPressureMmHg, state.atmosphere.co2PartialPressureMmHg),
+          );
+          return growthBonus > 0.001 ? (
+            <p className="panel-hint">
+              Cabin CO₂ is in a real, documented crop-growth-boosting range — trays are growing{" "}
+              {Math.round(growthBonus * 100)}% faster (WHEELER-2024-CO2-SALAD).
+            </p>
+          ) : null;
+        })()}
         <ul className="status-list">
           {state.systems.moxie !== undefined && (
             <li>

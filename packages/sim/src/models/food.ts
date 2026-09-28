@@ -9,6 +9,7 @@
 import { food as foodConstants, physics, science as scienceConstants, survivalModes } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
 import { isSheltering } from "./crew.js";
+import { totalPressureMmHg } from "./atmosphere.js";
 import type { CropTray } from "../types.js";
 import { clamp, daysToHours, perDayToPerHour } from "../units.js";
 
@@ -47,6 +48,31 @@ export function rationKgPerCrewDay(mode: keyof typeof survivalModes): number {
   return kcal / physics.kcalPerKgFoodDryMass.value;
 }
 
+/** Cabin CO2 mole fraction, in ppm — the same total-pressure calculation
+ *  `totalPressureMmHg` already provides, just expressed the way plant-growth literature
+ *  states CO2 concentration rather than as a partial pressure. */
+export function co2Ppm(o2MmHg: number, co2MmHg: number): number {
+  const total = totalPressureMmHg(o2MmHg, co2MmHg);
+  return total > 0 ? (co2MmHg / total) * 1e6 : 0;
+}
+
+/**
+ * WHEELER-2024-CO2-SALAD (player request #8): a real, documented environmental effect on
+ * crop growth — elevated cabin CO2 speeds growth toward the paper's own tested beneficial
+ * range, and stops helping (never penalised — this sim only models the "helps" half, see
+ * co2EnrichmentMaxGrowthBonusFraction's own note) past its super-elevated range. A simple
+ * triangular ramp between the two real, sourced ppm thresholds; 0 outside them.
+ */
+export function co2GrowthBonusFraction(ppm: number): number {
+  const beneficial = foodConstants.co2EnrichmentBeneficialPpm.value;
+  const superElevated = foodConstants.co2SuperElevatedPpm.value;
+  const maxBonus = foodConstants.co2EnrichmentMaxGrowthBonusFraction.value;
+  if (ppm <= 0) return 0;
+  if (ppm <= beneficial) return maxBonus * (ppm / beneficial);
+  if (ppm <= superElevated) return maxBonus * (1 - (ppm - beneficial) / (superElevated - beneficial));
+  return 0;
+}
+
 export function foodStage(ctx: TickContext): void {
   const { state, log } = ctx;
   const f = state.food;
@@ -75,9 +101,16 @@ export function foodStage(ctx: TickContext): void {
   const greenhouse = state.systems.greenhouse;
   const lit =
     greenhouse !== undefined && greenhouse.operational && greenhouse.poweredThisHour && !isSheltering(state.crew);
+  // Player request #8: a real, visible environmental effect on food production — elevated
+  // cabin CO2 (already driven by survival mode and scrubber health, not a new lever) speeds
+  // how fast a lit tray accumulates growth hours, toward WHEELER-2024-CO2-SALAD's own
+  // documented beneficial range.
+  const co2GrowthBonus = co2GrowthBonusFraction(
+    co2Ppm(state.atmosphere.o2PartialPressureMmHg, state.atmosphere.co2PartialPressureMmHg),
+  );
   for (const tray of f.trays) {
     if (!lit) continue;
-    tray.lightHours += ctx.dtHours;
+    tray.lightHours += ctx.dtHours * (1 + co2GrowthBonus);
 
     const required = cropRequiredLightHours(tray.crop);
     if (tray.lightHours >= required) {
