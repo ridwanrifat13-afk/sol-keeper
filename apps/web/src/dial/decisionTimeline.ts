@@ -20,6 +20,9 @@ const DECISION_CODE_STATION: Readonly<Record<string, StationId>> = {
   // Player request (M9.x): the CO2 scrubber duty-cycle control, on the same console rations
   // lives on.
   "decision.co2ScrubberMode.set": "lifeSupport",
+  // Player request (M9.x): routine array cleaning, a Power console action.
+  "decision.cleanSolarArrays.performed": "power",
+  "decision.cleanSolarArrays.insufficientTime": "power",
 };
 
 /** An incident-response decision (`incident.<id>.resolved`/`.detected`/`.queued`/

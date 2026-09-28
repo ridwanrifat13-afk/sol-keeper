@@ -509,6 +509,17 @@ export const power = {
     confidence: "measured",
     note: "0.28-0.33% array power lost per sol to dust accumulation, from MER and InSight observations. Resolved in the 2026-09 verification pass; was a 0.002 placeholder. Drives the dust-storm event.",
   }),
+  // M9.x (player request): "quiet sol" interactivity — this same routine, ordinary dust
+  // accumulation (above) previously had no player-facing lever outside the one scripted
+  // dust-storm incident's own cleanArrays response. A routine cleaning costs less crew time
+  // than that post-storm emergency cleanup (crewHoursCost: 3 on that response) since it is
+  // addressing ordinary accumulation, not a storm-driven spike.
+  routineArrayCleaningCrewHours: c({
+    value: 2,
+    unit: "h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+  }),
   fissionSurfacePowerKwe: c({
     value: 40,
     unit: "kWe",

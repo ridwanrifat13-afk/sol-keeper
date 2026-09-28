@@ -26,8 +26,9 @@ import type {
   SurvivalMode,
   SystemId,
 } from "../types.js";
+import { power as powerConstants } from "../data/constants.js";
 import type { TickContext } from "./context.js";
-import { INCIDENT_CATALOG, applyResponse } from "./incidents.js";
+import { INCIDENT_CATALOG, applyCleaningEvaDose, applyResponse } from "./incidents.js";
 import { EventLogger } from "./log.js";
 import { Rng } from "./rng.js";
 import { createInitialState } from "./state.js";
@@ -45,7 +46,8 @@ export type RunInput =
   | { readonly kind: "station"; readonly crewId: string; readonly station: StationId }
   | { readonly kind: "commsPriority"; readonly priority: CommsPriority }
   | { readonly kind: "incidentResponse"; readonly incidentId: string; readonly responseId: string }
-  | { readonly kind: "co2ScrubberMode"; readonly mode: Co2ScrubberMode };
+  | { readonly kind: "co2ScrubberMode"; readonly mode: Co2ScrubberMode }
+  | { readonly kind: "cleanSolarArrays" };
 
 /** One `RunInput` plus the `state.hour` it was applied at — what `store/run.ts`'s new
  *  `inputLog` records, and all `replayRun` needs to reproduce a run byte-identically: no
@@ -166,6 +168,43 @@ export function applyInput(ctx: TickContext, input: RunInput): void {
         // try to render "full"/"balanced"/"eco" as a SurvivalMode. A distinct field name gets
         // its own resolveField case instead.
         data: { co2ScrubberMode: input.mode },
+      });
+      return;
+    }
+
+    case "cleanSolarArrays": {
+      // Player request: "quiet sol" interactivity — a routine maintenance action available
+      // any sol, not gated behind the one scripted dust-storm incident. Mars only: the Moon
+      // has no atmosphere to carry dust (firstLight.ts's own doc comment already states this
+      // for the storm incident; the same physical fact applies here).
+      if (ctx.scenario.body !== "mars") return;
+
+      const cost = powerConstants.routineArrayCleaningCrewHours.value;
+      const remainingToday = Math.max(0, state.crewHours.budgetTodayHours - state.crewHours.spentTodayHours);
+      if (remainingToday < cost) {
+        log.log({
+          kind: "decision",
+          severity: "info",
+          code: "decision.cleanSolarArrays.insufficientTime",
+          data: { neededHours: cost, remainingHours: Math.round(remainingToday * 100) / 100 },
+        });
+        return;
+      }
+
+      state.crewHours.spentTodayHours += cost;
+      const before = state.environment.dustObscurationFraction;
+      // Cleans everything removable — the permanent floor a past storm may have left is,
+      // definitionally, not removable (engine/incidents.ts's own duststorm-2018 note).
+      state.environment.dustObscurationFraction = state.environment.dustObscurationFloorFraction;
+      applyCleaningEvaDose(ctx, cost);
+      log.log({
+        kind: "decision",
+        severity: "info",
+        code: "decision.cleanSolarArrays.performed",
+        data: {
+          obscurationBeforePct: Math.round(before * 1000) / 10,
+          obscurationAfterPct: Math.round(state.environment.dustObscurationFraction * 1000) / 10,
+        },
       });
       return;
     }

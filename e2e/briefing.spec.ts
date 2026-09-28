@@ -6,7 +6,7 @@
  * widget itself (not just the surrounding text) comes up and requests real tiles from
  * trek.nasa.gov.
  */
-import { expect, gotoApp, skipSetup, test } from "./fixtures.js";
+import { expect, gotoApp, openTab, skipSetup, test } from "./fixtures.js";
 
 test.describe("Mission Briefing", () => {
   test("reachable straight from Setup, with a real Leaflet map requesting actual Trek tiles for Jezero", async ({
@@ -42,9 +42,9 @@ test.describe("Mission Briefing", () => {
     });
 
     await gotoApp(page);
-    await page.getByRole("button", { name: "Mission Command" }).click();
+    await openTab(page, "Mission Command");
     await page.getByRole("button", { name: /^First Light/ }).click();
-    await page.getByRole("button", { name: "Briefing" }).click();
+    await openTab(page, "Briefing");
     await expect(page.getByText("Shackleton Ridge", { exact: false }).first()).toBeVisible();
     await expect(page.locator(".leaflet-tile.leaflet-tile-loaded").first()).toBeVisible({ timeout: 5000 });
 

@@ -12,7 +12,7 @@
  * meaningless for that comparison.
  */
 import { expect, test, type Page } from "@playwright/test";
-import { gotoApp } from "./fixtures.js";
+import { gotoApp, openTab } from "./fixtures.js";
 
 const CPU_THROTTLE_RATE = 4;
 const MEASURE_MS = 1000;
@@ -52,7 +52,7 @@ test.describe("Mobile performance (M9.7)", () => {
     await throttleCpu(page);
     for (let i = 0; i < 7; i++) await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "▶ Launch Mission" }).click();
-    await page.locator(".tab-nav").getByRole("button", { name: "Habitat" }).click();
+    await openTab(page, "Habitat");
     await expect(page.getByRole("heading", { name: "Habitat", exact: true })).toBeVisible();
 
     const fps = await measureFps(page, MEASURE_MS);

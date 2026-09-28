@@ -19,6 +19,8 @@ describe("M10.8: stationForDecision", () => {
     ["decision.station.assigned", "missionCommand"],
     ["decision.commsPriority.set", "comms"],
     ["decision.co2ScrubberMode.set", "lifeSupport"],
+    ["decision.cleanSolarArrays.performed", "power"],
+    ["decision.cleanSolarArrays.insufficientTime", "power"],
   ];
   for (const [code, expectedStation] of cases) {
     it(`tags "${code}" as ${expectedStation}`, () => {

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { power } from "@sol-keeper/sim";
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { useSpaceWeather } from "../../data/spaceWeather.js";
@@ -25,6 +26,8 @@ export function PowerConsole() {
   const version = useRun((s) => s.version);
   const state = useRun((s) => s.state);
   const scenario = useRun((s) => s.scenario);
+  const phase = useRun((s) => s.phase);
+  const cleanSolarArrays = useRun((s) => s.cleanSolarArrays);
   const level = useDial((s) => s.level);
   const language = useAppLanguage();
   const { t } = useTranslation();
@@ -32,6 +35,10 @@ export function PowerConsole() {
   const summary = buildResourceSummary(state, level, language);
   const powerServedFraction = state.power.demandKw > 0 ? state.power.servedKw / state.power.demandKw : 1;
   const spaceWeather = useSpaceWeather();
+  const locked = phase !== "planning";
+  const remainingCrewHours = Math.max(0, state.crewHours.budgetTodayHours - state.crewHours.spentTodayHours);
+  const cleaningCostHours = power.routineArrayCleaningCrewHours.value;
+  const canClean = scenario.body === "mars" && remainingCrewHours >= cleaningCostHours;
 
   return (
     <div className="console" key={version}>
@@ -66,14 +73,14 @@ export function PowerConsole() {
         )}
       </section>
 
-      {/* M8.4 Part A: read-only — no settable reactor throttle, array tilt, or "clean now"
-       *  control exists in the sim today; inventing one would mean a new, unsourced physical
-       *  constant with no real lever to attach it to (brief rule 1). duststorm-2018's own
-       *  cleanArrays response already models the real proactive-cleaning trade-off during an
-       *  actual storm — this panel is status only. */}
+      {/* M8.4 Part A: reactor throttle/array tilt stay read-only — no real lever exists to
+       *  attach either to (brief rule 1). Array cleaning is no longer status-only (player
+       *  request, M9.x): "quiet sol" interactivity, a routine any-sol maintenance action using
+       *  the same real physics duststorm-2018's own post-storm cleanArrays response already
+       *  models, not gated behind that one scripted incident. */}
       <section className="panel" aria-labelledby="reactor-array-heading">
         <h2 id="reactor-array-heading">Reactor &amp; array status</h2>
-        <p className="panel-hint">Status only — no adjustable reactor or array control exists yet.</p>
+        <p className="panel-hint">Reactor and array output are read-only — cleaning is the one real lever here.</p>
         <ul className="status-list">
           <li>
             <span className="status-list-label">Solar array</span>
@@ -92,6 +99,32 @@ export function PowerConsole() {
             </li>
           )}
         </ul>
+        {scenario.body === "mars" && (
+          <>
+            <p className="panel-hint">
+              Routine dust settles on the array every sol, whether or not a storm hits — send
+              someone out to wipe it off, any sol, for {cleaningCostHours} crew-hours and a real
+              EVA radiation dose.
+              {locked && " Locked while the sol is running — adjust it during Sol Planning."}
+            </p>
+            <button
+              type="button"
+              className="btn"
+              disabled={locked || !canClean}
+              onClick={() => {
+                cleanSolarArrays();
+              }}
+            >
+              Clean solar arrays
+              <span className="btn-sub">
+                {cleaningCostHours} crew-hours ·{" "}
+                {remainingCrewHours >= cleaningCostHours
+                  ? "clears to the permanent floor"
+                  : `only ${remainingCrewHours.toFixed(1)} h left today`}
+              </span>
+            </button>
+          </>
+        )}
       </section>
 
       <PowerPriorities />

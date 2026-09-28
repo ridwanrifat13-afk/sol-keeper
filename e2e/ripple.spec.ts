@@ -7,14 +7,14 @@
  * switching scenarios exercises the same zustand-store-mutation-after-mount path that a
  * server render can't observe either.
  */
-import { expect, gotoApp, test } from "./fixtures.js";
+import { expect, gotoApp, openTab, test } from "./fixtures.js";
 
 test.describe("Scenario switch (Mission Command console)", () => {
   test("switching to a Moon scenario changes the mission header and system list", async ({
     page,
   }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Mission Command" }).click();
+    await openTab(page, "Mission Command");
     await expect(page.getByText("Jezero Crater")).toBeVisible();
 
     await page.getByRole("button", { name: /^First Light/ }).click();
@@ -32,13 +32,13 @@ test.describe("Scenario switch (Mission Command console)", () => {
     page,
   }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Mission Command" }).click();
+    await openTab(page, "Mission Command");
     await page.getByRole("button", { name: /^First Light/ }).click();
 
     // MOXIE is Mars-only ISRU; First Light must not list it as a system. Scoped to .tab-nav:
     // M8.4 Part E's crew-assignment control also has station-name buttons (e.g. "Power") on
     // this same page, so an unscoped lookup is ambiguous.
-    await page.locator(".tab-nav").getByRole("button", { name: "Power", exact: true }).click();
+    await openTab(page, "Power");
     await expect(page.getByText("MOXIE (oxygen from air)")).not.toBeVisible();
   });
 });
@@ -46,7 +46,7 @@ test.describe("Scenario switch (Mission Command console)", () => {
 test.describe("Mission Command console (M8.4 Part E)", () => {
   test("shows station coverage, the daily plan, and real goal status", async ({ page }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Mission Command" }).click();
+    await openTab(page, "Mission Command");
 
     await expect(page.getByText("Station coverage")).toBeVisible();
     // Jezero's own 4-person crew covers every station via primary or backup (state.ts's
@@ -68,7 +68,7 @@ test.describe("Mission Command console (M8.4 Part E)", () => {
 
   test("crew assignment is real and locked to Sol Planning", async ({ page }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Mission Command" }).click();
+    await openTab(page, "Mission Command");
 
     const firstRow = page.locator(".crew-location-row").first();
     await firstRow.getByRole("button", { name: "Comms", exact: true }).click();
@@ -88,7 +88,7 @@ test.describe("Incident Command console", () => {
     page,
   }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Incident Command" }).click();
+    await openTab(page, "Incident Command");
 
     await expect(page.getByRole("heading", { level: 2, name: "Incident Command" })).toBeVisible();
 
@@ -110,7 +110,7 @@ test.describe("Incident Command console", () => {
     page,
   }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Incident Command" }).click();
+    await openTab(page, "Incident Command");
 
     // Scoped to this specific table: the "How the connections work" evidence table (M9.x,
     // player request #2) is also a .ripple-table, with real evidence prose in its own last
@@ -127,18 +127,18 @@ test.describe("Incident Command console", () => {
 
   test("full-page screenshot for a human to look at", async ({ page }, testInfo) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Incident Command" }).click();
+    await openTab(page, "Incident Command");
     await page.waitForTimeout(300);
     await page.screenshot({ path: testInfo.outputPath("incident-command.png"), fullPage: true });
   });
 
   test("switches to reflect a different scenario's system list", async ({ page }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Mission Command" }).click();
+    await openTab(page, "Mission Command");
     await page.getByRole("button", { name: /^The Long Night/ }).click();
     // Scoped to .tab-nav: Mission Command's own crew-assignment control (M8.4 Part E) also has
     // a station-name button ("Incident Command") still on screen at this point.
-    await page.locator(".tab-nav").getByRole("button", { name: "Incident Command" }).click();
+    await openTab(page, "Incident Command");
 
     // Scoped the same way, and for the same reason, as the previous test — the new evidence
     // table also legitimately says "Reactor" (it names the power node in its From/To columns).
@@ -151,7 +151,7 @@ test.describe("Incident Command console", () => {
     page,
   }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Incident Command" }).click();
+    await openTab(page, "Incident Command");
 
     await expect(page.getByText("Nothing queued.")).toBeVisible();
     // Jezero's own 4-person crew, each starting in the habitat.
@@ -167,7 +167,7 @@ test.describe("Incident Command console", () => {
     page,
   }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Incident Command" }).click();
+    await openTab(page, "Incident Command");
 
     const firstRow = page.locator(".crew-location-row").first();
     await firstRow.getByRole("button", { name: "the storm shelter", exact: true }).click();

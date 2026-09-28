@@ -105,8 +105,11 @@ function mostInjured(state: SimState): CrewMember | undefined {
  *  not the outpost lead choosing the least-exposed member, since that knowledge is a bot/
  *  player's decision, not a fairness violation to model here) is exposed at the "eva"
  *  shielding factor for `hours`, using the exact GCR transmission physics `radiationStage`
- *  itself runs (models/radiation.ts) — not an invented EVA dose rate. */
-function applyCleaningEvaDose(ctx: TickContext, hours: number): void {
+ *  itself runs (models/radiation.ts) — not an invented EVA dose rate. Exported (M9.x, player
+ *  request): `engine/replay.ts`'s `cleanSolarArrays` input, a routine any-sol maintenance
+ *  action rather than an incident response, reuses this exact same real physics — not a
+ *  second, invented EVA dose rate for the same real act of going outside. */
+export function applyCleaningEvaDose(ctx: TickContext, hours: number): void {
   const { state } = ctx;
   const crewMember = ctx.rng.stream("incidents").pick(state.crew.filter((c) => c.alive));
   if (crewMember === undefined) return;

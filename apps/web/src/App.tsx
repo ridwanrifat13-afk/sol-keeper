@@ -128,6 +128,12 @@ export interface AppProps {
 
 export function App({ initialView = "home" }: AppProps = {}) {
   const [view, setView] = useState<View>(initialView);
+  // Player request: "make a navigation bar for the pages on mobile ui too" — below the
+  // sidebar breakpoint (.app-shell's own 860px, styles.css), the tab-nav becomes an
+  // off-canvas drawer instead of the old horizontal scrolling strip, opened by this hamburger
+  // button. Irrelevant above the breakpoint — the sidebar is always visible there, so this
+  // state is simply never read.
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [dataSourcesOpen, setDataSourcesOpen] = useState(false);
   const [linkBanner, setLinkBanner] = useState<BootRunLinkResult | undefined>(undefined);
   const [debugOverlay, setDebugOverlay] = useState(false);
@@ -205,11 +211,27 @@ export function App({ initialView = "home" }: AppProps = {}) {
         />
       ) : (
         <div className="app-shell">
-          {/* Player request: the station/tab destinations sit in a left sidebar, not a top
-           *  row — same .tab-nav class and button markup as before (nothing here changed for
-           *  any test or a11y tree that already targets it), just laid out as a vertical list
-           *  via CSS rather than a horizontal one. */}
-          <nav className="tab-nav" aria-label={t("tabs.nav")}>
+          {/* Below the sidebar breakpoint, tapping the drawer's own backdrop closes it —
+           *  above it this never renders open, so the backdrop is simply absent. */}
+          {mobileNavOpen && (
+            <div
+              className="mobile-nav-backdrop"
+              onClick={() => {
+                setMobileNavOpen(false);
+              }}
+            />
+          )}
+          {/* Player request: the station/tab destinations sit in a left sidebar on wide
+           *  screens, not a top row — same .tab-nav class and button markup as before (nothing
+           *  here changed for any test or a11y tree that already targets it), just laid out as
+           *  a vertical list via CSS rather than a horizontal one. Below the sidebar
+           *  breakpoint, a second player request: a real navigation bar for mobile too — this
+           *  becomes an off-canvas drawer instead of the old horizontal scrolling strip. */}
+          <nav
+            id="mobile-nav"
+            className={`tab-nav ${mobileNavOpen ? "tab-nav-open" : ""}`}
+            aria-label={t("tabs.nav")}
+          >
             {TAB_IDS.map((id) => (
               <button
                 key={id}
@@ -218,6 +240,7 @@ export function App({ initialView = "home" }: AppProps = {}) {
                 aria-current={view === id ? "page" : undefined}
                 onClick={() => {
                   setView(id);
+                  setMobileNavOpen(false);
                 }}
               >
                 {t(TAB_KEYS[id])}
@@ -232,6 +255,17 @@ export function App({ initialView = "home" }: AppProps = {}) {
 
           <div className="app-main">
             <div className="app-head-actions">
+              <button
+                type="button"
+                className="btn btn-quiet mobile-nav-toggle"
+                aria-expanded={mobileNavOpen}
+                aria-controls="mobile-nav"
+                onClick={() => {
+                  setMobileNavOpen((open) => !open);
+                }}
+              >
+                <span aria-hidden="true">{mobileNavOpen ? "✕" : "☰"}</span> Menu
+              </button>
               <button
                 type="button"
                 className="btn btn-quiet"

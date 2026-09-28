@@ -26,6 +26,49 @@ export const test = base.extend({
 export { expect };
 
 /**
+ * Opens the mobile nav drawer if it's present and currently closed — a no-op above the
+ * sidebar breakpoint (the "Menu" button doesn't render there at all) and a no-op if it's
+ * already open. Exists on its own, not just inside `openTab` below, for specs that need to
+ * inspect the open drawer's own contents (a tab's label, its aria-current state, ...) rather
+ * than immediately click through it.
+ */
+export async function openMobileNavIfPresent(page: Page): Promise<void> {
+  const menuButton = page.getByRole("button", { name: "Menu" });
+  if ((await menuButton.isVisible()) && (await menuButton.getAttribute("aria-expanded")) !== "true") {
+    await menuButton.click();
+  }
+}
+
+/**
+ * Closes the mobile nav drawer if it's open — needed before clicking anything else in
+ * .app-head-actions (the language switch, Home, New Mission, ...) while the drawer is open:
+ * its own backdrop sits on top of that row at a real stacking order, not just visually, so a
+ * real click (even `force: true`, which still clicks real screen coordinates, not a synthetic
+ * dispatch straight to the target) lands on the backdrop and closes the drawer instead of
+ * reaching the button underneath it.
+ */
+export async function closeMobileNavIfPresent(page: Page): Promise<void> {
+  const menuButton = page.getByRole("button", { name: "Menu" });
+  if ((await menuButton.isVisible()) && (await menuButton.getAttribute("aria-expanded")) === "true") {
+    await menuButton.click();
+  }
+}
+
+/**
+ * Clicks a real tab-nav destination by its label. Below the sidebar breakpoint the tab-nav is
+ * an off-canvas drawer (player request, M9.x) — closed by default, opened by the "Menu"
+ * hamburger button in .app-head-actions — so a direct click on a tab button there would hit
+ * an off-screen element. Opening the menu first (only when it's actually present — the
+ * hamburger button doesn't render at all above the breakpoint) makes this the one call site
+ * every spec's tab navigation goes through, real for both viewport sizes rather than assuming
+ * desktop's always-visible sidebar.
+ */
+export async function openTab(page: Page, label: string): Promise<void> {
+  await openMobileNavIfPresent(page);
+  await page.locator(".tab-nav").getByRole("button", { name: label }).click();
+}
+
+/**
  * M9: the app now opens on Setup, not Briefing — every pre-M9 spec that expects to land
  * straight on a running mission (the clock, Decision Card, and mission-head are all hidden
  * while Setup is open) needs to get off it first. Clicking any real tab bypasses Setup
@@ -34,7 +77,7 @@ export { expect };
  * that's where most pre-M9 specs already assumed they'd land.
  */
 export async function skipSetup(page: Page, tab = "Briefing"): Promise<void> {
-  await page.locator(".tab-nav").getByRole("button", { name: tab }).click();
+  await openTab(page, tab);
 }
 
 /**

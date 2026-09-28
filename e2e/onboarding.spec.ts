@@ -29,6 +29,18 @@ function tabButton(page: Page, label: string) {
   return page.locator(".tab-nav").getByRole("button", { name: label });
 }
 
+/** Actually navigates to a tab, unlike `tabButton` alone — below the sidebar breakpoint the
+ *  tab-nav is a closed-by-default off-canvas drawer (player request, M9.x), so a bare click
+ *  on the tab button would hit an off-screen element there. Opens the "Menu" hamburger first
+ *  when it's present (it doesn't render at all above the breakpoint). Every `toHaveAttribute`
+ *  assertion elsewhere in this file still reads straight off `tabButton`, since checking a DOM
+ *  attribute needs no visibility. */
+async function clickTab(page: Page, label: string): Promise<void> {
+  const menuButton = page.getByRole("button", { name: "Menu" });
+  if (await menuButton.isVisible()) await menuButton.click();
+  await tabButton(page, label).click();
+}
+
 test.describe("First Light coach mark", () => {
   test("stays off Setup and Briefing, then walks all five stations in the brief's own order", async ({ page }) => {
     await gotoApp(page);
@@ -36,13 +48,13 @@ test.describe("First Light coach mark", () => {
     await expect(page.getByRole("dialog", { name: "First Light tutorial" })).toHaveCount(0);
 
     // Briefing is reachable straight from Setup (a real tab) — the tutorial stays off it too.
-    await tabButton(page, "Briefing").click();
+    await clickTab(page, "Briefing");
     await expect(page.getByText("Mission Briefing")).toBeVisible();
     await expect(page.getByRole("dialog", { name: "First Light tutorial" })).toHaveCount(0);
 
     // Leaving Briefing for any tab starts the tutorial at its own first step (Power), not
     // necessarily the tab that was clicked.
-    await tabButton(page, "Mission Command").click();
+    await clickTab(page, "Mission Command");
     const coachMark = page.getByRole("dialog", { name: "First Light tutorial" });
     await expect(coachMark).toBeVisible();
     await expect(coachMark).toContainText("Step 1 of 5");
@@ -67,7 +79,7 @@ test.describe("First Light coach mark", () => {
 
   test("Skip tutorial dismisses it immediately, from any step", async ({ page }) => {
     await gotoApp(page);
-    await tabButton(page, "Power").click();
+    await clickTab(page, "Power");
     const coachMark = page.getByRole("dialog", { name: "First Light tutorial" });
     await expect(coachMark).toBeVisible();
 
@@ -77,7 +89,7 @@ test.describe("First Light coach mark", () => {
 
     // A reload carries the dismissal, the same persisted-choice behaviour as the Reality Dial.
     await reloadApp(page);
-    await tabButton(page, "Comms").click();
+    await clickTab(page, "Comms");
     await expect(page.getByRole("dialog", { name: "First Light tutorial" })).toHaveCount(0);
   });
 });
@@ -85,9 +97,9 @@ test.describe("First Light coach mark", () => {
 test.describe("Gauge help", () => {
   test("a gauge's '?' reveals real explanatory text, at the current Reality Dial level", async ({ page }) => {
     await gotoApp(page);
-    await tabButton(page, "Life Support").click();
+    await clickTab(page, "Life Support");
     await skipTutorialIfShown(page);
-    await tabButton(page, "Life Support").click();
+    await clickTab(page, "Life Support");
 
     const oxygenHelp = page.getByRole("button", { name: "What is Oxygen?" });
     await expect(oxygenHelp).toBeVisible();
@@ -104,10 +116,10 @@ test.describe("Gauge help", () => {
   test("cadet level shows plain-word help text instead", async ({ page }) => {
     await gotoApp(page);
     // DialSwitch is hidden while Setup is open — get off it first.
-    await tabButton(page, "Life Support").click();
+    await clickTab(page, "Life Support");
     await skipTutorialIfShown(page);
     await page.getByRole("button", { name: /^Cadet/ }).click();
-    await tabButton(page, "Life Support").click();
+    await clickTab(page, "Life Support");
 
     await page.getByRole("button", { name: "What is Oxygen?" }).click();
     await expect(page.getByText("If it gets too low, they can't breathe well.", { exact: false })).toBeVisible();

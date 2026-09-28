@@ -8,12 +8,12 @@
  * reach the "live succeeded" branch (that would need `vercel dev`, a separate manual check
  * the lead developer can run).
  */
-import { expect, gotoApp, test } from "./fixtures.js";
+import { expect, gotoApp, openTab, test } from "./fixtures.js";
 
 test.describe("Comms console", () => {
   test("falls back to the real committed snapshot when /api is unavailable, and says so", async ({ page }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Comms" }).click();
+    await openTab(page, "Comms");
 
     await expect(page.getByRole("heading", { level: 2, name: "Comms" })).toBeVisible();
 
@@ -26,14 +26,14 @@ test.describe("Comms console", () => {
 
   test("full-page screenshot for a human to look at", async ({ page }, testInfo) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Comms" }).click();
+    await openTab(page, "Comms");
     await page.waitForTimeout(3500); // let the failed live fetch time out and settle
     await page.screenshot({ path: testInfo.outputPath("comms-console.png"), fullPage: true });
   });
 
   test("downlink priority defaults to science and is locked to Sol Planning", async ({ page }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Comms" }).click();
+    await openTab(page, "Comms");
 
     const science = page.getByRole("button", { name: "Science downlink", exact: false });
     const personal = page.getByRole("button", { name: "Personal correspondence", exact: false });
@@ -52,7 +52,7 @@ test.describe("Comms console", () => {
 test.describe("Power console: space weather", () => {
   test("falls back to the real committed snapshot when /api is unavailable, and says so", async ({ page }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Power", exact: true }).click();
+    await openTab(page, "Power");
 
     // The committed snapshot is the real May 2024 storm window, which is never empty, so
     // this always reads "Snapshot" here (not "Historical event" — that label is reserved
@@ -65,7 +65,7 @@ test.describe("Power console: space weather", () => {
 
   test("full-page screenshot for a human to look at", async ({ page }, testInfo) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Power", exact: true }).click();
+    await openTab(page, "Power");
     await page.waitForTimeout(3500); // let the failed live fetch time out and settle
     await page.screenshot({ path: testInfo.outputPath("power-console-weather.png"), fullPage: true });
   });

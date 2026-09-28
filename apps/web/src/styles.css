@@ -659,38 +659,69 @@ code {
   }
 }
 
+/* Player request: "a navigation bar for the pages on mobile ui too." Below the sidebar
+   breakpoint this is now an off-canvas drawer (opened by .mobile-nav-toggle in
+   .app-head-actions), not the horizontal scrolling strip it used to be — with eight real
+   destinations, a strip needing its own horizontal scroll to reach the last few was a worse
+   "navigation bar" than a real menu, not a lesser version of one. */
 .tab-nav {
   display: flex;
-  gap: 4px;
-  margin-bottom: var(--gap);
-  border-bottom: 1px solid var(--line);
-  overflow-x: auto;
-  flex: 1;
-  /* A flex item with overflow:auto has an implicit min-width:auto-collapses-to-0 (a classic
-     flexbox quirk) — with a `flex: 1` sibling row (.app-head-actions) crowded enough (M9
-     added a third header button, "New Mission"), the row's own flex-wrap never triggers
-     because the nav can always shrink to satisfy it instead, collapsing the whole tab bar to
-     a sliver instead of wrapping .app-head-actions onto its own line. A real minimum width
-     (not 0) is what makes flex-wrap actually engage when it should. */
-  min-width: 220px;
+  flex-direction: column;
+  gap: 2px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(78vw, 280px);
+  padding: 16px 10px;
+  background: var(--shell-bg);
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+  z-index: 100;
+  transform: translateX(-100%);
+  transition: transform 0.2s ease;
+  /* Closed still means genuinely non-interactive, not just visually off-canvas — mid-close,
+     the 200ms transform transition leaves the drawer's own hit-test area still overlapping
+     real content for a moment, real enough to swallow the very next click (e.g. the coach
+     mark's "Skip tutorial" button, which can appear the instant a tab click closes this). */
+  pointer-events: none;
+}
+
+.tab-nav.tab-nav-open {
+  transform: translateX(0);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+  pointer-events: auto;
+}
+
+.mobile-nav-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 99;
 }
 
 @media (min-width: 860px) {
+  .mobile-nav-toggle,
+  .mobile-nav-backdrop {
+    display: none;
+  }
+
   .tab-nav {
-    flex-direction: column;
+    position: sticky;
+    top: 16px;
+    left: auto;
+    bottom: auto;
     flex: none;
     width: 190px;
     min-width: 190px;
-    gap: 2px;
-    margin-bottom: 0;
-    padding-bottom: 4px;
-    border-bottom: none;
+    padding: 0 0 4px;
     border-right: 1px solid var(--line);
-    overflow-x: visible;
-    /* Stays on screen while a long console scrolls — the whole reason a sidebar is more
-       useful than a top row once there's room for one. */
-    position: sticky;
-    top: 16px;
+    overflow-y: visible;
+    z-index: auto;
+    transform: none;
+    transition: none;
+    box-shadow: none;
+    pointer-events: auto;
   }
 }
 
@@ -700,10 +731,15 @@ code {
   padding-top: 4px;
 }
 
+/* Both the mobile drawer and the desktop sidebar are vertical lists now (player request), so
+   this is the one, shared style — no per-breakpoint override needed. A left border + a
+   filled background is the active indicator; never colour alone (rule 6) — the bold text
+   weight carries it too. */
 .tab-button {
   background: transparent;
   border: none;
-  border-bottom: 3px solid transparent;
+  border-left: 3px solid transparent;
+  border-radius: 0 6px 6px 0;
   color: var(--shell-text-dim);
   font: inherit;
   font-size: 0.9rem;
@@ -712,9 +748,11 @@ code {
   cursor: pointer;
   min-height: 44px;
   white-space: nowrap;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 6px;
+  width: 100%;
 }
 
 .tab-button:hover {
@@ -728,25 +766,8 @@ code {
 
 .tab-button-active {
   color: var(--shell-text);
-  border-bottom-color: var(--shell-accent);
-}
-
-@media (min-width: 860px) {
-  /* A bottom-border active indicator reads fine in a horizontal row; in a vertical list a
-     left border + a filled background is the equivalent, legible mark (still never colour
-     alone — the bold text weight and the fill both carry it too, rule 6). */
-  .tab-button {
-    border-bottom: none;
-    border-left: 3px solid transparent;
-    border-radius: 0 6px 6px 0;
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .tab-button-active {
-    border-left-color: var(--shell-accent);
-    background: rgba(11, 61, 145, 0.09);
-  }
+  border-left-color: var(--shell-accent);
+  background: rgba(11, 61, 145, 0.09);
 }
 
 .tab-badge {
@@ -762,6 +783,15 @@ code {
   padding-top: 4px;
   margin-bottom: var(--gap);
   flex-wrap: wrap;
+}
+
+/* The drawer (.tab-nav, z-index 100) sits at the left edge of the screen, the same place the
+   toggle that opens it lives — without its own higher stacking context, opening the drawer
+   would cover the one button that closes it again, with no other visible way to dismiss it
+   except tapping the backdrop, a real usability bug, not just a test artifact. */
+.mobile-nav-toggle {
+  position: relative;
+  z-index: 101;
 }
 
 .overlay-backdrop {

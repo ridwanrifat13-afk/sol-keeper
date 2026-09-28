@@ -136,6 +136,12 @@ interface RunStore {
   /** Player request (M9.x): a real lever in nominal conditions, not just during an incident —
    *  see Co2ScrubberMode's own doc comment (@sol-keeper/sim) for the trade-off this controls. */
   setCo2ScrubberMode: (mode: Co2ScrubberMode) => void;
+  /** Player request (M9.x): "quiet sol" interactivity — a routine, any-sol maintenance action
+   *  (Mars only), not gated behind the one scripted dust-storm incident. A no-op (silently, the
+   *  same "invalid target" discipline every other action here already uses) on a Moon scenario
+   *  or when today's crew-hours budget can't cover it — the console only offers the button when
+   *  it would actually do something. */
+  cleanSolarArrays: () => void;
   setPriority: (id: SystemId, direction: -1 | 1) => void;
   /** M8.1: the player-driven counterpart to `tickWithBot`'s bot-driven incident resolution
    *  (packages/sim/src/engine/runWithBot.ts) — the exact seam that file's own doc comment
@@ -274,6 +280,10 @@ export const useRun = create<RunStore>((set, get) => ({
 
   setCo2ScrubberMode: (mode) => {
     applyAndRecord(get, set, { kind: "co2ScrubberMode", mode });
+  },
+
+  cleanSolarArrays: () => {
+    applyAndRecord(get, set, { kind: "cleanSolarArrays" });
   },
 
   /**

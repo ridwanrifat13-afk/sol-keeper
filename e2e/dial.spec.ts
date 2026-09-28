@@ -6,13 +6,13 @@
  * note in apps/web/tests/render.test.tsx) — a real page load and real clicks don't have that
  * limitation, so switching the dial and finishing a mission can actually be observed here.
  */
-import { expect, gotoApp, reloadApp, skipSetup, test } from "./fixtures.js";
+import { expect, gotoApp, openMobileNavIfPresent, openTab, reloadApp, skipSetup, test } from "./fixtures.js";
 import type { Page } from "@playwright/test";
 
 test.describe("Reality Dial", () => {
   test("switching level changes gauge text without changing status colour", async ({ page }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Life Support" }).click();
+    await openTab(page, "Life Support");
 
     await expect(page.getByText("161 mmHg")).toBeVisible();
     const oxygenGaugeBefore = await page.locator(".gauge").first().getAttribute("class");
@@ -30,7 +30,7 @@ test.describe("Reality Dial", () => {
 
   test("the choice persists across a reload", async ({ page }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Life Support" }).click();
+    await openTab(page, "Life Support");
     await page.getByRole("button", { name: /^Cadet/ }).click();
     await expect(page.getByText(/Plenty of air/)).toBeVisible();
 
@@ -46,7 +46,7 @@ test.describe("Reality Dial", () => {
     page,
   }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Life Support" }).click();
+    await openTab(page, "Life Support");
     await page.getByRole("button", { name: /^Cadet/ }).click();
 
     const statuses = page.locator(".gauge-status");
@@ -64,16 +64,16 @@ test.describe("Tab navigation", () => {
     await expect(page.locator("h1")).toHaveText("Sol Keeper");
     await expect(page.getByText("Mission Briefing")).toBeVisible();
 
-    await page.getByRole("button", { name: /^Debrief/ }).click();
+    await openTab(page, "Debrief");
     await expect(page.getByText("fills in once the mission ends")).toBeVisible();
 
-    await page.getByRole("button", { name: "Briefing" }).click();
+    await openTab(page, "Briefing");
     await expect(page.getByText("Mission Briefing")).toBeVisible();
   });
 
   test("Data Sources opens as an overlay from any tab, and closes again", async ({ page }) => {
     await gotoApp(page);
-    await page.getByRole("button", { name: "Power", exact: true }).click();
+    await openTab(page, "Power");
 
     await page.getByRole("button", { name: "Data Sources" }).click();
     const overlay = page.getByRole("dialog", { name: "Data Sources" });
@@ -153,13 +153,16 @@ test.describe("Black Box debrief", () => {
     await gotoApp(page);
     await finishMission(page);
 
-    await page.getByRole("button", { name: /^Debrief/ }).click();
+    await openTab(page, "Debrief");
 
     await expect(page.getByText("Final numbers")).toBeVisible();
     await expect(page.getByText(/Major incidents \(\d+\)/)).toBeVisible();
     await expect(page.getByText(/Full mission log \(\d+\)/)).toBeVisible();
 
-    // The Debrief tab should now show its ready indicator too.
+    // The Debrief tab should now show its ready indicator too. Re-opens the mobile drawer
+    // (openTab's own click above already closed it, same as any real tab click does) so this
+    // check means what it says instead of asserting on an off-canvas element.
+    await openMobileNavIfPresent(page);
     await expect(page.getByRole("button", { name: "Debrief", exact: false }).locator(".tab-badge")).toBeVisible();
   });
 
@@ -170,7 +173,7 @@ test.describe("Black Box debrief", () => {
     test.setTimeout(60000); // auto-pause can make finishMission take more clicks than before
     await gotoApp(page);
     await finishMission(page);
-    await page.getByRole("button", { name: /^Debrief/ }).click();
+    await openTab(page, "Debrief");
     await page.waitForTimeout(200);
     await page.screenshot({ path: testInfo.outputPath("debrief.png"), fullPage: true });
   });

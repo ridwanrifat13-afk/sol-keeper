@@ -4,14 +4,22 @@
  * shell and Live Sky, now split across the Power and Comms consoles per M8.3) — see
  * i18n/config.ts for what is and isn't covered yet.
  */
-import { expect, gotoApp, reloadApp, test } from "./fixtures.js";
+import { expect, gotoApp, closeMobileNavIfPresent, openMobileNavIfPresent, openTab, reloadApp, test } from "./fixtures.js";
 
 test.describe("Language switch", () => {
   test("switching to বাংলা changes the tab labels and Power console text, and persists across a reload", async ({
     page,
   }) => {
     await gotoApp(page);
+    // Below the sidebar breakpoint the tab-nav is a closed-by-default drawer (player request,
+    // M9.x) — opened here so the label-visibility checks below mean what they say, not just
+    // "would be visible if the menu were open."
+    await openMobileNavIfPresent(page);
     await expect(page.getByRole("button", { name: "Power", exact: true })).toBeVisible();
+    // The drawer's own backdrop sits on top of .app-head-actions (where বাংলা lives) while
+    // open — close it first, or the click below lands on the backdrop instead (closing the
+    // drawer) rather than actually switching language.
+    await closeMobileNavIfPresent(page);
 
     // `force: true`: a known category of false-positive pointer-event interception under
     // mobile-chrome's touch-viewport emulation between two small adjacent header buttons
@@ -20,20 +28,22 @@ test.describe("Language switch", () => {
     // shows both buttons correctly positioned and unobstructed; desktop chromium never hits
     // this; window.scrollX/Y sampled over 30 frames here stays at a stable (0, 0)).
     await page.getByRole("button", { name: "বাংলা" }).click({ force: true });
+    await openMobileNavIfPresent(page);
     await expect(page.getByRole("button", { name: "পাওয়ার", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "কমস" })).toBeVisible();
 
-    await page.getByRole("button", { name: "পাওয়ার", exact: true }).click();
+    await openTab(page, "পাওয়ার");
     await expect(page.getByText("পৃথিবী")).not.toBeVisible(); // that text lives on Comms now
     await expect(page.getByText(/সাম্প্রতিক/)).toBeVisible();
 
-    await page.getByRole("button", { name: "কমস" }).click();
+    await openTab(page, "কমস");
     await expect(page.getByText("পৃথিবী থেকে দূরত্ব")).toBeVisible();
 
     // The tab shown is plain useState, not persisted (a fresh load always opens on
     // Briefing); the language choice itself is what's expected to survive a reload.
     await reloadApp(page);
     await expect(page.getByRole("button", { name: "বাংলা" })).toHaveAttribute("aria-pressed", "true");
+    await openMobileNavIfPresent(page);
     await expect(page.getByRole("button", { name: "পাওয়ার", exact: true })).toBeVisible();
   });
 });
@@ -45,7 +55,7 @@ test.describe("Language switch screenshot", () => {
     await gotoApp(page);
     // See the other test's own note on `force: true` above.
     await page.getByRole("button", { name: "বাংলা" }).click({ force: true });
-    await page.getByRole("button", { name: "কমস" }).click();
+    await openTab(page, "কমস");
     await page.waitForTimeout(3500);
     await page.screenshot({ path: testInfo.outputPath("comms-console-bn.png"), fullPage: true });
   });

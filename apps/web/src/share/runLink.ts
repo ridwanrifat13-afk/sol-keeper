@@ -240,8 +240,9 @@ const KIND_TAGS: readonly RunInput["kind"][] = [
   "commsPriority",
   "incidentResponse",
   // Appended, not inserted (this table's own append-only rule, see file header) — player
-  // request (M9.x), a new lever added well after every kind above it.
+  // request (M9.x), two new levers added well after every kind above them.
   "co2ScrubberMode",
+  "cleanSolarArrays",
 ];
 const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
 const CREW_LOCATIONS: readonly CrewLocation[] = ["habitat", "stormShelter", "eva"];
@@ -336,6 +337,8 @@ function writeRunInput(bytes: number[], input: RunInput): void {
     case "co2ScrubberMode":
       bytes.push(tableIndexOf(CO2_SCRUBBER_MODES, input.mode, "co2 scrubber mode"));
       return;
+    case "cleanSolarArrays":
+      return; // no payload — the kind byte alone is the whole input
   }
 }
 
@@ -375,6 +378,8 @@ function readRunInput(reader: ByteReader): RunInput {
     }
     case "co2ScrubberMode":
       return { kind, mode: tableAt(CO2_SCRUBBER_MODES, reader.readByte(), "co2 scrubber mode") };
+    case "cleanSolarArrays":
+      return { kind };
   }
 }
 
