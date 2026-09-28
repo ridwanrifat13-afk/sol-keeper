@@ -6,7 +6,7 @@
  * Processor Assembly. Stored water also doubles as radiation shielding, so spending it
  * makes the crew more exposed — see the radiation model.
  */
-import { crew as crewConstants, habitat, lifeSupport } from "../data/constants.js";
+import { habitat, lifeSupport, survivalModes } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
 import { clamp, perDayToPerHour } from "../units.js";
 
@@ -14,7 +14,10 @@ const clamp01 = (x: number): number => clamp(x, 0, 1);
 
 /**
  * Water lost over a mission, given the recovery fraction. Pure arithmetic, exported so the
- * validation tests and the Prepare-view planner can both call it.
+ * validation tests and the Prepare-view planner can both call it. Pre-mission ESM/Launch-
+ * Packing sizing deliberately keeps using `crew.waterUseTotalKgPerCrewDay` (the BVAD-2022
+ * total-use figure) as its own `dailyUseKgPerCrew` input — a mission is packed and launched
+ * assuming nominal operation, not planned around a rationing mode nobody's chosen yet.
  */
 export function missionWaterLossKg(
   crewSize: number,
@@ -23,6 +26,17 @@ export function missionWaterLossKg(
   recoveryFraction: number,
 ): number {
   return crewSize * days * dailyUseKgPerCrew * (1 - recoveryFraction);
+}
+
+/**
+ * Daily water ration for the selected survival mode — OCHMO-TB047's own per-mode figure
+ * (`survivalModes[mode].waterLitersPerCrewDay`), the exact same source and shape as
+ * `food.ts`'s `rationKgPerCrewDay`. 1 L of water is 1 kg (density ~1.00 kg/L at habitat
+ * temperature) — a physical equivalence, not a tuned conversion, so the constant's own L
+ * figure is used directly as a kg rate.
+ */
+export function waterRationKgPerCrewDay(mode: keyof typeof survivalModes): number {
+  return survivalModes[mode].waterLitersPerCrewDay.value;
 }
 
 export function waterStage(ctx: TickContext): void {
@@ -38,8 +52,13 @@ export function waterStage(ctx: TickContext): void {
       ? lifeSupport.waterRecoveryFractionBaseline.value * (1 - recovery.efficiencyPenaltyFraction)
       : 0;
 
+  // M9.x (player request #7): rationing already had a real, sourced per-mode water figure
+  // declared (OCHMO-TB047's own waterLitersPerCrewDay) but it sat unused — this hour's usage
+  // always drew the flat nominal-mode rate regardless of which mode was actually selected, so
+  // switching to mode1/mode2 cut food and warmth but never actually stretched the water
+  // supply. Wired in the same way food.ts/thermal.ts already read the mode's own figure.
   const usedKg =
-    living * perDayToPerHour(crewConstants.waterUseTotalKgPerCrewDay.value) * ctx.dtHours;
+    living * perDayToPerHour(waterRationKgPerCrewDay(state.food.mode)) * ctx.dtHours;
   const recoveredKg = usedKg * w.recoveryFraction;
   const lostKg = usedKg - recoveredKg;
 
@@ -92,7 +111,7 @@ export function waterStage(ctx: TickContext): void {
     });
   }
 
-  if (w.potableKg < living * crewConstants.waterUseTotalKgPerCrewDay.value) {
+  if (w.potableKg < living * waterRationKgPerCrewDay(state.food.mode)) {
     log.logEdge({
       kind: "resource",
       severity: "critical",

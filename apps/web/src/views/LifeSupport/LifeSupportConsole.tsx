@@ -1,4 +1,4 @@
-import { cropRequiredLightHours, survivalModes, type SurvivalMode } from "@sol-keeper/sim";
+import { cropRequiredLightHours, habitat, physiology, survivalModes, type SurvivalMode } from "@sol-keeper/sim";
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { Gauge } from "../../components/Gauge.js";
@@ -131,11 +131,39 @@ export function LifeSupportConsole() {
             >
               {survivalModeLabel(m, level, language)}
               <span className="btn-sub">
-                {survivalModes[m].kcalPerCrewDay.value} kcal · {survivalModes[m].habitatTempC.value} °C
+                {survivalModes[m].kcalPerCrewDay.value} kcal · {survivalModes[m].waterLitersPerCrewDay.value} L water ·{" "}
+                {survivalModes[m].habitatTempC.value} °C
               </span>
             </button>
           ))}
         </div>
+        <details className="panel-detail">
+          <summary>Why only food, water, and warmth?</summary>
+          <p>
+            Rations is the one real trade-off dial because eating less, drinking less, and running colder are
+            choices a crew can actually make, at a real and survivable cost. Oxygen and CO₂ aren't — the
+            life-support loop's whole job is to hold them at fixed safety thresholds regardless of what a
+            trainee would prefer, so there's no "loosen it a bit" setting: past those thresholds is system
+            failure, not a comfort trade-off.
+          </p>
+          <ul className="status-list">
+            <li>
+              <span className="status-list-label">Oxygen</span>
+              <span className="status-list-value">
+                Held near {habitat.targetO2PartialPressureMmHg.value} mmHg; mild hypoxia begins below{" "}
+                {physiology.pio2HypoxiaLowerLimitMmHg.value} mmHg (OCHMO-TB003).
+              </span>
+            </li>
+            <li>
+              <span className="status-list-label">CO₂</span>
+              <span className="status-list-value">
+                Capped at each mode&apos;s own limit above ({survivalModes.nominal.co2LimitMmHg.value}–
+                {survivalModes.mode2.co2LimitMmHg.value} mmHg across modes); {physiology.co2ImmediatelyDangerousMmHg.value}{" "}
+                mmHg is immediately dangerous to life and health (OCHMO-TB004).
+              </span>
+            </li>
+          </ul>
+        </details>
       </section>
 
       {/* M8.4 Part B: read-only — no settable MOXIE-priority or crop-priority control exists

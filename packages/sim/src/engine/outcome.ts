@@ -8,12 +8,12 @@
  */
 import {
   abort as abortConstants,
-  crew as crewConstants,
   environment,
   physiology,
   radiation as radConstants,
 } from "../data/constants.js";
 import { rationKgPerCrewDay } from "../models/food.js";
+import { waterRationKgPerCrewDay } from "../models/water.js";
 import type { CrewMember } from "../types.js";
 import { daysToHours, perDayToPerHour } from "../units.js";
 import type { TickContext } from "./context.js";
@@ -122,7 +122,7 @@ export function shouldConsiderAbort(ctx: TickContext): { readonly reasonCode: st
   const living = state.crew.filter((c) => c.alive).length;
   const hoursRemaining = scenario.durationHours - state.hour;
   if (living > 0 && hoursRemaining > 0) {
-    const waterKgPerHour = living * perDayToPerHour(crewConstants.waterUseTotalKgPerCrewDay.value);
+    const waterKgPerHour = living * perDayToPerHour(waterRationKgPerCrewDay(state.food.mode));
     const waterHoursLeft = waterKgPerHour > 0 ? state.water.potableKg / waterKgPerHour : Infinity;
 
     const foodKgPerHour = living * perDayToPerHour(rationKgPerCrewDay(state.food.mode));

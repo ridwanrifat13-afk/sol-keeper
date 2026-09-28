@@ -30,7 +30,7 @@ describe(`SIM_VERSION ${SIM_VERSION} golden fingerprints`, () => {
       { scenarioId: "jezero-outpost", seed: 12345, crewSize: 4, missionStartIso: "2033-03-01", difficulty: "nominal" },
       200,
     );
-    expect(runFingerprint(state)).toBe("1f920d4043738033");
+    expect(runFingerprint(state)).toBe("f08260278bed554c");
   });
 
   it("First Light, seed 777, flightRated, 400 hours", () => {
@@ -38,6 +38,6 @@ describe(`SIM_VERSION ${SIM_VERSION} golden fingerprints`, () => {
       { scenarioId: "first-light", seed: 777, crewSize: 2, missionStartIso: "2033-03-01", difficulty: "flightRated" },
       400,
     );
-    expect(runFingerprint(state)).toBe("f4fa26cab63e8a8e");
+    expect(runFingerprint(state)).toBe("557605145c72bac5");
   });
 });

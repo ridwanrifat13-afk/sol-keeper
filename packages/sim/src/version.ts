@@ -14,4 +14,4 @@
  * A decoded run link whose `v` doesn't match this shows "made with an older version"
  * (apps/web's `share/runLink.ts`) rather than silently replaying wrong, or crashing.
  */
-export const SIM_VERSION = 1;
+export const SIM_VERSION = 2;

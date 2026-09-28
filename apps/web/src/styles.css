@@ -183,6 +183,24 @@ code {
   font-size: 0.82rem;
 }
 
+.panel-detail {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 0.82rem;
+}
+
+.panel-detail summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.panel-detail p {
+  margin: 8px 0;
+  color: var(--text-dim);
+}
+
 .two-col {
   display: grid;
   grid-template-columns: 1fr;

@@ -99,18 +99,18 @@ describe("M10.5: runLink query codec", () => {
 
   const invalidCases: [string, string][] = [
     ["v=notanumber&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=1", "version"],
-    ["v=1&sc=bogus&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=1", "scenario"],
-    ["v=1&sc=jezero-outpost&d=bogus&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=1", "difficulty"],
-    ["v=1&sc=jezero-outpost&d=nominal&cs=1&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=1", "crew size"],
-    ["v=1&sc=jezero-outpost&d=nominal&cs=99&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=1", "crew size"],
-    ["v=1&sc=jezero-outpost&d=nominal&cs=4&site=BOGUS&power=solarBattery&shield=hullOnly&seed=1", "landing site"],
+    [`v=${SIM_VERSION}&sc=bogus&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=1`, "scenario"],
+    [`v=${SIM_VERSION}&sc=jezero-outpost&d=bogus&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=1`, "difficulty"],
+    [`v=${SIM_VERSION}&sc=jezero-outpost&d=nominal&cs=1&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=1`, "crew size"],
+    [`v=${SIM_VERSION}&sc=jezero-outpost&d=nominal&cs=99&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=1`, "crew size"],
+    [`v=${SIM_VERSION}&sc=jezero-outpost&d=nominal&cs=4&site=BOGUS&power=solarBattery&shield=hullOnly&seed=1`, "landing site"],
     // A real site, but for the wrong body — jezero-outpost is Mars, MOON-MALAPERT is the Moon.
-    ["v=1&sc=jezero-outpost&d=nominal&cs=4&site=MOON-MALAPERT&power=solarBattery&shield=hullOnly&seed=1", "does not match"],
-    ["v=1&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=bogus&shield=hullOnly&seed=1", "power"],
-    ["v=1&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=bogus&seed=1", "shielding"],
-    ["v=1&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=-1", "seed"],
-    [`v=1&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=${MAX_SEED + 1}`, "seed"],
-    ["v=1&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly", "seed"],
+    [`v=${SIM_VERSION}&sc=jezero-outpost&d=nominal&cs=4&site=MOON-MALAPERT&power=solarBattery&shield=hullOnly&seed=1`, "does not match"],
+    [`v=${SIM_VERSION}&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=bogus&shield=hullOnly&seed=1`, "power"],
+    [`v=${SIM_VERSION}&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=bogus&seed=1`, "shielding"],
+    [`v=${SIM_VERSION}&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=-1`, "seed"],
+    [`v=${SIM_VERSION}&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=${MAX_SEED + 1}`, "seed"],
+    [`v=${SIM_VERSION}&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly`, "seed"],
   ];
   for (const [query, expectedReasonFragment] of invalidCases) {
     it(`rejects as invalid: ${query}`, () => {
@@ -181,7 +181,7 @@ describe("M10.5: frozen-literal regression", () => {
   // already shared. A deliberate format change updates these two literals *and* explains why
   // in the commit message, per CLAUDE.md's own SIM_VERSION-adjacent discipline.
   const FROZEN_QUERY =
-    "v=1&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=123456";
+    `v=${SIM_VERSION}&sc=jezero-outpost&d=nominal&cs=4&site=MARS-JEZERO&power=solarBattery&shield=hullOnly&seed=123456`;
   const FROZEN_FRAGMENT = "kAMCAAQBBAAB";
 
   it("the frozen query string still decodes to the exact same config", () => {
