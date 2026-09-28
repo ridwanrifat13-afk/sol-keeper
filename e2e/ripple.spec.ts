@@ -112,9 +112,13 @@ test.describe("Incident Command console", () => {
     await gotoApp(page);
     await page.getByRole("button", { name: "Incident Command" }).click();
 
-    await expect(page.getByRole("cell", { name: "Life support", exact: true })).toBeVisible();
-    await expect(page.getByRole("cell", { name: "Crew", exact: true })).toBeVisible();
-    const statusCells = page.locator(".ripple-table td:last-child");
+    // Scoped to this specific table: the "How the connections work" evidence table (M9.x,
+    // player request #2) is also a .ripple-table, with real evidence prose in its own last
+    // column, not a status word — a blanket `.ripple-table` selector would wrongly include it.
+    const statusTable = page.locator("section", { has: page.getByRole("heading", { name: "Same information, as text" }) });
+    await expect(statusTable.getByRole("cell", { name: "Life support", exact: true })).toBeVisible();
+    await expect(statusTable.getByRole("cell", { name: "Crew", exact: true })).toBeVisible();
+    const statusCells = statusTable.locator(".ripple-table td:last-child");
     await expect(statusCells.first()).toBeVisible();
     for (const text of await statusCells.allInnerTexts()) {
       expect(text).toMatch(/Standby|Powered|Shed|Failed|Nominal|Caution|Critical/);
@@ -136,8 +140,11 @@ test.describe("Incident Command console", () => {
     // a station-name button ("Incident Command") still on screen at this point.
     await page.locator(".tab-nav").getByRole("button", { name: "Incident Command" }).click();
 
-    await expect(page.getByRole("cell", { name: "MOXIE (oxygen from air)" })).toHaveCount(0);
-    await expect(page.getByRole("cell", { name: "Reactor" })).toBeVisible();
+    // Scoped the same way, and for the same reason, as the previous test — the new evidence
+    // table also legitimately says "Reactor" (it names the power node in its From/To columns).
+    const statusTable = page.locator("section", { has: page.getByRole("heading", { name: "Same information, as text" }) });
+    await expect(statusTable.getByRole("cell", { name: "MOXIE (oxygen from air)" })).toHaveCount(0);
+    await expect(statusTable.getByRole("cell", { name: "Reactor" })).toBeVisible();
   });
 
   test("shows an empty repair queue and every living crew member's real location control", async ({

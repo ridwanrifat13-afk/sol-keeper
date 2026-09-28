@@ -26,21 +26,30 @@ describe("buildRippleGraph", () => {
   it("Jezero has a MOXIE node, and it feeds oxygen", () => {
     const { nodes, edges } = buildRippleGraph(jezeroOutpost);
     expect(nodes.some((n) => n.id === "moxie")).toBe(true);
-    expect(edges).toContainEqual({ source: "moxie", target: "oxygen" });
+    expect(edges).toContainEqual(expect.objectContaining({ source: "moxie", target: "oxygen" }));
   });
 
   it("every system has a power edge feeding it", () => {
     const { edges } = buildRippleGraph(jezeroOutpost);
     for (const spec of jezeroOutpost.systems) {
-      expect(edges).toContainEqual({ source: "power", target: spec.id });
+      expect(edges).toContainEqual(expect.objectContaining({ source: "power", target: spec.id }));
     }
   });
 
   it("water feeds shielding, and shielding feeds crew, whenever water is a node at all", () => {
     const { nodes, edges } = buildRippleGraph(jezeroOutpost);
     expect(nodes.some((n) => n.id === "water")).toBe(true);
-    expect(edges).toContainEqual({ source: "water", target: "radiation" });
-    expect(edges).toContainEqual({ source: "radiation", target: "crew" });
+    expect(edges).toContainEqual(expect.objectContaining({ source: "water", target: "radiation" }));
+    expect(edges).toContainEqual(expect.objectContaining({ source: "radiation", target: "crew" }));
+  });
+
+  it("every edge carries real, non-empty evidence text", () => {
+    for (const scenario of [jezeroOutpost, firstLight, theLongNight]) {
+      const { edges } = buildRippleGraph(scenario);
+      for (const edge of edges) {
+        expect(edge.evidence.length, `${edge.source} -> ${edge.target}`).toBeGreaterThan(0);
+      }
+    }
   });
 
   it("every domain node used by an edge also exists as a node — no dangling edges", () => {

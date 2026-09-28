@@ -107,10 +107,16 @@ export function IncidentCommandConsole() {
     return node.kind === "system" ? systemLabel(node.id as SystemId, level, language) : node.label;
   }
 
+  const nodeById = new Map(nodes.map((n) => [n.id, n]));
+  function labelById(id: string): string {
+    const node = nodeById.get(id);
+    return node === undefined ? id : label(node);
+  }
+
   const edgeLines = edges.map((e) => {
     const source = laidOut.find((n) => n.id === e.source);
     const target = laidOut.find((n) => n.id === e.target);
-    return { key: `${e.source}-${e.target}`, source, target };
+    return { key: `${e.source}-${e.target}`, source, target, evidence: e.evidence };
   });
 
   return (
@@ -132,7 +138,7 @@ export function IncidentCommandConsole() {
           aria-label="Dependency graph of the outpost's systems, resources and crew. A full text version follows below."
           className="ripple-svg"
         >
-          {edgeLines.map(({ key, source, target }) =>
+          {edgeLines.map(({ key, source, target, evidence }) =>
             source && target ? (
               <line
                 key={key}
@@ -141,7 +147,9 @@ export function IncidentCommandConsole() {
                 x2={target.x}
                 y2={target.y}
                 className="ripple-edge"
-              />
+              >
+                <title>{evidence}</title>
+              </line>
             ) : null,
           )}
           {laidOut.map((node) => {
@@ -193,6 +201,32 @@ export function IncidentCommandConsole() {
         </table>
       </section>
 
+      <section className="panel" aria-labelledby="ripple-evidence-heading">
+        <h2 id="ripple-evidence-heading">How the connections work</h2>
+        <p className="panel-hint">
+          Every line above corresponds to a real check in the simulation's own model code, not a
+          drawn guess — hover a line for the same text, or read it here.
+        </p>
+        <table className="ripple-table">
+          <thead>
+            <tr>
+              <th scope="col">From</th>
+              <th scope="col">To</th>
+              <th scope="col">Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            {edges.map((e) => (
+              <tr key={`${e.source}-${e.target}`}>
+                <td>{labelById(e.source)}</td>
+                <td>{labelById(e.target)}</td>
+                <td className="ripple-evidence-cell">{e.evidence}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
       <section className="panel" aria-labelledby="repair-queue-heading">
         <h2 id="repair-queue-heading">Repair queue</h2>
         <p className="panel-hint">
@@ -205,10 +239,26 @@ export function IncidentCommandConsole() {
             {state.crewHours.queue.map((item) => {
               const def = INCIDENT_CATALOG.find((d) => d.id === item.definitionId);
               const response = def?.responses.find((r) => r.id === item.responseId);
+              const sparesSystem =
+                response?.sparesFromSystem !== undefined ? state.systems[response.sparesFromSystem] : undefined;
+              const shortfall =
+                response?.sparesCost !== undefined && sparesSystem !== undefined && sparesSystem.spares < response.sparesCost;
               return (
                 <li key={item.id}>
                   <span className="status-list-label">
                     {response !== undefined ? decisionText(response.i18nKey, level, undefined, language) : item.responseId}
+                    {response?.sparesCost !== undefined && response.sparesFromSystem !== undefined && (
+                      <span className="repair-queue-spares">
+                        {" "}
+                        — needs {response.sparesCost} spare(s) from {systemLabel(response.sparesFromSystem, level, language)}
+                        {sparesSystem !== undefined && (
+                          <>
+                            {" "}
+                            ({sparesSystem.spares} in stock{shortfall ? ", will fall short — improvised repair" : ""})
+                          </>
+                        )}
+                      </span>
+                    )}
                   </span>
                   <span className="status-list-value">{item.hoursRemaining.toFixed(1)} h left</span>
                 </li>
@@ -216,6 +266,23 @@ export function IncidentCommandConsole() {
             })}
           </ul>
         )}
+      </section>
+
+      <section className="panel" aria-labelledby="spares-heading">
+        <h2 id="spares-heading">Spares inventory</h2>
+        <p className="panel-hint">
+          What each system has on hand right now — a response that costs more spares than a
+          system has in stock still gets attempted, but leaves a permanent efficiency penalty
+          (an improvised repair), same as the Decision Card's own declared trade-offs.
+        </p>
+        <ul className="status-list">
+          {Object.entries(state.systems).map(([id, sys]) => (
+            <li key={id}>
+              <span className="status-list-label">{systemLabel(id as SystemId, level, language)}</span>
+              <span className="status-list-value">{sys.spares} spare(s)</span>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="panel" aria-labelledby="crew-location-heading">
