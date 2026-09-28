@@ -158,25 +158,31 @@
 }
 
 /* Hero headline — sticky-pinned over the center image, same as the image itself, so it reads
-   clearly at rest and fades out fast once the player starts scrolling. */
+   clearly at rest and fades out fast once the player starts scrolling. Left-aligned (never
+   centered — player request: homepage text sections sit left or right, not in the middle),
+   with a left-side scrim so it stays legible regardless of what's under it. */
 .modern-hero-headline {
   position: sticky;
   top: 0;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  text-align: center;
+  text-align: left;
   gap: 0.9rem;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
   margin-top: -100vh;
   z-index: 5;
   pointer-events: none;
-  /* A soft scrim behind the text block itself (not the whole viewport) so the headline reads
-     cleanly regardless of what's under it at rest, when the center image is still a small
-     clipped box directly behind this centered text. */
-  background: radial-gradient(ellipse 60% 55% at center, rgba(5, 6, 10, 0.72) 0%, rgba(5, 6, 10, 0) 72%);
+  background: linear-gradient(90deg, rgba(5, 6, 10, 0.82) 0%, rgba(5, 6, 10, 0.55) 42%, rgba(5, 6, 10, 0) 75%);
+}
+
+@media (min-width: 900px) {
+  .modern-hero-headline {
+    padding-left: 4.5rem;
+    max-width: 60%;
+  }
 }
 
 .modern-hero-headline-eyebrow {
@@ -227,8 +233,8 @@
 @media (max-width: 640px) {
   .modern-hero-headline-missions {
     flex-wrap: wrap;
-    justify-content: center;
-    text-align: center;
+    justify-content: flex-start;
+    text-align: left;
   }
 }
 
@@ -310,15 +316,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.75rem 0.75rem;
-  border-bottom: 1px solid #27272a;
+  padding: 1.75rem 1.25rem;
+  margin-bottom: 0.75rem;
+  border-radius: 10px;
+  /* Solid-ish panel at rest, not just on hover (player request: "make the shortcuts section a
+     bit less transparent") — each shortcut now reads as its own card against the page. */
+  background-color: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   transition:
     background-color 0.2s,
     border-color 0.2s;
 }
 
 .modern-hero-schedule-item:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: rgba(255, 255, 255, 0.08);
   border-color: #3f3f46;
 }
 
