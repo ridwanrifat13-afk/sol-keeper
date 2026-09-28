@@ -249,14 +249,19 @@ test.describe("Life Support console", () => {
   test("no NASA logo or insignia is present (brief rule 5)", async ({ page }) => {
     await gotoApp(page);
     await page.getByRole("button", { name: "Life Support" }).click();
+    await page.waitForTimeout(500);
 
     await expect(page.getByText("Not affiliated with or endorsed by NASA")).toBeVisible();
     // Scoped to the Life Support console specifically (this describe block's own subject):
-    // Briefing's own real Trek map tiles are real <img> elements now (M8.6) — checked for the
-    // same rule separately, in e2e/briefing.spec.ts, against what they actually are rather
-    // than assuming the whole app stays imageless forever.
-    const images = await page.locator("img").count();
-    expect(images).toBe(0);
+    // real NASA hardware photos (player request #4, FactCardGallery) are real <img> elements
+    // now, the same "not imageless forever" reasoning briefing.spec.ts's own equivalent check
+    // already documents for the Trek map tiles — checked here the same way: every <img>'s src
+    // must be real NASA Image Library asset content, never a logo/insignia graphic.
+    const srcs = await page.locator("img").evaluateAll((els) => els.map((el) => el.getAttribute("src") ?? ""));
+    expect(srcs.length).toBeGreaterThan(0);
+    for (const src of srcs) {
+      expect(src).toMatch(/images-assets\.nasa\.gov/);
+    }
   });
 
   test("full-page screenshot for a human to look at", async ({ page }, testInfo) => {

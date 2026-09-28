@@ -10,6 +10,7 @@ import {
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { Gauge } from "../../components/Gauge.js";
+import { FactCardGallery } from "../../components/FactCardGallery.js";
 import { statusWord } from "../../dial/statusWords.js";
 import { cropLabel, survivalModeLabel } from "../../dial/labels.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
@@ -215,6 +216,9 @@ export function LifeSupportConsole() {
           })}
         </ul>
       </section>
+
+      <FactCardGallery topic="co2-scrubber" heading="Real hardware: the ISS's CDRA CO₂ scrubber" />
+      <FactCardGallery topic="veggie" heading="Real hardware: NASA's Veggie plant-growth hardware" />
     </div>
   );
 }

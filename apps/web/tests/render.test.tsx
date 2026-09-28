@@ -243,7 +243,10 @@ describe("Comms console, first frame", () => {
     expect(out).toContain("Distance to Earth");
     // The light-time data hook fetches inside a useEffect, which never runs during SSR (see
     // the note on Power console's own equivalent check) — still "Loading…", not a stale claim.
-    expect((out.match(/Loading…/g) ?? []).length).toBe(1);
+    // Two matches, not one: the console now also carries a FactCardGallery (real NASA hardware
+    // photos, player request #4), whose own useLiveOrSnapshot fetch is equally SSR-inert and
+    // equally honest about it via the same ProvenanceBadge "Loading…" state.
+    expect((out.match(/Loading…/g) ?? []).length).toBe(2);
   });
 });
 

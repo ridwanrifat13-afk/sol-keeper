@@ -15,10 +15,8 @@ import { useDial } from "../../store/dial.js";
 import { CrewPanel } from "../../components/CrewPanel.js";
 import { ScenarioSwitch } from "../../components/ScenarioSwitch.js";
 import { EsmPanel } from "../../components/EsmPanel.js";
-import { FactCardGallery } from "../../components/FactCardGallery.js";
 import { STATUS } from "../../components/status.js";
 import { stationLabel, survivalModeLabel } from "../../dial/labels.js";
-import { powerFactCardTopicFor } from "../../dial/factCardTopics.js";
 import { goalText } from "../../i18n/goalText.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 
@@ -172,22 +170,6 @@ export function MissionCommandConsole() {
       </section>
 
       <EsmPanel />
-
-      <section className="panel" aria-labelledby="real-hardware-heading">
-        <h2 id="real-hardware-heading">Real hardware</h2>
-        <p className="panel-hint">
-          Player request: what does the crew actually operate? Real NASA photos of the hardware
-          each station's console models — not concept art, the real flight or flight-derived
-          units.
-        </p>
-      </section>
-      <FactCardGallery
-        topic={powerFactCardTopicFor(scenario.body)}
-        heading={scenario.body === "mars" ? "Power: MOXIE (Mars ISRU)" : "Power: the lunar south pole"}
-      />
-      <FactCardGallery topic="co2-scrubber" heading="Life support: the ISS's CDRA CO₂ scrubber" />
-      <FactCardGallery topic="veggie" heading="Crops: NASA's Veggie plant-growth hardware" />
-      <FactCardGallery topic="deep-space-network" heading="Comms: the Deep Space Network" />
     </div>
   );
 }

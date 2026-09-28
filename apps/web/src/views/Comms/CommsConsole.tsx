@@ -4,6 +4,7 @@ import type { CommsPriority } from "@sol-keeper/sim";
 import { useRun } from "../../store/run.js";
 import { useLiveOrSnapshot } from "../../data/liveOrSnapshot.js";
 import { ProvenanceBadge } from "../../components/ProvenanceBadge.js";
+import { FactCardGallery } from "../../components/FactCardGallery.js";
 import type { LightTimeResponse } from "../../../server-lib/types.js";
 
 function todayIso(): string {
@@ -109,6 +110,8 @@ export function CommsConsole() {
           ))}
         </div>
       </section>
+
+      <FactCardGallery topic="deep-space-network" heading="Real hardware: the Deep Space Network" />
     </div>
   );
 }
