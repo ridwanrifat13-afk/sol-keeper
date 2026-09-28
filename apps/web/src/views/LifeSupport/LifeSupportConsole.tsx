@@ -148,14 +148,14 @@ export function LifeSupportConsole() {
           </p>
           <ul className="status-list">
             <li>
-              <span className="status-list-label">Oxygen</span>
+              <span className="status-list-label">Oxygen limit</span>
               <span className="status-list-value">
                 Held near {habitat.targetO2PartialPressureMmHg.value} mmHg; mild hypoxia begins below{" "}
                 {physiology.pio2HypoxiaLowerLimitMmHg.value} mmHg (OCHMO-TB003).
               </span>
             </li>
             <li>
-              <span className="status-list-label">CO₂</span>
+              <span className="status-list-label">CO₂ limit</span>
               <span className="status-list-value">
                 Capped at each mode&apos;s own limit above ({survivalModes.nominal.co2LimitMmHg.value}–
                 {survivalModes.mode2.co2LimitMmHg.value} mmHg across modes); {physiology.co2ImmediatelyDangerousMmHg.value}{" "}

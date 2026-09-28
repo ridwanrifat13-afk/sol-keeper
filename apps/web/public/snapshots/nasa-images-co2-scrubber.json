@@ -1,0 +1,42 @@
+{
+  "source": "snapshot",
+  "fetchedAt": "2026-09-28T09:34:00.000Z",
+  "items": [
+    {
+      "nasaId": "iss043e181459",
+      "title": "Node 3 CDRA Replacement",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss043e181459/iss043e181459~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "iss039e010369",
+      "title": "Swanson during Day 2 of CDRA IFM",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss039e010369/iss039e010369~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "iss039e010367",
+      "title": "Swanson during Day 2 of CDRA IFM",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss039e010367/iss039e010367~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "iss028e034305",
+      "title": "iss028e034305",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss028e034305/iss028e034305~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "iss040e026221",
+      "title": "CDRA Bed 202 Removal and Transfer",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss040e026221/iss040e026221~thumb.jpg",
+      "credit": "JSC"
+    },
+    {
+      "nasaId": "iss022e052257",
+      "title": "CDRA in the JPM during Expedition 22",
+      "thumbUrl": "https://images-assets.nasa.gov/image/iss022e052257/iss022e052257~thumb.jpg",
+      "credit": "JSC"
+    }
+  ]
+}

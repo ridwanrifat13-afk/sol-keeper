@@ -1,0 +1,42 @@
+{
+  "source": "snapshot",
+  "fetchedAt": "2026-09-28T09:34:00.000Z",
+  "items": [
+    {
+      "nasaId": "PIA25136",
+      "title": "A New Antenna for NASA's Deep Space Network",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA25136/PIA25136~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA24163",
+      "title": "New All-in-One Antenna for the Deep Space Network",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA24163/PIA24163~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA26147",
+      "title": "Six Deep Space Network Antennas in Madrid Arrayed For the First Time",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA26147/PIA26147~thumb.jpg",
+      "credit": "MDSCC/INTA, Francisco \"Paco\" Moreno"
+    },
+    {
+      "nasaId": "PIA13277",
+      "title": "Tracks of a Giant",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA13277/PIA13277~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA13559",
+      "title": "Prepping a Support Leg",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA13559/PIA13559~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    },
+    {
+      "nasaId": "PIA13558",
+      "title": "Stringer Box Going In",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA13558/PIA13558~thumb.jpg",
+      "credit": "NASA/JPL-Caltech"
+    }
+  ]
+}

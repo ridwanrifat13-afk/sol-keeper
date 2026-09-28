@@ -57,6 +57,10 @@ export const IMAGE_QUERY_WHITELIST = {
   artemis: "Artemis",
   rad: "Mars radiation",
   "lunar-south-pole": "lunar south pole",
+  // M9.x (player request #4): real hardware fact cards for Mission Command's life-support
+  // and comms stations, the same whitelisted-topic pattern moxie/veggie already established.
+  "co2-scrubber": "CDRA carbon dioxide removal",
+  "deep-space-network": "Deep Space Network antenna",
 } as const;
 
 export type ImageQueryKey = keyof typeof IMAGE_QUERY_WHITELIST;

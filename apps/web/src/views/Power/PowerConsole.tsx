@@ -11,15 +11,9 @@ import { statusWord } from "../../dial/statusWords.js";
 import { spaceWeatherTypeLabel } from "../../dial/spaceWeatherLabels.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
-import type { ImageQueryKey } from "../../../server-lib/validate.js";
+import { powerFactCardTopicFor } from "../../dial/factCardTopics.js";
 
 const MAX_EVENTS_SHOWN = 8;
-
-/** Which whitelisted image topic fits the current mission body — real fact-card photos,
- *  chosen by what the player is actually doing rather than a fixed, generic set. */
-function factCardTopicFor(body: "mars" | "moon"): ImageQueryKey {
-  return body === "mars" ? "moxie" : "lunar-south-pole";
-}
 
 /**
  * The Power console (M8.3): battery/generation status, the load-shed priority order, and —
@@ -133,7 +127,7 @@ export function PowerConsole() {
       </section>
 
       <FactCardGallery
-        topic={factCardTopicFor(scenario.body)}
+        topic={powerFactCardTopicFor(scenario.body)}
         heading={scenario.body === "mars" ? "What NASA did: MOXIE" : "What NASA did: the lunar south pole"}
       />
     </div>
