@@ -156,6 +156,7 @@ export function createInitialState(params: Params, scenario: Scenario = getScena
       scrubberEfficiencyFraction: 1,
       cumulativeCo2ExposureAboveLimitMmHgHours: 0,
       chronicCo2PenaltyApplied: false,
+      co2ScrubberMode: "full",
     },
 
     water: {

@@ -135,6 +135,7 @@ describe("M10.5: runLink fragment codec", () => {
       { hour: 0, input: { kind: "station", crewId: "crew-1", station: "comms" } },
       { hour: 0, input: { kind: "priority", systemId: "comms", direction: -1 } },
       { hour: 12, input: { kind: "rations", mode: "mode1" } },
+      { hour: 12, input: { kind: "co2ScrubberMode", mode: "eco" } },
       { hour: 42, input: { kind: "incidentResponse", incidentId: `${def.id}-42`, responseId } },
     ];
 

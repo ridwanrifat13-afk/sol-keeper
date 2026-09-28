@@ -17,6 +17,7 @@
  */
 import type {
   CommsPriority,
+  Co2ScrubberMode,
   CrewLocation,
   Params,
   Scenario,
@@ -43,7 +44,8 @@ export type RunInput =
   | { readonly kind: "crewLocation"; readonly crewId: string; readonly location: CrewLocation }
   | { readonly kind: "station"; readonly crewId: string; readonly station: StationId }
   | { readonly kind: "commsPriority"; readonly priority: CommsPriority }
-  | { readonly kind: "incidentResponse"; readonly incidentId: string; readonly responseId: string };
+  | { readonly kind: "incidentResponse"; readonly incidentId: string; readonly responseId: string }
+  | { readonly kind: "co2ScrubberMode"; readonly mode: Co2ScrubberMode };
 
 /** One `RunInput` plus the `state.hour` it was applied at — what `store/run.ts`'s new
  *  `inputLog` records, and all `replayRun` needs to reproduce a run byte-identically: no
@@ -150,6 +152,21 @@ export function applyInput(ctx: TickContext, input: RunInput): void {
       const definition = INCIDENT_CATALOG.find((d) => d.id === incident.definitionId);
       if (definition === undefined) return;
       applyResponse(ctx, definition, incident, input.responseId);
+      return;
+    }
+
+    case "co2ScrubberMode": {
+      state.atmosphere.co2ScrubberMode = input.mode;
+      log.log({
+        kind: "decision",
+        severity: "info",
+        code: "decision.co2ScrubberMode.set",
+        // Not `data: { mode }` — logText.ts's resolveField already hardcodes the bare "mode"
+        // key to survivalModeLabel (decision.rations.set's own field), which would wrongly
+        // try to render "full"/"balanced"/"eco" as a SurvivalMode. A distinct field name gets
+        // its own resolveField case instead.
+        data: { co2ScrubberMode: input.mode },
+      });
       return;
     }
   }

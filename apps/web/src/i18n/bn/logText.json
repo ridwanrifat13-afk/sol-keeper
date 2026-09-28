@@ -105,7 +105,8 @@
     "decision.priority.changed": "{system} বিদ্যুতের তালিকায় {direction} সরানো হয়েছে।",
     "decision.crewLocation.set": "{crew} {location}-এ গিয়েছে।",
     "decision.station.assigned": "{crew} এখন {station}-এ আছে।",
-    "decision.commsPriority.set": "এখন {priority} পাঠানো হচ্ছে।"
+    "decision.commsPriority.set": "এখন {priority} পাঠানো হচ্ছে।",
+    "decision.co2ScrubberMode.set": "বাতাস পরিষ্কারক {co2ScrubberMode}-এ সেট করা হয়েছে।"
   },
   "specialist": {
     "power.brownout": "লোড শেডিং: চাহিদা {demandKw} কিলোওয়াট, মাত্র {servedKw} কিলোওয়াট সরবরাহ করা যাচ্ছে। {shedCount}টি সিস্টেম বন্ধ করা হয়েছে।",
@@ -213,7 +214,8 @@
     "decision.priority.changed": "{system} লোড-শেডিং তালিকায় {direction} সরানো হয়েছে।",
     "decision.crewLocation.set": "{crew} {location}-এ স্থানান্তরিত হয়েছে।",
     "decision.station.assigned": "{crew}-কে {station}-এ নিয়োগ দেওয়া হয়েছে।",
-    "decision.commsPriority.set": "ডাউনলিংক অগ্রাধিকার {priority}-এ সেট করা হয়েছে।"
+    "decision.commsPriority.set": "ডাউনলিংক অগ্রাধিকার {priority}-এ সেট করা হয়েছে।",
+    "decision.co2ScrubberMode.set": "CO₂ স্ক্রাবার {co2ScrubberMode}-এ সেট করা হয়েছে।"
   },
   "commander": {
     "power.brownout": "লোড শেড: চাহিদা {demandKw} kW বনাম সরবরাহ {servedKw} kW, ব্যাটারি {batteryKwh} kWh। {shedCount}টি সিস্টেম বিচ্ছিন্ন।",
@@ -321,6 +323,7 @@
     "decision.priority.changed": "{system}-এর লোড-শেডিং অগ্রাধিকার {direction} সরানো হয়েছে।",
     "decision.crewLocation.set": "{crew} {location}-এ স্থানান্তরিত।",
     "decision.station.assigned": "{crew}-কে প্রধান স্টেশনে পুনর্নিয়োগ: {station}।",
-    "decision.commsPriority.set": "ডাউনলিংক অগ্রাধিকার পুনর্নির্ধারিত: {priority}।"
+    "decision.commsPriority.set": "ডাউনলিংক অগ্রাধিকার পুনর্নির্ধারিত: {priority}।",
+    "decision.co2ScrubberMode.set": "CO₂ স্ক্রাবার ডিউটি সাইকেল সেট: {co2ScrubberMode}।"
   }
 }

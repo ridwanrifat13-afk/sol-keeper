@@ -106,6 +106,16 @@ export type CrewCondition = "nominal" | "impaired" | "critical" | "lost";
 /** Rationing level selected by the player. Thresholds live in constants.survivalModes. */
 export type SurvivalMode = "nominal" | "mode1" | "mode2";
 
+/** Player request (M9.x): a real lever in nominal conditions, not just during an incident.
+ *  "full" is this sim's original, only-ever behaviour — the scrubber always runs at rated
+ *  capacity. "balanced"/"eco" trade some of that capacity away on purpose: cabin CO2 climbs
+ *  toward WHEELER-2024-CO2-SALAD's own documented crop-growth-boosting range (models/food.ts's
+ *  co2GrowthBonusFraction), at the real risk of crossing the current survival mode's own CO2
+ *  limit — which already has a real, permanent consequence (atmosphereStage's chronic-exposure
+ *  fatigue penalty), not an invented one. See models/atmosphere.ts's own
+ *  co2ScrubberDutyCycleFraction for the exact multiplier each mode applies. */
+export type Co2ScrubberMode = "full" | "balanced" | "eco";
+
 /** Where a crew member is, which decides how much shielding they are behind. */
 export type CrewLocation = "habitat" | "stormShelter" | "eva";
 
@@ -241,6 +251,10 @@ export interface AtmosphereState {
    *  permanent crew fatigue cost — guards against re-applying it every subsequent hour the
    *  cumulative exposure stays above threshold. */
   chronicCo2PenaltyApplied: boolean;
+  /** Player-set scrubber duty cycle (M9.x, player request) — "full" reproduces this sim's
+   *  original always-at-rated-capacity behaviour exactly. See the Co2ScrubberMode doc comment
+   *  for what the other two modes trade away, and why. */
+  co2ScrubberMode: Co2ScrubberMode;
 }
 
 export interface WaterState {

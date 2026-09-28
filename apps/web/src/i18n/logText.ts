@@ -10,8 +10,16 @@
  * printed as the raw machine id the sim actually stores (`"co2Scrubber"`, `"stormShelter"`).
  * Every other placeholder is printed as the sim gave it.
  */
-import type { CommsPriority, CropTray, CrewLocation, LogEntry, StationId, SurvivalMode, SystemId } from "@sol-keeper/sim";
-import { commsPriorityLabel, cropLabel, locationLabel, stationLabel, survivalModeLabel, systemLabel } from "../dial/labels.js";
+import type { CommsPriority, Co2ScrubberMode, CropTray, CrewLocation, LogEntry, StationId, SurvivalMode, SystemId } from "@sol-keeper/sim";
+import {
+  co2ScrubberModeLabel,
+  commsPriorityLabel,
+  cropLabel,
+  locationLabel,
+  stationLabel,
+  survivalModeLabel,
+  systemLabel,
+} from "../dial/labels.js";
 import type { DialLevel, Language } from "../dial/types.js";
 import enTemplates from "./en/logText.json" with { type: "json" };
 import bnTemplates from "./bn/logText.json" with { type: "json" };
@@ -73,6 +81,10 @@ function resolveField(entry: LogEntry, key: string, level: DialLevel, language: 
   if (key === "priority") {
     const priority = entry.data["priority"];
     return typeof priority === "string" ? commsPriorityLabel(priority as CommsPriority, level, language) : "";
+  }
+  if (key === "co2ScrubberMode") {
+    const mode = entry.data["co2ScrubberMode"];
+    return typeof mode === "string" ? co2ScrubberModeLabel(mode as Co2ScrubberMode, level, language) : "";
   }
   if (key === "direction") {
     // `decision.priority.changed`'s own data: -1 means "shed later" (moved up the list),

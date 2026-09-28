@@ -7,11 +7,27 @@
  */
 import { crew as crewConstants, habitat, incidents as incidentConstants, physics, physiology, survivalModes } from "../data/constants.js";
 import type { TickContext } from "../engine/context.js";
+import type { Co2ScrubberMode } from "../types.js";
 import { clamp, partialPressureMmHg, perDayToPerHour } from "../units.js";
 
 /** The CO2 partial-pressure limit for the currently selected rationing mode. */
 export function co2LimitMmHg(mode: keyof typeof survivalModes): number {
   return survivalModes[mode].co2LimitMmHg.value;
+}
+
+/** Player request (M9.x): the scrubber's own duty cycle, a real nominal-conditions lever —
+ *  see Co2ScrubberMode's own doc comment (types.ts) and the two tuned fractions themselves
+ *  (data/constants.ts's habitat group) for what each mode trades off and why those specific
+ *  values were chosen. "full" is exactly 1 — this sim's original, only-ever behaviour. */
+export function co2ScrubberDutyCycleFraction(mode: Co2ScrubberMode): number {
+  switch (mode) {
+    case "full":
+      return 1;
+    case "balanced":
+      return habitat.co2ScrubberDutyCycleBalancedFraction.value;
+    case "eco":
+      return habitat.co2ScrubberDutyCycleEcoFraction.value;
+  }
 }
 
 /**
@@ -72,7 +88,10 @@ export function atmosphereStage(ctx: TickContext): void {
     // efficiencyPenaltyFraction (M7.7 §2) is the general "spares ran out, improvised" penalty
     // any repair can leave — both stack, since they model genuinely different degradations.
     const capacityKgPerHour =
-      habitat.co2ScrubberKgPerHour.value * a.scrubberEfficiencyFraction * (1 - scrubber.efficiencyPenaltyFraction);
+      habitat.co2ScrubberKgPerHour.value *
+      a.scrubberEfficiencyFraction *
+      (1 - scrubber.efficiencyPenaltyFraction) *
+      co2ScrubberDutyCycleFraction(a.co2ScrubberMode);
     const removedKg = Math.min(a.co2Kg, capacityKgPerHour * ctx.dtHours);
     a.co2Kg -= removedKg;
   } else if (scrubber !== undefined) {

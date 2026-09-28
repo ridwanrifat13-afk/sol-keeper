@@ -37,6 +37,7 @@ import {
   SIM_VERSION,
   STATION_IDS,
   type CommsPriority,
+  type Co2ScrubberMode,
   type CrewLocation,
   type LandingSiteId,
   type LegacyDifficulty,
@@ -238,10 +239,14 @@ const KIND_TAGS: readonly RunInput["kind"][] = [
   "station",
   "commsPriority",
   "incidentResponse",
+  // Appended, not inserted (this table's own append-only rule, see file header) — player
+  // request (M9.x), a new lever added well after every kind above it.
+  "co2ScrubberMode",
 ];
 const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
 const CREW_LOCATIONS: readonly CrewLocation[] = ["habitat", "stormShelter", "eva"];
 const COMMS_PRIORITIES: readonly CommsPriority[] = ["personal", "science"];
+const CO2_SCRUBBER_MODES: readonly Co2ScrubberMode[] = ["full", "balanced", "eco"];
 /** Not exported anywhere in `@sol-keeper/sim` (unlike `STATION_IDS`) — mirrors the
  *  `SystemId` union in `packages/sim/src/types.ts` exactly; a change to that union already
  *  requires touching `data/scenarios/*.ts` or `constants.ts`, both `SIM_VERSION` bump
@@ -328,6 +333,9 @@ function writeRunInput(bytes: number[], input: RunInput): void {
       writeVarint(bytes, responseIndex);
       return;
     }
+    case "co2ScrubberMode":
+      bytes.push(tableIndexOf(CO2_SCRUBBER_MODES, input.mode, "co2 scrubber mode"));
+      return;
   }
 }
 
@@ -365,6 +373,8 @@ function readRunInput(reader: ByteReader): RunInput {
       }
       return { kind, incidentId: `${def.id}-${triggeredAtHour}`, responseId: response.id };
     }
+    case "co2ScrubberMode":
+      return { kind, mode: tableAt(CO2_SCRUBBER_MODES, reader.readByte(), "co2 scrubber mode") };
   }
 }
 

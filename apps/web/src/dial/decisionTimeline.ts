@@ -17,6 +17,9 @@ const DECISION_CODE_STATION: Readonly<Record<string, StationId>> = {
   "decision.crewLocation.set": "incidentCommand",
   "decision.station.assigned": "missionCommand",
   "decision.commsPriority.set": "comms",
+  // Player request (M9.x): the CO2 scrubber duty-cycle control, on the same console rations
+  // lives on.
+  "decision.co2ScrubberMode.set": "lifeSupport",
 };
 
 /** An incident-response decision (`incident.<id>.resolved`/`.detected`/`.queued`/

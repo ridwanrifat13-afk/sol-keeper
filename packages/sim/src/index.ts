@@ -13,6 +13,7 @@ export type {
   Body,
   CommsPriority,
   CommsState,
+  Co2ScrubberMode,
   CrewCondition,
   CrewLocation,
   CrewMember,
@@ -149,7 +150,7 @@ export { crewHeatKwPerPerson } from "./models/thermal.js";
 export { solarGenerationKw } from "./models/power.js";
 export { sunFactor, dayLengthHours } from "./models/environment.js";
 export { crewCondition, feverMetabolicMultiplier, availableCrewHours, worstCauseCode } from "./models/crew.js";
-export { pio2MmHg, totalPressureMmHg } from "./models/atmosphere.js";
+export { co2ScrubberDutyCycleFraction, pio2MmHg, totalPressureMmHg } from "./models/atmosphere.js";
 
 export * as units from "./units.js";
 

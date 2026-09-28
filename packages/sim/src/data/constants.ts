@@ -1199,6 +1199,27 @@ export const habitat = {
     source: "GAME-DESIGN",
     confidence: "tuned",
   }),
+  // M9.x (player request): a real lever in nominal conditions — easing the scrubber off its
+  // rated capacity trades scrubbing margin for WHEELER-2024-CO2-SALAD's own documented crop-
+  // growth-boosting CO2 range (food.co2EnrichmentBeneficialPpm), at the real risk of crossing
+  // the current survival mode's own CO2 limit and its already-real, already-permanent chronic-
+  // exposure fatigue consequence (incidents.co2ChronicExposureFatiguePenalty). These two
+  // duty-cycle fractions are the trade-off's own dial positions, not a physiological figure —
+  // GAME-DESIGN, same as co2ScrubberKgPerHour itself just above.
+  co2ScrubberDutyCycleBalancedFraction: c({
+    value: 0.5,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "\"Balanced\": half capacity. Checked by direct simulation against Jezero's own 4-crew production rate (crew.co2ProductionKgPerCrewDay): capacity still exceeds production, so cabin CO2 settles into a real, sustained hold inside the crop-growth-boosting range without ever crossing even the Nominal survival mode's own (tightest) CO2 limit — a real, safe trade, not a hidden trap.",
+  }),
+  co2ScrubberDutyCycleEcoFraction: c({
+    value: 0.3333,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "\"Ease off for crops\": one-third capacity, below Jezero's own 4-crew production rate — checked by direct simulation: cabin CO2 crosses the Nominal survival mode's own CO2 limit after about 19 hours if left unmanaged, and reaches the immediately-dangerous threshold (physiology.co2ImmediatelyDangerousMmHg) after about 281 hours — a real, felt risk on a realistic timescale, not a formality or an instant trap.",
+  }),
   targetO2PartialPressureMmHg: c({
     value: 160,
     unit: "mmHg",

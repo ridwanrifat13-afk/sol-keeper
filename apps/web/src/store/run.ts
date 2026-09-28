@@ -19,6 +19,7 @@ import {
   EventLogger,
   Rng,
   type CommsPriority,
+  type Co2ScrubberMode,
   type CrewLocation,
   type Params,
   type RecordedInput,
@@ -132,6 +133,9 @@ interface RunStore {
     setupChoicesOverride?: RunSetupChoices,
   ) => void;
   setSurvivalMode: (mode: SurvivalMode) => void;
+  /** Player request (M9.x): a real lever in nominal conditions, not just during an incident —
+   *  see Co2ScrubberMode's own doc comment (@sol-keeper/sim) for the trade-off this controls. */
+  setCo2ScrubberMode: (mode: Co2ScrubberMode) => void;
   setPriority: (id: SystemId, direction: -1 | 1) => void;
   /** M8.1: the player-driven counterpart to `tickWithBot`'s bot-driven incident resolution
    *  (packages/sim/src/engine/runWithBot.ts) — the exact seam that file's own doc comment
@@ -266,6 +270,10 @@ export const useRun = create<RunStore>((set, get) => ({
 
   setSurvivalMode: (mode) => {
     applyAndRecord(get, set, { kind: "rations", mode });
+  },
+
+  setCo2ScrubberMode: (mode) => {
+    applyAndRecord(get, set, { kind: "co2ScrubberMode", mode });
   },
 
   /**

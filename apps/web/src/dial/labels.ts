@@ -13,7 +13,7 @@
  * (station consoles, DecisionCard, EsmPanel, ...) compiling unchanged; only the log/decision
  * text renderers pass `"bn"` explicitly once the player has chosen Bangla.
  */
-import type { CommsPriority, CropTray, CrewLocation, StationId, SurvivalMode, SystemId } from "@sol-keeper/sim";
+import type { CommsPriority, Co2ScrubberMode, CropTray, CrewLocation, StationId, SurvivalMode, SystemId } from "@sol-keeper/sim";
 import type { DialLevel, Language } from "./types.js";
 
 /** Full names, used at the specialist and commander levels. */
@@ -151,6 +151,38 @@ const SURVIVAL_MODE_LABELS_CADET_BN: Record<SurvivalMode, string> = {
 export function survivalModeLabel(mode: SurvivalMode, level: DialLevel, language: Language = "en"): string {
   if (language === "bn") return level === "cadet" ? SURVIVAL_MODE_LABELS_CADET_BN[mode] : SURVIVAL_MODE_LABELS_BN[mode];
   return level === "cadet" ? SURVIVAL_MODE_LABELS_CADET[mode] : SURVIVAL_MODE_LABELS[mode];
+}
+
+/** Player request (M9.x): the CO2 scrubber duty-cycle control's own label — shared between
+ *  LifeSupportConsole's buttons and the log text, same pattern as survivalModeLabel above. */
+const CO2_SCRUBBER_MODE_LABELS: Record<Co2ScrubberMode, string> = {
+  full: "Full scrub",
+  balanced: "Balanced",
+  eco: "Ease off for crops",
+};
+
+const CO2_SCRUBBER_MODE_LABELS_CADET: Record<Co2ScrubberMode, string> = {
+  full: "clean the air all the way",
+  balanced: "clean the air a little less",
+  eco: "let the air help the plants",
+};
+
+const CO2_SCRUBBER_MODE_LABELS_BN: Record<Co2ScrubberMode, string> = {
+  full: "পূর্ণ পরিষ্কারকরণ",
+  balanced: "ভারসাম্যপূর্ণ",
+  eco: "ফসলের জন্য কম পরিষ্কারকরণ",
+};
+
+const CO2_SCRUBBER_MODE_LABELS_CADET_BN: Record<Co2ScrubberMode, string> = {
+  full: "বাতাস পুরোপুরি পরিষ্কার রাখুন",
+  balanced: "বাতাস একটু কম পরিষ্কার করুন",
+  eco: "বাতাসকে গাছপালাকে সাহায্য করতে দিন",
+};
+
+export function co2ScrubberModeLabel(mode: Co2ScrubberMode, level: DialLevel, language: Language = "en"): string {
+  if (language === "bn")
+    return level === "cadet" ? CO2_SCRUBBER_MODE_LABELS_CADET_BN[mode] : CO2_SCRUBBER_MODE_LABELS_BN[mode];
+  return level === "cadet" ? CO2_SCRUBBER_MODE_LABELS_CADET[mode] : CO2_SCRUBBER_MODE_LABELS[mode];
 }
 
 /** M8.2: the crew role that owns an incident's Decision Card (IncidentDefinition.station). */

@@ -201,7 +201,10 @@ test.describe("Life Support console", () => {
     await page.getByRole("button", { name: "Run the sol" }).click();
 
     await expect(page.getByRole("button", { name: "Survival", exact: false })).toBeDisabled();
-    await expect(page.getByText("Locked while the sol is running")).toBeVisible();
+    // Scoped to the Rations section specifically: the new CO2 scrubber duty-cycle section
+    // (player request) carries the exact same "locked" sentence for its own control.
+    const rationsSection = page.locator("section", { has: page.getByRole("heading", { name: "Rations" }) });
+    await expect(rationsSection.getByText("Locked while the sol is running")).toBeVisible();
   });
 
   test("advancing the clock changes the sol counter and fills the log", async ({ page }) => {

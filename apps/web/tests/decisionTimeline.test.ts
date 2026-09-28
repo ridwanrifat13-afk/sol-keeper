@@ -18,6 +18,7 @@ describe("M10.8: stationForDecision", () => {
     ["decision.crewLocation.set", "incidentCommand"],
     ["decision.station.assigned", "missionCommand"],
     ["decision.commsPriority.set", "comms"],
+    ["decision.co2ScrubberMode.set", "lifeSupport"],
   ];
   for (const [code, expectedStation] of cases) {
     it(`tags "${code}" as ${expectedStation}`, () => {

@@ -1,10 +1,12 @@
 import {
   co2GrowthBonusFraction,
   co2Ppm,
+  co2ScrubberDutyCycleFraction,
   cropRequiredLightHours,
   habitat,
   physiology,
   survivalModes,
+  type Co2ScrubberMode,
   type SurvivalMode,
 } from "@sol-keeper/sim";
 import { useRun } from "../../store/run.js";
@@ -12,11 +14,12 @@ import { useDial } from "../../store/dial.js";
 import { Gauge } from "../../components/Gauge.js";
 import { FactCardGallery } from "../../components/FactCardGallery.js";
 import { statusWord } from "../../dial/statusWords.js";
-import { cropLabel, survivalModeLabel } from "../../dial/labels.js";
+import { co2ScrubberModeLabel, cropLabel, survivalModeLabel } from "../../dial/labels.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
 
 const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
+const CO2_SCRUBBER_MODES: readonly Co2ScrubberMode[] = ["full", "balanced", "eco"];
 
 /**
  * The Life Support console (M8.3): oxygen, CO2, water, food and cabin temperature, plus the
@@ -30,12 +33,17 @@ export function LifeSupportConsole() {
   const version = useRun((s) => s.version);
   const state = useRun((s) => s.state);
   const setSurvivalMode = useRun((s) => s.setSurvivalMode);
+  const setCo2ScrubberMode = useRun((s) => s.setCo2ScrubberMode);
   const phase = useRun((s) => s.phase);
   const level = useDial((s) => s.level);
   const language = useAppLanguage();
 
   const summary = buildResourceSummary(state, level, language);
   const locked = phase !== "planning";
+  const co2LimitMmHg = survivalModes[state.food.mode].co2LimitMmHg.value;
+  const co2GrowthBonus = co2GrowthBonusFraction(
+    co2Ppm(state.atmosphere.o2PartialPressureMmHg, state.atmosphere.co2PartialPressureMmHg),
+  );
 
   return (
     <div className="console" key={version}>
@@ -120,6 +128,42 @@ export function LifeSupportConsole() {
         </div>
       </section>
 
+      <section className="panel" aria-labelledby="scrubber-heading">
+        <h2 id="scrubber-heading">Air cleaner (CO₂ scrubber)</h2>
+        <p className="panel-hint">
+          A real lever in ordinary conditions, not just during an incident: run it flat out and
+          CO₂ stays near zero; ease off and it climbs — toward a real, documented crop-growth
+          boost if it stays under control, or toward real, permanent harm if it doesn't.
+          {locked && " Locked while the sol is running — adjust it during Sol Planning."}
+        </p>
+        <div className="button-row" role="group" aria-label="CO2 scrubber duty cycle">
+          {CO2_SCRUBBER_MODES.map((m) => (
+            <button
+              key={m}
+              type="button"
+              className={`btn ${state.atmosphere.co2ScrubberMode === m ? "btn-active" : ""}`}
+              aria-pressed={state.atmosphere.co2ScrubberMode === m}
+              disabled={locked}
+              onClick={() => {
+                setCo2ScrubberMode(m);
+              }}
+            >
+              {co2ScrubberModeLabel(m, level, language)}
+              <span className="btn-sub">{Math.round(co2ScrubberDutyCycleFraction(m) * 100)}% capacity</span>
+            </button>
+          ))}
+        </div>
+        <p className="panel-hint">
+          Currently {state.atmosphere.co2PartialPressureMmHg.toFixed(2)} mmHg, capped at{" "}
+          {co2LimitMmHg.toFixed(1)} mmHg in {survivalModeLabel(state.food.mode, level, language)} mode.
+          {co2GrowthBonus > 0.001 && (
+            <> Crops are growing {Math.round(co2GrowthBonus * 100)}% faster from it right now.</>
+          )}
+          {state.atmosphere.co2PartialPressureMmHg > co2LimitMmHg &&
+            " Above the limit — this is already costing the crew, the longer it stays here."}
+        </p>
+      </section>
+
       <section className="panel" aria-labelledby="rations-heading">
         <h2 id="rations-heading">Rations</h2>
         <p className="panel-hint">
@@ -147,13 +191,13 @@ export function LifeSupportConsole() {
           ))}
         </div>
         <details className="panel-detail">
-          <summary>Why only food, water, and warmth?</summary>
+          <summary>Why not oxygen too?</summary>
           <p>
-            Rations is the one real trade-off dial because eating less, drinking less, and running colder are
-            choices a crew can actually make, at a real and survivable cost. Oxygen and CO₂ aren't — the
-            life-support loop's whole job is to hold them at fixed safety thresholds regardless of what a
-            trainee would prefer, so there's no "loosen it a bit" setting: past those thresholds is system
-            failure, not a comfort trade-off.
+            Rations and the CO₂ scrubber's duty cycle (below) are both real trade-off dials — eating less,
+            drinking less, running colder, and easing off the scrubber are all choices a crew can actually
+            make, each at a real and survivable cost. Oxygen isn't — the life-support loop's whole job is to
+            hold it at a fixed safety threshold regardless of what a trainee would prefer, so there's no
+            "loosen it a bit" setting: past that threshold is system failure, not a comfort trade-off.
           </p>
           <ul className="status-list">
             <li>
@@ -181,17 +225,12 @@ export function LifeSupportConsole() {
       <section className="panel" aria-labelledby="isru-heading">
         <h2 id="isru-heading">ISRU &amp; crops</h2>
         <p className="panel-hint">Status only — no adjustable MOXIE or crop-task control exists yet.</p>
-        {(() => {
-          const growthBonus = co2GrowthBonusFraction(
-            co2Ppm(state.atmosphere.o2PartialPressureMmHg, state.atmosphere.co2PartialPressureMmHg),
-          );
-          return growthBonus > 0.001 ? (
-            <p className="panel-hint">
-              Cabin CO₂ is in a real, documented crop-growth-boosting range — trays are growing{" "}
-              {Math.round(growthBonus * 100)}% faster (WHEELER-2024-CO2-SALAD).
-            </p>
-          ) : null;
-        })()}
+        {co2GrowthBonus > 0.001 && (
+          <p className="panel-hint">
+            Cabin CO₂ is in a real, documented crop-growth-boosting range — trays are growing{" "}
+            {Math.round(co2GrowthBonus * 100)}% faster (WHEELER-2024-CO2-SALAD).
+          </p>
+        )}
         <ul className="status-list">
           {state.systems.moxie !== undefined && (
             <li>

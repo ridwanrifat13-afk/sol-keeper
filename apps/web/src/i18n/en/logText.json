@@ -105,7 +105,8 @@
     "decision.priority.changed": "{system} moved {direction} the power list.",
     "decision.crewLocation.set": "{crew} went to {location}.",
     "decision.station.assigned": "{crew} is now on {station}.",
-    "decision.commsPriority.set": "Now sending {priority}."
+    "decision.commsPriority.set": "Now sending {priority}.",
+    "decision.co2ScrubberMode.set": "Air cleaner set to {co2ScrubberMode}."
   },
   "specialist": {
     "power.brownout": "Brownout: demand {demandKw} kW, only {servedKw} kW available. {shedCount} system(s) shut down.",
@@ -213,7 +214,8 @@
     "decision.priority.changed": "{system} moved {direction} the load-shed order.",
     "decision.crewLocation.set": "{crew} moved to {location}.",
     "decision.station.assigned": "{crew} assigned to {station}.",
-    "decision.commsPriority.set": "Downlink priority set to {priority}."
+    "decision.commsPriority.set": "Downlink priority set to {priority}.",
+    "decision.co2ScrubberMode.set": "CO2 scrubber set to {co2ScrubberMode}."
   },
   "commander": {
     "power.brownout": "Load shed: demand {demandKw} kW vs. {servedKw} kW served, battery at {batteryKwh} kWh. {shedCount} system(s) dropped.",
@@ -321,6 +323,7 @@
     "decision.priority.changed": "Load-shed priority for {system} moved {direction}.",
     "decision.crewLocation.set": "{crew} relocated to {location}.",
     "decision.station.assigned": "{crew} reassigned to primary station: {station}.",
-    "decision.commsPriority.set": "Downlink priority reassigned: {priority}."
+    "decision.commsPriority.set": "Downlink priority reassigned: {priority}.",
+    "decision.co2ScrubberMode.set": "CO2 scrubber duty cycle set: {co2ScrubberMode}."
   }
 }
