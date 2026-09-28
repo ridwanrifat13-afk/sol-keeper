@@ -1,0 +1,42 @@
+{
+  "source": "snapshot",
+  "fetchedAt": "2026-09-29T00:00:00.000Z",
+  "items": [
+    {
+      "nasaId": "LRC-2011-00020",
+      "title": "Expandable Lunar Habitat (X-Hab)",
+      "thumbUrl": "https://images-assets.nasa.gov/image/LRC-2011-00020/LRC-2011-00020~thumb.jpg",
+      "credit": "LRC"
+    },
+    {
+      "nasaId": "LRC-2011-00021",
+      "title": "Expandable Lunar Habitat (X-Hab)",
+      "thumbUrl": "https://images-assets.nasa.gov/image/LRC-2011-00021/LRC-2011-00021~thumb.jpg",
+      "credit": "LRC"
+    },
+    {
+      "nasaId": "LRC-2011-00022",
+      "title": "Expandable Lunar Habitat (X-Hab)",
+      "thumbUrl": "https://images-assets.nasa.gov/image/LRC-2011-00022/LRC-2011-00022~thumb.jpg",
+      "credit": "LRC"
+    },
+    {
+      "nasaId": "LRC-2011-00023",
+      "title": "Expandable Lunar Habitat (X-Hab)",
+      "thumbUrl": "https://images-assets.nasa.gov/image/LRC-2011-00023/LRC-2011-00023~thumb.jpg",
+      "credit": "LRC"
+    },
+    {
+      "nasaId": "LRC-2011-00024",
+      "title": "Expandable Lunar Habitat (X-Hab)",
+      "thumbUrl": "https://images-assets.nasa.gov/image/LRC-2011-00024/LRC-2011-00024~thumb.jpg",
+      "credit": "LRC"
+    },
+    {
+      "nasaId": "jsc2024e024186",
+      "title": "Gateway - Lunar International Habitat and HALO",
+      "thumbUrl": "https://images-assets.nasa.gov/image/jsc2024e024186/jsc2024e024186~thumb.jpg",
+      "credit": "JSC"
+    }
+  ]
+}

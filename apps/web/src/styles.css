@@ -1803,7 +1803,8 @@ code {
    wizard's own step counter, the habitat's real sol/hour clock), unlike the five older
    station consoles this deliberately leaves unchanged. */
 .setup-wizard .panel,
-.habitat-telemetry .panel {
+.habitat-telemetry .panel,
+.ops-center .panel {
   border-top: 3px solid var(--shell-accent);
 }
 
@@ -1820,6 +1821,94 @@ code {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--nominal);
+}
+
+/* ---------------------------------------------------------------- ops center (player #9) */
+/* Mission Command's own "big board" — a real ops-room main display reads a handful of large
+   numbers at a glance, not paragraphs, so this sits above every other panel on the console.
+   The faint grid is drawn with the same dark tokens every panel already uses (--bg/--line),
+   never touching --shell-bg/--shell-text — the M9.5 "panels stay dark, shell stays light"
+   split this file's own telemetry-chrome section documents holds here too. */
+.ops-board {
+  background:
+    repeating-linear-gradient(0deg, rgba(139, 147, 184, 0.09) 0px, rgba(139, 147, 184, 0.09) 1px, transparent 1px, transparent 22px),
+    repeating-linear-gradient(90deg, rgba(139, 147, 184, 0.09) 0px, rgba(139, 147, 184, 0.09) 1px, transparent 1px, transparent 22px),
+    var(--bg);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--shell-accent);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: var(--gap);
+}
+
+.ops-board-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+/* Rule 6: this dot is decorative emphasis on top of the text label right next to it
+   ("MISSION IN PROGRESS" / the real state.status word), never the only way that status is
+   conveyed — aria-hidden, exactly like habitat-telemetry's own status markers. */
+.ops-live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--nominal);
+  flex-shrink: 0;
+  animation: ops-live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ops-live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.ops-board-title {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.ops-board-readouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.ops-readout {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ops-readout-value {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--nominal);
+  line-height: 1.1;
+}
+
+.ops-readout-value.ops-readout-alert {
+  color: var(--critical);
+}
+
+.ops-readout-unit {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.ops-readout-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
 }
 
 /* ---------------------------------------------------------------- mission report (M10.8) */
@@ -2047,6 +2136,11 @@ code {
     animation: none;
     transform: translateX(292px);
   }
+
+  .ops-live-dot {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 /* The manual low-power-mode toggle (App.tsx) applies the exact same rules as the OS
@@ -2059,4 +2153,9 @@ code {
 :root.low-power-mode .establishing-shot-craft {
   animation: none;
   transform: translateX(292px);
+}
+
+:root.low-power-mode .ops-live-dot {
+  animation: none;
+  opacity: 1;
 }

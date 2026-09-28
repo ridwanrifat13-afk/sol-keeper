@@ -26,6 +26,8 @@ import {
 } from "../../dial/labels.js";
 import { goalText } from "../../i18n/goalText.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
+import { durationLabel, elapsedValue, timeUnitWord } from "../../dial/missionTime.js";
+import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
 
 /**
  * The Mission Command console (M8.3): crew status, which mission is running, and the whole
@@ -46,6 +48,12 @@ import { useAppLanguage } from "../../i18n/useAppLanguage.js";
  * crew.overtimeCeilingFractionOfAverage/crew.overtimeFatiguePerHourAboveCeiling
  * (BVAD-2022, already sourced, never read by any model before this) via
  * engine/crewHours.ts's own day-boundary bookkeeping.
+ *
+ * Player request #9's second half: "the mission command panels should look like a real NASA
+ * operation center." The `ops-center` class (styles.css) adds a console-room grid backdrop
+ * and a "big board" status strip — real, already-live numbers (mission elapsed time, crew
+ * alive/total, active alerts) in the large tabular-nums readout a real ops room's main
+ * display uses, not new state or invented figures.
  */
 export function MissionCommandConsole() {
   // `state` is mutated in place (store/run.ts's own doc comment) — subscribing to `version`
@@ -77,12 +85,54 @@ export function MissionCommandConsole() {
   const primaryMet = checkGoal(scenario.primaryGoal, state, scenario);
   const stretchMet = checkGoal(scenario.stretchGoal, state, scenario);
 
+  const aliveCrewCount = state.crew.filter((c) => c.alive).length;
+  const activeAlertCount = state.activeIncidents.filter((i) => i.resolvedAtHour === undefined).length;
+
   return (
-    <div className="console">
+    <div className="console ops-center">
       <header className="view-head">
         <h2>Mission Command</h2>
         <p className="view-hint">Crew status, the current mission, and the whole-mission mass budget.</p>
       </header>
+
+      <section className="ops-board" aria-labelledby="ops-board-heading">
+        <h2 id="ops-board-heading" className="visually-hidden">
+          Mission status board
+        </h2>
+        <div className="ops-board-row">
+          <span className="ops-live-dot" aria-hidden="true" />
+          <span className="ops-board-title">
+            {SCENARIO_LABELS[scenario.id].label.toUpperCase()} ·{" "}
+            {state.status === "running" ? "MISSION IN PROGRESS" : state.status.toUpperCase()}
+          </span>
+        </div>
+        <div className="ops-board-readouts">
+          <div className="ops-readout">
+            <span className="ops-readout-value">
+              {elapsedValue(state.hour, scenario.body).toFixed(2)}
+              <span className="ops-readout-unit"> / {durationLabel(scenario.durationHours, scenario.body)}</span>
+            </span>
+            <span className="ops-readout-label">{timeUnitWord(scenario.body)} elapsed</span>
+          </div>
+          <div className="ops-readout">
+            <span className="ops-readout-value">
+              {aliveCrewCount}
+              <span className="ops-readout-unit"> / {state.crew.length}</span>
+            </span>
+            <span className="ops-readout-label">Crew alive</span>
+          </div>
+          <div className="ops-readout">
+            <span className={`ops-readout-value ${activeAlertCount > 0 ? "ops-readout-alert" : ""}`}>
+              {activeAlertCount}
+            </span>
+            <span className="ops-readout-label">Active alerts</span>
+          </div>
+          <div className="ops-readout">
+            <span className="ops-readout-value">{state.hour}</span>
+            <span className="ops-readout-label">Mission hour</span>
+          </div>
+        </div>
+      </section>
 
       <ScenarioSwitch />
       <CrewPanel />

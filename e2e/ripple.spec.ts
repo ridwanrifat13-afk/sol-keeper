@@ -22,7 +22,10 @@ test.describe("Scenario switch (Mission Command console)", () => {
     await expect(page.locator(".mission-site")).toContainText("Moon");
 
     await page.getByRole("button", { name: /^The Long Night/ }).click();
-    await expect(page.getByText("89 days")).toBeVisible();
+    // Not a bare page-wide getByText: the new "big board" ops-readout (player request #9)
+    // shows the same real duration in its own "/ 89 days" unit text, so an unscoped match is
+    // now ambiguous — scoped to the mission-site line this test is actually about.
+    await expect(page.locator(".mission-site")).toContainText("89 days");
 
     await page.getByRole("button", { name: /^Jezero/ }).click();
     await expect(page.getByText("Jezero Crater")).toBeVisible();

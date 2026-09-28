@@ -61,6 +61,15 @@ export const IMAGE_QUERY_WHITELIST = {
   // and comms stations, the same whitelisted-topic pattern moxie/veggie already established.
   "co2-scrubber": "CDRA carbon dioxide removal",
   "deep-space-network": "Deep Space Network antenna",
+  // Player request #9: "what an actual NASA planned or affiliated lunar/martian outpost
+  // could look like, if it's available anywhere." Checked directly against images-api.nasa.gov
+  // (keyless, CLAUDE.md's own allowed-endpoint list) before picking these two query strings —
+  // "Mars habitat" surfaces JPL's PIA14471 "Plausible Martian Habitats" and MSFC's real
+  // 3D-Printed Habitat Challenge renders; "lunar habitat" surfaces LRC's real Expandable Lunar
+  // Habitat (X-Hab) concept and JSC's Gateway lunar habitat renders — real NASA-studied
+  // concepts, not artwork this project invented or a specific mission's as-built design.
+  "mars-habitat-concept": "Mars habitat",
+  "lunar-habitat-concept": "lunar habitat",
 } as const;
 
 export type ImageQueryKey = keyof typeof IMAGE_QUERY_WHITELIST;

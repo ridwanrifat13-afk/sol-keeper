@@ -69,7 +69,16 @@ test.describe("Habitat view", () => {
   test("no NASA logo or insignia is present (brief rule 5)", async ({ page }) => {
     await gotoApp(page);
     await skipSetup(page, "Habitat");
-    await expect(page.locator("img[src*='nasa' i], img[alt*='nasa' i]")).toHaveCount(0);
+    await page.waitForTimeout(500);
+    // Player request #9 added a real "What NASA envisions" habitat-concept gallery here (the
+    // same FactCardGallery pattern Life Support's own equivalent check already documents) —
+    // this view is no longer imageless. Every <img>'s src must be real NASA Image Library
+    // asset content, never a logo/insignia graphic this project ships itself.
+    const srcs = await page.locator("img").evaluateAll((els) => els.map((el) => el.getAttribute("src") ?? ""));
+    expect(srcs.length).toBeGreaterThan(0);
+    for (const src of srcs) {
+      expect(src).toMatch(/images-assets\.nasa\.gov/);
+    }
   });
 
   test("lists the real crew in the crew table, station and condition included", async ({ page }) => {

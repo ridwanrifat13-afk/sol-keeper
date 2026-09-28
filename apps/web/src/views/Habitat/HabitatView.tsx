@@ -11,6 +11,7 @@ import { useDial } from "../../store/dial.js";
 import { Starfield } from "../../components/Starfield.js";
 import { STATUS } from "../../components/status.js";
 import { AlarmBanner } from "../../components/AlarmBanner.js";
+import { FactCardGallery } from "../../components/FactCardGallery.js";
 import { locationLabel, stationLabel } from "../../dial/labels.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { timestampLabel } from "../../dial/missionTime.js";
@@ -197,6 +198,45 @@ export function HabitatView() {
           {/* Ground */}
           <rect x="0" y="170" width="400" height="50" fill={isMars ? "#7a4a30" : "#6b6e73"} />
 
+          {/* Player request #9: a handful of real, common architectural elements checked
+           *  against actual NASA-studied outpost concepts (the FactCardGallery below has the
+           *  real citations) — a solar array, a secondary inflatable module linked by a short
+           *  tunnel, a comms mast, and a low regolith berm — not a reproduction of any one
+           *  concept's own artwork, and not claimed as this mission's own as-built design
+           *  (the scene's aria-label and the gallery's own heading both say "concept"). */}
+          <g aria-hidden="true">
+            {/* Regolith berm — the same real shielding approach engine/shielding.ts's own
+             *  regolithBerm choice models, drawn low and wide in front of the dome. A stroked
+             *  crest line (rather than a fill-only shade close to the ground's own colour)
+             *  keeps the mound legible as its own feature against Mars' similarly-toned dirt. */}
+            <path
+              d="M 60 170 Q 130 150 200 170 Q 270 150 340 170 L 340 178 L 60 178 Z"
+              fill={isMars ? "#8a5a3c" : "#5a5d63"}
+            />
+            <path
+              d="M 60 170 Q 130 150 200 170 Q 270 150 340 170"
+              fill="none"
+              stroke={isMars ? "#c98a4b" : "#9aa0ab"}
+              strokeWidth="2"
+            />
+
+            {/* Solar array, left of the dome — a strut plus two ribbed panels, the same
+             *  panel-plus-truss shape real outpost/Gateway renders use. */}
+            <line x1="70" y1="168" x2="70" y2="128" stroke="#8b93b8" strokeWidth="2" />
+            <g stroke="#4a5578" strokeWidth="1">
+              <rect x="30" y="118" width="38" height="18" fill="#1d3a63" />
+              <line x1="38" y1="118" x2="38" y2="136" />
+              <line x1="46" y1="118" x2="46" y2="136" />
+              <line x1="54" y1="118" x2="54" y2="136" />
+              <line x1="62" y1="118" x2="62" y2="136" />
+              <rect x="72" y="118" width="38" height="18" fill="#1d3a63" />
+              <line x1="80" y1="118" x2="80" y2="136" />
+              <line x1="88" y1="118" x2="88" y2="136" />
+              <line x1="96" y1="118" x2="96" y2="136" />
+              <line x1="104" y1="118" x2="104" y2="136" />
+            </g>
+          </g>
+
           {/* Habitat module cutaway — a plain schematic dome. */}
           <path
             d="M 100 170 L 100 120 A 100 70 0 0 1 300 120 L 300 170 Z"
@@ -205,6 +245,24 @@ export function HabitatView() {
             strokeWidth={depressurizing ? 3 : 2}
           />
           <line x1="100" y1="150" x2="300" y2="150" stroke="#8b93b8" strokeWidth="1.5" />
+
+          {/* Comms mast, mounted on the dome's own roof and rising clear of it — drawn after
+           *  the dome so it reads as mounted hardware, not a shape floating behind the hull.
+           *  x=230 (off-centre, not the exact roof peak) puts the roofline itself at y~53
+           *  (the dome's own arc: rx=100, ry=70, centred at 200,120), so the mast's base sits
+           *  right on the hull and its dish clears the roofline into open sky. */}
+          <g aria-hidden="true">
+            <line x1="230" y1="53" x2="230" y2="25" stroke="#8b93b8" strokeWidth="2" />
+            <circle cx="230" cy="21" r="5" fill="#c7cee3" stroke="#8b93b8" strokeWidth="2" />
+          </g>
+
+          {/* Secondary inflatable module — the real X-Hab expandable-habitat concept (see the
+           *  gallery below), linked to the main module by a short tunnel rather than drawn as
+           *  a second, disconnected building. */}
+          <g aria-hidden="true">
+            <rect x="300" y="148" width="22" height="10" fill="#c7cee3" stroke="#8b93b8" strokeWidth="1.5" />
+            <ellipse cx="336" cy="153" rx="24" ry="20" fill="#c7cee3" stroke="#8b93b8" strokeWidth="2" />
+          </g>
 
           {/* atStation/sheltering/onEva are all built from aliveCrew — crewCondition() only
            *  ever returns "lost" for a dead member, so every marker here is genuinely one of
@@ -310,6 +368,18 @@ export function HabitatView() {
           </p>
         )}
       </section>
+
+      {/* Player request #9: "better habitat visuals made with what an actual NASA planned or
+       *  affiliated lunar/martian outpost could look like, if it's available anywhere." The
+       *  scene above is a schematic, not a reproduction of any one real design — this gallery
+       *  is the real thing: actual NASA/NASA-center concept renders and hardware prototypes
+       *  for a body-appropriate surface habitat, the same FactCardGallery machinery (and the
+       *  same "credited, never fabricated" discipline) every other station's real-hardware
+       *  gallery already uses. */}
+      <FactCardGallery
+        topic={isMars ? "mars-habitat-concept" : "lunar-habitat-concept"}
+        heading={isMars ? "Real NASA concepts: Mars surface habitats" : "Real NASA concepts: lunar surface habitats"}
+      />
     </div>
   );
 }

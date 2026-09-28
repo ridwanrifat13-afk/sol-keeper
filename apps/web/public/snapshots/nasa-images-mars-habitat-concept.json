@@ -1,0 +1,42 @@
+{
+  "source": "snapshot",
+  "fetchedAt": "2026-09-29T00:00:00.000Z",
+  "items": [
+    {
+      "nasaId": "PIA14471",
+      "title": "Plausible Martian Habitats",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA14471/PIA14471~thumb.jpg",
+      "credit": "NASA/Indiana University"
+    },
+    {
+      "nasaId": "PIA23302",
+      "title": "First Humans on Mars (Artist's Concept)",
+      "thumbUrl": "https://images-assets.nasa.gov/image/PIA23302/PIA23302~thumb.jpg",
+      "credit": "NASA"
+    },
+    {
+      "nasaId": "MSFC-201900576",
+      "title": "NASA 3D-Printed Habitat Challenge",
+      "thumbUrl": "https://images-assets.nasa.gov/image/MSFC-201900576/MSFC-201900576~thumb.jpg",
+      "credit": "MSFC"
+    },
+    {
+      "nasaId": "MSFC-201900614",
+      "title": "NASA 3D-Printed Habitat Challenge",
+      "thumbUrl": "https://images-assets.nasa.gov/image/MSFC-201900614/MSFC-201900614~thumb.jpg",
+      "credit": "MSFC"
+    },
+    {
+      "nasaId": "MSFC-201900580",
+      "title": "NASA 3D-Printed Habitat Challenge",
+      "thumbUrl": "https://images-assets.nasa.gov/image/MSFC-201900580/MSFC-201900580~thumb.jpg",
+      "credit": "MSFC"
+    },
+    {
+      "nasaId": "MSFC-201900633",
+      "title": "NASA 3D-Printed Habitat Challenge",
+      "thumbUrl": "https://images-assets.nasa.gov/image/MSFC-201900633/MSFC-201900633~thumb.jpg",
+      "credit": "MSFC"
+    }
+  ]
+}

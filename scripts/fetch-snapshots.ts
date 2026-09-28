@@ -24,7 +24,19 @@ import { fileURLToPath } from "node:url";
 const BASE_URL = process.env["BASE_URL"] ?? "http://localhost:3000";
 const OUT_DIR = fileURLToPath(new URL("../apps/web/public/snapshots/", import.meta.url));
 
-const IMAGE_QUERY_KEYS = ["moxie", "iss-water", "veggie", "artemis", "rad", "lunar-south-pole"];
+const IMAGE_QUERY_KEYS = [
+  "moxie",
+  "iss-water",
+  "veggie",
+  "artemis",
+  "rad",
+  "lunar-south-pole",
+  // Player request #9's own two habitat-concept galleries — not co2-scrubber/deep-space-
+  // network, a pre-existing gap this change doesn't otherwise touch (both already registered
+  // in server-lib/validate.ts's IMAGE_QUERY_WHITELIST but never added here).
+  "mars-habitat-concept",
+  "lunar-habitat-concept",
+];
 
 interface SourcedBody {
   readonly source: string;
