@@ -38,7 +38,7 @@ export default defineConfig({
       workbox: {
         // Everything Vite builds (JS/CSS/fonts) plus the committed snapshots, so the app
         // opens and Live Sky/light-time still show real (if stale) data with no network.
-        globPatterns: ["**/*.{js,css,html,svg,png,ico}", "snapshots/*.json"],
+        globPatterns: ["**/*.{js,css,html,svg,png,jpg,ico}", "snapshots/*.json"],
         runtimeCaching: [
           {
             // NetworkFirst per the brief: try live data, fall back to whatever was last

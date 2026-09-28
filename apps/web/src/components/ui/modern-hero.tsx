@@ -93,8 +93,7 @@ const CenterImage = () => {
         clipPath,
         backgroundSize,
         opacity,
-        backgroundImage:
-          "url(https://cdn.21st.dev/assets/mirror/3e/3ea1ee3ce8a8134c194baf880a7afabc7a43bad8d5672f7b0f74fff87344dcc4.jpg)",
+        backgroundImage: "url(/images/hero/hero-center.jpg)",
       }}
     />
   );
@@ -104,28 +103,28 @@ const ParallaxImages = () => {
   return (
     <div className="modern-hero-parallax-container">
       <ParallaxImg
-        src="https://cdn.21st.dev/assets/mirror/68/68fd4edf19855762d0020e6ddbf3fdd31b7f768a6c65014d50ec6b36ef305b54.jpg"
+        src="/images/hero/hero-parallax-1.jpg"
         alt="Spacecraft ascending from planetary base"
         start={-200}
         end={200}
         className="modern-hero-parallax-img parallax-w-1-3"
       />
       <ParallaxImg
-        src="https://cdn.21st.dev/assets/mirror/bc/bca64f76b38b6b3e0f1c2357292903fc428e16d47b49005201be8ba51377ce8c.jpg"
+        src="/images/hero/hero-parallax-2.jpg"
         alt="Orbital insertion and planetary horizon"
         start={200}
         end={-250}
         className="modern-hero-parallax-img parallax-w-2-3"
       />
       <ParallaxImg
-        src="https://cdn.21st.dev/assets/mirror/04/04691b2e29925f30eac3817ea8f65d973484b711822252a13c15248859e464da.jpg"
+        src="/images/hero/hero-parallax-3.jpg"
         alt="Deep space communication satellite array"
         start={-200}
         end={200}
         className="modern-hero-parallax-img parallax-w-1-3-ml-auto"
       />
       <ParallaxImg
-        src="https://cdn.21st.dev/assets/mirror/71/711f1a9ccb3786dcc00e8031191dc4d58c9377cefb54bf927806921a4a05a818.jpg"
+        src="/images/hero/hero-parallax-4.jpg"
         alt="Solar outpost surface telemetry and operations"
         start={0}
         end={-500}
