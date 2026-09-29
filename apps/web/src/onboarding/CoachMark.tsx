@@ -1,7 +1,5 @@
-import { useEffect } from "react";
 import type { StationId } from "@sol-keeper/sim";
 import { useOnboarding } from "../store/onboarding.js";
-import { useRun } from "../store/run.js";
 import { useDial } from "../store/dial.js";
 import { COACH_MARK_ORDER, coachMarkText } from "../i18n/onboardingText.js";
 import { useAppLanguage } from "../i18n/useAppLanguage.js";
@@ -38,13 +36,21 @@ interface CoachMarkProps {
  * click happens to match a later entry in that fixed order may see that one station's lesson
  * twice (and, correspondingly, one other station's lesson zero times) if they rely on Next
  * alone afterward — a minor tour-ordering nicety, not the player-fighting bug this fixes.
+ *
+ * Second player bug report: this component used to also call `setPhase("planning")` on every
+ * activation — a leftover from when it drove navigation itself, meant to hold the sim still
+ * while it forcibly relocated the player. Now that navigation is never forced, that side
+ * effect had no purpose left except an unwanted one: leaving Habitat/Briefing/Debrief and
+ * landing back on a station re-activates the coach mark (`active` goes false -> true), which
+ * re-ran the effect and silently re-locked a running sol to Sol Planning — "moving from one
+ * station to another pauses the sol automatically" with no toggle involved. Removed outright;
+ * the sol now only ever pauses via the player's own explicit speed/phase controls.
  */
 export function CoachMark({ view, onNavigate }: CoachMarkProps) {
   const seen = useOnboarding((s) => s.seen);
   const step = useOnboarding((s) => s.step);
   const next = useOnboarding((s) => s.next);
   const skip = useOnboarding((s) => s.skip);
-  const setPhase = useRun((s) => s.setPhase);
   const level = useDial((s) => s.level);
   const language = useAppLanguage();
 
@@ -58,11 +64,6 @@ export function CoachMark({ view, onNavigate }: CoachMarkProps) {
     view !== "report";
   const station = active ? view : undefined;
   const nextStation = COACH_MARK_ORDER[step + 1];
-
-  useEffect(() => {
-    if (!active) return;
-    setPhase("planning");
-  }, [active, setPhase]);
 
   if (!active || station === undefined) return null;
 

@@ -164,27 +164,28 @@ const CenterImage = () => {
  */
 // Player report: a feature card sharing the images' own full ±150-250px translateY range
 // could end up visually overlapping the very image it's paired beside mid-scroll, since each
-// element's motion is computed independently off its own position. A much smaller range —
-// still a real scroll-linked fade+slide, the same technique, just a gentler distance — keeps
-// every card close to its natural flow position instead.
+// element's motion is computed independently off its own position — confirmed worse on a
+// narrow mobile viewport, where the same pixel offsets are a much larger fraction of the
+// screen. A small range — still a real scroll-linked fade+slide, the same technique, just a
+// gentler distance — keeps every card close to its natural flow position on every viewport.
 const HERO_FEATURES: readonly { title: string; body: string; start: number; end: number }[] = [
   {
     title: "Every number is real.",
     body: "Crew metabolic rate, battery chemistry, radiation limits, dust-storm duration — every constant traces back to a published NASA source, credited on the Data Sources screen.",
-    start: -40,
-    end: 60,
+    start: -15,
+    end: 20,
   },
   {
     title: "Real incidents, not scripted drama.",
     body: "A Mir fire, an Apollo 13 CO2 scrubber failure, an ISS depressurization — the incidents you respond to are drawn from real spaceflight history, not invented for the game.",
-    start: 40,
-    end: -60,
+    start: 15,
+    end: -20,
   },
   {
     title: "Three depths, one simulation.",
     body: "Cadet, Specialist, or Commander — the Reality Dial changes how the mission is explained, never the physics underneath it.",
-    start: -40,
-    end: 60,
+    start: -15,
+    end: 20,
   },
 ];
 
@@ -216,8 +217,11 @@ const ParallaxImages = () => {
       />
       {/* Right-aligned, not left — image 4 right after it sits left-of-centre (margin-left:
        *  6rem, not a full right position like image 3), so a left-aligned card here would
-       *  encroach on the same territory instead of complementing it. */}
-      <ParallaxFeature {...HERO_FEATURES[2]!} className="modern-hero-feature-right" />
+       *  encroach on the same territory instead of complementing it. Extra top margin: image 3
+       *  is the one portrait-oriented image (taller relative to its width than the other
+       *  three), and at the base gap this card's own top corner touched its bottom corner
+       *  mid-scroll — a targeted bump here instead of a larger gap on every card. */}
+      <ParallaxFeature {...HERO_FEATURES[2]!} className="modern-hero-feature-right modern-hero-feature-extra-top" />
       <ParallaxImg
         src="/images/hero/hero-parallax-4.jpg"
         alt="Solar outpost surface telemetry and operations"

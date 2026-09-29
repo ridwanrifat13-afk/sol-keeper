@@ -94,6 +94,29 @@ test.describe("First Light coach mark", () => {
     await expect(coachMark).toHaveCount(0);
   });
 
+  test("does not auto-pause a running sol when navigating between stations, or back from Habitat (bug fix: it used to reset phase to Sol Planning on every re-activation)", async ({
+    page,
+  }) => {
+    await gotoApp(page);
+    await clickTab(page, "Power");
+    await page.getByRole("button", { name: "▶ Run the sol" }).click();
+    await page.getByRole("button", { name: "1×" }).click();
+    await page.waitForTimeout(1500);
+    const hourAfterRunning = await page.locator(".clock-hour").textContent();
+    expect(hourAfterRunning).not.toBe("hour 0");
+
+    // Habitat isn't a station — leaving it for one re-activates the coach mark, which used to
+    // silently pause a running sol as a side effect of that re-activation alone.
+    await clickTab(page, "Habitat");
+    await clickTab(page, "Comms");
+    await page.waitForTimeout(1500);
+
+    // If it paused, "Run the sol" (only shown while phase === "planning") would be back.
+    await expect(page.getByRole("button", { name: "▶ Run the sol" })).toHaveCount(0);
+    const hourAfterSwitching = await page.locator(".clock-hour").textContent();
+    expect(hourAfterSwitching).not.toBe(hourAfterRunning);
+  });
+
   test("Skip tutorial dismisses it immediately, from any step", async ({ page }) => {
     await gotoApp(page);
     await clickTab(page, "Power");

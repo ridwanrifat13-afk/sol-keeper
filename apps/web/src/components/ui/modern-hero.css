@@ -311,7 +311,7 @@
 .modern-hero-feature {
   width: 24rem;
   max-width: 40%;
-  margin: 7rem 0;
+  margin: 3.5rem 0;
   padding: 1.5rem 1.75rem;
   background: rgba(9, 9, 11, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -329,6 +329,14 @@
 .modern-hero-feature-left {
   margin-right: auto;
   text-align: left;
+}
+
+/* Targeted extra clearance above one specific card (the one right after the tall portrait-
+   oriented image), not raised on every card — a real class (not an inline style) so the
+   mobile breakpoint below can give it its own, smaller value instead of inheriting a
+   desktop-tuned gap that overlapped the image above it on a narrow viewport. */
+.modern-hero-feature-extra-top {
+  margin-top: 9rem;
 }
 
 .modern-hero-feature-title {
@@ -556,6 +564,14 @@
     margin-left: auto;
     margin-right: auto;
     text-align: left;
+  }
+
+  /* The desktop-tuned 9rem gap (.modern-hero-feature-extra-top) is sized for the wide,
+     multi-column-feeling layout above this breakpoint; stacked full-width on mobile, the
+     base 3.5rem .modern-hero-feature margin is already enough clearance from the image above
+     it — a player report caught the desktop value still applying here and overlapping. */
+  .modern-hero-feature-extra-top {
+    margin-top: 3.5rem;
   }
 
   .modern-hero-nav {
