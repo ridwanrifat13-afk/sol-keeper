@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import {
   checkGoal,
   crew as crewConstants,
@@ -14,7 +15,6 @@ import {
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { CrewPanel } from "../../components/CrewPanel.js";
-import { OrbitalView } from "../../components/OrbitalView.js";
 import { ScenarioSwitch } from "../../components/ScenarioSwitch.js";
 import { EsmPanel } from "../../components/EsmPanel.js";
 import { STATUS } from "../../components/status.js";
@@ -29,6 +29,16 @@ import { goalText } from "../../i18n/goalText.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { durationLabel, elapsedValue, timeUnitWord } from "../../dial/missionTime.js";
 import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
+
+/** Code-split: OrbitalView pulls in `three` (+ OrbitControls), a real ~140 KB gzipped add to
+ *  the bundle (measured via `vercel build`'s own output once the dependency landed) — CLAUDE.md
+ *  rule 6's "low-end Android phone" and "offline after first load" both weigh against making
+ *  every player pay that cost on first paint just to reach Power/Life Support/Comms. Lazy,
+ *  so the WebGL scene (and its dependency) only downloads once a player actually opens Mission
+ *  Command, the one console that uses it. */
+const OrbitalView = lazy(() =>
+  import("../../components/OrbitalView.js").then((m) => ({ default: m.OrbitalView })),
+);
 
 /**
  * The Mission Command console (M8.3): crew status, which mission is running, and the whole
@@ -142,7 +152,15 @@ export function MissionCommandConsole() {
         </div>
       </section>
 
-      <OrbitalView />
+      <Suspense
+        fallback={
+          <section className="panel orbital-view" aria-label="Orbital display">
+            <p className="panel-hint">Loading the orbital display…</p>
+          </section>
+        }
+      >
+        <OrbitalView />
+      </Suspense>
 
       <ScenarioSwitch />
       <CrewPanel />
