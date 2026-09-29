@@ -49,3 +49,12 @@ describe("Habitat view (M9.4a/b), first frame", () => {
     expect(out).toContain("●");
   });
 });
+
+describe("Habitat view: no lasting damage by default", () => {
+  it("none of the three permanent-effect rows render on a fresh mission", () => {
+    const out = render();
+    expect(out).not.toContain("Solar array damage");
+    expect(out).not.toContain("Fire history");
+    expect(out).not.toContain("Improvised repairs");
+  });
+});

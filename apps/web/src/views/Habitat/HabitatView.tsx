@@ -15,6 +15,7 @@ import { FactCardGallery } from "../../components/FactCardGallery.js";
 import { locationLabel, stationLabel } from "../../dial/labels.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { timestampLabel } from "../../dial/missionTime.js";
+import { habitatEffects } from "../../dial/habitatEffects.js";
 
 /** Mars' real daytime sky is a dusty butterscotch, not Earth blue — no atmosphere means the
  *  Moon's sky is black at any hour, sun up or not (both are art-direction facts, not sourced
@@ -138,6 +139,11 @@ export function HabitatView() {
     (i) => i.definitionId === "depress-mir97" && i.resolvedAtHour === undefined,
   );
 
+  // Player request: "apply visual effects on the habitat according to the mission logs sol by
+  // sol" — real, lasting incident consequences the sim already tracks (dial/habitatEffects.ts
+  // has the full reasoning and the unit test this component's own SSR test can't provide).
+  const { arrayLossFraction, hasFireHistory, improvisedRepairSystemCount } = habitatEffects(state, scenario);
+
   // Station-slot crew (location === "habitat") are grouped by station so a shared slot (a
   // 6th crew member wraps onto another's primary station, see the M9 plan's own note on
   // STATION_IDS[5 % 5]) fans out instead of fully overlapping.
@@ -221,9 +227,13 @@ export function HabitatView() {
             />
 
             {/* Solar array, left of the dome — a strut plus two ribbed panels, the same
-             *  panel-plus-truss shape real outpost/Gateway renders use. */}
+             *  panel-plus-truss shape real outpost/Gateway renders use. Player request: "apply
+             *  visual effects... according to the mission logs sol by sol" — a scripted hull
+             *  breach's real, permanent power.arrayAreaLossM2 (models/power.ts's own note:
+             *  "sealing a leaking module takes its arrays with it") fades and cracks the panel
+             *  proportionally, not just a battery gauge reading lower. */}
             <line x1="70" y1="168" x2="70" y2="128" stroke="#8b93b8" strokeWidth="2" />
-            <g stroke="#4a5578" strokeWidth="1">
+            <g stroke="#4a5578" strokeWidth="1" opacity={1 - arrayLossFraction * 0.65}>
               <rect x="30" y="118" width="38" height="18" fill="#1d3a63" />
               <line x1="38" y1="118" x2="38" y2="136" />
               <line x1="46" y1="118" x2="46" y2="136" />
@@ -235,6 +245,12 @@ export function HabitatView() {
               <line x1="96" y1="118" x2="96" y2="136" />
               <line x1="104" y1="118" x2="104" y2="136" />
             </g>
+            {arrayLossFraction > 0.3 && (
+              <g stroke="var(--critical)" strokeWidth="2">
+                <line x1="32" y1="120" x2="66" y2="134" />
+                <line x1="66" y1="120" x2="32" y2="134" />
+              </g>
+            )}
           </g>
 
           {/* Habitat module cutaway — a plain schematic dome. */}
@@ -245,6 +261,32 @@ export function HabitatView() {
             strokeWidth={depressurizing ? 3 : 2}
           />
           <line x1="100" y1="150" x2="300" y2="150" stroke="#8b93b8" strokeWidth="1.5" />
+
+          {/* Soot smudge — fire-mir97 having happened at all is a permanent fact once it's on
+           *  the mission log, even after its own temporary smoke-recovery window ends; scanning
+           *  the log's own stable code (hasFireHistory, above) rather than any state flag this
+           *  sim doesn't otherwise keep. */}
+          {hasFireHistory && (
+            <ellipse aria-hidden="true" cx="130" cy="135" rx="26" ry="16" fill="#1a1a1a" opacity="0.3" />
+          )}
+
+          {/* Improvised-repair patch — SystemState.efficiencyPenaltyFraction's own permanent
+           *  "used something else" cost (engine/incidents.ts M7.7 Part 2), on the hull as a
+           *  visibly different-coloured patch rather than only a lower number on Power/Life
+           *  Support's own consoles. */}
+          {improvisedRepairSystemCount > 0 && (
+            <rect
+              aria-hidden="true"
+              x="170"
+              y="152"
+              width="26"
+              height="16"
+              fill="#7a6a3a"
+              stroke="var(--caution)"
+              strokeWidth="1.5"
+              strokeDasharray="3 2"
+            />
+          )}
 
           {/* Comms mast, mounted on the dome's own roof and rising clear of it — drawn after
            *  the dome so it reads as mounted hardware, not a shape floating behind the hull.
@@ -327,6 +369,33 @@ export function HabitatView() {
                 <span aria-hidden="true">{dust.glyph}</span> {isMars ? dust.word : "No atmosphere — dust storms don't occur"}
               </td>
             </tr>
+            {arrayLossFraction > 0 && (
+              <tr>
+                <th scope="row">Solar array damage</th>
+                <td className="is-caution">
+                  <span aria-hidden="true">▲</span> {Math.round(arrayLossFraction * 100)}% of rated area lost —
+                  permanent, from a sealed module
+                </td>
+              </tr>
+            )}
+            {hasFireHistory && (
+              <tr>
+                <th scope="row">Fire history</th>
+                <td className="is-caution">
+                  <span aria-hidden="true">▲</span> This mission has had a fire — soot residue remains
+                </td>
+              </tr>
+            )}
+            {improvisedRepairSystemCount > 0 && (
+              <tr>
+                <th scope="row">Improvised repairs</th>
+                <td className="is-caution">
+                  <span aria-hidden="true">▲</span> {improvisedRepairSystemCount} system
+                  {improvisedRepairSystemCount === 1 ? "" : "s"} running below rated capacity from a
+                  spares-short repair
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </section>

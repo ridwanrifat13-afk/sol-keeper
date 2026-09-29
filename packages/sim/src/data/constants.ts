@@ -639,6 +639,32 @@ export const environment = {
     confidence: "measured",
     note: "Full synodic lunar day; half of it is night.",
   }),
+  // Player request: a real orbital-motion display for Mission Command (see
+  // components/OrbitalView.tsx). Sidereal periods — the physical time to complete one real
+  // orbit — not lunarDayHours' own synodic figure above (which is about solar illumination
+  // phase, a different real quantity this sim already uses lunarDayHours for; conflating the
+  // two would misstate the Moon's own real orbital period around Earth).
+  lunarSiderealOrbitalPeriodDays: c({
+    value: 27.322,
+    unit: "days",
+    source: "NSSDC-FACTS",
+    confidence: "measured",
+    note: "The Moon's real orbital period around Earth (the sidereal month) — NSSDC's Moon fact sheet.",
+  }),
+  earthOrbitalPeriodDays: c({
+    value: 365.256,
+    unit: "days",
+    source: "NSSDC-FACTS",
+    confidence: "measured",
+    note: "Earth's real sidereal orbital period around the Sun — NSSDC's Earth fact sheet.",
+  }),
+  marsOrbitalPeriodDays: c({
+    value: 686.98,
+    unit: "days",
+    source: "NSSDC-FACTS",
+    confidence: "measured",
+    note: "Mars' real sidereal orbital period around the Sun — NSSDC's Mars fact sheet. Distinct from marsConjunctionPeriodDays above (the Earth-Mars synodic/conjunction cycle, a different real quantity already used for the comms-blackout schedule).",
+  }),
   marsGravityMPerS2: c({
     value: 3.73,
     unit: "m/s^2",

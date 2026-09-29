@@ -14,6 +14,7 @@ import {
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { CrewPanel } from "../../components/CrewPanel.js";
+import { OrbitalView } from "../../components/OrbitalView.js";
 import { ScenarioSwitch } from "../../components/ScenarioSwitch.js";
 import { EsmPanel } from "../../components/EsmPanel.js";
 import { STATUS } from "../../components/status.js";
@@ -54,6 +55,13 @@ import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
  * and a "big board" status strip — real, already-live numbers (mission elapsed time, crew
  * alive/total, active alerts) in the large tabular-nums readout a real ops room's main
  * display uses, not new state or invented figures.
+ *
+ * A later request built on that same theme: "a 3d model like eyes.nasa.gov... to show
+ * moon/mars orbiting when the sol is ran, stop when paused, speed up at 4x/16x." OrbitalView
+ * (components/OrbitalView.tsx) is that control — an SVG scene, not a WebGL globe (see its own
+ * doc comment for why), whose real orbital-period ratios and real 1x/4x/16x speed
+ * relationship are both driven straight from store/run.ts's own speed/phase/status, the exact
+ * state TimeControls.tsx already reads for the same purpose.
  */
 export function MissionCommandConsole() {
   // `state` is mutated in place (store/run.ts's own doc comment) — subscribing to `version`
@@ -133,6 +141,8 @@ export function MissionCommandConsole() {
           </div>
         </div>
       </section>
+
+      <OrbitalView />
 
       <ScenarioSwitch />
       <CrewPanel />

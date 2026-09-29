@@ -1911,6 +1911,43 @@ code {
   color: var(--text-dim);
 }
 
+/* ---------------------------------------------------------------- orbital view (player #9) */
+.orbital-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 400 / 200;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #060a16;
+}
+
+.orbital-view-state {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--nominal);
+}
+
+/* Rule 6: `.orbital-view-state`'s own text ("ORBITING AT 4X" / "STOPPED") is what actually
+   carries the state — this spin is motion on top of an already-labelled fact, same as every
+   other decorative animation in this file, never the only signal. */
+.orbital-spin {
+  animation-name: orbital-spin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes orbital-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ---------------------------------------------------------------- mission report (M10.8) */
 .mission-report {
   max-width: 900px;
@@ -2141,6 +2178,10 @@ code {
     animation: none;
     opacity: 1;
   }
+
+  .orbital-spin {
+    animation: none;
+  }
 }
 
 /* The manual low-power-mode toggle (App.tsx) applies the exact same rules as the OS
@@ -2158,4 +2199,8 @@ code {
 :root.low-power-mode .ops-live-dot {
   animation: none;
   opacity: 1;
+}
+
+:root.low-power-mode .orbital-spin {
+  animation: none;
 }
