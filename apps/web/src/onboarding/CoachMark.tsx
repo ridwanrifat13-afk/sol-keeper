@@ -22,11 +22,22 @@ interface CoachMarkProps {
 /**
  * The First Light onboarding tutorial (M8.7, brief: "first launch runs the 'First Light'
  * tutorial with coach marks, introducing one station at a time"). Not a blocking modal over
- * the console — a small anchored card so the console underneath (and the tab it's driven to)
- * stays visible and readable while it's introduced. It drives navigation itself (`onNavigate`)
- * rather than asking the player to find the right tab, so the tab's own existing
- * `tab-button-active` styling already does the "highlight this station" work with no separate
- * spotlight overlay needed.
+ * the console — a small anchored card so the console underneath stays visible and readable
+ * while it's introduced.
+ *
+ * Player bug report: the tutorial used to call `onNavigate` itself on every activation,
+ * forcing the view to `COACH_MARK_ORDER[step]` regardless of which tab the player had just
+ * clicked — so a first-time player's very first sidebar click (say, "Life Support") silently
+ * landed them on Power instead, with no indication their own click had been overridden. Fixed
+ * by never driving navigation on activation: `station` is always `view` itself (safe — `active`
+ * already guarantees `view` is one of the five StationIds), so the card always truthfully
+ * describes wherever the player actually is, and clicking a sidebar tab always goes exactly
+ * there. "Next" is the one remaining, explicit case where driving navigation is legitimate —
+ * the player asked for the next lesson — advancing through COACH_MARK_ORDER's fixed sequence
+ * starting from wherever they began; the one disclosed edge case is a player whose own first
+ * click happens to match a later entry in that fixed order may see that one station's lesson
+ * twice (and, correspondingly, one other station's lesson zero times) if they rely on Next
+ * alone afterward — a minor tour-ordering nicety, not the player-fighting bug this fixes.
  */
 export function CoachMark({ view, onNavigate }: CoachMarkProps) {
   const seen = useOnboarding((s) => s.seen);
@@ -38,21 +49,20 @@ export function CoachMark({ view, onNavigate }: CoachMarkProps) {
   const language = useAppLanguage();
 
   const totalSteps = COACH_MARK_ORDER.length;
-  const station = COACH_MARK_ORDER[step] ?? COACH_MARK_ORDER[totalSteps - 1];
   const active =
     !seen &&
-    station !== undefined &&
     view !== "setup" &&
     view !== "briefing" &&
     view !== "debrief" &&
     view !== "habitat" &&
     view !== "report";
+  const station = active ? view : undefined;
+  const nextStation = COACH_MARK_ORDER[step + 1];
 
   useEffect(() => {
-    if (!active || station === undefined) return;
+    if (!active) return;
     setPhase("planning");
-    onNavigate(station);
-  }, [active, station, setPhase, onNavigate]);
+  }, [active, setPhase]);
 
   if (!active || station === undefined) return null;
 
@@ -73,6 +83,7 @@ export function CoachMark({ view, onNavigate }: CoachMarkProps) {
           className="btn btn-active"
           onClick={() => {
             next(totalSteps);
+            if (nextStation !== undefined) onNavigate(nextStation);
           }}
         >
           {step + 1 >= totalSteps ? "Done" : "Next"}

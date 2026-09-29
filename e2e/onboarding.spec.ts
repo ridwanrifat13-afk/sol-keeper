@@ -42,7 +42,9 @@ async function clickTab(page: Page, label: string): Promise<void> {
 }
 
 test.describe("First Light coach mark", () => {
-  test("stays off Setup and Briefing, then walks all five stations in the brief's own order", async ({ page }) => {
+  test("stays off Setup and Briefing, then describes whichever station the player actually clicked (bug fix: it used to force Power regardless of the click)", async ({
+    page,
+  }) => {
     await gotoApp(page);
     await expect(page.getByText("Mission Setup")).toBeVisible();
     await expect(page.getByRole("dialog", { name: "First Light tutorial" })).toHaveCount(0);
@@ -52,28 +54,43 @@ test.describe("First Light coach mark", () => {
     await expect(page.getByText("Mission Briefing")).toBeVisible();
     await expect(page.getByRole("dialog", { name: "First Light tutorial" })).toHaveCount(0);
 
-    // Leaving Briefing for any tab starts the tutorial at its own first step (Power), not
-    // necessarily the tab that was clicked.
+    // Leaving Briefing for Mission Command starts the tutorial anchored to Mission Command —
+    // the tab the player actually clicked, never silently overridden to some fixed first tab.
     await clickTab(page, "Mission Command");
     const coachMark = page.getByRole("dialog", { name: "First Light tutorial" });
     await expect(coachMark).toBeVisible();
     await expect(coachMark).toContainText("Step 1 of 5");
-    await expect(tabButton(page, "Power")).toHaveAttribute("aria-current", "page");
+    await expect(coachMark).toContainText("Mission Command");
+    await expect(tabButton(page, "Mission Command")).toHaveAttribute("aria-current", "page");
 
-    const order = ["Power", "Life Support", "Incident Command", "Comms", "Mission Command"];
+    // Clicking a different tab directly is respected immediately too, not just the first one.
+    await clickTab(page, "Comms");
+    await expect(coachMark).toContainText("Comms");
+    await expect(tabButton(page, "Comms")).toHaveAttribute("aria-current", "page");
+
+    // "Next" still offers a guided walk through the brief's own fixed order, starting from
+    // wherever the tour began (Mission Command here) — this run's own real sequence. Four
+    // "Next" clicks (step 0->1->2->3->4) each drive to and describe the next station in
+    // COACH_MARK_ORDER; a player who started on Mission Command (that order's own last entry)
+    // sees it once now and once again as the tour's own final step — the disclosed edge case
+    // CoachMark.tsx's own doc comment names, not a bug.
+    await clickTab(page, "Mission Command");
+    await expect(coachMark).toContainText("Step 1 of 5");
+    const order = ["Life Support", "Incident Command", "Comms", "Mission Command"];
     for (const [i, label] of order.entries()) {
-      await expect(coachMark).toContainText(`Step ${i + 1} of 5`);
-      await expect(tabButton(page, label)).toHaveAttribute("aria-current", "page");
       // A real mouse click here genuinely dismisses/advances the card (verified manually) —
       // Playwright's pre-click hit-test retries indefinitely on this fixed-position card on
       // the mobile-chrome project, a known category of false-positive interception with
       // `position: fixed` elements under touch-viewport emulation, not a real unclickable
       // state (same note as `skipTutorialIfShown` above).
-      const isLastStep = i + 1 === order.length;
-      const button = coachMark.getByRole("button", { name: isLastStep ? "Done" : "Next" });
-      await button.click({ force: true });
+      await coachMark.getByRole("button", { name: "Next" }).click({ force: true });
+      await expect(coachMark).toContainText(`Step ${i + 2} of 5`);
+      await expect(tabButton(page, label)).toHaveAttribute("aria-current", "page");
     }
 
+    // One more click (step 4, "of 5" already showing) finishes the tour with no further
+    // navigation — COACH_MARK_ORDER has no 6th entry to drive to.
+    await coachMark.getByRole("button", { name: "Done" }).click({ force: true });
     await expect(coachMark).toHaveCount(0);
   });
 

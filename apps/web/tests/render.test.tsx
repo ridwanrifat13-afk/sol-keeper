@@ -136,10 +136,10 @@ describe("First Light coach mark (M8.7)", () => {
     expect(out).not.toContain("Skip tutorial");
   });
 
-  it("starts at step 1 of 5 on Power once the player is on any station console", () => {
+  it("describes whichever station console the player is actually on, not a fixed first station (bug fix: it used to force Power regardless)", () => {
     const out = render(<CoachMark view="comms" onNavigate={() => {}} />);
     expect(out).toContain("Step 1 of 5");
-    expect(out).toContain("Power");
+    expect(out).toContain("Comms");
     expect(out).toContain("Skip tutorial");
   });
 });

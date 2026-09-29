@@ -71,11 +71,28 @@ const Nav = ({ onLaunchMission }: { onLaunchMission?: ((scenarioId?: ScenarioId)
 // less scroll distance, on top of the snappier Lenis smoothing above.
 const SECTION_HEIGHT = 950;
 
+/**
+ * Player report: the parallax images (and, worse, the new hero-features cards below) were
+ * getting cut off before Launch Windows rather than actually pushing it lower — because the
+ * old single `.modern-hero-section` gave both the sticky pin zone AND the normal-flow
+ * parallax content the SAME fixed `SECTION_HEIGHT + 100vh` height with `overflow: hidden`.
+ * That height is sized for the pin zone's own scroll-driven zoom animation, not for however
+ * tall the parallax content (now including three feature cards) happens to be — on a shorter
+ * viewport, or once feature cards were added, real content quietly got clipped away entirely
+ * rather than shown. `.modern-hero-pin-zone` now carries that fixed height + overflow:hidden
+ * on its own, wrapping only the sticky CenterImage/HeroHeadline (whose `position: sticky`
+ * pinning behavior depends on exactly this ancestor height, unchanged from before);
+ * ParallaxImages sits after it as an ordinary sibling with no forced height, so it's always
+ * fully visible regardless of content length or viewport size, and Launch Windows always
+ * starts exactly where the real content ends — no more magic-number guessing.
+ */
 const Hero = () => {
   return (
-    <div style={{ height: `calc(${SECTION_HEIGHT}px + 100vh)` }} className="modern-hero-section">
-      <CenterImage />
-      <HeroHeadline />
+    <div className="modern-hero-section">
+      <div style={{ height: `calc(${SECTION_HEIGHT}px + 100vh)` }} className="modern-hero-pin-zone">
+        <CenterImage />
+        <HeroHeadline />
+      </div>
       <ParallaxImages />
       <div className="modern-hero-gradient-overlay" />
     </div>
@@ -136,6 +153,41 @@ const CenterImage = () => {
   );
 };
 
+/**
+ * Player request: "state some hero features/rules of this trainer on the homepage hero
+ * section (on the left/right side with same scroll animation)." Four real, verifiable claims
+ * — nothing invented for marketing effect, each traceable to an actual rule or feature this
+ * codebase enforces (CLAUDE.md's own rules 1/5/6, the Reality Dial, the incident catalog's
+ * real analogues) — alternating sides opposite each parallax image, sharing that image's own
+ * `ParallaxImg` scroll-linked motion (see `ParallaxFeature` below) rather than a new,
+ * inconsistent animation style.
+ */
+// Player report: a feature card sharing the images' own full ±150-250px translateY range
+// could end up visually overlapping the very image it's paired beside mid-scroll, since each
+// element's motion is computed independently off its own position. A much smaller range —
+// still a real scroll-linked fade+slide, the same technique, just a gentler distance — keeps
+// every card close to its natural flow position instead.
+const HERO_FEATURES: readonly { title: string; body: string; start: number; end: number }[] = [
+  {
+    title: "Every number is real.",
+    body: "Crew metabolic rate, battery chemistry, radiation limits, dust-storm duration — every constant traces back to a published NASA source, credited on the Data Sources screen.",
+    start: -40,
+    end: 60,
+  },
+  {
+    title: "Real incidents, not scripted drama.",
+    body: "A Mir fire, an Apollo 13 CO2 scrubber failure, an ISS depressurization — the incidents you respond to are drawn from real spaceflight history, not invented for the game.",
+    start: 40,
+    end: -60,
+  },
+  {
+    title: "Three depths, one simulation.",
+    body: "Cadet, Specialist, or Commander — the Reality Dial changes how the mission is explained, never the physics underneath it.",
+    start: -40,
+    end: 60,
+  },
+];
+
 const ParallaxImages = () => {
   return (
     <div className="modern-hero-parallax-container">
@@ -146,6 +198,7 @@ const ParallaxImages = () => {
         end={200}
         className="modern-hero-parallax-img parallax-w-1-3"
       />
+      <ParallaxFeature {...HERO_FEATURES[0]!} className="modern-hero-feature-right" />
       <ParallaxImg
         src="/images/hero/hero-parallax-2.jpg"
         alt="Orbital insertion and planetary horizon"
@@ -153,6 +206,7 @@ const ParallaxImages = () => {
         end={-250}
         className="modern-hero-parallax-img parallax-w-2-3"
       />
+      <ParallaxFeature {...HERO_FEATURES[1]!} className="modern-hero-feature-left" />
       <ParallaxImg
         src="/images/hero/hero-parallax-3.jpg"
         alt="Deep space communication satellite array"
@@ -160,6 +214,10 @@ const ParallaxImages = () => {
         end={200}
         className="modern-hero-parallax-img parallax-w-1-3-ml-auto"
       />
+      {/* Right-aligned, not left — image 4 right after it sits left-of-centre (margin-left:
+       *  6rem, not a full right position like image 3), so a left-aligned card here would
+       *  encroach on the same territory instead of complementing it. */}
+      <ParallaxFeature {...HERO_FEATURES[2]!} className="modern-hero-feature-right" />
       <ParallaxImg
         src="/images/hero/hero-parallax-4.jpg"
         alt="Solar outpost surface telemetry and operations"
@@ -201,6 +259,37 @@ const ParallaxImg = ({ className, alt, src, start, end }: ParallaxImgProps) => {
       ref={ref}
       style={{ transform, opacity }}
     />
+  );
+};
+
+interface ParallaxFeatureProps {
+  title: string;
+  body: string;
+  start: number;
+  end: number;
+  className?: string;
+}
+
+/** A hero feature/rule callout, sharing `ParallaxImg`'s own scroll-linked
+ *  translateY+scale+opacity motion — the same animation, a text block instead of an image. */
+const ParallaxFeature = ({ title, body, start, end, className }: ParallaxFeatureProps) => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: [`${start}px end`, `end ${end * -1}px`],
+  });
+
+  const opacity = useTransform(scrollYProgress, [0.75, 1], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0.75, 1], [1, 0.85]);
+  const y = useTransform(scrollYProgress, [0, 1], [start, end]);
+  const transform = useMotionTemplate`translateY(${y}px) scale(${scale})`;
+
+  return (
+    <motion.div ref={ref} className={`modern-hero-feature ${className ?? ""}`} style={{ transform, opacity }}>
+      <p className="modern-hero-feature-title">{title}</p>
+      <p className="modern-hero-feature-body">{body}</p>
+    </motion.div>
   );
 };
 

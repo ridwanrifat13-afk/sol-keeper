@@ -134,11 +134,18 @@
 .modern-hero-section {
   position: relative;
   width: 100%;
-  /* The parallax images lay out in normal flow at their own intrinsic height, which can run
-     taller than this section's fixed scroll-driven height (especially after shortening
-     SECTION_HEIGHT for a faster scroll) — without a clip, the last image's tail bleeds
-     straight into the shortcuts section below with no visible seam. Clipping here, not on
-     an ancestor, keeps the sticky center image's own 100vh pin unaffected. */
+}
+
+/* The sticky pin zone (CenterImage + HeroHeadline) alone gets the fixed scroll-driven height
+   and its own clip — sized for that zoom/fade animation's own pacing, not for however tall
+   the parallax content below happens to be. Previously this fixed height (and its
+   overflow: hidden) sat on .modern-hero-section itself, wrapping the parallax content too —
+   on a shorter viewport, or once real content (feature cards) grew past this height, it was
+   silently clipped away entirely rather than pushing Launch Windows lower, the player-
+   reported bug this split fixes. */
+.modern-hero-pin-zone {
+  position: relative;
+  width: 100%;
   overflow: hidden;
 }
 
@@ -258,7 +265,11 @@
 .modern-hero-parallax-container {
   margin: 0 auto;
   max-width: 68rem;
-  padding: 200px 1rem 0;
+  /* Bottom padding (player report: Launch Windows should sit "a bit lower," not flush against
+     the last image) — real breathing room now that .modern-hero-pin-zone's own split fix
+     means this container's natural height is never clipped, so this padding always actually
+     renders rather than sometimes being eaten by the old shared overflow:hidden. */
+  padding: 200px 1rem 5rem;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -292,6 +303,46 @@
 .parallax-w-5-12 {
   width: 41.666%;
   margin-left: 6rem;
+}
+
+/* Hero feature/rule callouts (player request) — left/right of the parallax images, same
+   scroll-linked motion as ParallaxImg above (translateY + scale + opacity), never centered
+   (this file's own established rule for hero text — see .modern-hero-headline's own note). */
+.modern-hero-feature {
+  width: 24rem;
+  max-width: 40%;
+  margin: 7rem 0;
+  padding: 1.5rem 1.75rem;
+  background: rgba(9, 9, 11, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+.modern-hero-feature-right {
+  margin-left: auto;
+  text-align: right;
+}
+
+.modern-hero-feature-left {
+  margin-right: auto;
+  text-align: left;
+}
+
+.modern-hero-feature-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #9fd0ff;
+}
+
+.modern-hero-feature-body {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #d4d4d8;
 }
 
 /* Launch Schedule section */
@@ -473,13 +524,15 @@
 /* Reduced motion & low-power overrides */
 @media (prefers-reduced-motion: reduce) {
   .modern-hero-center-img,
-  .modern-hero-parallax-img {
+  .modern-hero-parallax-img,
+  .modern-hero-feature {
     transform: none !important;
   }
 }
 
 .low-power-mode .modern-hero-center-img,
-.low-power-mode .modern-hero-parallax-img {
+.low-power-mode .modern-hero-parallax-img,
+.low-power-mode .modern-hero-feature {
   transform: none !important;
 }
 
@@ -496,6 +549,13 @@
     width: 80%;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  .modern-hero-feature {
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
   }
 
   .modern-hero-nav {
