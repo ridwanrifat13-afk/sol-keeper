@@ -62,6 +62,10 @@ export function ReplayControls() {
             {SPEED_LABELS[s]}
           </button>
         ))}
+        {/* Same sol countdown as TimeControls, beside the same pause button, for the replay UI. */}
+        <span className="sol-countdown">
+          <span aria-hidden="true">⏳</span> Sol ends in {24 - (hour % 24)}h
+        </span>
       </div>
     </div>
   );

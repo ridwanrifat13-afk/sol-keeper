@@ -318,6 +318,17 @@ code {
   font-variant-numeric: tabular-nums;
 }
 
+.sol-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  align-self: center;
+}
+
 /* ---------------------------------------------------------------- gauges */
 .gauge-grid {
   display: grid;
@@ -792,6 +803,23 @@ code {
 .mobile-nav-toggle {
   position: relative;
   z-index: 101;
+  gap: 6px;
+}
+
+/* Player report: the Menu button reads too large next to the other header actions on a
+   narrow phone. Icon-only below 480px (matching the hero nav's own 480px cutoff for
+   secondary chrome) — the accessible name comes from the button's own `aria-label`, not
+   this text, so nothing is lost for assistive tech; `min-height`/`min-width` below keep the
+   44px touch target the rest of `.btn` already guarantees, just narrower, not shorter. */
+@media (max-width: 480px) {
+  .mobile-nav-toggle-label {
+    display: none;
+  }
+
+  .mobile-nav-toggle {
+    padding: 9px 11px;
+    min-width: 44px;
+  }
 }
 
 .overlay-backdrop {
@@ -1460,8 +1488,22 @@ code {
 }
 
 /* ---------------------------------------------------------------- launch packing (M6) */
-.launch-packing-table {
+/* Player report: on a narrow phone this table's 5 columns don't fit and there was nothing
+   letting it scroll — it just overflowed the page, half off-screen. */
+.table-scroll {
   width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.launch-packing-table {
+  /* `width: 100%` alone, inside an `overflow-x: auto` wrapper that's also 100% wide, would
+     just shrink the table to match the wrapper and never actually overflow it — the min-width
+     is what keeps the columns readable and makes this scroll on a narrow screen instead of
+     silently compressing text past legibility; on any screen wide enough, 100% still wins and
+     nothing here changes from before. */
+  width: 100%;
+  min-width: 540px;
   border-collapse: collapse;
   font-size: 0.85rem;
   margin-bottom: 10px;
@@ -1925,6 +1967,7 @@ code {
   border-radius: var(--radius);
   overflow: hidden;
   background: #000000;
+  position: relative;
 }
 
 .orbital-iframe {
@@ -1932,6 +1975,40 @@ code {
   width: 100%;
   height: 100%;
   border: 0;
+}
+
+/* A plain black background behind a slow-to-start iframe reads as "broken," not "loading" —
+   player report ("sometimes just shows a black screen"). This overlay sits on top of that same
+   black background until the iframe's own `onLoad` fires, so the wait is visibly a wait. */
+.orbital-loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  text-align: center;
+  color: #e3e8f5;
+  font-size: 0.82rem;
+  background: #000000;
+  pointer-events: none;
+}
+
+.orbital-loading-spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: var(--nominal);
+  animation: orbital-loading-spin 0.9s linear infinite;
+}
+
+@keyframes orbital-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .orbital-view-state {
@@ -2172,6 +2249,10 @@ code {
     animation: none;
     opacity: 1;
   }
+
+  .orbital-loading-spinner {
+    animation: none;
+  }
 }
 
 /* The manual low-power-mode toggle (App.tsx) applies the exact same rules as the OS
@@ -2189,4 +2270,8 @@ code {
 :root.low-power-mode .ops-live-dot {
   animation: none;
   opacity: 1;
+}
+
+:root.low-power-mode .orbital-loading-spinner {
+  animation: none;
 }

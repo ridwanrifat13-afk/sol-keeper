@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { environment, type Body } from "@sol-keeper/sim";
 import { useRun } from "../store/run.js";
 
@@ -47,7 +48,31 @@ const BODY_ROUTE: Record<Body, string> = {
 export function OrbitalView() {
   const scenario = useRun((s) => s.scenario);
   const body: Body = scenario.body;
+  // `reloadCount` is folded into the iframe's `key` below purely to force React to tear down
+  // and recreate the <iframe> DOM node on "Reload view" — the one real lever this page has
+  // over a cross-origin embed's own internal state (a WebGL context that failed to init, a
+  // request that stalled) when there's no postMessage API to ask it to retry itself.
+  const [reloadCount, setReloadCount] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+  const [slow, setSlow] = useState(false);
   const src = `https://eyes.nasa.gov/apps/solar-system/#/${BODY_ROUTE[body]}?${EMBED_PARAMS}`;
+
+  // Every mount of this view is a fresh <iframe> — `App.tsx` only renders MissionCommandConsole
+  // while that tab is active, so navigating away and back reloads NASA's own app from scratch
+  // every time. That's the real reason the embed sometimes "takes too long": there is no
+  // warm state to return to. Resetting `loaded` here (rather than leaving a stale `true` from
+  // a previous body) is what makes the loading state below actually reappear on a body switch
+  // or a manual reload, not just on first mount.
+  useEffect(() => {
+    setLoaded(false);
+    setSlow(false);
+    const id = setTimeout(() => {
+      setSlow(true);
+    }, 6000);
+    return () => {
+      clearTimeout(id);
+    };
+  }, [src, reloadCount]);
 
   return (
     <section className="panel orbital-view" aria-labelledby="orbital-view-heading">
@@ -64,13 +89,45 @@ export function OrbitalView() {
       </p>
 
       <div className="orbital-iframe-container">
+        {!loaded && (
+          <div className="orbital-loading-overlay" role="status">
+            <span className="orbital-loading-spinner" aria-hidden="true" />
+            <span>
+              {slow
+                ? "Still loading NASA's live 3D view — it can be slow on a weaker connection or device."
+                : "Loading NASA's live 3D view…"}
+            </span>
+          </div>
+        )}
         <iframe
+          key={reloadCount}
           className="orbital-iframe"
           src={src}
           title={`NASA Eyes on the Solar System: ${body === "mars" ? "Mars" : "the Moon"}, live`}
           allowFullScreen
-          loading="lazy"
+          onLoad={() => {
+            setLoaded(true);
+          }}
         />
+      </div>
+      <div className="button-row">
+        <button
+          type="button"
+          className="btn btn-tiny btn-quiet"
+          onClick={() => {
+            setReloadCount((n) => n + 1);
+          }}
+        >
+          Reload view
+        </button>
+        <span className="panel-hint">
+          Black screen or stuck loading? NASA's own 3D view can fail to start on some devices —
+          reload it, or{" "}
+          <a href={src} target="_blank" rel="noreferrer">
+            open it directly in a new tab
+          </a>
+          .
+        </span>
       </div>
 
       <table className="ripple-table">

@@ -152,67 +152,73 @@ export function LaunchPackingStep() {
         ))}
       </div>
 
-      <table className="launch-packing-table">
-        <thead>
-          <tr>
-            <th scope="col">System</th>
-            <th scope="col">TRL</th>
-            <th scope="col">Hardware mass</th>
-            <th scope="col">Reliability (MTBF)</th>
-            <th scope="col">
-              Packed at {PHASES.find((p) => p.id === phase)?.label} (+{Math.round(marginFraction * 100)}%)
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {breakdown.perSystem.map((line) => {
-            const spec = scenario.systems.find((s) => s.id === line.system);
-            const trl = spec?.trl ?? 0;
-            const mtbfHours = trl > 0 ? 1 / failureRatePerHour(trl) : undefined;
-            return (
-              <tr key={line.system}>
-                <td>{systemLabel(line.system, level, language)}</td>
-                <td>{trl || "—"}</td>
-                <td>{line.massKg !== undefined ? `${Math.round(line.massKg)} kg` : "not sourced"}</td>
-                <td>{mtbfHours !== undefined ? readableHours(mtbfHours) : "—"}</td>
-                <td>
-                  {line.massKg !== undefined
-                    ? `${Math.round(line.massKg * (1 + marginFraction))} kg`
-                    : "not sourced"}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td>Hardware total (sourced only)</td>
-            <td />
-            <td>{Math.round(bareMassTotal)} kg</td>
-            <td />
-            <td>{Math.round(packedMassTotal)} kg</td>
-          </tr>
-          <tr>
-            <td>+ Consumables launched (O2/CO2/food/water)</td>
-            <td colSpan={3} />
-            <td>{Math.round(breakdown.consumablesMassKg)} kg</td>
-          </tr>
-          <tr>
-            <td>+ Shielding crew-time (ESM-equivalent)</td>
-            <td colSpan={3} />
-            <td>{Math.round(breakdown.shieldingCrewTimeKg)} kg</td>
-          </tr>
-          <tr>
-            <td>
-              <strong>Grand total</strong>
-            </td>
-            <td colSpan={3} />
-            <td>
-              <strong>{Math.round(grandTotalKg)} kg</strong>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+      {/* Player report: this table's own natural width (5 columns, headers like "Reliability
+       *  (MTBF)") doesn't fit a phone screen and there was nothing letting it scroll — it just
+       *  overflowed the page, half off-screen. A horizontally scrollable wrapper is the
+       *  standard fix for a data table that can't be narrowed further without losing columns. */}
+      <div className="table-scroll">
+        <table className="launch-packing-table">
+          <thead>
+            <tr>
+              <th scope="col">System</th>
+              <th scope="col">TRL</th>
+              <th scope="col">Hardware mass</th>
+              <th scope="col">Reliability (MTBF)</th>
+              <th scope="col">
+                Packed at {PHASES.find((p) => p.id === phase)?.label} (+{Math.round(marginFraction * 100)}%)
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {breakdown.perSystem.map((line) => {
+              const spec = scenario.systems.find((s) => s.id === line.system);
+              const trl = spec?.trl ?? 0;
+              const mtbfHours = trl > 0 ? 1 / failureRatePerHour(trl) : undefined;
+              return (
+                <tr key={line.system}>
+                  <td>{systemLabel(line.system, level, language)}</td>
+                  <td>{trl || "—"}</td>
+                  <td>{line.massKg !== undefined ? `${Math.round(line.massKg)} kg` : "not sourced"}</td>
+                  <td>{mtbfHours !== undefined ? readableHours(mtbfHours) : "—"}</td>
+                  <td>
+                    {line.massKg !== undefined
+                      ? `${Math.round(line.massKg * (1 + marginFraction))} kg`
+                      : "not sourced"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Hardware total (sourced only)</td>
+              <td />
+              <td>{Math.round(bareMassTotal)} kg</td>
+              <td />
+              <td>{Math.round(packedMassTotal)} kg</td>
+            </tr>
+            <tr>
+              <td>+ Consumables launched (O2/CO2/food/water)</td>
+              <td colSpan={3} />
+              <td>{Math.round(breakdown.consumablesMassKg)} kg</td>
+            </tr>
+            <tr>
+              <td>+ Shielding crew-time (ESM-equivalent)</td>
+              <td colSpan={3} />
+              <td>{Math.round(breakdown.shieldingCrewTimeKg)} kg</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>Grand total</strong>
+              </td>
+              <td colSpan={3} />
+              <td>
+                <strong>{Math.round(grandTotalKg)} kg</strong>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
       {unsourcedLines.length > 0 && (
         <p className="panel-hint">
           {unsourcedLines.map((l) => systemLabel(l.system, level, language)).join(", ")} carr

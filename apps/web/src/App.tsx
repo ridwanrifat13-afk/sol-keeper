@@ -260,11 +260,13 @@ export function App({ initialView = "home" }: AppProps = {}) {
                 className="btn btn-quiet mobile-nav-toggle"
                 aria-expanded={mobileNavOpen}
                 aria-controls="mobile-nav"
+                aria-label="Menu"
                 onClick={() => {
                   setMobileNavOpen((open) => !open);
                 }}
               >
-                <span aria-hidden="true">{mobileNavOpen ? "✕" : "☰"}</span> Menu
+                <span aria-hidden="true">{mobileNavOpen ? "✕" : "☰"}</span>
+                <span className="mobile-nav-toggle-label">Menu</span>
               </button>
               <button
                 type="button"

@@ -89,6 +89,12 @@ export function TimeControls() {
             {SPEED_LABELS[s]}
           </button>
         ))}
+        {/* Player request: a sol countdown beside the pause button. The sol auto-pauses at
+         *  the next `hour % 24 === 0` boundary (store/run.ts's own `step()`), so the number
+         *  shown here is exactly how many ticks are left before that happens. */}
+        <span className="sol-countdown">
+          <span aria-hidden="true">⏳</span> Sol ends in {24 - (hour % 24)}h
+        </span>
       </div>
 
       <div className="button-row">

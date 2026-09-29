@@ -199,7 +199,7 @@ const ParallaxImages = () => {
         end={200}
         className="modern-hero-parallax-img parallax-w-1-3"
       />
-      <ParallaxFeature {...HERO_FEATURES[0]!} className="modern-hero-feature-right" />
+      <ParallaxFeature {...HERO_FEATURES[0]!} className="modern-hero-feature-right modern-hero-feature-first" />
       <ParallaxImg
         src="/images/hero/hero-parallax-2.jpg"
         alt="Orbital insertion and planetary horizon"
