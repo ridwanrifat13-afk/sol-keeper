@@ -4,7 +4,20 @@
   color: #fafafa;
   min-height: 100vh;
   position: relative;
-  overflow-x: hidden;
+  /* `overflow-x: hidden` with no `overflow-y` set looks harmless but isn't: per the CSS
+     Overflow spec, when one axis is non-visible and the other is left at its default
+     (visible), the visible one computes to `auto` instead — silently turning this element
+     into a scroll container. That container (which never actually scrolls itself; the real
+     page does) becomes the nearest scrolling ancestor for every `position: sticky` descendant
+     below (CenterImage, HeroHeadline), so their sticky pinning never engaged at all — measured
+     directly (real `getBoundingClientRect()` calls while scrolling): their rect.top tracked
+     `-scrollY` exactly, i.e. plain unstuck flow, not a pinned element. That's the real, much
+     larger cause behind the player-reported "huge black gap after the 1st image": the image
+     was scrolling fully away in one viewport height while the pin zone still reserved much
+     more scroll distance for an animation that, in practice, was never staying pinned long
+     enough to fill it. `overflow-x: clip` clips the same horizontal overflow (parallax images'
+     own transforms) without establishing a scroll container or ever engaging that quirk. */
+  overflow-x: clip;
   font-family: inherit;
 }
 
@@ -146,7 +159,6 @@
 .modern-hero-pin-zone {
   position: relative;
   width: 100%;
-  overflow: hidden;
 }
 
 .modern-hero-center-img {
@@ -154,10 +166,20 @@
   top: 0;
   height: 100vh;
   width: 100%;
+  will-change: clip-path, opacity;
+}
+
+/* The actual photo layer, always `background-size: cover` — never animated directly (see
+   modern-hero.tsx's own CenterImage doc comment for why an animated percentage broke full
+   coverage on mobile). The zoom effect is a `transform: scale` on this layer instead, which
+   can only ever show more of an already-fully-covering image, never a gap. */
+.modern-hero-center-img-layer {
+  position: absolute;
+  inset: 0;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  will-change: clip-path, opacity, transform;
+  will-change: transform;
 }
 
 .modern-hero-gradient-overlay {
@@ -661,16 +683,25 @@
     padding: 0.75rem 1rem;
   }
 
+  /* Player report: "reduce the Sol Keeper logo size on the header for mobile UI." The base
+     rule (26px) was never actually overridden here before — this breakpoint repeated the same
+     value, so mobile got the identical desktop-sized brand pill. Shrunk for real now, along
+     with the pill's own padding, so the whole lockup reads proportionally smaller, not just
+     the wordmark on its own. */
+  .modern-hero-brand {
+    padding: 0.3rem 0.6rem 0.3rem 0.7rem;
+  }
+
   .modern-hero-team-logo {
-    height: 26px;
+    height: 18px;
   }
 
   .modern-hero-title {
-    font-size: 0.95rem;
+    font-size: 0.8rem;
   }
 
   .modern-hero-by {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
   }
 
   .modern-hero-nav-actions {

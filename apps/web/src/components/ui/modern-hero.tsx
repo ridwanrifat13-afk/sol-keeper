@@ -1,7 +1,7 @@
 import { ReactLenis } from "lenis/react";
 import { motion, useMotionTemplate, useScroll, useTransform } from "framer-motion";
 import { FiArrowRight, FiBookOpen, FiMapPin } from "react-icons/fi";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SCENARIOS, type ScenarioId } from "@sol-keeper/sim";
 import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
 import { CONTROLS_REFERENCE, MISSION_GUIDES, SETUP_CONTROLS_REFERENCE } from "../../dial/missionGuides.js";
@@ -87,10 +87,23 @@ const SECTION_HEIGHT = 950;
  * starts exactly where the real content ends — no more magic-number guessing.
  */
 const Hero = () => {
+  // Player report: "after scrolling past the 1st image, a black background appears which
+  // users need to scroll through." Root cause, confirmed by walking the actual scroll math:
+  // the pin zone reserves SECTION_HEIGHT + 100vh of scroll so CenterImage's `position: sticky`
+  // has a full 100vh of runway to release and scroll away in — but CenterImage's own opacity
+  // fade used to end at a flat `SECTION_HEIGHT + 500`, a guess that has no relationship to the
+  // real viewport height. On any device where 100vh is taller than 500px (most phones — a
+  // typical mobile viewport is 700-900px), the image was already fully transparent well before
+  // the pin zone's own reserved space ran out, leaving `.modern-hero-root`'s near-black
+  // background showing through, empty, for the remainder of that scroll. Reading the real
+  // viewport height here and using it for BOTH the container's reserved space and the fade's
+  // own endpoint keeps them mathematically in sync on every device, instead of a guess that
+  // only happened to work on whatever screen it was last tuned against.
+  const vh = useViewportHeight();
   return (
     <div className="modern-hero-section">
-      <div style={{ height: `calc(${SECTION_HEIGHT}px + 100vh)` }} className="modern-hero-pin-zone">
-        <CenterImage />
+      <div style={{ height: `${SECTION_HEIGHT + vh}px` }} className="modern-hero-pin-zone">
+        <CenterImage fadeEnd={SECTION_HEIGHT + vh} />
         <HeroHeadline />
       </div>
       <ParallaxImages />
@@ -98,6 +111,23 @@ const Hero = () => {
     </div>
   );
 };
+
+/** The real, current viewport height in px, kept live across resizes/orientation changes —
+ *  `window` is absent during the SSR render tests (see this file's own render.test.tsx usage),
+ *  so the initial value falls back to a plausible desktop height rather than crashing there. */
+function useViewportHeight(): number {
+  const [vh, setVh] = useState(() => (typeof window === "undefined" ? 800 : window.innerHeight));
+  useEffect(() => {
+    const onResize = () => {
+      setVh(window.innerHeight);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+  return vh;
+}
 
 /**
  * Player request: hero text that names all three real missions, for attention. Sticky-pinned
@@ -129,7 +159,7 @@ const HeroHeadline = () => {
   );
 };
 
-const CenterImage = () => {
+const CenterImage = ({ fadeEnd }: { fadeEnd: number }) => {
   const { scrollY } = useScroll();
 
   const clip1 = useTransform(scrollY, [0, SECTION_HEIGHT], [25, 0]);
@@ -137,19 +167,34 @@ const CenterImage = () => {
 
   const clipPath = useMotionTemplate`polygon(${clip1}% ${clip1}%, ${clip2}% ${clip1}%, ${clip2}% ${clip2}%, ${clip1}% ${clip2}%)`;
 
-  const backgroundSize = useTransform(scrollY, [0, SECTION_HEIGHT + 500], ["170%", "100%"]);
-  const opacity = useTransform(scrollY, [SECTION_HEIGHT, SECTION_HEIGHT + 500], [1, 0]);
+  // Fades all the way out exactly as the pin zone itself ends (fadeEnd = SECTION_HEIGHT + the
+  // real viewport height, see Hero's own doc comment) instead of a flat +500px guess, so there
+  // is no longer a stretch of scroll where the image has already vanished but the parallax
+  // gallery hasn't appeared yet.
+  const opacity = useTransform(scrollY, [SECTION_HEIGHT, fadeEnd], [1, 0]);
+
+  // Player report (part of the same "black gap" investigation): a real, second bug found while
+  // fixing the first. The zoom used to animate `background-size` directly, from a flat "170%"
+  // down to "100%" of the CONTAINER's own width — but that percentage's relationship to actual
+  // full coverage depends on both the container's aspect ratio AND the source photo's
+  // (1920x1280, confirmed by inspecting the file directly): on a wide desktop viewport "cover"
+  // only needs ~105% width, so 100-170% happened to look fine there, but on a narrow, tall
+  // mobile viewport "cover" needs roughly 325% — so both ends of that range under-covered,
+  // leaving real, visible black letterboxing above and below the image for a wide stretch of
+  // the scroll (confirmed directly: comparing the computed clip-path, correctly near-full-bleed
+  // at that point, against the image's own much smaller rendered band). A `transform: scale`
+  // on a layer that keeps a constant `background-size: cover` fixes this for any viewport or
+  // image, at any zoom level, by construction — "cover" itself already guarantees full
+  // coverage; scaling up from there can only ever add more image, never a gap.
+  const scale = useTransform(scrollY, [0, fadeEnd], [1.7, 1]);
 
   return (
-    <motion.div
-      className="modern-hero-center-img"
-      style={{
-        clipPath,
-        backgroundSize,
-        opacity,
-        backgroundImage: "url(/images/hero/hero-center.jpg)",
-      }}
-    />
+    <motion.div className="modern-hero-center-img" style={{ clipPath, opacity }}>
+      <motion.div
+        className="modern-hero-center-img-layer"
+        style={{ scale, backgroundImage: "url(/images/hero/hero-center.jpg)" }}
+      />
+    </motion.div>
   );
 };
 

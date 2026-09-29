@@ -329,6 +329,21 @@ code {
   align-self: center;
 }
 
+/* Player request: "optimize the sol pause/resume bar to make it look highlighted." Scoped to
+   just the speed row (Paused/1x/4x/16x) inside TimeControls/ReplayControls, not `.btn-active`
+   generally -- that class is shared with the Setup wizard's scenario cards, the Reality Dial
+   switch, and Launch Packing's phase tabs, none of which were part of this report. A real
+   accent colour + glow (the same brand blue used for the hero's own CTA button), not just a
+   brighter grey -- but still paired with the bold weight and border `.btn-active` already
+   carries, so the current speed is never conveyed by colour alone (rule 6). */
+.time-controls .btn-active,
+.replay-controls .btn-active {
+  background: linear-gradient(135deg, #0b3d91 0%, #1e5bc6 100%);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 14px rgba(30, 91, 198, 0.55);
+}
+
 /* ---------------------------------------------------------------- gauges */
 .gauge-grid {
   display: grid;
@@ -689,14 +704,14 @@ code {
      actions`'s own (unmeasured-by-CSS) position in normal flow, confirmed by measuring it
      directly at y:20, height:44, so its bottom edge is at y:64. The drawer's own top padding
      used to be 16px, so its first tab-button (16px to 60px) sat almost exactly under the
-     toggle. A first pass (76px) only cleared that edge by 12px — a follow-up player report
-     ("still isn't optimized") confirmed 12px doesn't read as genuinely separated, so this
-     gives a full 44px (one touch target's worth) of real clearance below the toggle's own
-     measured bottom edge instead. The toggle itself stays visually above the drawer (z-index
-     101, see below) precisely so it's still the one thing that closes the drawer again, so
-     the fix is giving the drawer's own content room to start well below it, not lowering the
-     toggle's stacking order. */
-  padding: 108px 10px 16px;
+     toggle. This clears that edge by 8px — enough on its own now that the space right below
+     it holds a real element (`.app-brand`, its own padding/border adding further real
+     separation from the first tab button) rather than needing extra bare padding to read as
+     "separated." The toggle itself stays visually above the drawer (z-index 101, see below)
+     precisely so it's still the one thing that closes the drawer again, so the fix is giving
+     the drawer's own content room to start below it, not lowering the toggle's stacking
+     order. */
+  padding: 72px 10px 16px;
   background: var(--shell-bg);
   border-right: 1px solid var(--line);
   overflow-y: auto;
@@ -721,6 +736,35 @@ code {
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
   z-index: 99;
+}
+
+/* Player request: the Home hero's own "Sol Keeper" brand mark, on every other page too --
+   "without a header, just the logo." Lives at the top of `.tab-nav` (BrandMark.tsx), so it's
+   shared, unmodified markup between the mobile drawer and the desktop sidebar rather than two
+   separate placements. Styled for the shell's own light chrome (`--shell-text`/`--shell-
+   accent`), not a copy of the Home hero nav's dark-pill version -- that one is tuned for
+   sitting over a photo background, this one sits on plain `--shell-bg`. */
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px 14px;
+  margin: 0 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.app-brand-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--shell-accent);
+}
+
+.app-brand-logo {
+  height: 20px;
+  width: auto;
+  object-fit: contain;
 }
 
 @media (min-width: 860px) {

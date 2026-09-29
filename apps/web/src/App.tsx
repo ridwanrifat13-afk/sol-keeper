@@ -27,6 +27,7 @@ import { MissionReportView } from "./views/Report/MissionReportView.js";
 import { HomeView } from "./views/Home/HomeView.js";
 import { applyRunLinkFromLocation, type BootRunLinkResult } from "./share/bootRunLink.js";
 import { DebugOverlay } from "./components/DebugOverlay.js";
+import { BrandMark } from "./components/BrandMark.js";
 import "./i18n/config.js";
 
 /** The tab-nav's own eight destinations — seven since M8.3, plus Habitat (M9.4a) as the
@@ -232,6 +233,7 @@ export function App({ initialView = "home" }: AppProps = {}) {
             className={`tab-nav ${mobileNavOpen ? "tab-nav-open" : ""}`}
             aria-label={t("tabs.nav")}
           >
+            <BrandMark />
             {TAB_IDS.map((id) => (
               <button
                 key={id}

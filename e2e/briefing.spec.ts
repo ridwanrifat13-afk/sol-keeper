@@ -84,8 +84,12 @@ test.describe("Mission Briefing", () => {
     // Every <img> on this screen must be one of Leaflet's own real Trek map tiles — not a
     // NASA logo/insignia asset, which this project never ships (brief rule 5 is about the
     // brand mark, not NASA's own scientific imagery, which crediting it is the whole point
-    // of this screen).
-    const srcs = await page.locator("img").evaluateAll((els) => els.map((el) => el.getAttribute("src") ?? ""));
+    // of this screen). `.app-brand-logo` is excluded: the app shell's own "Sol Keeper" mark
+    // (BrandMark.tsx, on every non-Home page now) is this project's own team logo, not a NASA
+    // asset — a real, separate, permitted category, not a rule 5 violation to check for here.
+    const srcs = await page
+      .locator("img:not(.app-brand-logo)")
+      .evaluateAll((els) => els.map((el) => el.getAttribute("src") ?? ""));
     expect(srcs.length).toBeGreaterThan(0);
     for (const src of srcs) {
       expect(src).toMatch(/trek\.nasa\.gov/);

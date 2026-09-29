@@ -73,8 +73,13 @@ test.describe("Habitat view", () => {
     // Player request #9 added a real "What NASA envisions" habitat-concept gallery here (the
     // same FactCardGallery pattern Life Support's own equivalent check already documents) —
     // this view is no longer imageless. Every <img>'s src must be real NASA Image Library
-    // asset content, never a logo/insignia graphic this project ships itself.
-    const srcs = await page.locator("img").evaluateAll((els) => els.map((el) => el.getAttribute("src") ?? ""));
+    // asset content, never a logo/insignia graphic this project ships itself. `.app-brand-logo`
+    // is excluded: the app shell's own "Sol Keeper" mark (BrandMark.tsx, on every non-Home page
+    // now) is this project's own team logo, a real, separate, permitted category — not a rule 5
+    // violation to check for here.
+    const srcs = await page
+      .locator("img:not(.app-brand-logo)")
+      .evaluateAll((els) => els.map((el) => el.getAttribute("src") ?? ""));
     expect(srcs.length).toBeGreaterThan(0);
     for (const src of srcs) {
       expect(src).toMatch(/images-assets\.nasa\.gov/);
