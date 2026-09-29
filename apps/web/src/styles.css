@@ -306,15 +306,32 @@ code {
 }
 
 .clock-sol {
+  /* `.time-controls` is a dark `.bg-panel`, not the light shell background this token pair is
+     meant for (the same real mismatch `.overlay-panel .view-head h2` already documents its own
+     fix for, further down this file) — confirmed directly: this color computed to rgb(19,26,46)
+     against a panel background of rgb(20,27,49), functionally invisible. */
   font-size: 1.25rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--shell-text);
+  color: var(--text);
 }
 
+/* Player request: "highlight the hour count in the sol pause/resume bar." A small accent-blue
+   badge (the same brand blue the speed row's own active state and the hero's CTA already use),
+   not just a brighter grey — real visual weight, not merely "less dim than before" (which is
+   all fixing the --shell-text/--text mismatch above would have given it on its own). */
 .clock-hour {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 2px;
+  padding: 2px 9px;
+  border-radius: 999px;
   font-size: 0.75rem;
-  color: var(--shell-text-dim);
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #0b3d91 0%, #1e5bc6 100%);
+  box-shadow: 0 0 10px rgba(30, 91, 198, 0.5);
   font-variant-numeric: tabular-nums;
 }
 

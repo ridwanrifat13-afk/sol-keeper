@@ -2,8 +2,10 @@ import {
   crewCondition,
   dayLengthHours,
   sunFactor,
+  cropRequiredLightHours,
   STATION_IDS,
   type CrewMember,
+  type CropTray,
   type StationId,
 } from "@sol-keeper/sim";
 import { useRun } from "../../store/run.js";
@@ -12,7 +14,7 @@ import { Starfield } from "../../components/Starfield.js";
 import { STATUS } from "../../components/status.js";
 import { AlarmBanner } from "../../components/AlarmBanner.js";
 import { FactCardGallery } from "../../components/FactCardGallery.js";
-import { locationLabel, stationLabel } from "../../dial/labels.js";
+import { locationLabel, stationLabel, cropLabel } from "../../dial/labels.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { timestampLabel } from "../../dial/missionTime.js";
 import { habitatEffects } from "../../dial/habitatEffects.js";
@@ -82,6 +84,69 @@ function ConditionMarker({ cx, cy, condition }: { cx: number; cy: number; condit
     return <polygon points={`${cx},${cy - 7} ${cx - 7},${cy + 6} ${cx + 7},${cy + 6}`} fill="var(--caution)" stroke="#0b1020" strokeWidth="1" />;
   }
   return <rect x={cx - 6} y={cy - 6} width="12" height="12" fill="var(--critical)" stroke="#0b1020" strokeWidth="1" />;
+}
+
+/** A tray's leaf colour blends from a healthy green toward a wilted brown as
+ *  `healthFraction` falls — the same `mixHex` blend `skyColor` already uses, not a new
+ *  mechanism. Decorative only (aria-hidden, see CropSprite below) — the real health number
+ *  reads from the text table beside it (rule 6: never colour alone). */
+function cropHealthColor(healthFraction: number): string {
+  return mixHex("#8a6a2c", "#4ade80", Math.max(0, Math.min(1, healthFraction)));
+}
+
+/**
+ * Player request: "add visuals for crops in the habitat." One compact sprite per real
+ * `CropTray` (state.food.trays — already exported, no new sim field), grown inside the
+ * secondary module drawn below as the mission's own small greenhouse. A stem height that
+ * grows with `lightHours / cropRequiredLightHours(crop)` (the same fraction
+ * LifeSupportConsole's own crop status list already computes) and a leaf colour that fades
+ * toward brown with `healthFraction` reuse the sim's real numbers rather than a decorative
+ * animation with nothing behind it. Four distinct, simple silhouettes (not attempting botanical
+ * accuracy) so the four crop types read as different plants at a glance, not identical dots.
+ */
+function CropSprite({ cx, baseY, tray }: { cx: number; baseY: number; tray: CropTray }) {
+  const growthFraction = Math.min(1, tray.lightHours / cropRequiredLightHours(tray.crop));
+  const stemHeight = 4 + growthFraction * 12;
+  const topY = baseY - stemHeight;
+  const leafColor = cropHealthColor(tray.healthFraction);
+
+  return (
+    <g aria-hidden="true">
+      <line x1={cx} y1={baseY} x2={cx} y2={topY} stroke="#5a6b3a" strokeWidth="1.5" />
+      {tray.crop === "lettuce" && (
+        <>
+          <circle cx={cx} cy={topY} r={3 + growthFraction * 2.5} fill={leafColor} />
+          <circle cx={cx - 2} cy={topY + 1} r={2 + growthFraction * 1.5} fill={leafColor} opacity="0.85" />
+          <circle cx={cx + 2} cy={topY + 1} r={2 + growthFraction * 1.5} fill={leafColor} opacity="0.85" />
+        </>
+      )}
+      {tray.crop === "wheat" && (
+        <>
+          <line x1={cx - 2} y1={baseY - 2} x2={cx - 2} y2={topY - 2} stroke={leafColor} strokeWidth="1.2" />
+          <line x1={cx + 2} y1={baseY - 2} x2={cx + 2} y2={topY - 2} stroke={leafColor} strokeWidth="1.2" />
+          <ellipse cx={cx} cy={topY - 2} rx={2} ry={3 + growthFraction * 2} fill={leafColor} />
+          <ellipse cx={cx - 2} cy={topY - 1} rx={1.4} ry={2 + growthFraction * 1.4} fill={leafColor} opacity="0.85" />
+          <ellipse cx={cx + 2} cy={topY - 1} rx={1.4} ry={2 + growthFraction * 1.4} fill={leafColor} opacity="0.85" />
+        </>
+      )}
+      {tray.crop === "soybean" && (
+        <>
+          <ellipse cx={cx - 3} cy={topY} rx={2.5 + growthFraction} ry={1.8 + growthFraction} fill={leafColor} />
+          <ellipse cx={cx + 3} cy={topY} rx={2.5 + growthFraction} ry={1.8 + growthFraction} fill={leafColor} />
+          <ellipse cx={cx} cy={topY - 3} rx={2.5 + growthFraction} ry={1.8 + growthFraction} fill={leafColor} opacity="0.9" />
+        </>
+      )}
+      {tray.crop === "potato" && (
+        <>
+          <ellipse cx={cx - 2.5} cy={topY} rx={3 + growthFraction} ry={2.2 + growthFraction * 0.8} fill={leafColor} />
+          <ellipse cx={cx + 2.5} cy={topY - 1} rx={3 + growthFraction} ry={2.2 + growthFraction * 0.8} fill={leafColor} opacity="0.9" />
+          {/* The tuber itself, at the soil line — potato's own defining feature versus the
+           *  other three leaf-only crops, and a visible cue for what "harvest" means here. */}
+          <ellipse cx={cx} cy={baseY + 1.5} rx={3} ry={2} fill="#8a5a3c" opacity={0.5 + growthFraction * 0.5} />
+        </>
+      )}
+    </g>
+  );
 }
 
 /**
@@ -300,11 +365,23 @@ export function HabitatView() {
 
           {/* Secondary inflatable module — the real X-Hab expandable-habitat concept (see the
            *  gallery below), linked to the main module by a short tunnel rather than drawn as
-           *  a second, disconnected building. */}
+           *  a second, disconnected building. Doubles as the mission's own small greenhouse —
+           *  a real NASA Veggie-hardware-style planter strip plus one CropSprite per real
+           *  `state.food.trays` entry (player request: "add visuals for crops in the
+           *  habitat"), evenly spaced across the module's own interior width. */}
           <g aria-hidden="true">
             <rect x="300" y="148" width="22" height="10" fill="#c7cee3" stroke="#8b93b8" strokeWidth="1.5" />
             <ellipse cx="336" cy="153" rx="24" ry="20" fill="#c7cee3" stroke="#8b93b8" strokeWidth="2" />
+            <rect x="317" y="163" width="38" height="5" rx="1.5" fill="#4a3a26" />
           </g>
+          {state.food.trays.map((tray, i, trays) => (
+            <CropSprite
+              key={tray.id}
+              cx={336 - 14 + ((i + 0.5) * 28) / trays.length}
+              baseY={163}
+              tray={tray}
+            />
+          ))}
 
           {/* atStation/sheltering/onEva are all built from aliveCrew — crewCondition() only
            *  ever returns "lost" for a dead member, so every marker here is genuinely one of
@@ -369,6 +446,23 @@ export function HabitatView() {
                 <span aria-hidden="true">{dust.glyph}</span> {isMars ? dust.word : "No atmosphere — dust storms don't occur"}
               </td>
             </tr>
+            {/* The greenhouse module's own CropSprite visuals, in words — same growth/health
+             *  numbers LifeSupportConsole's own crop status list already reads, from the same
+             *  real state.food.trays (rule 6: the scene's plant icons are decoration, this row
+             *  is the actual fact). */}
+            {state.food.trays.map((tray) => {
+              const growthPct = Math.min(100, Math.round((tray.lightHours / cropRequiredLightHours(tray.crop)) * 100));
+              const healthPct = Math.round(tray.healthFraction * 100);
+              return (
+                <tr key={tray.id}>
+                  <th scope="row">{cropLabel(tray.crop, level, language)}</th>
+                  <td className={healthPct < 60 ? "is-caution" : "is-nominal"}>
+                    <span aria-hidden="true">{healthPct < 60 ? "▲" : "●"}</span> {growthPct}% grown ·{" "}
+                    {healthPct}% healthy
+                  </td>
+                </tr>
+              );
+            })}
             {arrayLossFraction > 0 && (
               <tr>
                 <th scope="row">Solar array damage</th>
