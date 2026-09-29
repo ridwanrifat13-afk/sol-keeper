@@ -132,7 +132,10 @@ describe("First Light coach mark (M8.7)", () => {
   // directly against the store instead, in tests/onboarding.test.ts.
   it("stays out of the way of Setup, the app's true default first frame", () => {
     const out = render();
-    expect(out).toContain("Mission Setup");
+    // "Mission Setup" used to come from the hero's own "Start Mission Setup" button, since
+    // removed (player request) in favour of each scenario card's own "Select" and Nav's
+    // "Launch Outpost" — "Launch Outpost" is the real, stable marker of Home's first frame now.
+    expect(out).toContain("Launch Outpost");
     expect(out).not.toContain("Skip tutorial");
   });
 

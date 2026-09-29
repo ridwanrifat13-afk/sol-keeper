@@ -192,19 +192,27 @@ const HERO_FEATURES: readonly { title: string; body: string; start: number; end:
 const ParallaxImages = () => {
   return (
     <div className="modern-hero-parallax-container">
+      {/* Player report (twice): "a huge scroll animation gap ... between the 1st & the 2nd
+       *  image." A first cut halved this pair's amplitude, which shrank the mid-scroll flash
+       *  but wasn't enough — each image tracks its OWN scroll progress independently, so by
+       *  the time a reader's scroll position naturally settles with the card between them
+       *  centered in view, image 1 has already reached (or nearly reached) its own `end` and
+       *  image 2 is still sitting near its own `start` — that combined worst case is real,
+       *  visible separation at rest, not just a transient. Cut hard here (roughly a third of
+       *  the original range) rather than incrementally again. */}
       <ParallaxImg
         src="/images/hero/hero-parallax-1.jpg"
         alt="Spacecraft ascending from planetary base"
-        start={-200}
-        end={200}
+        start={-50}
+        end={50}
         className="modern-hero-parallax-img parallax-w-1-3"
       />
       <ParallaxFeature {...HERO_FEATURES[0]!} className="modern-hero-feature-right modern-hero-feature-first" />
       <ParallaxImg
         src="/images/hero/hero-parallax-2.jpg"
         alt="Orbital insertion and planetary horizon"
-        start={200}
-        end={-250}
+        start={50}
+        end={-65}
         className="modern-hero-parallax-img parallax-w-2-3"
       />
       <ParallaxFeature {...HERO_FEATURES[1]!} className="modern-hero-feature-left" />
@@ -321,6 +329,10 @@ const Schedule = ({ onLaunchMission }: ScheduleProps) => {
       className="modern-hero-schedule"
       aria-label="Mission Launch Windows"
     >
+      {/* Player request: remove the generic "Start Mission Setup" button that used to sit
+       *  here — each card below already has its own real, scenario-specific launch action
+       *  (`onLaunch`), and Nav's own "Launch Outpost" button (top of the page) already covers
+       *  the generic, no-scenario-preselected entry point, so this wasn't the only way in. */}
       <div className="modern-hero-schedule-head">
         <div>
           <motion.h2
@@ -336,17 +348,6 @@ const Schedule = ({ onLaunchMission }: ScheduleProps) => {
             with it already selected.
           </p>
         </div>
-        {onLaunchMission && (
-          <button
-            type="button"
-            onClick={() => {
-              onLaunchMission();
-            }}
-            className="modern-hero-cta-btn"
-          >
-            Start Mission Setup
-          </button>
-        )}
       </div>
 
       {SCENARIO_ORDER.map((id) => {

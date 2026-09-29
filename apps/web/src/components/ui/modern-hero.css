@@ -623,22 +623,30 @@
     margin-right: auto;
   }
 
+  /* Padding cut on top of the margin/amplitude cuts below (player report, twice): the card's
+     own rendered height — title + wrapped body copy inside 1.5rem/1.75rem padding — was
+     itself a real chunk of the "gap," not just the space around it. Applies to every card,
+     not just the first, since a taller-than-needed card reads as empty space everywhere, not
+     only between images 1 and 2. */
   .modern-hero-feature {
     max-width: 90%;
     margin-left: auto;
     margin-right: auto;
+    padding: 1.1rem 1.4rem;
     text-align: left;
   }
 
-  /* Player report: too much scroll distance between the 1st and 2nd hero image on mobile.
-     Scoped to the first feature card only (the one sitting between image 1 and image 2) —
-     the base 3.5rem top+bottom margin (7rem combined) is pure empty scroll there. The other
-     cards keep the base value: card 3 in particular relies on it for the clearance
-     .modern-hero-feature-extra-top's own mobile override already tunes against, and touching
-     that gap isn't what was reported. */
+  /* Player report (twice): too much scroll distance between the 1st and 2nd hero image on
+     mobile. Scoped to the first feature card only (the one sitting between image 1 and image
+     2) — the base 3.5rem top+bottom margin (7rem combined) was pure empty scroll there; a
+     first cut to 1.5rem wasn't enough on its own (the real remaining distance turned out to
+     be mostly ParallaxImg's own settle-position drift, cut separately in modern-hero.tsx), so
+     this goes further still. The other cards keep the base value: card 3 in particular relies
+     on it for the clearance .modern-hero-feature-extra-top's own mobile override already
+     tunes against, and touching that gap isn't what was reported. */
   .modern-hero-feature-first {
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
+    margin-top: 0.85rem;
+    margin-bottom: 0.85rem;
   }
 
   /* The desktop-tuned 9rem gap (.modern-hero-feature-extra-top) is sized for the wide,

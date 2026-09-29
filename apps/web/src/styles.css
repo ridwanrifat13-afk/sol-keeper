@@ -689,11 +689,14 @@ code {
      actions`'s own (unmeasured-by-CSS) position in normal flow, confirmed by measuring it
      directly at y:20, height:44, so its bottom edge is at y:64. The drawer's own top padding
      used to be 16px, so its first tab-button (16px to 60px) sat almost exactly under the
-     toggle. This top padding just needs to clear that real, measured bottom edge — the
-     toggle itself stays visually above the drawer (z-index 101, see below) precisely so it's
-     still the one thing that closes the drawer again, so the fix is giving the drawer's own
-     content room to start below it, not lowering the toggle's stacking order. */
-  padding: 76px 10px 16px;
+     toggle. A first pass (76px) only cleared that edge by 12px — a follow-up player report
+     ("still isn't optimized") confirmed 12px doesn't read as genuinely separated, so this
+     gives a full 44px (one touch target's worth) of real clearance below the toggle's own
+     measured bottom edge instead. The toggle itself stays visually above the drawer (z-index
+     101, see below) precisely so it's still the one thing that closes the drawer again, so
+     the fix is giving the drawer's own content room to start well below it, not lowering the
+     toggle's stacking order. */
+  padding: 108px 10px 16px;
   background: var(--shell-bg);
   border-right: 1px solid var(--line);
   overflow-y: auto;
