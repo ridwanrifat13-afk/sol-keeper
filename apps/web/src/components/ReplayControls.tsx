@@ -49,6 +49,11 @@ export function ReplayControls() {
         {t("report.replayingLabel")} {timestampLabel(hour, body)} / {timestampLabel(throughHour, body)}
       </p>
       <div className="button-row">
+        {/* Same sol countdown as TimeControls, beside the same pause button and on the same
+         *  left side of the row, for the replay UI. */}
+        <span className="sol-countdown">
+          <span aria-hidden="true">⏳</span> Sol ends in {24 - (hour % 24)}h
+        </span>
         {(Object.keys(SPEEDS) as Speed[]).map((s) => (
           <button
             key={s}
@@ -62,10 +67,6 @@ export function ReplayControls() {
             {SPEED_LABELS[s]}
           </button>
         ))}
-        {/* Same sol countdown as TimeControls, beside the same pause button, for the replay UI. */}
-        <span className="sol-countdown">
-          <span aria-hidden="true">⏳</span> Sol ends in {24 - (hour % 24)}h
-        </span>
       </div>
     </div>
   );

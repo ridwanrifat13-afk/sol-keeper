@@ -684,7 +684,16 @@ code {
   left: 0;
   bottom: 0;
   width: min(78vw, 280px);
-  padding: 16px 10px;
+  /* Player report: opening the drawer, its own first item sat right under the Menu button
+     that opens it — both start near the same top-left corner, the toggle at `.app-head-
+     actions`'s own (unmeasured-by-CSS) position in normal flow, confirmed by measuring it
+     directly at y:20, height:44, so its bottom edge is at y:64. The drawer's own top padding
+     used to be 16px, so its first tab-button (16px to 60px) sat almost exactly under the
+     toggle. This top padding just needs to clear that real, measured bottom edge — the
+     toggle itself stays visually above the drawer (z-index 101, see below) precisely so it's
+     still the one thing that closes the drawer again, so the fix is giving the drawer's own
+     content room to start below it, not lowering the toggle's stacking order. */
+  padding: 76px 10px 16px;
   background: var(--shell-bg);
   border-right: 1px solid var(--line);
   overflow-y: auto;
@@ -1961,13 +1970,38 @@ code {
    iframe's own DOM (which the browser's Same-Origin Policy would block outright). See
    OrbitalView.tsx's own doc comment for the full compliance reasoning and the other embed
    parameters used. */
+/* Player report: "the content panel of orbital view doesn't work in the mobile UI," plus a
+   separate report that its "EYES ON THE SOLAR SYSTEM" title reads too large on mobile.
+   Investigated directly — loaded the real embed URL in a real browser at this container's own
+   real dimensions, at several heights, to see what NASA's app itself does there (there's no
+   way to inspect or restyle its cross-origin content otherwise). NASA's app renders a bottom
+   info sheet ("Mars ▼") and its own title at a fixed real pixel size, regardless of the
+   iframe's width — what actually breaks is the container's *height*. At the old 400/240
+   aspect ratio, a ~358px-wide mobile container is only ~215px tall, which isn't enough room
+   for the sheet and title to coexist with the 3D view — the sheet ends up covering almost
+   everything, and the title (never shrunk for our box, since we can't touch its CSS) reads as
+   oversized relative to what little space is left. The same 400/240 ratio at the ~860px width
+   this panel gets on desktop yields ~516px tall, which the same direct test confirmed is
+   already enough room — so only the mobile default needed a fixed, taller height (measured
+   against the real embed until the sheet, title, and 3D globe all had genuine room — 420px
+   was already clean, 440px used here for a bit more margin); the `min-width: 860px` override
+   below keeps the already-working desktop ratio. NASA's own title text can't be resized
+   directly — giving its layout the vertical room it expects is what actually fixes both
+   reports, not a font-size that was never ours to set. */
 .orbital-iframe-container {
   width: 100%;
-  aspect-ratio: 400 / 240;
+  height: 440px;
   border-radius: var(--radius);
   overflow: hidden;
   background: #000000;
   position: relative;
+}
+
+@media (min-width: 860px) {
+  .orbital-iframe-container {
+    height: auto;
+    aspect-ratio: 400 / 240;
+  }
 }
 
 .orbital-iframe {
