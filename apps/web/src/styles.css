@@ -1912,28 +1912,26 @@ code {
 }
 
 /* ---------------------------------------------------------------- orbital view (player #9) */
-/* A real Three.js/WebGL canvas (player request: "a literal 3D/WebGL version"), replacing the
-   original SVG scene — reduced-motion/low-power handling now lives in OrbitalView.tsx's own
-   animation loop (it reads prefers-reduced-motion and the low-power-mode store directly, since
-   a per-frame JS rotation update isn't something a CSS media query can reach the way the old
-   CSS keyframe animation was), not this stylesheet's own reduced-motion block below. */
-.orbital-canvas-container {
+/* NASA's own real "Eyes on the Solar System" (player request: "use it directly into this
+   trainer"), embedded via its own official Embed panel's `logo=false` parameter — verified
+   directly (curled the page, drove the app's own Share > Embed UI) to genuinely remove the
+   NASA insignia from the embedded frame, not a CSS crop trying to reach into a cross-origin
+   iframe's own DOM (which the browser's Same-Origin Policy would block outright). See
+   OrbitalView.tsx's own doc comment for the full compliance reasoning and the other embed
+   parameters used. */
+.orbital-iframe-container {
   width: 100%;
   aspect-ratio: 400 / 240;
   border-radius: var(--radius);
   overflow: hidden;
-  background: #060a16;
+  background: #000000;
 }
 
-.orbital-canvas {
+.orbital-iframe {
   display: block;
   width: 100%;
   height: 100%;
-  cursor: grab;
-}
-
-.orbital-canvas:active {
-  cursor: grabbing;
+  border: 0;
 }
 
 .orbital-view-state {

@@ -1,4 +1,3 @@
-import { lazy, Suspense } from "react";
 import {
   checkGoal,
   crew as crewConstants,
@@ -15,6 +14,7 @@ import {
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { CrewPanel } from "../../components/CrewPanel.js";
+import { OrbitalView } from "../../components/OrbitalView.js";
 import { ScenarioSwitch } from "../../components/ScenarioSwitch.js";
 import { EsmPanel } from "../../components/EsmPanel.js";
 import { STATUS } from "../../components/status.js";
@@ -29,16 +29,6 @@ import { goalText } from "../../i18n/goalText.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { durationLabel, elapsedValue, timeUnitWord } from "../../dial/missionTime.js";
 import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
-
-/** Code-split: OrbitalView pulls in `three` (+ OrbitControls), a real ~140 KB gzipped add to
- *  the bundle (measured via `vercel build`'s own output once the dependency landed) — CLAUDE.md
- *  rule 6's "low-end Android phone" and "offline after first load" both weigh against making
- *  every player pay that cost on first paint just to reach Power/Life Support/Comms. Lazy,
- *  so the WebGL scene (and its dependency) only downloads once a player actually opens Mission
- *  Command, the one console that uses it. */
-const OrbitalView = lazy(() =>
-  import("../../components/OrbitalView.js").then((m) => ({ default: m.OrbitalView })),
-);
 
 /**
  * The Mission Command console (M8.3): crew status, which mission is running, and the whole
@@ -67,11 +57,16 @@ const OrbitalView = lazy(() =>
  * display uses, not new state or invented figures.
  *
  * A later request built on that same theme: "a 3d model like eyes.nasa.gov... to show
- * moon/mars orbiting when the sol is ran, stop when paused, speed up at 4x/16x." OrbitalView
- * (components/OrbitalView.tsx) is that control — an SVG scene, not a WebGL globe (see its own
- * doc comment for why), whose real orbital-period ratios and real 1x/4x/16x speed
- * relationship are both driven straight from store/run.ts's own speed/phase/status, the exact
- * state TimeControls.tsx already reads for the same purpose.
+ * moon/mars orbiting." That first shipped as an original Three.js/WebGL scene (real orbital
+ * periods, synced to store/run.ts's own speed/phase/status) — then the player asked directly
+ * whether NASA's own eyes.nasa.gov could be used instead. OrbitalView.tsx is now a direct
+ * embed of that real app (its own doc comment has the full investigation: no frame-blocking
+ * header, its own documented `logo=false` embed option genuinely removes the NASA insignia —
+ * confirmed with the player, since attribution alone doesn't satisfy brief rule 5 — and real
+ * `#/mars`/`#/moon` routes). No longer synced to the sim clock: NASA's own app runs on the
+ * real live clock with no cross-origin API this page can drive, a real, disclosed trade the
+ * player accepted for the real thing over a custom approximation. A plain iframe needs no
+ * code-splitting the way the Three.js build it replaced did.
  */
 export function MissionCommandConsole() {
   // `state` is mutated in place (store/run.ts's own doc comment) — subscribing to `version`
@@ -152,15 +147,7 @@ export function MissionCommandConsole() {
         </div>
       </section>
 
-      <Suspense
-        fallback={
-          <section className="panel orbital-view" aria-label="Orbital display">
-            <p className="panel-hint">Loading the orbital display…</p>
-          </section>
-        }
-      >
-        <OrbitalView />
-      </Suspense>
+      <OrbitalView />
 
       <ScenarioSwitch />
       <CrewPanel />
