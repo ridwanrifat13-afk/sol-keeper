@@ -4,7 +4,7 @@ import { FiArrowRight, FiBookOpen, FiMapPin } from "react-icons/fi";
 import { useRef, useState } from "react";
 import { SCENARIOS, type ScenarioId } from "@sol-keeper/sim";
 import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
-import { MISSION_GUIDES } from "../../dial/missionGuides.js";
+import { CONTROLS_REFERENCE, MISSION_GUIDES, SETUP_CONTROLS_REFERENCE } from "../../dial/missionGuides.js";
 import { durationLabel } from "../../dial/missionTime.js";
 import "./modern-hero.css";
 
@@ -431,6 +431,44 @@ const GuideShortcut = ({ onLaunchMission }: ScheduleProps) => {
           {guide.paragraphs.map((paragraph, i) => (
             <p key={i}>{paragraph}</p>
           ))}
+
+          <h4 className="modern-hero-guide-subhead">How to run this mission, step by step</h4>
+          <ol className="modern-hero-guide-steps">
+            {guide.steps.map((step, i) => (
+              <li key={i}>{step}</li>
+            ))}
+          </ol>
+
+          <h4 className="modern-hero-guide-subhead">What can fail this mission</h4>
+          <ul className="modern-hero-guide-failures">
+            {guide.failureModes.map((mode, i) => (
+              <li key={i}>{mode}</li>
+            ))}
+          </ul>
+
+          <h4 className="modern-hero-guide-subhead">What to toggle for what, during the mission</h4>
+          <dl className="modern-hero-guide-controls">
+            {CONTROLS_REFERENCE.map((control) => (
+              <div key={control.name} className="modern-hero-guide-control-row">
+                <dt>
+                  {control.name}
+                  <span className="modern-hero-guide-control-where">{control.where}</span>
+                </dt>
+                <dd>{control.effect}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <h4 className="modern-hero-guide-subhead">What to set before you launch (Setup)</h4>
+          <dl className="modern-hero-guide-controls">
+            {SETUP_CONTROLS_REFERENCE.map((control) => (
+              <div key={control.name} className="modern-hero-guide-control-row">
+                <dt>{control.name}</dt>
+                <dd>{control.effect}</dd>
+              </div>
+            ))}
+          </dl>
+
           {onLaunchMission && (
             <button
               type="button"

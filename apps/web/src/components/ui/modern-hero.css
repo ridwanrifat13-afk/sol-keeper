@@ -529,6 +529,70 @@
   margin-top: 0.25rem;
 }
 
+/* Player request: a real, structured step-by-step/failure-modes/controls guide, not another
+   wall of paragraphs — "even a non-science user can easily understand." */
+.modern-hero-guide-subhead {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.modern-hero-guide-steps,
+.modern-hero-guide-failures {
+  margin: 0;
+  padding-left: 1.4rem;
+  color: #d4d4d8;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modern-hero-guide-steps li::marker {
+  color: #9fd0ff;
+  font-weight: 700;
+}
+
+.modern-hero-guide-failures li::marker {
+  color: #f87171;
+}
+
+.modern-hero-guide-controls {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.modern-hero-guide-control-row {
+  padding: 0.6rem 0.8rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modern-hero-guide-control-row dt {
+  font-weight: 700;
+  color: #fff;
+  font-size: 0.88rem;
+}
+
+.modern-hero-guide-control-where {
+  display: block;
+  font-weight: 500;
+  font-size: 0.75rem;
+  color: #9fd0ff;
+  margin-top: 0.1rem;
+}
+
+.modern-hero-guide-control-row dd {
+  margin: 0.3rem 0 0;
+  color: #d4d4d8;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
 /* Reduced motion & low-power overrides */
 @media (prefers-reduced-motion: reduce) {
   .modern-hero-center-img,
