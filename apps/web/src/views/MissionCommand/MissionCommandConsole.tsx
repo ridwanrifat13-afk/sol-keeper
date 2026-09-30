@@ -11,6 +11,7 @@ import {
   type StationId,
   type TickContext,
 } from "@sol-keeper/sim";
+import { FiCalendar, FiUsers, FiAlertTriangle, FiClock } from "react-icons/fi";
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { CrewPanel } from "../../components/CrewPanel.js";
@@ -18,6 +19,7 @@ import { OrbitalView } from "../../components/OrbitalView.js";
 import { ScenarioSwitch } from "../../components/ScenarioSwitch.js";
 import { EsmPanel } from "../../components/EsmPanel.js";
 import { STATUS } from "../../components/status.js";
+import { StatusPill } from "../../components/StatusPill.js";
 import {
   co2ScrubberModeLabel,
   stationLabel,
@@ -121,28 +123,48 @@ export function MissionCommandConsole() {
         </div>
         <div className="ops-board-readouts">
           <div className="ops-readout">
-            <span className="ops-readout-value">
-              {elapsedValue(state.hour, scenario.body).toFixed(2)}
-              <span className="ops-readout-unit"> / {durationLabel(scenario.durationHours, scenario.body)}</span>
+            <span className="ops-readout-icon" aria-hidden="true">
+              <FiCalendar />
             </span>
-            <span className="ops-readout-label">{timeUnitWord(scenario.body)} elapsed</span>
+            <span className="ops-readout-body">
+              <span className="ops-readout-value">
+                {elapsedValue(state.hour, scenario.body).toFixed(2)}
+                <span className="ops-readout-unit"> / {durationLabel(scenario.durationHours, scenario.body)}</span>
+              </span>
+              <span className="ops-readout-label">{timeUnitWord(scenario.body)} elapsed</span>
+            </span>
           </div>
           <div className="ops-readout">
-            <span className="ops-readout-value">
-              {aliveCrewCount}
-              <span className="ops-readout-unit"> / {state.crew.length}</span>
+            <span className="ops-readout-icon" aria-hidden="true">
+              <FiUsers />
             </span>
-            <span className="ops-readout-label">Crew alive</span>
+            <span className="ops-readout-body">
+              <span className="ops-readout-value">
+                {aliveCrewCount}
+                <span className="ops-readout-unit"> / {state.crew.length}</span>
+              </span>
+              <span className="ops-readout-label">Crew alive</span>
+            </span>
           </div>
           <div className="ops-readout">
-            <span className={`ops-readout-value ${activeAlertCount > 0 ? "ops-readout-alert" : ""}`}>
-              {activeAlertCount}
+            <span className="ops-readout-icon" aria-hidden="true">
+              <FiAlertTriangle />
             </span>
-            <span className="ops-readout-label">Active alerts</span>
+            <span className="ops-readout-body">
+              <span className={`ops-readout-value ${activeAlertCount > 0 ? "ops-readout-alert" : ""}`}>
+                {activeAlertCount}
+              </span>
+              <span className="ops-readout-label">Active alerts</span>
+            </span>
           </div>
           <div className="ops-readout">
-            <span className="ops-readout-value">{state.hour}</span>
-            <span className="ops-readout-label">Mission hour</span>
+            <span className="ops-readout-icon" aria-hidden="true">
+              <FiClock />
+            </span>
+            <span className="ops-readout-body">
+              <span className="ops-readout-value">{state.hour}</span>
+              <span className="ops-readout-label">Mission hour</span>
+            </span>
           </div>
         </div>
       </section>
@@ -288,17 +310,17 @@ export function MissionCommandConsole() {
       <section className="panel" aria-labelledby="goals-heading">
         <h2 id="goals-heading">Goals</h2>
         <p>
-          <span className={STATUS[primaryMet ? "nominal" : "caution"].className}>
-            <span aria-hidden="true">{STATUS[primaryMet ? "nominal" : "caution"].glyph}</span>{" "}
-            {primaryMet ? "Primary goal met" : "Primary goal"}
-          </span>
+          <StatusPill
+            status={STATUS[primaryMet ? "nominal" : "caution"]}
+            label={primaryMet ? "Primary goal met" : "Primary goal"}
+          />
         </p>
         <p className="panel-hint">{goalText(scenario.primaryGoal.briefKey, level, language)}</p>
         <p>
-          <span className={STATUS[stretchMet ? "nominal" : "caution"].className}>
-            <span aria-hidden="true">{STATUS[stretchMet ? "nominal" : "caution"].glyph}</span>{" "}
-            {stretchMet ? "Stretch goal met" : "Stretch goal"}
-          </span>
+          <StatusPill
+            status={STATUS[stretchMet ? "nominal" : "caution"]}
+            label={stretchMet ? "Stretch goal met" : "Stretch goal"}
+          />
         </p>
         <p className="panel-hint">{goalText(scenario.stretchGoal.briefKey, level, language)}</p>
         {scenario.scienceTargetPoints > 0 && (

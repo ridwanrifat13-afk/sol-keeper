@@ -14,6 +14,8 @@ import { Starfield } from "../../components/Starfield.js";
 import { STATUS } from "../../components/status.js";
 import { AlarmBanner } from "../../components/AlarmBanner.js";
 import { FactCardGallery } from "../../components/FactCardGallery.js";
+import { Avatar } from "../../components/Avatar.js";
+import { MiniBar } from "../../components/MiniBar.js";
 import { locationLabel, stationLabel, cropLabel } from "../../dial/labels.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { timestampLabel } from "../../dial/missionTime.js";
@@ -245,12 +247,10 @@ export function HabitatView() {
       )}
 
       <section className="panel" aria-labelledby="habitat-scene-heading">
-        <div className="panel-head-row">
-          <h2 id="habitat-scene-heading" className="visually-hidden">
-            Habitat scene
-          </h2>
-          <p className="habitat-telemetry-readout">{timestampLabel(state.hour, scenario.body)} · hour {state.hour}</p>
-        </div>
+        <h2 id="habitat-scene-heading" className="visually-hidden">
+          Habitat scene
+        </h2>
+        <div className="habitat-hud-wrap">
         <svg
           className="habitat-svg"
           viewBox="0 0 400 220"
@@ -422,6 +422,22 @@ export function HabitatView() {
             <rect x="0" y="0" width="400" height="220" fill="#a8592c" opacity={dustOverlayOpacity} />
           )}
         </svg>
+
+        {/* HUD-style corner badges, real data laid over the scene itself (player reference: a
+         *  drone-camera HUD). Every number here also has its own row in the tables below —
+         *  this is a second, decorative presentation of the same facts, never the only one
+         *  (rule 6). */}
+        <span className="hud-badge hud-badge-tl">
+          {state.environment.isDaylight ? "☀" : "☾"} {Math.round(state.environment.outsideTempC)}°C
+        </span>
+        <span className="hud-badge hud-badge-tr">
+          <span className={spe || depressurizing ? "hud-alert-dot" : "hud-live-dot"} aria-hidden="true" />
+          {timestampLabel(state.hour, scenario.body)} · hour {state.hour}
+        </span>
+        <span className="hud-badge hud-badge-bl">
+          {aliveCrew.length}/{state.crew.length} CREW
+        </span>
+        </div>
       </section>
 
       <section className="panel" aria-labelledby="habitat-facts-heading">
@@ -441,6 +457,10 @@ export function HabitatView() {
               </td>
             </tr>
             <tr>
+              <th scope="row">Outside temperature</th>
+              <td>{Math.round(state.environment.outsideTempC)}°C</td>
+            </tr>
+            <tr>
               <th scope="row">Sky conditions</th>
               <td className={dust.className}>
                 <span aria-hidden="true">{dust.glyph}</span> {isMars ? dust.word : "No atmosphere — dust storms don't occur"}
@@ -453,12 +473,14 @@ export function HabitatView() {
             {state.food.trays.map((tray) => {
               const growthPct = Math.min(100, Math.round((tray.lightHours / cropRequiredLightHours(tray.crop)) * 100));
               const healthPct = Math.round(tray.healthFraction * 100);
+              const trayStatusClass = healthPct < 60 ? "is-caution" : "is-nominal";
               return (
                 <tr key={tray.id}>
                   <th scope="row">{cropLabel(tray.crop, level, language)}</th>
-                  <td className={healthPct < 60 ? "is-caution" : "is-nominal"}>
+                  <td className={trayStatusClass}>
                     <span aria-hidden="true">{healthPct < 60 ? "▲" : "●"}</span> {growthPct}% grown ·{" "}
                     {healthPct}% healthy
+                    <MiniBar fraction={growthPct / 100} statusClassName={trayStatusClass} />
                   </td>
                 </tr>
               );
@@ -469,6 +491,7 @@ export function HabitatView() {
                 <td className="is-caution">
                   <span aria-hidden="true">▲</span> {Math.round(arrayLossFraction * 100)}% of rated area lost —
                   permanent, from a sealed module
+                  <MiniBar fraction={1 - arrayLossFraction} statusClassName="is-caution" />
                 </td>
               </tr>
             )}
@@ -513,10 +536,17 @@ export function HabitatView() {
               const presentation = CONDITION_PRESENTATION[condition as "nominal" | "impaired" | "critical"];
               return (
                 <tr key={member.id}>
-                  <td>{member.name}</td>
+                  <td>
+                    <span className="crew-row-head">
+                      <Avatar name={member.name} statusClassName={presentation.className} />
+                      {member.name}
+                    </span>
+                  </td>
                   <td>{stationLabel(member.primaryStation, level, language)}</td>
-                  <td className={presentation.className}>
-                    <span aria-hidden="true">{presentation.glyph}</span> {presentation.label}
+                  <td>
+                    <span className={`status-pill ${presentation.className}`}>
+                      <span aria-hidden="true">{presentation.glyph}</span> {presentation.label}
+                    </span>
                   </td>
                   <td>{locationLabel(member.location, level, language)}</td>
                 </tr>

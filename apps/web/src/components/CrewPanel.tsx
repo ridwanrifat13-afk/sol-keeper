@@ -4,6 +4,7 @@ import { radiation } from "@sol-keeper/sim";
 import { statusFromReserve } from "./status.js";
 import { presentDose } from "../dial/present.js";
 import { statusWord } from "../dial/statusWords.js";
+import { Avatar } from "./Avatar.js";
 
 /**
  * Crew health, morale and accumulated dose.
@@ -29,9 +30,12 @@ export function CrewPanel() {
 
           return (
             <li key={member.id} className={`crew-row ${member.alive ? health.className : "is-critical"}`}>
-              <span className="crew-name">
-                {member.name}
-                {!member.alive && <span className="crew-lost"> — lost</span>}
+              <span className="crew-row-head">
+                <Avatar name={member.name} statusClassName={member.alive ? health.className : "is-critical"} />
+                <span className="crew-name">
+                  {member.name}
+                  {!member.alive && <span className="crew-lost"> — lost</span>}
+                </span>
               </span>
               <span className="crew-stat">
                 <span aria-hidden="true">{health.glyph}</span> {healthWord}

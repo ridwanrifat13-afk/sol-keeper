@@ -35,6 +35,10 @@ export function EsmPanel() {
             <span className="esm-total-value">{Math.round(breakdown.totalKg).toLocaleString()} kg</span>
           </div>
 
+          {/* Six columns, plus the new "not sourced" pills widening cells further, don't fit a
+           *  phone screen — the same real overflow bug Launch Packing's own table had, fixed
+           *  the same way there: a horizontally scrollable wrapper instead of clipping. */}
+          <div className="table-scroll">
           <table className="esm-table">
             <thead>
               <tr>
@@ -59,9 +63,27 @@ export function EsmPanel() {
                     )}
                   </td>
                   <td>{line.powerKw.toFixed(1)} kW</td>
-                  <td>{line.massKg !== undefined ? `${Math.round(line.massKg)} kg` : "not sourced"}</td>
-                  <td>{line.coolingKg !== undefined ? `${Math.round(line.coolingKg)} kg` : "not sourced"}</td>
-                  <td>{line.crewTimeKg !== undefined ? `${Math.round(line.crewTimeKg)} kg` : "not sourced"}</td>
+                  <td>
+                    {line.massKg !== undefined ? (
+                      `${Math.round(line.massKg)} kg`
+                    ) : (
+                      <span className="status-pill is-standby esm-not-sourced">not sourced</span>
+                    )}
+                  </td>
+                  <td>
+                    {line.coolingKg !== undefined ? (
+                      `${Math.round(line.coolingKg)} kg`
+                    ) : (
+                      <span className="status-pill is-standby esm-not-sourced">not sourced</span>
+                    )}
+                  </td>
+                  <td>
+                    {line.crewTimeKg !== undefined ? (
+                      `${Math.round(line.crewTimeKg)} kg`
+                    ) : (
+                      <span className="status-pill is-standby esm-not-sourced">not sourced</span>
+                    )}
+                  </td>
                   <td>{Math.round(line.equivalentKg)} kg</td>
                 </tr>
               ))}
@@ -93,6 +115,7 @@ export function EsmPanel() {
               )}
             </tbody>
           </table>
+          </div>
           <p className="esm-table-note">* not sourced for every term — see the note below.</p>
 
           <p className="esm-disclosure">{ESM_PARTIAL_DISCLOSURE}</p>

@@ -117,12 +117,17 @@ code {
 /* ---------------------------------------------------------------- status */
 /* The pattern is the accessibility mechanism, not decoration: it distinguishes the three
    levels without relying on hue. */
+/* `--status-bg` is a fixed rgba per tier (not `color-mix()`, which this codebase hasn't used
+   anywhere else) — a tinted pill background for `.status-pill` below, same three tiers, no new
+   browser-support surface to worry about on a low-end phone (rule 6). */
 .is-nominal {
   --status: var(--nominal);
+  --status-bg: rgba(74, 222, 128, 0.16);
   --pattern: none;
 }
 .is-caution {
   --status: var(--caution);
+  --status-bg: rgba(251, 191, 36, 0.16);
   --pattern: repeating-linear-gradient(
     45deg,
     rgb(0 0 0 / 28%) 0 4px,
@@ -131,6 +136,7 @@ code {
 }
 .is-critical {
   --status: var(--critical);
+  --status-bg: rgba(248, 113, 113, 0.16);
   --pattern: repeating-linear-gradient(
     90deg,
     rgb(0 0 0 / 40%) 0 2px,
@@ -143,7 +149,26 @@ code {
    is-nominal's green and implying a result that hasn't happened yet. */
 .is-standby {
   --status: var(--text-dim);
+  --status-bg: rgba(154, 166, 199, 0.14);
   --pattern: none;
+}
+
+/* UI upgrade: a filled status pill (icon + word, on a tinted background), reused across
+   Mission Command and Habitat wherever a status already carries one of the three tiers above —
+   combine with `.is-nominal`/`.is-caution`/`.is-critical` the same way `.gauge`/`.crew-row`
+   already do, never a new colour-only signal (rule 6: the glyph + word inside travel with it). */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--status);
+  background: var(--status-bg);
+  color: var(--status);
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
 /* ---------------------------------------------------------------- layout */
@@ -579,10 +604,34 @@ code {
   font-size: 0.8rem;
 }
 
+/* UI upgrade (Mission Command/Habitat): the crew row's name + a real status-coloured initials
+   avatar (Avatar.tsx) share their own full-width row, so the stat spans below still wrap the
+   same way they always did — only .crew-name lost `flex-basis: 100%` to its new wrapper. */
+.crew-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}
+
+.avatar-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--status-bg);
+  border: 1.5px solid var(--status);
+  color: var(--status);
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 .crew-name {
   font-weight: 700;
   font-size: 0.9rem;
-  flex-basis: 100%;
 }
 
 .crew-lost {
@@ -1406,7 +1455,11 @@ code {
 }
 
 .esm-table {
+  /* min-width is what actually makes `.table-scroll` (EsmPanel.tsx) scroll instead of just
+     compressing six columns unreadably on a phone — same reasoning as launch-packing-table's
+     own min-width, right below the note that explains why width:100% alone can't do this. */
   width: 100%;
+  min-width: 620px;
   border-collapse: collapse;
   font-size: 0.85rem;
   margin-bottom: 10px;
@@ -1418,14 +1471,26 @@ code {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 4px 8px;
+  padding: 6px 8px;
   border-bottom: 1px solid var(--line);
 }
 
 .esm-table td {
-  padding: 5px 8px;
+  padding: 7px 8px;
   border-bottom: 1px solid var(--line);
   font-variant-numeric: tabular-nums;
+}
+
+/* UI upgrade: a faint zebra stripe (the same reason a real data table gives one — a wide row
+   with six numeric columns is otherwise easy to lose your place on) — kept faint enough that
+   the row itself never becomes the only way any fact here is told apart (rule 6 still rests on
+   the text in each cell, not this). */
+.esm-table tbody tr:nth-child(even) {
+  background: rgba(139, 147, 184, 0.05);
+}
+
+.esm-not-sourced {
+  font-size: 0.72rem;
 }
 
 .esm-table td:last-child,
@@ -1505,6 +1570,26 @@ code {
 .ripple-table td.is-standby {
   color: var(--status);
   font-weight: 600;
+}
+
+/* UI upgrade (Habitat): a small inline bar beside a table fact's own text (MiniBar.tsx) —
+   decorative, the percentage in the cell's own text is the real fact (rule 6). */
+.mini-bar-track {
+  display: inline-block;
+  width: 60px;
+  height: 6px;
+  margin-left: 8px;
+  vertical-align: middle;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mini-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--status);
 }
 
 .ripple-evidence-cell {
@@ -1938,6 +2023,67 @@ code {
   overflow: hidden;
 }
 
+/* UI upgrade (Habitat): HUD-style corner badges laid over the scene itself, the way a real
+   camera/telemetry feed overlays its own readouts on the image rather than listing them
+   beside it. Real numbers only (day/night + outside temp, the sol/hour clock already shown
+   here before M9.6, live crew count) — every one of them also has a plain-text row in the
+   "Current conditions"/"Crew" tables right below (Ripple pattern, rule 6), this is a second,
+   decorative presentation of the same facts, never the only place they're told. */
+.habitat-hud-wrap {
+  position: relative;
+}
+
+.hud-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(5, 8, 16, 0.62);
+  border: 1px solid rgba(139, 147, 184, 0.35);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #d7dcf0;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.hud-badge-tl {
+  top: 8px;
+  left: 8px;
+}
+
+.hud-badge-tr {
+  top: 8px;
+  right: 8px;
+}
+
+.hud-badge-bl {
+  bottom: 8px;
+  left: 8px;
+}
+
+.hud-alert-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--critical);
+  flex-shrink: 0;
+  animation: ops-live-pulse 1s ease-in-out infinite;
+}
+
+.hud-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--nominal);
+  flex-shrink: 0;
+  animation: ops-live-pulse 2s ease-in-out infinite;
+}
+
 /* ---------------------------------------------------------------- telemetry chrome (M9.6) */
 .setup-progress {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
@@ -2006,23 +2152,53 @@ code {
 
 .ops-board-readouts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
 }
 
+/* UI upgrade #2 (Mission Command): the same 4 real readouts, restyled as individual stat
+   cards — an icon in a rounded box beside the number, the pattern a real ops-dashboard's own
+   KPI row uses. Still the exact same data as the plain grid before; only the chrome changed. */
 .ops-readout {
   display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.ops-readout-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(139, 147, 184, 0.14);
+  color: var(--shell-accent);
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.ops-readout-body {
+  display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+  min-width: 0;
 }
 
 .ops-readout-value {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-variant-numeric: tabular-nums;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--nominal);
   line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ops-readout-value.ops-readout-alert {
@@ -2364,6 +2540,12 @@ code {
     opacity: 1;
   }
 
+  .hud-alert-dot,
+  .hud-live-dot {
+    animation: none;
+    opacity: 1;
+  }
+
   .orbital-loading-spinner {
     animation: none;
   }
@@ -2382,6 +2564,12 @@ code {
 }
 
 :root.low-power-mode .ops-live-dot {
+  animation: none;
+  opacity: 1;
+}
+
+:root.low-power-mode .hud-alert-dot,
+:root.low-power-mode .hud-live-dot {
   animation: none;
   opacity: 1;
 }
