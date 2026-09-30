@@ -74,10 +74,16 @@ interface SetupStore {
    *  `commit()`, so leaving it untouched still gives each mission its own real seed instead
    *  of quietly repeating the previous one. */
   seed: number;
+  /** Player request: name your own crew. Always `MAX_CREW_SIZE` slots (not resized to the
+   *  current `crewSize`), so raising and lowering the crew-size stepper never discards a name
+   *  already typed for a slot the player is just temporarily not using — `commit()` hands the
+   *  whole array to `Params.crewNames`, which only ever reads the first `crewSize` of them. */
+  crewNames: string[];
 
   setScenarioId: (id: ScenarioId) => void;
   setDifficulty: (difficulty: MissionDifficulty) => void;
   setCrewSize: (size: number) => void;
+  setCrewName: (index: number, name: string) => void;
   setLandingSiteId: (id: LandingSiteId) => void;
   setPowerArchitecture: (architecture: PowerArchitecture) => void;
   setShieldingApproach: (approach: ShieldingApproach) => void;
@@ -157,6 +163,10 @@ export function buildClassLinkConfig(choices: {
   };
 }
 
+function emptyCrewNames(): string[] {
+  return Array.from({ length: MAX_CREW_SIZE }, () => "");
+}
+
 const initialChoices = {
   stepIndex: 0,
   scenarioId: "jezero-outpost" as ScenarioId,
@@ -170,6 +180,7 @@ const initialChoices = {
 export const useSetup = create<SetupStore>((set, get) => ({
   ...initialChoices,
   seed: rollSeed(),
+  crewNames: emptyCrewNames(),
 
   setScenarioId: (scenarioId) => {
     const current = get();
@@ -187,6 +198,14 @@ export const useSetup = create<SetupStore>((set, get) => ({
 
   setCrewSize: (size) => {
     set({ crewSize: Math.max(MIN_CREW_SIZE, Math.min(MAX_CREW_SIZE, size)) });
+  },
+
+  setCrewName: (index, name) => {
+    const { crewNames } = get();
+    if (index < 0 || index >= crewNames.length) return;
+    const next = [...crewNames];
+    next[index] = name;
+    set({ crewNames: next });
   },
 
   setLandingSiteId: (landingSiteId) => {
@@ -223,10 +242,16 @@ export const useSetup = create<SetupStore>((set, get) => ({
     const choices = get();
     const { scenario, setupChoices } = resolveScenario(choices);
     useRun.getState().reset(
-      { scenarioId: choices.scenarioId, crewSize: choices.crewSize, difficulty: choices.difficulty, seed: choices.seed },
+      {
+        scenarioId: choices.scenarioId,
+        crewSize: choices.crewSize,
+        difficulty: choices.difficulty,
+        seed: choices.seed,
+        crewNames: choices.crewNames,
+      },
       scenario,
       setupChoices,
     );
-    set({ ...initialChoices, seed: rollSeed() });
+    set({ ...initialChoices, seed: rollSeed(), crewNames: emptyCrewNames() });
   },
 }));

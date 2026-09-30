@@ -21,7 +21,10 @@ import { auToLightSeconds, partialPressureMmHg } from "../units.js";
 import { createRngState } from "./rng.js";
 import { STATION_IDS } from "./stations.js";
 
-const CREW_NAMES = ["Ayesha", "Diego", "Mei", "Tunde", "Nadia", "Petra"] as const;
+/** Exported so the Setup UI's own crew-naming step can show the real default a blank field
+ *  falls back to as its placeholder, rather than a second, possibly-drifting copy of this
+ *  list living in `apps/web`. */
+export const CREW_NAMES = ["Ayesha", "Diego", "Mei", "Tunde", "Nadia", "Petra"] as const;
 
 /**
  * Primary/backup stations rotate through `STATION_IDS` by crew index — deterministic, no RNG
@@ -29,10 +32,12 @@ const CREW_NAMES = ["Ayesha", "Diego", "Mei", "Tunde", "Nadia", "Petra"] as cons
  * backup: Incident Command and Mission Command sit unstaffed for that scenario by
  * construction, not a bug — a smaller crew is supposed to feel thinner.
  */
-function buildCrew(size: number, startingPio2MmHg: number): CrewMember[] {
+function buildCrew(size: number, startingPio2MmHg: number, customNames?: readonly string[]): CrewMember[] {
   return Array.from({ length: size }, (_, i) => ({
     id: `crew-${i + 1}`,
-    name: CREW_NAMES[i % CREW_NAMES.length] ?? `Crew ${i + 1}`,
+    // A blank/whitespace-only entry (an emptied input, not yet retyped) falls through to the
+    // real default pool the same as a missing one — never a visibly empty crew name.
+    name: customNames?.[i]?.trim() || CREW_NAMES[i % CREW_NAMES.length] || `Crew ${i + 1}`,
     location: "habitat" as const,
     healthFraction: 1,
     moraleFraction: 1,
@@ -112,7 +117,7 @@ export function createInitialState(params: Params, scenario: Scenario = getScena
     init.habitatVolumeM3,
     startTempC,
   );
-  const crew = buildCrew(params.crewSize, pio2MmHg(initialO2MmHg, initialCo2MmHg));
+  const crew = buildCrew(params.crewSize, pio2MmHg(initialO2MmHg, initialCo2MmHg), params.crewNames);
 
   return {
     hour: 0,

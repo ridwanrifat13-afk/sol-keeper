@@ -165,6 +165,14 @@ export interface Params {
    */
   readonly missionStartIso: string;
   readonly difficulty: MissionDifficulty;
+  /**
+   * Player request: name your own crew. Optional and index-matched to crew slot (index 0 is
+   * whichever member `engine/state.ts`'s own `buildCrew` builds first) — a blank or missing
+   * entry falls back to the existing `CREW_NAMES` pool, so a shorter list, or no list at all,
+   * never leaves a crew member unnamed. Not brief rule 1 territory: a name isn't a physical or
+   * mission parameter, just player-chosen flavour, so it carries no `Constant`/source.
+   */
+  readonly crewNames?: readonly string[];
 }
 
 /** Old Phase 1 values map onto the closest new preset, so a stale save or URL still loads. */

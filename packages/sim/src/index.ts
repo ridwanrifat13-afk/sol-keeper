@@ -98,7 +98,7 @@ export {
   entriesWithCode,
   rootCauses,
 } from "./engine/log.js";
-export { createInitialState } from "./engine/state.js";
+export { createInitialState, CREW_NAMES } from "./engine/state.js";
 export { PIPELINE, run, tick } from "./engine/tick.js";
 export type { NamedStage } from "./engine/tick.js";
 

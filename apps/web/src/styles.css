@@ -1163,6 +1163,41 @@ code {
   font-variant-numeric: tabular-nums;
 }
 
+.setup-crew-names-heading {
+  margin: 18px 0 4px;
+  font-size: 0.95rem;
+}
+
+.setup-crew-names-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.setup-crew-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setup-crew-name-label {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  min-width: 60px;
+}
+
+.setup-crew-name-input {
+  flex: 1;
+  background: var(--bg-raised);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  min-height: 44px;
+  min-width: 0;
+}
+
 .landing-site-cards {
   display: flex;
   flex-wrap: wrap;
@@ -1590,6 +1625,30 @@ code {
   display: block;
   height: 100%;
   background: var(--status);
+}
+
+/* UI upgrade: a circular arc gauge (CircularGauge.tsx) — player reference: the drone HUD's own
+   compass dial. Decorative (the component itself is aria-hidden); every call site pairs it
+   with the same fact as real, visible text elsewhere (rule 6). */
+.circular-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.circular-gauge-center {
+  fill: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.circular-gauge-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
 }
 
 .ripple-evidence-cell {
@@ -2084,6 +2143,170 @@ code {
   animation: ops-live-pulse 2s ease-in-out infinite;
 }
 
+/* UI upgrade (Habitat): player reference, a logistics dashboard's own 3-column body — an
+   "analytic view" panel, a waypoint timeline, a map + named-contact card. Stacks to one
+   column on mobile in DOM order (env panel, timeline, then the scene + lead card, so the
+   scene the previous version already led with stays first there); 3 columns once there's
+   room, the scene column narrower since it's a fixed-aspect visual, not reading text. */
+.habitat-kpi-row {
+  margin-bottom: var(--gap);
+}
+
+.habitat-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+}
+
+@media (min-width: 860px) {
+  .habitat-grid {
+    grid-template-columns: 1fr 1fr 1.3fr;
+    align-items: start;
+  }
+}
+
+.habitat-env-numbers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.habitat-env-number {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.habitat-env-number-value {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.habitat-env-number-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
+}
+
+.habitat-env-crops-hint {
+  margin: 10px 0 6px;
+}
+
+.habitat-env-crop-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.habitat-env-crop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.82rem;
+}
+
+.habitat-env-crop-row .mini-bar-track {
+  margin-left: 0;
+  width: 80px;
+}
+
+.habitat-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.habitat-timeline-row {
+  display: flex;
+  gap: 10px;
+  padding-bottom: 14px;
+  position: relative;
+}
+
+/* The waypoint-style vertical line, drawn once per row rather than as one long line behind
+   the list — each row's own line only needs to reach the next dot, and this way a single-item
+   list draws no orphaned line past its own last dot. */
+.habitat-timeline-row:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 14px;
+  bottom: -4px;
+  width: 1px;
+  background: var(--line);
+}
+
+.habitat-timeline-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--status);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.habitat-timeline-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.habitat-timeline-time {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.habitat-timeline-text {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.habitat-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.habitat-lead-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.habitat-lead-card .avatar-circle {
+  width: 40px;
+  height: 40px;
+  font-size: 0.9rem;
+}
+
+.habitat-lead-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.habitat-lead-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.habitat-lead-role {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
 /* ---------------------------------------------------------------- telemetry chrome (M9.6) */
 .setup-progress {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
@@ -2091,40 +2314,7 @@ code {
   letter-spacing: 0.02em;
 }
 
-.habitat-telemetry-readout {
-  margin: 0 0 0 auto;
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-variant-numeric: tabular-nums;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--nominal);
-}
-
 /* ---------------------------------------------------------------- ops center (player #9) */
-/* Mission Command's own "big board" — a real ops-room main display reads a handful of large
-   numbers at a glance, not paragraphs, so this sits above every other panel on the console.
-   The faint grid is drawn with the same dark tokens every panel already uses (--bg/--line),
-   never touching --shell-bg/--shell-text — the M9.5 "panels stay dark, shell stays light"
-   split this file's own telemetry-chrome section documents holds here too. */
-.ops-board {
-  background:
-    repeating-linear-gradient(0deg, rgba(139, 147, 184, 0.09) 0px, rgba(139, 147, 184, 0.09) 1px, transparent 1px, transparent 22px),
-    repeating-linear-gradient(90deg, rgba(139, 147, 184, 0.09) 0px, rgba(139, 147, 184, 0.09) 1px, transparent 1px, transparent 22px),
-    var(--bg);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--shell-accent);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  margin-bottom: var(--gap);
-}
-
-.ops-board-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
 /* Rule 6: this dot is decorative emphasis on top of the text label right next to it
    ("MISSION IN PROGRESS" / the real state.status word), never the only way that status is
    conveyed — aria-hidden, exactly like habitat-telemetry's own status markers. */
@@ -2142,15 +2332,9 @@ code {
   50% { opacity: 0.35; }
 }
 
-.ops-board-title {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--text-dim);
-}
-
-.ops-board-readouts {
+/* A KPI stat card row — real numbers in an icon-in-rounded-box card, reused for Mission
+   Command's sidebar stats and Habitat's own header row below. */
+.ops-readout-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
@@ -2205,17 +2389,112 @@ code {
   color: var(--critical);
 }
 
-.ops-readout-unit {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-dim);
-}
-
 .ops-readout-label {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-dim);
+}
+
+/* Player reference: the drone HUD's own hero-video + stat-sidebar split. Stacked on mobile
+   (OrbitalView above the sidebar — it's the more important, larger thing), side by side once
+   there's room for both to read comfortably. */
+.ops-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+  align-items: start;
+}
+
+@media (min-width: 760px) {
+  .ops-hero-grid {
+    grid-template-columns: 1.5fr 1fr;
+  }
+
+  /* OrbitalView.tsx's own .panel carries margin-bottom for the single-column layout every
+     other view still uses — redundant once it's a grid cell with its own `gap`. */
+  .ops-hero-grid > .panel {
+    margin-bottom: 0;
+  }
+}
+
+.ops-sidebar-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ops-sidebar-title {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text);
+  margin: 0;
+}
+
+.ops-sidebar-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin: 1px 0 0;
+}
+
+.ops-sidebar-stat {
+  margin-bottom: 12px;
+}
+
+.ops-sidebar-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.ops-sidebar-stat-row svg {
+  color: var(--shell-accent);
+  flex-shrink: 0;
+}
+
+.ops-sidebar-stat-label {
+  color: var(--text-dim);
+}
+
+.ops-sidebar-stat-value {
+  margin-left: auto;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.ops-sidebar-stat .mini-bar-track {
+  display: block;
+  width: 100%;
+  margin-left: 0;
+}
+
+.ops-sidebar-dial {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.ops-sidebar-dial-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.ops-sidebar-dial-text svg {
+  color: var(--shell-accent);
+  flex-shrink: 0;
 }
 
 /* ---------------------------------------------------------------- orbital view (player #9) */
