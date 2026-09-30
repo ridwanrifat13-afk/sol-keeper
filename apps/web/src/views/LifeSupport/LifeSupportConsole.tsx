@@ -45,6 +45,8 @@ const THERMAL_CONTROL_MODES: readonly ThermalControlMode[] = ["comfort", "powerS
 export function LifeSupportConsole() {
   const version = useRun((s) => s.version);
   const state = useRun((s) => s.state);
+  const oxygenHistory = useRun((s) => s.resourceHistory.oxygen);
+  const waterHistory = useRun((s) => s.resourceHistory.water);
   const setSurvivalMode = useRun((s) => s.setSurvivalMode);
   const setCo2ScrubberMode = useRun((s) => s.setCo2ScrubberMode);
   const setWaterReclamationMode = useRun((s) => s.setWaterReclamationMode);
@@ -83,6 +85,7 @@ export function LifeSupportConsole() {
             detail={summary.oxygen.text.detail}
             helpKey="gauge.oxygen"
             level={level}
+            history={oxygenHistory}
           />
           <Gauge
             icon="▽"
@@ -111,6 +114,7 @@ export function LifeSupportConsole() {
             detail={summary.water.text.detail}
             helpKey="gauge.water"
             level={level}
+            history={waterHistory}
           />
           <Gauge
             icon="✦"

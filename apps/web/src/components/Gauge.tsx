@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { StatusPresentation } from "./status.js";
 import { gaugeHelp } from "../i18n/gaugeHelp.js";
 import type { DialLevel } from "../dial/types.js";
+import { Sparkline } from "./Sparkline.js";
 
 export interface GaugeProps {
   /** Shape-distinct icon for the resource itself. */
@@ -31,6 +32,10 @@ export interface GaugeProps {
   readonly helpKey?: string;
   /** Reality Dial level for the help text above — irrelevant without `helpKey`. */
   readonly level?: DialLevel;
+  /** UI upgrade #3: recent fraction samples (oldest first) for a trend sparkline beside the
+   *  big number. Omitted entirely (no sparkline) rather than a flat line for a gauge nobody's
+   *  wired history up for yet, or before enough real ticks have happened to show a trend. */
+  readonly history?: readonly number[];
 }
 
 /**
@@ -53,6 +58,7 @@ export function Gauge({
   statusLabel,
   helpKey,
   level = "specialist",
+  history,
 }: GaugeProps) {
   const [helpOpen, setHelpOpen] = useState(false);
   const pct = Math.max(0, Math.min(100, fraction * 100));
@@ -86,7 +92,10 @@ export function Gauge({
 
       {helpKey !== undefined && helpOpen && <p className="gauge-help-text">{gaugeHelp(helpKey, level)}</p>}
 
-      <div className="gauge-value">{shown}</div>
+      <div className="gauge-value-row">
+        <div className="gauge-value">{shown}</div>
+        {history !== undefined && <Sparkline values={history} />}
+      </div>
 
       <div
         className="gauge-track"

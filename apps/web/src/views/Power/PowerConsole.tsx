@@ -25,6 +25,7 @@ const MAX_EVENTS_SHOWN = 8;
 export function PowerConsole() {
   const version = useRun((s) => s.version);
   const state = useRun((s) => s.state);
+  const batteryHistory = useRun((s) => s.resourceHistory.battery);
   const scenario = useRun((s) => s.scenario);
   const phase = useRun((s) => s.phase);
   const cleanSolarArrays = useRun((s) => s.cleanSolarArrays);
@@ -63,6 +64,7 @@ export function PowerConsole() {
             detail={summary.battery.text.detail}
             helpKey="gauge.battery"
             level={level}
+            history={batteryHistory}
           />
         </div>
 

@@ -41,6 +41,41 @@ import { useDebugStats } from "./debugStats.js";
 
 const STATUS_RANK: Record<StatusLevel, number> = { nominal: 0, caution: 1, critical: 2 };
 
+/** UI upgrade #3: sparkline trend lines on the O2/water/battery gauges. One fraction sample
+ *  per real simulated hour, same 0-1 numbers `buildResourceSummary` already computes for the
+ *  gauge bars themselves — reusing that single source of truth (this file's own
+ *  `worstStatusRank` already does the same) rather than re-deriving the formulas here.
+ *  24 samples = one full day boundary's worth (`step()`'s own `hour % 24` cadence), a real,
+ *  already-established "recent" window rather than an arbitrary length. */
+const RESOURCE_HISTORY_LENGTH = 24;
+
+export interface ResourceHistory {
+  readonly oxygen: readonly number[];
+  readonly water: readonly number[];
+  readonly battery: readonly number[];
+}
+
+function emptyResourceHistory(): ResourceHistory {
+  return { oxygen: [], water: [], battery: [] };
+}
+
+/** Mutates `history`'s three arrays in place (push + cap), matching the file's own established
+ *  pattern for hot-loop tick state (`state: SimState` itself is mutated in place too, see this
+ *  file's header comment) — a `step()` covering many hours (a `+1 sol` click, 16x speed) would
+ *  otherwise mean rebuilding three arrays up to `hours` times per call for no benefit. */
+function pushResourceHistorySample(history: ResourceHistory, state: SimState): void {
+  const s = buildResourceSummary(state, "specialist");
+  for (const [key, value] of [
+    ["oxygen", s.oxygen.fraction],
+    ["water", s.water.fraction],
+    ["battery", s.battery.fraction],
+  ] as const) {
+    const series = history[key] as number[];
+    series.push(value);
+    if (series.length > RESOURCE_HISTORY_LENGTH) series.shift();
+  }
+}
+
 /** The worst of the six gauges' status ranks — used by auto-pause (M8.1) to notice a
  *  threshold crossing regardless of which resource caused it. The dial level passed to
  *  `buildResourceSummary` only affects its *text*, never the status itself, so any level
@@ -119,6 +154,9 @@ interface RunStore {
    *  comment. Set by every `reset()` call alongside `scenario` itself, so the two can never
    *  silently disagree about which run they describe. */
   setupChoices: RunSetupChoices;
+  /** UI upgrade #3: recent oxygen/water/battery fraction samples, for the Gauge sparklines —
+   *  see `pushResourceHistorySample`'s own doc comment. */
+  resourceHistory: ResourceHistory;
 
   step: (hours?: number) => void;
   setSpeed: (speed: Speed) => void;
@@ -212,9 +250,10 @@ export const useRun = create<RunStore>((set, get) => ({
   justEndedSol: undefined,
   inputLog: [],
   setupChoices: defaultSetupChoices(getScenario(DEFAULT_PARAMS.scenarioId)),
+  resourceHistory: emptyResourceHistory(),
 
   step: (hours = 1) => {
-    const { state, params, scenario } = get();
+    const { state, params, scenario, resourceHistory } = get();
     let autoPaused = false;
     let justEndedSol: { startHour: number; endHour: number } | undefined;
 
@@ -230,6 +269,7 @@ export const useRun = create<RunStore>((set, get) => ({
       const tickStart = performance.now();
       simTick(state, params, scenario);
       useDebugStats.getState().recordTick(performance.now() - tickStart);
+      pushResourceHistorySample(resourceHistory, state);
 
       // A day boundary always halts the clock immediately (Sol Planning locks it, M8.4 Part
       // A) — crossing more than one in a single step() call would otherwise be possible at
@@ -282,6 +322,7 @@ export const useRun = create<RunStore>((set, get) => ({
       justEndedSol: undefined,
       inputLog: [],
       setupChoices: setupChoicesOverride ?? defaultSetupChoices(scenario),
+      resourceHistory: emptyResourceHistory(),
     });
   },
 

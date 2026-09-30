@@ -177,9 +177,17 @@ code {
   font-weight: 400;
 }
 
+/* UI upgrade #1: one consistent panel-chrome system, everywhere. The accent-topped border
+   used to be scoped to just three M9 screens (setup wizard, habitat, mission command) — every
+   older station console (Power, Life Support, Comms, Incident Command), Briefing, Debrief,
+   Data Sources, and the Mission Report all used the plain, un-accented box below. Folded into
+   the base rule so the whole app reads as one deliberate system instead of some screens
+   looking more finished than others — headers/labels already share one h2 rule, so this was
+   the one remaining piece of chrome that wasn't actually consistent. */
 .panel {
   background: var(--bg-panel);
   border: 1px solid var(--line);
+  border-top: 3px solid var(--shell-accent);
   border-radius: var(--radius);
   padding: 14px;
   margin-bottom: var(--gap);
@@ -440,11 +448,29 @@ code {
   line-height: 1.4;
 }
 
+.gauge-value-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 3px 0 6px;
+}
+
 .gauge-value {
   font-size: 1.35rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  margin: 3px 0 6px;
+}
+
+/* UI upgrade #3: a trend sparkline beside the gauge's own big number, coloured with the same
+   --status var the fill bar and icon already use — decorative (Sparkline.tsx is aria-hidden),
+   the real number and status stay in the text next to it (rule 6). */
+.gauge-sparkline {
+  width: 56px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--status);
+  opacity: 0.85;
 }
 
 .gauge-track {
@@ -1913,16 +1939,6 @@ code {
 }
 
 /* ---------------------------------------------------------------- telemetry chrome (M9.6) */
-/* A shared accent-topped panel border, tying the setup wizard and the habitat view together
-   visually — the two M9 screens built around a single real, live-updating readout (the
-   wizard's own step counter, the habitat's real sol/hour clock), unlike the five older
-   station consoles this deliberately leaves unchanged. */
-.setup-wizard .panel,
-.habitat-telemetry .panel,
-.ops-center .panel {
-  border-top: 3px solid var(--shell-accent);
-}
-
 .setup-progress {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-variant-numeric: tabular-nums;
