@@ -49,7 +49,7 @@ export function BriefingView() {
   const packedMassKg = Math.round(bareMassKg * (1 + marginFraction));
 
   return (
-    <div className="console">
+    <div className="console two-col">
       <header className="view-head">
         <h2>{t("briefing.title")}</h2>
         <p className="view-hint">
@@ -73,7 +73,7 @@ export function BriefingView() {
         </ul>
       </section>
 
-      <section className="panel" aria-labelledby="briefing-site-heading">
+      <section className="panel panel-span-full" aria-labelledby="briefing-site-heading">
         <h2 id="briefing-site-heading">{t("briefing.siteHeading")}</h2>
         <LandingSiteMap />
       </section>

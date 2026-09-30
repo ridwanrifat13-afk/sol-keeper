@@ -228,7 +228,7 @@ export function HabitatView() {
   }
 
   return (
-    <div className="console habitat-telemetry">
+    <div className="console habitat-telemetry two-col">
       <header className="view-head">
         <h2>Habitat</h2>
         <p className="view-hint">
@@ -246,7 +246,7 @@ export function HabitatView() {
         <AlarmBanner severity="critical">Depressurization in progress — see Incident Command.</AlarmBanner>
       )}
 
-      <section className="panel" aria-labelledby="habitat-scene-heading">
+      <section className="panel panel-span-full" aria-labelledby="habitat-scene-heading">
         <h2 id="habitat-scene-heading" className="visually-hidden">
           Habitat scene
         </h2>

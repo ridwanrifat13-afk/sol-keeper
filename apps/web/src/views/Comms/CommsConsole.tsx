@@ -49,7 +49,7 @@ export function CommsConsole() {
   const oneWayMinutes = lightTime.data ? lightTime.data.oneWayLightSeconds / 60 : undefined;
 
   return (
-    <div className="console">
+    <div className="console two-col">
       <header className="view-head">
         <h2>Comms</h2>
         <p className="view-hint">The real delay to Earth, and — on Mars — why urgent problems can't wait for a reply.</p>

@@ -42,7 +42,7 @@ export function PowerConsole() {
   const canClean = scenario.body === "mars" && remainingCrewHours >= cleaningCostHours;
 
   return (
-    <div className="console" key={version}>
+    <div className="console two-col" key={version}>
       <header className="view-head">
         <h2>Power</h2>
         <p className="view-hint">Generation, storage, the load-shed order, and incoming space weather.</p>

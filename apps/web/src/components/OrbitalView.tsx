@@ -75,7 +75,7 @@ export function OrbitalView() {
   }, [src, reloadCount]);
 
   return (
-    <section className="panel orbital-view" aria-labelledby="orbital-view-heading">
+    <section className="panel orbital-view panel-span-full" aria-labelledby="orbital-view-heading">
       <div className="panel-head-row">
         <h2 id="orbital-view-heading">Orbital display</h2>
         <span className="orbital-view-state">

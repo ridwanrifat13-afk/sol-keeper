@@ -104,7 +104,7 @@ export function MissionCommandConsole() {
   const activeAlertCount = state.activeIncidents.filter((i) => i.resolvedAtHour === undefined).length;
 
   return (
-    <div className="console ops-center">
+    <div className="console ops-center two-col">
       <header className="view-head">
         <h2>Mission Command</h2>
         <p className="view-hint">Crew status, the current mission, and the whole-mission mass budget.</p>

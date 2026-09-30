@@ -242,18 +242,60 @@ code {
   color: var(--text-dim);
 }
 
+/* `.two-col`'s own `gap` (both here and at 760px+ below) replaces each child's individual
+   `margin-bottom` entirely — grid gap plus every panel's own margin would double up the space
+   between them, at any width, not just above the breakpoint, so the reset lives right beside
+   the grid it belongs to rather than only inside the media query.
+
+   `minmax(0, 1fr)`, not bare `1fr`: a plain `1fr` track's minimum size defaults to its
+   content's own min-content width, so a single un-shrinkable child (this file's own
+   launch-packing-table/esm-table `min-width`, or an iframe with no min-width at all) silently
+   blows the whole track — and with it `.console`, and with it the page — out past the real
+   viewport, confirmed directly: a real mobile-width measurement showed a 650px-wide grid track
+   inside a 390px viewport once one of these panels sat inside it. `minmax(0, 1fr)` caps the
+   track's own minimum at 0 instead, so it actually shrinks to fit; a genuinely wide child keeps
+   scrolling horizontally inside its own column (its own `.table-scroll` wrapper, already built
+   for exactly this) rather than dragging the whole page wider than the screen. */
 .two-col {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--gap);
+}
+
+.two-col > * {
+  margin-bottom: 0;
 }
 
 @media (min-width: 760px) {
   .two-col {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
-  .two-col > .panel {
-    margin-bottom: 0;
+}
+
+/* Player request: every station console was one long stacked column of panels/tables, however
+   wide the screen — arrange them two-wide instead so a wide screen actually gets used, not
+   just centred inside a narrower reading column. Reuses `.two-col` above (defined but unused
+   until now) rather than a second, near-identical grid rule. Below 760px `.two-col` itself
+   already falls back to a single column, still using grid `gap` for spacing rather than each
+   panel's own margin — the same visual rhythm the old plain stack had, just via the rule that
+   also has to handle two columns above the breakpoint. Grid's own row-major auto-placement
+   keeps DOM/reading order untouched: a screen reader or keyboard user still moves through
+   panels in the exact order they're written in, this only changes where each one paints. */
+@media (min-width: 760px) {
+  /* A page's own heading, any alert banner, and Debrief's own action-button row always read
+     oddly at half width — sized for the full column regardless of which two-panel row they'd
+     otherwise fall into. */
+  .console.two-col > .view-head,
+  .console.two-col > .inline-alert,
+  .console.two-col > .debrief-actions {
+    grid-column: 1 / -1;
+  }
+
+  /* Player-named exceptions: the orbital display, the habitat scene, the landing-site map, and
+     the dependency graph all stay full width — each one is either inherently wide (a live
+     video/map/graph needs real room to be legible) or was explicitly asked to be left alone. */
+  .panel-span-full {
+    grid-column: 1 / -1;
   }
 }
 
@@ -652,6 +694,45 @@ code {
    --text-dim colour, which is already the deliberately de-emphasized token. An earlier
    `opacity: 0.8` stacked on top of that pushed contrast below WCAG AA — caught by a real
    Lighthouse accessibility audit, not a visual guess. */
+
+/* Player request: a standalone "Crop conditions" content box (LifeSupportConsole.tsx) — the
+   same real-status-coloured card look `.crew-row` already uses, not a plain list, since each
+   row now carries a status tier and its own mini bar. */
+.crop-conditions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.crop-conditions-row {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--status);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.crop-conditions-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.crop-conditions-stat {
+  display: inline-flex;
+  align-items: center;
+  color: var(--status);
+  font-weight: 600;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ---------------------------------------------------------------- events */
 .event-list {

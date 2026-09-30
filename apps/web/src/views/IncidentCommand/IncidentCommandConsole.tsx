@@ -120,7 +120,7 @@ export function IncidentCommandConsole() {
   });
 
   return (
-    <div className="console">
+    <div className="console two-col">
       <header className="view-head">
         <h2>Incident Command</h2>
         <p className="view-hint">
@@ -129,7 +129,7 @@ export function IncidentCommandConsole() {
         </p>
       </header>
 
-      <section className="panel" aria-labelledby="ripple-graph-heading">
+      <section className="panel panel-span-full" aria-labelledby="ripple-graph-heading">
         <h2 id="ripple-graph-heading">Dependency map</h2>
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}

@@ -36,7 +36,7 @@ export function DebriefView({ onViewReport }: { onViewReport: () => void }) {
 
   if (state.status === "running") {
     return (
-      <div className="debrief">
+      <div className="debrief console two-col">
         <header className="view-head">
           <h2>{t("debrief.notReadyHeading")}</h2>
           <p className="view-hint">{t("debrief.notReadyHint")}</p>
@@ -55,7 +55,7 @@ export function DebriefView({ onViewReport }: { onViewReport: () => void }) {
   const headline = outcomeHeadline(t, state.status, state.hour, body, summary.livingCrew, state.crew.length);
 
   return (
-    <div className="debrief">
+    <div className="debrief console two-col">
       <header className="view-head">
         <h2>{headline.title}</h2>
         <p className="view-hint">{headline.subtitle}</p>

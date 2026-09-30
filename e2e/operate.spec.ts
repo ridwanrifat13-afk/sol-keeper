@@ -187,15 +187,21 @@ test.describe("Life Support console", () => {
     await gotoApp(page);
     await skipSetup(page, "Life Support");
 
-    await expect(page.getByText("ISRU & crops")).toBeVisible();
-    await expect(page.getByText("Status only", { exact: false })).toBeVisible();
+    // Player request: crop conditions split out of the old combined "ISRU & crops" panel into
+    // its own standalone box — Jezero (Mars) has both panels; a Moon scenario would have only
+    // Crop conditions, since MOXIE (state.systems.moxie) never exists there.
+    await expect(page.getByRole("heading", { name: "ISRU" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Crop conditions" })).toBeVisible();
+    await expect(page.getByText("Status only", { exact: false }).first()).toBeVisible();
     await expect(page.getByText("MOXIE", { exact: true })).toBeVisible();
     // Jezero's own crop trays (dial/labels.ts's cropLabel), each with a real grown/health
     // readout — not a settable priority, per the settled decision.
     await expect(page.getByText(/% grown/).first()).toBeVisible();
-    // No button anywhere in this panel — nothing here invites a click that does nothing.
-    const panel = page.locator("section", { has: page.getByRole("heading", { name: "ISRU & crops" }) });
-    await expect(panel.locator("button")).toHaveCount(0);
+    // No button anywhere in either panel — nothing here invites a click that does nothing.
+    const isruPanel = page.locator("section", { has: page.getByRole("heading", { name: "ISRU", exact: true }) });
+    const cropPanel = page.locator("section", { has: page.getByRole("heading", { name: "Crop conditions" }) });
+    await expect(isruPanel.locator("button")).toHaveCount(0);
+    await expect(cropPanel.locator("button")).toHaveCount(0);
   });
 
   test("Sol Planning locks rations until Run the sol is clicked", async ({ page }) => {

@@ -18,6 +18,7 @@ import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { Gauge } from "../../components/Gauge.js";
 import { FactCardGallery } from "../../components/FactCardGallery.js";
+import { MiniBar } from "../../components/MiniBar.js";
 import { statusWord } from "../../dial/statusWords.js";
 import {
   co2ScrubberModeLabel,
@@ -63,7 +64,7 @@ export function LifeSupportConsole() {
   );
 
   return (
-    <div className="console" key={version}>
+    <div className="console two-col" key={version}>
       <header className="view-head">
         <h2>Life Support</h2>
         <p className="view-hint">Air, water, food, and how hard the crew is rationing.</p>
@@ -308,20 +309,16 @@ export function LifeSupportConsole() {
         </details>
       </section>
 
-      {/* M8.4 Part B: read-only — no settable MOXIE-priority or crop-priority control exists
-       *  in the sim today; inventing one would mean a new, unsourced physical constant with no
-       *  real lever to attach it to (brief rule 1). */}
-      <section className="panel" aria-labelledby="isru-heading">
-        <h2 id="isru-heading">ISRU &amp; crops</h2>
-        <p className="panel-hint">Status only — no adjustable MOXIE or crop-task control exists yet.</p>
-        {co2GrowthBonus > 0.001 && (
-          <p className="panel-hint">
-            Cabin CO₂ is in a real, documented crop-growth-boosting range — trays are growing{" "}
-            {Math.round(co2GrowthBonus * 100)}% faster (WHEELER-2024-CO2-SALAD).
-          </p>
-        )}
-        <ul className="status-list">
-          {state.systems.moxie !== undefined && (
+      {/* M8.4 Part B: read-only — no settable MOXIE-priority control exists in the sim today;
+       *  inventing one would mean a new, unsourced physical constant with no real lever to
+       *  attach it to (brief rule 1). Mars-only: `state.systems.moxie` is `undefined` on the
+       *  Moon (no atmosphere for MOXIE-style ISRU to work on), so this panel simply doesn't
+       *  render there rather than showing an empty "ISRU" box with nothing in it. */}
+      {state.systems.moxie !== undefined && (
+        <section className="panel" aria-labelledby="isru-heading">
+          <h2 id="isru-heading">ISRU</h2>
+          <p className="panel-hint">Status only — no adjustable MOXIE control exists yet.</p>
+          <ul className="status-list">
             <li>
               <span className="status-list-label">MOXIE</span>
               <span className="status-list-value">
@@ -329,15 +326,38 @@ export function LifeSupportConsole() {
                 {state.isru.moxieO2ProducedKg.toFixed(2)} kg O₂ made
               </span>
             </li>
-          )}
+          </ul>
+        </section>
+      )}
+
+      {/* Player request: a standalone content box for crop conditions, split out of the old
+       *  combined "ISRU & crops" panel — every scenario has real crop trays (state.food.trays)
+       *  regardless of body, unlike MOXIE above, so this always renders. Growth/health numbers
+       *  are the same ones HabitatView's own "Current conditions" table and CropSprite visuals
+       *  already read — MiniBar (built for that table) reused here rather than a second bar
+       *  component for the identical purpose. */}
+      <section className="panel" aria-labelledby="crop-conditions-heading">
+        <h2 id="crop-conditions-heading">Crop conditions</h2>
+        <p className="panel-hint">Status only — no adjustable crop-task control exists yet.</p>
+        {co2GrowthBonus > 0.001 && (
+          <p className="panel-hint">
+            Cabin CO₂ is in a real, documented crop-growth-boosting range — trays are growing{" "}
+            {Math.round(co2GrowthBonus * 100)}% faster (WHEELER-2024-CO2-SALAD).
+          </p>
+        )}
+        <ul className="crop-conditions-list">
           {state.food.trays.map((tray) => {
             const required = cropRequiredLightHours(tray.crop);
-            const progressPct = Math.min(100, Math.round((tray.lightHours / required) * 100));
+            const growthFraction = Math.min(1, tray.lightHours / required);
+            const healthPct = Math.round(tray.healthFraction * 100);
+            const trayStatusClass = healthPct < 60 ? "is-caution" : "is-nominal";
             return (
-              <li key={tray.id}>
-                <span className="status-list-label">{cropLabel(tray.crop, level, language)}</span>
-                <span className="status-list-value">
-                  {progressPct}% grown · {Math.round(tray.healthFraction * 100)}% healthy
+              <li key={tray.id} className={`crop-conditions-row ${trayStatusClass}`}>
+                <span className="crop-conditions-name">{cropLabel(tray.crop, level, language)}</span>
+                <span className="crop-conditions-stat">
+                  <span aria-hidden="true">{healthPct < 60 ? "▲" : "●"}</span>{" "}
+                  {Math.round(growthFraction * 100)}% grown · {healthPct}% healthy
+                  <MiniBar fraction={growthFraction} statusClassName={trayStatusClass} />
                 </span>
               </li>
             );
