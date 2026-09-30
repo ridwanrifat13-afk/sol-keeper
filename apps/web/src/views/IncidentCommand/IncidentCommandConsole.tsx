@@ -285,7 +285,7 @@ export function IncidentCommandConsole() {
         </ul>
       </section>
 
-      <section className="panel" aria-labelledby="crew-location-heading">
+      <section className="panel panel-span-full" aria-labelledby="crew-location-heading">
         <h2 id="crew-location-heading">Crew location</h2>
         <p className="panel-hint">
           Send crew to the storm shelter ahead of a solar event, or out on an EVA.

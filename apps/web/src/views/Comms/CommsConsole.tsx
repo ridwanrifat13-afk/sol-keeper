@@ -111,7 +111,11 @@ export function CommsConsole() {
         </div>
       </section>
 
-      <FactCardGallery topic="deep-space-network" heading="Real hardware: the Deep Space Network" />
+      <FactCardGallery
+        topic="deep-space-network"
+        heading="Real hardware: the Deep Space Network"
+        className="panel-span-full"
+      />
     </div>
   );
 }

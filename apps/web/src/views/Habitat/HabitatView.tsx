@@ -572,6 +572,7 @@ export function HabitatView() {
       <FactCardGallery
         topic={isMars ? "mars-habitat-concept" : "lunar-habitat-concept"}
         heading={isMars ? "Real NASA concepts: Mars surface habitats" : "Real NASA concepts: lunar surface habitats"}
+        className="panel-span-full"
       />
     </div>
   );

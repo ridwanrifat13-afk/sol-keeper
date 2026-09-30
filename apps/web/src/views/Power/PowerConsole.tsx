@@ -164,6 +164,7 @@ export function PowerConsole() {
       <FactCardGallery
         topic={powerFactCardTopicFor(scenario.body)}
         heading={scenario.body === "mars" ? "What NASA did: MOXIE" : "What NASA did: the lunar south pole"}
+        className="panel-span-full"
       />
     </div>
   );

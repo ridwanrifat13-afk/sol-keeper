@@ -110,7 +110,7 @@ export function MissionCommandConsole() {
         <p className="view-hint">Crew status, the current mission, and the whole-mission mass budget.</p>
       </header>
 
-      <section className="ops-board" aria-labelledby="ops-board-heading">
+      <section className="ops-board panel-span-full" aria-labelledby="ops-board-heading">
         <h2 id="ops-board-heading" className="visually-hidden">
           Mission status board
         </h2>

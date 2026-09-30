@@ -10,14 +10,26 @@ import type { NasaImagesResponse } from "../../server-lib/types.js";
  * pattern isn't something this project has independently confirmed, and a guessed link is
  * exactly the kind of thing rule 1's spirit extends to even outside physical constants.
  */
-export function FactCardGallery({ topic, heading }: { readonly topic: ImageQueryKey; readonly heading: string }) {
+export function FactCardGallery({
+  topic,
+  heading,
+  className,
+}: {
+  readonly topic: ImageQueryKey;
+  readonly heading: string;
+  /** Player request: some galleries (a horizontally-scrolling photo strip) read as cramped
+   *  squeezed into half of a two-column console — `panel-span-full` (styles.css) restores the
+   *  full-width look they had before that layout shipped, at the same call sites the player
+   *  named, not every gallery everywhere. */
+  readonly className?: string;
+}) {
   const result = useLiveOrSnapshot<NasaImagesResponse>(
     `/snapshots/nasa-images-${topic}.json`,
     `/api/nasa-images?q=${topic}`,
   );
 
   return (
-    <section className="panel" aria-labelledby={`fact-cards-${topic}-heading`}>
+    <section className={`panel ${className ?? ""}`} aria-labelledby={`fact-cards-${topic}-heading`}>
       <div className="panel-head-row">
         <h2 id={`fact-cards-${topic}-heading`}>{heading}</h2>
         <ProvenanceBadge status={result.status} fetchedAt={result.data?.fetchedAt} />

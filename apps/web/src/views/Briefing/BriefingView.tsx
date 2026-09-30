@@ -58,7 +58,7 @@ export function BriefingView() {
         </p>
       </header>
 
-      <section className="panel" aria-labelledby="briefing-crew-heading">
+      <section className="panel panel-span-full" aria-labelledby="briefing-crew-heading">
         <h2 id="briefing-crew-heading">{t("briefing.crewHeading")}</h2>
         <ul className="status-list">
           {crew.map((member) => (
@@ -107,7 +107,7 @@ export function BriefingView() {
         <p>{t(cadet ? "briefing.massLineCadet" : "briefing.massLine", { kg: packedMassKg.toLocaleString() })}</p>
       </section>
 
-      <section className="panel" aria-labelledby="briefing-guide-heading">
+      <section className="panel panel-span-full" aria-labelledby="briefing-guide-heading">
         <h2 id="briefing-guide-heading">Mission Guide</h2>
         <p className="panel-hint">{MISSION_GUIDES[scenario.id].tagline}</p>
         {MISSION_GUIDES[scenario.id].paragraphs.map((paragraph, i) => (

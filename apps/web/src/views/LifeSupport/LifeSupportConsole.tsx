@@ -366,7 +366,11 @@ export function LifeSupportConsole() {
       </section>
 
       <FactCardGallery topic="co2-scrubber" heading="Real hardware: the ISS's CDRA CO₂ scrubber" />
-      <FactCardGallery topic="veggie" heading="Real hardware: NASA's Veggie plant-growth hardware" />
+      <FactCardGallery
+        topic="veggie"
+        heading="Real hardware: NASA's Veggie plant-growth hardware"
+        className="panel-span-full"
+      />
     </div>
   );
 }
