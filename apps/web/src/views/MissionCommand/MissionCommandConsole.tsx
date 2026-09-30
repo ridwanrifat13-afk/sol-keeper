@@ -20,8 +20,6 @@ import { ScenarioSwitch } from "../../components/ScenarioSwitch.js";
 import { EsmPanel } from "../../components/EsmPanel.js";
 import { STATUS } from "../../components/status.js";
 import { StatusPill } from "../../components/StatusPill.js";
-import { MiniBar } from "../../components/MiniBar.js";
-import { CircularGauge } from "../../components/CircularGauge.js";
 import {
   co2ScrubberModeLabel,
   stationLabel,
@@ -112,82 +110,66 @@ export function MissionCommandConsole() {
         <p className="view-hint">Crew status, the current mission, and the whole-mission mass budget.</p>
       </header>
 
-      {/* Player reference: a drone HUD's own hero-video + stat-sidebar layout. OrbitalView is
-       *  this app's own real "live feed" (NASA's own live 3D view) — the genuine analog, not a
-       *  decorative stand-in — so it keeps that role; the same 4 real readouts the old
-       *  full-width "big board" row showed now live in a sidebar beside it, each paired with a
-       *  mini progress bar (the reference's own "Battery status 75%"/slider pattern) where a
-       *  fraction is real and meaningful, plus a circular dial for how far into the current
-       *  sol the mission is (the reference's own compass dial, real data instead of heading). */}
-      <div className="ops-hero-grid">
-        <OrbitalView />
-        <aside className="panel ops-sidebar" aria-labelledby="ops-sidebar-heading">
-          <div className="ops-sidebar-head">
-            <span className="ops-live-dot" aria-hidden="true" />
-            <div>
-              <h2 id="ops-sidebar-heading" className="ops-sidebar-title">
-                {SCENARIO_LABELS[scenario.id].label.toUpperCase()}
-              </h2>
-              <p className="ops-sidebar-subtitle">
-                {state.status === "running" ? "MISSION IN PROGRESS" : state.status.toUpperCase()}
-              </p>
-            </div>
+      <section className="ops-board" aria-labelledby="ops-board-heading">
+        <h2 id="ops-board-heading" className="visually-hidden">
+          Mission status board
+        </h2>
+        <div className="ops-board-row">
+          <span className="ops-live-dot" aria-hidden="true" />
+          <span className="ops-board-title">
+            {SCENARIO_LABELS[scenario.id].label.toUpperCase()} ·{" "}
+            {state.status === "running" ? "MISSION IN PROGRESS" : state.status.toUpperCase()}
+          </span>
+        </div>
+        <div className="ops-board-readouts">
+          <div className="ops-readout">
+            <span className="ops-readout-icon" aria-hidden="true">
+              <FiCalendar />
+            </span>
+            <span className="ops-readout-body">
+              <span className="ops-readout-value">
+                {elapsedValue(state.hour, scenario.body).toFixed(2)}
+                <span className="ops-readout-unit"> / {durationLabel(scenario.durationHours, scenario.body)}</span>
+              </span>
+              <span className="ops-readout-label">{timeUnitWord(scenario.body)} elapsed</span>
+            </span>
           </div>
-
-          <div className="ops-sidebar-stat">
-            <div className="ops-sidebar-stat-row">
-              <span className="ops-sidebar-stat-label" aria-hidden="true">
-                <FiCalendar />
+          <div className="ops-readout">
+            <span className="ops-readout-icon" aria-hidden="true">
+              <FiUsers />
+            </span>
+            <span className="ops-readout-body">
+              <span className="ops-readout-value">
+                {aliveCrewCount}
+                <span className="ops-readout-unit"> / {state.crew.length}</span>
               </span>
-              <span className="ops-sidebar-stat-label">{timeUnitWord(scenario.body)} elapsed</span>
-              <span className="ops-sidebar-stat-value">
-                {elapsedValue(state.hour, scenario.body).toFixed(2)} / {durationLabel(scenario.durationHours, scenario.body)}
-              </span>
-            </div>
-            <MiniBar fraction={state.hour / scenario.durationHours} statusClassName="is-nominal" />
+              <span className="ops-readout-label">Crew alive</span>
+            </span>
           </div>
-
-          <div className="ops-sidebar-stat">
-            <div className="ops-sidebar-stat-row">
-              <span className="ops-sidebar-stat-label" aria-hidden="true">
-                <FiUsers />
-              </span>
-              <span className="ops-sidebar-stat-label">Crew alive</span>
-              <span className="ops-sidebar-stat-value">
-                {aliveCrewCount} / {state.crew.length}
-              </span>
-            </div>
-            <MiniBar
-              fraction={state.crew.length > 0 ? aliveCrewCount / state.crew.length : 1}
-              statusClassName={aliveCrewCount < state.crew.length ? "is-caution" : "is-nominal"}
-            />
-          </div>
-
-          <div className="ops-sidebar-stat-row">
-            <span className="ops-sidebar-stat-label" aria-hidden="true">
+          <div className="ops-readout">
+            <span className="ops-readout-icon" aria-hidden="true">
               <FiAlertTriangle />
             </span>
-            <span className="ops-sidebar-stat-label">Active alerts</span>
-            <span className={`ops-sidebar-stat-value ${activeAlertCount > 0 ? "ops-readout-alert" : ""}`}>
-              {activeAlertCount}
+            <span className="ops-readout-body">
+              <span className={`ops-readout-value ${activeAlertCount > 0 ? "ops-readout-alert" : ""}`}>
+                {activeAlertCount}
+              </span>
+              <span className="ops-readout-label">Active alerts</span>
             </span>
           </div>
-
-          <div className="ops-sidebar-dial">
-            <CircularGauge
-              fraction={(state.hour % 24) / 24}
-              label="Sol progress"
-              centerText={`${state.hour % 24}h`}
-            />
-            <p className="ops-sidebar-dial-text">
-              <span aria-hidden="true">
-                <FiClock />
-              </span>{" "}
-              Hour {state.hour % 24} of 24 this sol · mission hour {state.hour}
-            </p>
+          <div className="ops-readout">
+            <span className="ops-readout-icon" aria-hidden="true">
+              <FiClock />
+            </span>
+            <span className="ops-readout-body">
+              <span className="ops-readout-value">{state.hour}</span>
+              <span className="ops-readout-label">Mission hour</span>
+            </span>
           </div>
-        </aside>
-      </div>
+        </div>
+      </section>
+
+      <OrbitalView />
 
       <ScenarioSwitch />
       <CrewPanel />

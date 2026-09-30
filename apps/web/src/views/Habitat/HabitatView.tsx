@@ -8,11 +8,10 @@ import {
   type CropTray,
   type StationId,
 } from "@sol-keeper/sim";
-import { FiUsers, FiThermometer, FiZap, FiTrendingUp } from "react-icons/fi";
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
 import { Starfield } from "../../components/Starfield.js";
-import { STATUS, statusFromSeverity } from "../../components/status.js";
+import { STATUS } from "../../components/status.js";
 import { AlarmBanner } from "../../components/AlarmBanner.js";
 import { FactCardGallery } from "../../components/FactCardGallery.js";
 import { Avatar } from "../../components/Avatar.js";
@@ -21,7 +20,6 @@ import { locationLabel, stationLabel, cropLabel } from "../../dial/labels.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { timestampLabel } from "../../dial/missionTime.js";
 import { habitatEffects } from "../../dial/habitatEffects.js";
-import { logText } from "../../i18n/logText.js";
 
 /** Mars' real daytime sky is a dusty butterscotch, not Earth blue — no atmosphere means the
  *  Moon's sky is black at any hour, sun up or not (both are art-direction facts, not sourced
@@ -229,22 +227,6 @@ export function HabitatView() {
     }
   }
 
-  // Player reference: a logistics dashboard's own 3-column layout (KPI row, an "analytic
-  // view" panel, a waypoint timeline, a map + a named contact card). Real Sol Keeper analogs
-  // for the last two: the crew member actually covering Mission Command right now (falling
-  // back to the first living crew member for a scenario/crew size where nobody does — First
-  // Light's 2-person crew never staffs that station at all, per engine/stations.ts) stands in
-  // for the reference's named "courier"; the mission's own real, causal event log (already
-  // real text via logText, the same machinery EventFeed.tsx uses for the full log elsewhere)
-  // stands in for its waypoint history.
-  const crewLead = aliveCrew.find((m) => m.primaryStation === "missionCommand") ?? aliveCrew[0];
-  const recentLog = state.log.slice(-5).reverse();
-  const avgCropGrowthFraction =
-    state.food.trays.length > 0
-      ? state.food.trays.reduce((sum, t) => sum + Math.min(1, t.lightHours / cropRequiredLightHours(t.crop)), 0) /
-        state.food.trays.length
-      : 0;
-
   return (
     <div className="console habitat-telemetry">
       <header className="view-head">
@@ -264,119 +246,6 @@ export function HabitatView() {
         <AlarmBanner severity="critical">Depressurization in progress — see Incident Command.</AlarmBanner>
       )}
 
-      {/* Player reference: a logistics dashboard's own page-header KPI row — the same real
-       *  stat-card pattern Mission Command's sidebar uses, reused here (styles.css's shared
-       *  .ops-readout). */}
-      <div className="ops-readout-row habitat-kpi-row">
-        <div className="ops-readout">
-          <span className="ops-readout-icon" aria-hidden="true">
-            <FiUsers />
-          </span>
-          <span className="ops-readout-body">
-            <span className="ops-readout-value">
-              {aliveCrew.length}
-              <span className="ops-readout-unit"> / {state.crew.length}</span>
-            </span>
-            <span className="ops-readout-label">Crew alive</span>
-          </span>
-        </div>
-        <div className="ops-readout">
-          <span className="ops-readout-icon" aria-hidden="true">
-            <FiThermometer />
-          </span>
-          <span className="ops-readout-body">
-            <span className="ops-readout-value">{Math.round(state.environment.outsideTempC)}°C</span>
-            <span className="ops-readout-label">Outside temp</span>
-          </span>
-        </div>
-        <div className="ops-readout">
-          <span className="ops-readout-icon" aria-hidden="true">
-            <FiZap />
-          </span>
-          <span className="ops-readout-body">
-            <span className="ops-readout-value">{Math.round((1 - arrayLossFraction) * 100)}%</span>
-            <span className="ops-readout-label">Array health</span>
-          </span>
-        </div>
-        {state.food.trays.length > 0 && (
-          <div className="ops-readout">
-            <span className="ops-readout-icon" aria-hidden="true">
-              <FiTrendingUp />
-            </span>
-            <span className="ops-readout-body">
-              <span className="ops-readout-value">{Math.round(avgCropGrowthFraction * 100)}%</span>
-              <span className="ops-readout-label">Avg crop growth</span>
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Player reference: the same dashboard's own 3-column body — an "analytic view" panel
-       *  (real environment numbers), a waypoint-style timeline (the mission's own real, causal
-       *  event log), and a map + named-contact card (the habitat scene + whoever leads Mission
-       *  Command). Stacks to one column on mobile; the scene stays visually first there since
-       *  it's the one thing every earlier version of this view already led with. */}
-      <div className="habitat-grid">
-        <section className="panel habitat-env-panel" aria-labelledby="habitat-env-heading">
-          <h2 id="habitat-env-heading">Environment</h2>
-          <div className="habitat-env-numbers">
-            <div className="habitat-env-number">
-              <span className="habitat-env-number-value">{Math.round(state.environment.outsideTempC)}°</span>
-              <span className="habitat-env-number-label">Temp (°C)</span>
-            </div>
-            <div className="habitat-env-number">
-              <span className="habitat-env-number-value">{Math.round(sun * 100)}</span>
-              <span className="habitat-env-number-label">Sun elevation %</span>
-            </div>
-            <div className="habitat-env-number">
-              <span className="habitat-env-number-value">
-                {Math.round(state.environment.dustObscurationFraction * 100)}
-              </span>
-              <span className="habitat-env-number-label">Dust %</span>
-            </div>
-          </div>
-          {state.food.trays.length > 0 && (
-            <>
-              <p className="panel-hint habitat-env-crops-hint">Crop trays, by growth</p>
-              <ul className="habitat-env-crop-list">
-                {state.food.trays.map((tray) => {
-                  const growth = Math.min(1, tray.lightHours / cropRequiredLightHours(tray.crop));
-                  const statusClass = tray.healthFraction < 0.6 ? "is-caution" : "is-nominal";
-                  return (
-                    <li key={tray.id} className="habitat-env-crop-row">
-                      <span>{cropLabel(tray.crop, level, language)}</span>
-                      <MiniBar fraction={growth} statusClassName={statusClass} />
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
-          )}
-        </section>
-
-        <section className="panel habitat-timeline-panel" aria-labelledby="habitat-timeline-heading">
-          <h2 id="habitat-timeline-heading">Recent activity</h2>
-          {recentLog.length === 0 ? (
-            <p className="panel-hint">Nothing has happened yet. Start the clock.</p>
-          ) : (
-            <ul className="habitat-timeline">
-              {recentLog.map((entry) => {
-                const status = statusFromSeverity(entry.severity);
-                return (
-                  <li key={entry.id} className="habitat-timeline-row">
-                    <span className={`habitat-timeline-dot ${status.className}`} aria-hidden="true" />
-                    <span className="habitat-timeline-body">
-                      <span className="habitat-timeline-time">{timestampLabel(entry.hour, scenario.body)}</span>
-                      <span className="habitat-timeline-text">{logText(entry, level, language)}</span>
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-
-        <div className="habitat-right-col">
       <section className="panel" aria-labelledby="habitat-scene-heading">
         <h2 id="habitat-scene-heading" className="visually-hidden">
           Habitat scene
@@ -570,24 +439,6 @@ export function HabitatView() {
         </span>
         </div>
       </section>
-
-      {crewLead !== undefined && (
-        <section className="panel habitat-lead-card" aria-labelledby="habitat-lead-heading">
-          <h2 id="habitat-lead-heading" className="visually-hidden">
-            Mission Command lead
-          </h2>
-          <Avatar name={crewLead.name} statusClassName={CONDITION_PRESENTATION[crewCondition(crewLead) as "nominal" | "impaired" | "critical"].className} />
-          <span className="habitat-lead-info">
-            <span className="habitat-lead-name">{crewLead.name}</span>
-            <span className="habitat-lead-role">
-              {stationLabel(crewLead.primaryStation, level, language)}
-              {crewLead.primaryStation !== "missionCommand" && " · standing in for Mission Command"}
-            </span>
-          </span>
-        </section>
-      )}
-        </div>
-      </div>
 
       <section className="panel" aria-labelledby="habitat-facts-heading">
         <h2 id="habitat-facts-heading">Current conditions</h2>
