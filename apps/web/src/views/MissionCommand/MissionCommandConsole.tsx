@@ -330,7 +330,7 @@ export function MissionCommandConsole() {
         )}
       </section>
 
-      <EsmPanel />
+      <EsmPanel className="panel-span-full" />
     </div>
   );
 }

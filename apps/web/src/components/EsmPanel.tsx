@@ -14,15 +14,21 @@ import { esmCadetHeadline, esmIntro, ESM_PARTIAL_DISCLOSURE } from "../dial/esmP
  * Life Support (kept out on purpose, to avoid double-counting the five subsystems that
  * already model real life-support hardware) — see the note on scenarioEsmBreakdown in
  * packages/sim/src/engine/esm.ts.
+ *
+ * Player request: the six-column table (System/Power/Hardware/Cooling/Crew time/Equivalent
+ * mass) reads as cramped squeezed into half of Mission Command's two-column console — same
+ * optional `className` escape hatch FactCardGallery.tsx already uses, so this one call site
+ * can opt into `panel-span-full` (styles.css) without every future EsmPanel use defaulting
+ * to full width.
  */
-export function EsmPanel() {
+export function EsmPanel({ className }: { readonly className?: string } = {}) {
   const scenario = useRun((s) => s.scenario);
   const level = useDial((s) => s.level);
   const language = useAppLanguage();
   const breakdown = scenarioEsmBreakdown(scenario);
 
   return (
-    <section className="panel" aria-labelledby="esm-heading">
+    <section className={`panel ${className ?? ""}`} aria-labelledby="esm-heading">
       <h2 id="esm-heading">Mission ESM budget</h2>
       <p className="panel-hint">{esmIntro(level)}</p>
 
