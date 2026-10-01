@@ -6,6 +6,7 @@ import { useLiveOrSnapshot } from "../../data/liveOrSnapshot.js";
 import { ProvenanceBadge } from "../../components/ProvenanceBadge.js";
 import { FactCardGallery } from "../../components/FactCardGallery.js";
 import type { LightTimeResponse } from "../../../server-lib/types.js";
+import { DashboardGrid } from "../../components/DashboardGrid.js";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -49,7 +50,7 @@ export function CommsConsole() {
   const oneWayMinutes = lightTime.data ? lightTime.data.oneWayLightSeconds / 60 : undefined;
 
   return (
-    <div className="console two-col">
+    <DashboardGrid className="console two-col" layoutKey="comms">
       <header className="view-head">
         <h2>Comms</h2>
         <p className="view-hint">The real delay to Earth, and — on Mars — why urgent problems can't wait for a reply.</p>
@@ -116,6 +117,6 @@ export function CommsConsole() {
         heading="Real hardware: the Deep Space Network"
         className="panel-span-full"
       />
-    </div>
+    </DashboardGrid>
   );
 }

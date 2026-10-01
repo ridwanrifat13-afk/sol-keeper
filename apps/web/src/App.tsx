@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FiAlertTriangle, FiMenu, FiX } from "react-icons/fi";
+import { FiAlertTriangle, FiMenu, FiRotateCcw, FiX } from "react-icons/fi";
+import { clearAllLayouts } from "./components/dashboardReorder.js";
 import { useRun } from "./store/run.js";
 import { useSetup } from "./store/setup.js";
 import { useAccessibility } from "./store/accessibility.js";
@@ -299,6 +300,14 @@ export function App({ initialView = "home" }: AppProps = {}) {
                 }}
               >
                 {t("tabs.dataSources")}
+              </button>
+              <button
+                type="button"
+                className="btn btn-quiet"
+                title="Put every page's panels back in their default order"
+                onClick={clearAllLayouts}
+              >
+                <FiRotateCcw aria-hidden="true" /> Reset layout
               </button>
               <LowPowerToggle />
               <LanguageSwitch />

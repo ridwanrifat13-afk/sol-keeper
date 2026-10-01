@@ -10,6 +10,7 @@ import { systemStatusInfo } from "../../dial/systemStatus.js";
 import { decisionText } from "../../i18n/decisionText.js";
 import { STATUS, statusFromReserve, type StatusPresentation } from "../../components/status.js";
 import { INCIDENT_CATALOG, management, radiation, type CrewLocation, type SystemId } from "@sol-keeper/sim";
+import { DashboardGrid } from "../../components/DashboardGrid.js";
 
 const LOCATIONS: readonly CrewLocation[] = ["habitat", "stormShelter", "eva"];
 
@@ -129,7 +130,7 @@ export function IncidentCommandConsole() {
   });
 
   return (
-    <div className="console two-col">
+    <DashboardGrid className="console two-col" layoutKey="incidentCommand">
       <header className="view-head">
         <h2>Incident Command</h2>
         <p className="view-hint">
@@ -177,63 +178,6 @@ export function IncidentCommandConsole() {
             );
           })}
         </svg>
-      </section>
-
-      <section className="panel" aria-labelledby="ripple-table-heading">
-        <h2 id="ripple-table-heading">Same information, as text</h2>
-        <p className="panel-hint">
-          A force-directed graph is not something a screen reader can narrate usefully — this
-          table carries the identical status for every node above.
-        </p>
-        <table className="ripple-table">
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Kind</th>
-              <th scope="col">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {nodes.map((node) => {
-              const status = nodeStatus(node);
-              return (
-                <tr key={node.id}>
-                  <td>{label(node)}</td>
-                  <td>{node.kind}</td>
-                  <td className={status.className}>
-                    <span aria-hidden="true">{status.glyph}</span> {status.word}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </section>
-
-      <section className="panel" aria-labelledby="ripple-evidence-heading">
-        <h2 id="ripple-evidence-heading">How the connections work</h2>
-        <p className="panel-hint">
-          Every line above corresponds to a real check in the simulation's own model code, not a
-          drawn guess — hover a line for the same text, or read it here.
-        </p>
-        <table className="ripple-table">
-          <thead>
-            <tr>
-              <th scope="col">From</th>
-              <th scope="col">To</th>
-              <th scope="col">Evidence</th>
-            </tr>
-          </thead>
-          <tbody>
-            {edges.map((e) => (
-              <tr key={`${e.source}-${e.target}`}>
-                <td>{labelById(e.source)}</td>
-                <td>{labelById(e.target)}</td>
-                <td className="ripple-evidence-cell">{e.evidence}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </section>
 
       <section className="panel" aria-labelledby="repair-queue-heading">
@@ -322,15 +266,15 @@ export function IncidentCommandConsole() {
           before the part exists.
           {locked && " Locked while the sol is running — adjust it during Sol Planning."}
         </p>
-        <ul className="status-list">
+        <ul className="chip-grid">
           {Object.entries(state.systems).map(([id, sys]) => {
             const systemId = id as SystemId;
             const pending = state.printQueue.filter((job) => job.systemId === systemId);
             const canAfford = remainingCrewHours >= printCostHours;
             return (
-              <li key={id}>
-                <span className="status-list-label">{systemLabel(systemId, level, language)}</span>
-                <span className="status-list-value">
+              <li key={id} className="chip-grid-item chip-grid-stack">
+                <span className="chip-grid-label">{systemLabel(systemId, level, language)}</span>
+                <span className="chip-grid-action chip-grid-action-wide">
                   {sys.spares} spare(s)
                   {pending.map((job) => (
                     <span key={job.id} className="status-pill is-caution">
@@ -352,6 +296,65 @@ export function IncidentCommandConsole() {
             );
           })}
         </ul>
+      </section>
+
+      <section className="panel" aria-labelledby="ripple-table-heading">
+        <h2 id="ripple-table-heading">Same information, as text</h2>
+        <p className="panel-hint">
+          A force-directed graph is not something a screen reader can narrate usefully — this
+          table carries the identical status for every node above.
+        </p>
+        <table className="ripple-table">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Kind</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {nodes.map((node) => {
+              const status = nodeStatus(node);
+              return (
+                <tr key={node.id}>
+                  <td>{label(node)}</td>
+                  <td>{node.kind}</td>
+                  <td className={status.className}>
+                    <span aria-hidden="true">{status.glyph}</span> {status.word}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </section>
+
+      <section className="panel" aria-labelledby="ripple-evidence-heading">
+        <h2 id="ripple-evidence-heading">How the connections work</h2>
+        <p className="panel-hint">
+          Every line above corresponds to a real check in the simulation's own model code, not a
+          drawn guess — hover a line for the same text, or read it here.
+        </p>
+        <div className="panel-scroll" role="region" aria-label="Connection evidence, scrollable" tabIndex={0}>
+        <table className="ripple-table">
+          <thead>
+            <tr>
+              <th scope="col">From</th>
+              <th scope="col">To</th>
+              <th scope="col">Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            {edges.map((e) => (
+              <tr key={`${e.source}-${e.target}`}>
+                <td>{labelById(e.source)}</td>
+                <td>{labelById(e.target)}</td>
+                <td className="ripple-evidence-cell">{e.evidence}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        </div>
       </section>
 
       <section className="panel panel-span-full" aria-labelledby="crew-location-heading">
@@ -386,6 +389,6 @@ export function IncidentCommandConsole() {
             ))}
         </ul>
       </section>
-    </div>
+    </DashboardGrid>
   );
 }

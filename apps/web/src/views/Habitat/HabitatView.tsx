@@ -23,6 +23,7 @@ import { locationLabel, stationLabel, cropLabel, systemLabel } from "../../dial/
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { timestampLabel } from "../../dial/missionTime.js";
 import { habitatEffects } from "../../dial/habitatEffects.js";
+import { DashboardGrid } from "../../components/DashboardGrid.js";
 
 /** Mars' real daytime sky is a dusty butterscotch, not Earth blue — no atmosphere means the
  *  Moon's sky is black at any hour, sun up or not (both are art-direction facts, not sourced
@@ -243,7 +244,7 @@ export function HabitatView() {
   const systemEntries = Object.entries(state.systems) as [SystemId, SystemState][];
 
   return (
-    <div className="console habitat-telemetry two-col">
+    <DashboardGrid className="console habitat-telemetry two-col" layoutKey="habitat">
       <header className="view-head">
         <h2>Habitat</h2>
         <p className="view-hint">
@@ -542,14 +543,14 @@ export function HabitatView() {
           and lowers its failure odds for the next {maintenanceWindowHours} hours.
           {locked && " Locked while the sol is running — adjust it during Sol Planning."}
         </p>
-        <ul className="status-list">
+        <ul className="chip-grid">
           {systemEntries.map(([id, sys]) => {
             const active = state.hour < sys.maintenanceCreditUntilHour;
             const canAfford = remainingCrewHours >= maintenanceCostHours;
             return (
-              <li key={id}>
-                <span className="status-list-label">{systemLabel(id, level, language)}</span>
-                <span className="status-list-value">
+              <li key={id} className="chip-grid-item">
+                <span className="chip-grid-label">{systemLabel(id, level, language)}</span>
+                <span className="chip-grid-action">
                   {active && (
                     <span className="status-pill is-nominal">
                       <span aria-hidden="true">●</span> Maintained (
@@ -575,6 +576,7 @@ export function HabitatView() {
 
       <section className="panel" aria-labelledby="habitat-crew-heading">
         <h2 id="habitat-crew-heading">Crew</h2>
+        <div className="table-scroll">
         <table className="ripple-table">
           <thead>
             <tr>
@@ -610,6 +612,7 @@ export function HabitatView() {
             })}
           </tbody>
         </table>
+        </div>
         {lostCount > 0 && (
           <p className="panel-hint">
             {lostCount} crew member{lostCount === 1 ? "" : "s"} lost this mission — see Debrief
@@ -630,6 +633,6 @@ export function HabitatView() {
         heading={isMars ? "Real NASA concepts: Mars surface habitats" : "Real NASA concepts: lunar surface habitats"}
         className="panel-span-full"
       />
-    </div>
+    </DashboardGrid>
   );
 }

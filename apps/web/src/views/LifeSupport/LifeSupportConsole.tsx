@@ -29,6 +29,7 @@ import {
 } from "../../dial/labels.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
+import { DashboardGrid } from "../../components/DashboardGrid.js";
 
 const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
 const CO2_SCRUBBER_MODES: readonly Co2ScrubberMode[] = ["full", "balanced", "eco"];
@@ -44,7 +45,7 @@ const THERMAL_CONTROL_MODES: readonly ThermalControlMode[] = ["comfort", "powerS
  * lever to attach it to (brief rule 1) — settled with the user before Part A was built.
  */
 export function LifeSupportConsole() {
-  const version = useRun((s) => s.version);
+  useRun((s) => s.version);
   const state = useRun((s) => s.state);
   const oxygenHistory = useRun((s) => s.resourceHistory.oxygen);
   const waterHistory = useRun((s) => s.resourceHistory.water);
@@ -64,7 +65,7 @@ export function LifeSupportConsole() {
   );
 
   return (
-    <div className="console two-col" key={version}>
+    <DashboardGrid className="console two-col" layoutKey="lifeSupport">
       <header className="view-head">
         <h2>Life Support</h2>
         <p className="view-hint">Air, water, food, and how hard the crew is rationing.</p>
@@ -371,6 +372,6 @@ export function LifeSupportConsole() {
         heading="Real hardware: NASA's Veggie plant-growth hardware"
         className="panel-span-full"
       />
-    </div>
+    </DashboardGrid>
   );
 }

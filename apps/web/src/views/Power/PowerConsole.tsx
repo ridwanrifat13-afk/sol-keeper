@@ -13,6 +13,7 @@ import { spaceWeatherTypeLabel } from "../../dial/spaceWeatherLabels.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { powerFactCardTopicFor } from "../../dial/factCardTopics.js";
+import { DashboardGrid } from "../../components/DashboardGrid.js";
 
 const MAX_EVENTS_SHOWN = 8;
 
@@ -23,7 +24,7 @@ const MAX_EVENTS_SHOWN = 8;
  * Live Sky's light-time/distance panel goes to Comms instead (M8.4 Part C), not here.
  */
 export function PowerConsole() {
-  const version = useRun((s) => s.version);
+  useRun((s) => s.version);
   const state = useRun((s) => s.state);
   const batteryHistory = useRun((s) => s.resourceHistory.battery);
   const scenario = useRun((s) => s.scenario);
@@ -42,7 +43,7 @@ export function PowerConsole() {
   const canClean = scenario.body === "mars" && remainingCrewHours >= cleaningCostHours;
 
   return (
-    <div className="console two-col" key={version}>
+    <DashboardGrid className="console two-col" layoutKey="power">
       <header className="view-head">
         <h2>Power</h2>
         <p className="view-hint">Generation, storage, the load-shed order, and incoming space weather.</p>
@@ -166,6 +167,6 @@ export function PowerConsole() {
         heading={scenario.body === "mars" ? "What NASA did: MOXIE" : "What NASA did: the lunar south pole"}
         className="panel-span-full"
       />
-    </div>
+    </DashboardGrid>
   );
 }

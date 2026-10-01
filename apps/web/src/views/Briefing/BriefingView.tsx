@@ -8,6 +8,7 @@ import { durationLabel } from "../../dial/missionTime.js";
 import { MISSION_GUIDES } from "../../dial/missionGuides.js";
 import { goalText } from "../../i18n/goalText.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
+import { DashboardGrid } from "../../components/DashboardGrid.js";
 
 /**
  * Mission Briefing (M8.6, brief: "crew names, roles and stations; duration; landing site; the
@@ -49,7 +50,7 @@ export function BriefingView() {
   const packedMassKg = Math.round(bareMassKg * (1 + marginFraction));
 
   return (
-    <div className="console two-col">
+    <DashboardGrid className="console two-col" layoutKey="briefing">
       <header className="view-head">
         <h2>{t("briefing.title")}</h2>
         <p className="view-hint">
@@ -60,11 +61,11 @@ export function BriefingView() {
 
       <section className="panel panel-span-full" aria-labelledby="briefing-crew-heading">
         <h2 id="briefing-crew-heading">{t("briefing.crewHeading")}</h2>
-        <ul className="status-list">
+        <ul className="chip-grid">
           {crew.map((member) => (
-            <li key={member.id}>
-              <span className="status-list-label">{member.name}</span>
-              <span className="status-list-value">
+            <li key={member.id} className="chip-grid-item chip-grid-stack">
+              <span className="chip-grid-label">{member.name}</span>
+              <span className="chip-grid-sub">
                 {stationLabel(member.primaryStation, level, language)} · {t("briefing.backup")}{" "}
                 {stationLabel(member.backupStation, level, language)}
               </span>
@@ -114,6 +115,6 @@ export function BriefingView() {
           <p key={i}>{paragraph}</p>
         ))}
       </section>
-    </div>
+    </DashboardGrid>
   );
 }

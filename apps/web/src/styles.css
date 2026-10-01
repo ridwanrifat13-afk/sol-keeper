@@ -272,6 +272,155 @@ code {
   }
 }
 
+/* Professional-dashboard packing (components/DashboardGrid.tsx). The plain `.two-col` grid
+   aligns panels into rows and stretches the shorter panel of each row to match the taller one
+   — blank space inside a tab. `align-items: start` alone fixes the stretch (fallback before
+   measurement, server render, tests); once DashboardGrid has measured, `data-masonry="on"`
+   switches to 1px implicit rows and each panel gets `grid-row-end: span <height + gap>`, so
+   every panel is exactly its own content height and the next one fills the shorter column.
+   `row-gap: 0` because the gap is already inside each panel's span. */
+.dashboard-grid {
+  align-items: start;
+}
+
+.dashboard-grid[data-masonry="on"] {
+  grid-auto-rows: 1px;
+  row-gap: 0;
+}
+
+.dashboard-grid > * {
+  align-self: start;
+}
+
+/* Compact tile grid for short "name + one action/line" lists (Habitat's per-system maintenance,
+   Briefing's crew roster): auto-fit tiles fill the panel's width, instead of a one-per-row list
+   with a wide empty gutter between each label and its value. */
+.chip-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.chip-grid-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-width: 0;
+}
+
+.chip-grid-stack {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 2px;
+}
+
+.chip-grid-label {
+  font-size: 0.9rem;
+  min-width: 0;
+}
+
+.chip-grid-sub {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.chip-grid-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.chip-grid-action-wide {
+  width: 100%;
+  justify-content: space-between;
+}
+
+/* A bounded, scrollable widget body (long evidence tables): a dashboard tile shouldn't be 1000px
+   tall and leave a hole beside it in the other column. The element carries tabindex/role in the
+   markup so a keyboard user can scroll it. */
+.panel-scroll {
+  max-height: 24rem;
+  overflow: auto;
+}
+
+/* Drag-to-reorder (components/dashboardReorder.ts). The heading is the drag handle: a grip drawn
+   with a dot pattern (no emoji/glyph), a grab cursor, and `touch-action: pan-y` so a touch on
+   it can still scroll the page until the long-press lifts the panel. */
+.dashboard-grid [data-drag-handle] {
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  border-radius: 4px;
+}
+
+.dashboard-grid [data-drag-handle]::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 14px;
+  margin-right: 8px;
+  vertical-align: -2px;
+  background: radial-gradient(circle, currentColor 1.2px, transparent 1.5px) 0 0 / 5px 5px;
+  opacity: 0.45;
+}
+
+.dashboard-grid [data-drag-handle]:hover::before,
+.dashboard-grid [data-drag-handle]:focus-visible::before {
+  opacity: 0.9;
+}
+
+.dashboard-grid [data-drag-handle]:focus-visible {
+  outline: 2px solid var(--shell-accent);
+  outline-offset: 3px;
+}
+
+.dashboard-grid.is-reordering,
+.dashboard-grid.is-reordering * {
+  cursor: grabbing !important;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* An iframe swallows pointer events that belong to the drag, so it goes inert mid-drag. */
+.dashboard-grid.is-reordering iframe {
+  pointer-events: none;
+}
+
+.dashboard-item-lifted {
+  position: relative;
+  z-index: 30;
+  box-shadow: 0 28px 60px -16px rgba(0, 0, 0, 0.55), 0 10px 24px -8px rgba(0, 0, 0, 0.4);
+  will-change: transform;
+}
+
+.dashboard-item-settling {
+  position: relative;
+  z-index: 20;
+}
+
+@media print {
+  .dashboard-grid[data-masonry="on"] {
+    display: block;
+  }
+
+  .dashboard-grid > * {
+    margin-bottom: var(--gap);
+  }
+}
+
 /* Player request: every station console was one long stacked column of panels/tables, however
    wide the screen — arrange them two-wide instead so a wide screen actually gets used, not
    just centred inside a narrower reading column. Reuses `.two-col` above (defined but unused
@@ -321,6 +470,17 @@ code {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+/* `.btn` is a column so a `.btn-sub` caption can sit under the label; a leading icon should sit
+   beside the label instead of stacking above it. */
+.btn:has(> svg:first-child) {
+  flex-direction: row;
+  gap: 6px;
+}
+
+.btn > svg {
+  flex: none;
 }
 
 .btn:hover:not(:disabled) {
@@ -437,10 +597,18 @@ code {
 }
 
 /* ---------------------------------------------------------------- gauges */
+/* flex-wrap, not an auto-fit grid: a grid leaves an empty cell beside a lone last gauge (five
+   gauges in two columns), while a wrapping flex row stretches that last gauge to fill its row —
+   no blank space inside the panel. */
 .gauge-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
+}
+
+.gauge-grid > .gauge {
+  flex: 1 1 210px;
+  min-width: 0;
 }
 
 .gauge {
@@ -1793,6 +1961,8 @@ code {
 .live-sky-event-link {
   margin-left: auto;
   font-size: 0.78rem;
+  /* Browser-default link blue is near-invisible on the dark panel. */
+  color: #8fb4ff;
 }
 
 /* ---------------------------------------------------------------- launch packing (M6) */

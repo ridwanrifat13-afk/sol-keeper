@@ -31,6 +31,7 @@ import { goalText } from "../../i18n/goalText.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { durationLabel, elapsedValue, timeUnitWord } from "../../dial/missionTime.js";
 import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
+import { DashboardGrid } from "../../components/DashboardGrid.js";
 
 /**
  * The Mission Command console (M8.3): crew status, which mission is running, and the whole
@@ -104,7 +105,7 @@ export function MissionCommandConsole() {
   const activeAlertCount = state.activeIncidents.filter((i) => i.resolvedAtHour === undefined).length;
 
   return (
-    <div className="console ops-center two-col">
+    <DashboardGrid className="console ops-center two-col" layoutKey="missionCommand">
       <header className="view-head">
         <h2>Mission Command</h2>
         <p className="view-hint">Crew status, the current mission, and the whole-mission mass budget.</p>
@@ -331,6 +332,6 @@ export function MissionCommandConsole() {
       </section>
 
       <EsmPanel className="panel-span-full" />
-    </div>
+    </DashboardGrid>
   );
 }

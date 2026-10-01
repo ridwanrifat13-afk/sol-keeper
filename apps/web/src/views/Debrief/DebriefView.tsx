@@ -13,6 +13,7 @@ import { durationLabel, elapsedValue, timeUnitWord, timestampLabel } from "../..
 import { statusFromSeverity } from "../../components/status.js";
 import { crewLossHeadline } from "../../dial/crewLoss.js";
 import { ReportLinkButton } from "../../components/ReportLinkButton.js";
+import { DashboardGrid } from "../../components/DashboardGrid.js";
 
 /**
  * The Black Box debrief — what happened, and what an entry actually caused.
@@ -37,13 +38,13 @@ export function DebriefView({ onViewReport }: { onViewReport: () => void }) {
 
   if (state.status === "running") {
     return (
-      <div className="debrief console two-col">
+      <DashboardGrid className="debrief console two-col">
         <header className="view-head">
           <h2>{t("debrief.notReadyHeading")}</h2>
           <p className="view-hint">{t("debrief.notReadyHint")}</p>
         </header>
         <ReportLinkButton />
-      </div>
+      </DashboardGrid>
     );
   }
 
@@ -56,7 +57,7 @@ export function DebriefView({ onViewReport }: { onViewReport: () => void }) {
   const headline = outcomeHeadline(t, state.status, state.hour, body, summary.livingCrew, state.crew.length);
 
   return (
-    <div className="debrief console two-col">
+    <DashboardGrid className="debrief console two-col" layoutKey="debrief">
       <header className="view-head">
         <h2>{headline.title}</h2>
         <p className="view-hint">{headline.subtitle}</p>
@@ -154,7 +155,7 @@ export function DebriefView({ onViewReport }: { onViewReport: () => void }) {
           })}
         </ul>
       </section>
-    </div>
+    </DashboardGrid>
   );
 }
 
