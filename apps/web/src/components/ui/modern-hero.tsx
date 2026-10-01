@@ -143,7 +143,7 @@ const HeroHeadline = () => {
   return (
     <motion.div className="modern-hero-headline" style={{ opacity, y }}>
       <p className="modern-hero-headline-eyebrow">Junior Astronaut Mission Trainer</p>
-      <h1 className="modern-hero-headline-title">Run an outpost on real NASA numbers.</h1>
+      <h1 className="modern-hero-headline-title">Run an outpost beyond Earth on real NASA numbers.</h1>
       <p className="modern-hero-headline-sub">
         Three real missions. One dust storm, one 354-hour night, one reactor that has to last
         three of them.
