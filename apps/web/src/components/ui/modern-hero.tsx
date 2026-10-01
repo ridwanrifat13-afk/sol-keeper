@@ -176,8 +176,11 @@ const CenterImage = ({ fadeEnd }: { fadeEnd: number }) => {
   // Player report (part of the same "black gap" investigation): a real, second bug found while
   // fixing the first. The zoom used to animate `background-size` directly, from a flat "170%"
   // down to "100%" of the CONTAINER's own width — but that percentage's relationship to actual
-  // full coverage depends on both the container's aspect ratio AND the source photo's
-  // (1920x1280, confirmed by inspecting the file directly): on a wide desktop viewport "cover"
+  // full coverage depends on both the container's aspect ratio AND the source photo's own
+  // (1920x1280 at the time this was found, confirmed by inspecting the file directly — the
+  // photo itself has since been swapped, rotated to landscape so a wide viewport's "cover"
+  // crops it only lightly; the fix below doesn't depend on which photo loads here): on a wide
+  // desktop viewport "cover"
   // only needs ~105% width, so 100-170% happened to look fine there, but on a narrow, tall
   // mobile viewport "cover" needs roughly 325% — so both ends of that range under-covered,
   // leaving real, visible black letterboxing above and below the image for a wide stretch of
