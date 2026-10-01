@@ -43,6 +43,7 @@ body {
   margin: 0;
   padding: 0;
   background: var(--shell-bg);
+  background-size: cover;
   color: var(--text);
   font-family:
     system-ui,
@@ -53,6 +54,31 @@ body {
   font-size: 16px;
   line-height: 1.45;
   -webkit-text-size-adjust: 100%;
+}
+
+/* Player request: a real lunar/Mars-surface photo behind the five station consoles
+ * (`App.tsx`'s own `STATION_VIEWS` sets `data-station-bg` on `<html>`, only for those five —
+ * Habitat/Briefing/Debrief already carry their own real imagery and stay on the plain shell
+ * background). The photo is blended with the shell's own light tint rather than shown at
+ * full strength: `h1`/`.view-head`/`.mission-site` sit directly on this background (unlike
+ * every panel, gauge and button, which are opaque and so unaffected either way), and brief
+ * rule 6's contrast guarantee has to hold against a photo, not just a flat colour. The image
+ * is fixed-size `cover`/`center`, not `background-attachment: fixed` — a repainted fixed
+ * background is real scroll jank on a low-end Android phone (brief rule 6), and this still
+ * reads as "the backdrop", not "a sticker", since every page here is short enough to need
+ * little or no scrolling. */
+html[data-station-bg="moon"] body {
+  background-image: linear-gradient(rgba(238, 243, 251, 0.72), rgba(238, 243, 251, 0.72)),
+    url("/images/station-bg-moon.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+html[data-station-bg="mars"] body {
+  background-image: linear-gradient(rgba(238, 243, 251, 0.72), rgba(238, 243, 251, 0.72)),
+    url("/images/station-bg-mars.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .app {

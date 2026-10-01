@@ -44,6 +44,13 @@ type TabView =
   | "briefing"
   | "debrief";
 
+/** Player request: a themed page background (a real lunar-surface or Mars-surface photo,
+ *  images/station-bg-{moon,mars}.jpg) behind the five station consoles proper — `StationId`'s
+ *  own five (CLAUDE.md's "Station" section) — not Habitat/Briefing/Debrief, which already carry
+ *  their own real imagery (the habitat scene, the landing-site map, NASA fact-card galleries)
+ *  and would visually compete with a second photo behind them. */
+const STATION_VIEWS = new Set<TabView>(["power", "lifeSupport", "comms", "incidentCommand", "missionCommand"]);
+
 /** M9: Setup is a real screen but deliberately not a tab-nav destination (see this file's own
  *  doc comment) — a separate, wider type rather than adding it to `TabView` and every
  *  `Record<TabView, ...>` below. M10.8's Mission Report joins it for the same reason: a
@@ -167,6 +174,20 @@ export function App({ initialView = "home" }: AppProps = {}) {
   useEffect(() => {
     document.documentElement.classList.toggle("low-power-mode", lowPowerMode);
   }, [lowPowerMode]);
+
+  // Player request: the station consoles' background reflects the real body the current
+  // mission is on. One attribute, read by styles.css — set only on a station view (the home/
+  // setup/report screens, and Habitat/Briefing/Debrief, stay on the plain shell background).
+  useEffect(() => {
+    if (STATION_VIEWS.has(view as TabView)) {
+      document.documentElement.setAttribute("data-station-bg", scenario.body === "mars" ? "mars" : "moon");
+    } else {
+      document.documentElement.removeAttribute("data-station-bg");
+    }
+    return () => {
+      document.documentElement.removeAttribute("data-station-bg");
+    };
+  }, [view, scenario.body]);
 
   // M11: `?debug=1` shows docs/DEVICE_TEST.md's FPS/memory/tick overlay. Read the same way
   // the run-link query is (a `useEffect`, never at render time — `window` doesn't exist under
