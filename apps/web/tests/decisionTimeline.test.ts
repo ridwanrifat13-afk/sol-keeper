@@ -24,6 +24,12 @@ describe("M10.8: stationForDecision", () => {
     ["decision.waterReclamationMode.set", "lifeSupport"],
     ["decision.thermalControlMode.set", "lifeSupport"],
     ["decision.overtimeAuthorized.set", "missionCommand"],
+    ["decision.scheduledMaintenance.performed", "missionCommand"],
+    ["decision.scheduledMaintenance.insufficientTime", "missionCommand"],
+    ["decision.printSpare.started", "incidentCommand"],
+    ["decision.printSpare.insufficientTime", "incidentCommand"],
+    ["decision.printSpare.completed", "incidentCommand"],
+    ["decision.reorderRepairQueue.changed", "incidentCommand"],
   ];
   for (const [code, expectedStation] of cases) {
     it(`tags "${code}" as ${expectedStation}`, () => {

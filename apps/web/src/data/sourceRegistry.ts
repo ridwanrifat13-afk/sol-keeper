@@ -268,4 +268,14 @@ export const SOURCE_REGISTRY: Record<SourceId, SourceInfo> = {
     url: "https://www.tandfonline.com/doi/full/10.1080/17429145.2023.2292219",
     usedFor: "the cabin-CO2 crop-growth-rate bonus range (real beneficial/super-elevated ppm thresholds; the in-sim bonus magnitude itself is a disclosed game-scaled choice)",
   },
+  "NTRS-LUNAR-MAINT-CREWTIME": {
+    title: "Lynch, Stromgren, Cho, Cirillo, Owens (2022), \"Assessment of Crew Time for Maintenance and Repair Activities for Lunar Surface Missions\", IEEE Aerospace Conference 2022",
+    url: "https://ntrs.nasa.gov/citations/20220002626",
+    usedFor: "the Habitat page's scheduled-maintenance lever: the real expected corrective-maintenance crew-hours rate for a 2-crew lunar Surface Habitat mission (Table 3)",
+  },
+  "NASA-AMF-RATCHET": {
+    title: "NASA, \"Space Station 3-D Printer Builds Ratchet Wrench To Complete First Phase Of Operations\"",
+    url: "https://www.nasa.gov/missions/station/space-station-3-d-printer-builds-ratchet-wrench-to-complete-first-phase-of-operations/",
+    usedFor: "Incident Command's print-a-spare lever: the real 4-hour print time for the ISS Additive Manufacturing Facility's first uplinked tool",
+  },
 };

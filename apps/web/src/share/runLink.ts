@@ -249,6 +249,11 @@ const KIND_TAGS: readonly RunInput["kind"][] = [
   "waterReclamationMode",
   "thermalControlMode",
   "overtimeAuthorized",
+  // Appended again (player request) — the Habitat scheduled-maintenance lever, the Incident
+  // Command print-a-spare lever, and repair-queue reordering.
+  "scheduledMaintenance",
+  "printSpare",
+  "reorderRepairQueue",
 ];
 const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
 const CREW_LOCATIONS: readonly CrewLocation[] = ["habitat", "stormShelter", "eva"];
@@ -356,6 +361,16 @@ function writeRunInput(bytes: number[], input: RunInput): void {
     case "overtimeAuthorized":
       bytes.push(input.authorized ? 1 : 0);
       return;
+    case "scheduledMaintenance":
+      bytes.push(tableIndexOf(SYSTEM_IDS, input.systemId, "system id"));
+      return;
+    case "printSpare":
+      bytes.push(tableIndexOf(SYSTEM_IDS, input.systemId, "system id"));
+      return;
+    case "reorderRepairQueue":
+      writeVarint(bytes, input.index);
+      bytes.push(input.direction === -1 ? 0 : 1);
+      return;
   }
 }
 
@@ -405,6 +420,16 @@ function readRunInput(reader: ByteReader): RunInput {
       const byte = reader.readByte();
       if (byte !== 0 && byte !== 1) throw new Error("malformed overtimeAuthorized flag");
       return { kind, authorized: byte === 1 };
+    }
+    case "scheduledMaintenance":
+      return { kind, systemId: tableAt(SYSTEM_IDS, reader.readByte(), "system id") };
+    case "printSpare":
+      return { kind, systemId: tableAt(SYSTEM_IDS, reader.readByte(), "system id") };
+    case "reorderRepairQueue": {
+      const index = reader.readVarint();
+      const directionByte = reader.readByte();
+      if (directionByte !== 0 && directionByte !== 1) throw new Error("malformed reorderRepairQueue direction");
+      return { kind, index, direction: directionByte === 0 ? -1 : 1 };
     }
   }
 }

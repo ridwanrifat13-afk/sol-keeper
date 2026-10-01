@@ -392,6 +392,13 @@ export interface SystemState {
    *  mirrors AtmosphereState.scrubberEfficiencyFraction's "no free undo" pattern, generalised
    *  to any system instead of one hardcoded case. */
   efficiencyPenaltyFraction: number;
+  /** Player request: Habitat page's scheduled-maintenance lever. The `state.hour` this
+   *  system's temporary failure-rate reduction (management.scheduledMaintenanceRiskReduction
+   *  Fraction) expires — 0 means no session is currently in effect. Unlike
+   *  `efficiencyPenaltyFraction` this is deliberately temporary and re-earnable, not a "no
+   *  free undo" value: it is a scheduling choice (did the crew keep up with upkeep recently),
+   *  not a repair outcome. */
+  maintenanceCreditUntilHour: number;
 }
 
 /** M7.6 Part D.9 revision: a dedicated, tracked store for firefighting equipment — distinct
@@ -480,6 +487,17 @@ export interface QueuedWork {
   readonly queuedAtHour: number;
 }
 
+/** Player request: Incident Command's print-a-spare lever (NASA AMF-inspired, see
+ *  management.printSpareWallClockHours's own doc comment). Unlike `QueuedWork`, which pays
+ *  down against the crew-hours budget, a print job only needs real wall-clock hours to pass —
+ *  the small crew-hours cost is spent once, up front, when the job is queued. */
+export interface PrintJob {
+  readonly id: string;
+  readonly systemId: SystemId;
+  readonly queuedAtHour: number;
+  readonly readyAtHour: number;
+}
+
 // ---------------------------------------------------------------------------
 // Whole state
 // ---------------------------------------------------------------------------
@@ -517,6 +535,9 @@ export interface SimState {
   safetyConsumables: SafetyConsumablesState;
   science: ScienceState;
   crewHours: CrewHoursState;
+  /** Player request: Incident Command's print-a-spare lever — see `PrintJob`'s own doc
+   *  comment. Resolved alongside the repair queue (engine/crewHours.ts). */
+  printQueue: PrintJob[];
   /** M7.7 §7: a temporary, global multiplier on crew metabolic output (CO2 production,
    *  body heat) — 1 = normal. The o2tank-apollo13 incident's `rationActivity` response is
    *  the one thing that changes it today, restored to 1 once that incident resolves. A

@@ -1001,6 +1001,66 @@ export const management = {
     confidence: "tuned",
     note: "Permanent SystemState.efficiencyPenaltyFraction applied when an improvised (spares-short) repair still succeeds — the system works again, just not at full rated capacity, ever again this run.",
   }),
+  // --- Player request: "quiet sol" interactivity for the Habitat page — a scheduled
+  // (preventive) maintenance action, distinct from the corrective repairs above. Real NASA
+  // crew-time research (NTRS-LUNAR-MAINT-CREWTIME) distinguishes scheduled from corrective
+  // maintenance but only tabulates the corrective side in enough detail to convert into a
+  // game number (see lunarSurfaceHabitatMaintenanceCrewHoursPerDay below) — the session cost,
+  // the risk-reduction size, and the window it lasts are all disclosed as tuned, same
+  // GAME-DESIGN category as repairAttemptCrewHours above, not claimed as source-level precision.
+  scheduledMaintenanceCrewHours: c({
+    value: 1,
+    unit: "CM-h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "One scheduled-maintenance session on one system. Real-world grounding: NTRS-LUNAR-MAINT-CREWTIME's Table 3 gives an expected 24.7 CM-h of corrective maintenance crew time over a 28-day, 2-crew lunar Surface Habitat mission (~0.88 CM-h/day habitat-wide, see lunarSurfaceHabitatMaintenanceCrewHoursPerDay) — that source doesn't tabulate a per-system scheduled-maintenance session cost at this game's granularity, so this value is a disclosed apportionment, not read directly off the paper.",
+  }),
+  scheduledMaintenanceRiskReductionFraction: c({
+    value: 0.5,
+    unit: "fraction",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Multiplies failureRatePerHour for the maintained system while scheduledMaintenanceWindowHours is still running. No source quantifies how much a single preventive session should cut near-term failure odds by at this granularity; chosen so the lever is clearly worth doing without making failures nearly impossible.",
+  }),
+  scheduledMaintenanceWindowHours: c({
+    value: 48,
+    unit: "h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "How long one scheduled-maintenance session's risk reduction lasts before it needs repeating — two sols, long enough to matter, short enough that it's a real recurring choice rather than a one-time click.",
+  }),
+  lunarSurfaceHabitatMaintenanceCrewHoursPerDay: c({
+    value: 0.8821,
+    unit: "CM-h/day",
+    source: "NTRS-LUNAR-MAINT-CREWTIME",
+    confidence: "derived",
+    note: "24.7 expected corrective-maintenance crew-hours / 28 mission days (Table 3's Expected Value row, 2-crew lunar Surface Habitat case study) = 0.8821 CM-h/day, straight arithmetic on the source's own stated figures. Informational only — shown on the Habitat page as the real study this mechanic is grounded in; the game's own per-session lever cost is the separately-disclosed, tuned scheduledMaintenanceCrewHours above, since the source gives a whole-habitat mission total, not a per-system per-session figure. Not validated by the source for crew sizes other than 2 or bodies other than the Moon; applied here to every scenario as the best available real analog, same disclosed-best-available pattern the project already uses elsewhere (e.g. waterWallShieldingGPerCm2PerKg).",
+  }),
+  // --- Player request: "repair/spares interactivity in Incident Command" — a 3D-printed
+  // spare, modelled on the ISS Additive Manufacturing Facility (AMF): ground-controlled, so
+  // crew time is small, but real wall-clock print time still has to pass before the part
+  // exists. The one lever in this game gated mainly by elapsed time rather than crew-hours.
+  printSpareCrewHours: c({
+    value: 0.5,
+    unit: "CM-h",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "Crew time to load the print job and retrieve the finished part. Small by design: the real AMF is ground-controlled (Made In Space/NASA operate it from Earth), so the crew's own time cost is just handling, not running the print — no NASA figure quantifies that handling time specifically, so it's tuned rather than cited to NASA-AMF-RATCHET, which is reserved for the one figure that source actually states (the print duration below).",
+  }),
+  printSpareWallClockHours: c({
+    value: 4,
+    unit: "h",
+    source: "NASA-AMF-RATCHET",
+    confidence: "measured",
+    note: "The ISS AMF's first uplinked tool, a ratchet, took 4 hours to print (NASA's own mission update). Applied here as the wall-clock delay between starting and receiving a printed spare for any system — a disclosed generalisation from one specific real print to a game mechanic covering every system, not a claim that every spare prints in exactly 4 hours.",
+  }),
+  printSpareYieldCount: c({
+    value: 1,
+    unit: "spare(s)",
+    source: "GAME-DESIGN",
+    confidence: "tuned",
+    note: "How many spares one completed print job adds to the target system's stock.",
+  }),
   incidentDetectionBaseDelayHours: c({
     value: 1,
     unit: "h at stationPerformance=1",

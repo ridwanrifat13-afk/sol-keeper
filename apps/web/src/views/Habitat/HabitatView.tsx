@@ -3,10 +3,13 @@ import {
   dayLengthHours,
   sunFactor,
   cropRequiredLightHours,
+  management,
   STATION_IDS,
   type CrewMember,
   type CropTray,
   type StationId,
+  type SystemId,
+  type SystemState,
 } from "@sol-keeper/sim";
 import { useRun } from "../../store/run.js";
 import { useDial } from "../../store/dial.js";
@@ -16,7 +19,7 @@ import { AlarmBanner } from "../../components/AlarmBanner.js";
 import { FactCardGallery } from "../../components/FactCardGallery.js";
 import { Avatar } from "../../components/Avatar.js";
 import { MiniBar } from "../../components/MiniBar.js";
-import { locationLabel, stationLabel, cropLabel } from "../../dial/labels.js";
+import { locationLabel, stationLabel, cropLabel, systemLabel } from "../../dial/labels.js";
 import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { timestampLabel } from "../../dial/missionTime.js";
 import { habitatEffects } from "../../dial/habitatEffects.js";
@@ -184,6 +187,8 @@ export function HabitatView() {
   useRun((s) => s.version);
   const scenario = useRun((s) => s.scenario);
   const state = useRun((s) => s.state);
+  const phase = useRun((s) => s.phase);
+  const performScheduledMaintenance = useRun((s) => s.performScheduledMaintenance);
   const level = useDial((s) => s.level);
   const language = useAppLanguage();
 
@@ -226,6 +231,16 @@ export function HabitatView() {
       atStation.set(member.primaryStation, group);
     }
   }
+
+  // Player request: "quiet sol" interactivity for the Habitat page — a scheduled-maintenance
+  // lever, real NASA crew-time research grounded (management.lunarSurfaceHabitatMaintenance
+  // CrewHoursPerDay's own doc comment has the derivation), same locked/afford pattern Power's
+  // own cleanSolarArrays control already uses.
+  const locked = phase !== "planning";
+  const remainingCrewHours = Math.max(0, state.crewHours.budgetTodayHours - state.crewHours.spentTodayHours);
+  const maintenanceCostHours = management.scheduledMaintenanceCrewHours.value;
+  const maintenanceWindowHours = management.scheduledMaintenanceWindowHours.value;
+  const systemEntries = Object.entries(state.systems) as [SystemId, SystemState][];
 
   return (
     <div className="console habitat-telemetry two-col">
@@ -515,6 +530,47 @@ export function HabitatView() {
             )}
           </tbody>
         </table>
+      </section>
+
+      <section className="panel" aria-labelledby="habitat-maintenance-heading">
+        <h2 id="habitat-maintenance-heading">Scheduled maintenance</h2>
+        <p className="panel-hint">
+          Real NASA crew-time research on lunar surface habitats estimates about{" "}
+          {management.lunarSurfaceHabitatMaintenanceCrewHoursPerDay.value.toFixed(2)} crew-hours
+          a day of upkeep across a habitat's systems — a quiet-sol maintenance pass on one
+          system here costs {maintenanceCostHours} crew-hour{maintenanceCostHours === 1 ? "" : "s"}{" "}
+          and lowers its failure odds for the next {maintenanceWindowHours} hours.
+          {locked && " Locked while the sol is running — adjust it during Sol Planning."}
+        </p>
+        <ul className="status-list">
+          {systemEntries.map(([id, sys]) => {
+            const active = state.hour < sys.maintenanceCreditUntilHour;
+            const canAfford = remainingCrewHours >= maintenanceCostHours;
+            return (
+              <li key={id}>
+                <span className="status-list-label">{systemLabel(id, level, language)}</span>
+                <span className="status-list-value">
+                  {active && (
+                    <span className="status-pill is-nominal">
+                      <span aria-hidden="true">●</span> Maintained (
+                      {sys.maintenanceCreditUntilHour - state.hour} h left)
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-tiny"
+                    disabled={locked || !canAfford}
+                    onClick={() => {
+                      performScheduledMaintenance(id);
+                    }}
+                  >
+                    {active ? "Refresh" : "Maintain"}
+                  </button>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <section className="panel" aria-labelledby="habitat-crew-heading">

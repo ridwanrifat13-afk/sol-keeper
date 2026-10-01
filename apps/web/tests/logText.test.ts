@@ -84,6 +84,14 @@ describe("Reality Dial log templates", () => {
       "decision.crewLocation.set",
       "decision.station.assigned",
       "decision.commsPriority.set",
+      // Player request: Habitat quiet-sol maintenance, Incident Command print-a-spare, and
+      // repair-queue reordering.
+      "decision.scheduledMaintenance.performed",
+      "decision.scheduledMaintenance.insufficientTime",
+      "decision.printSpare.started",
+      "decision.printSpare.insufficientTime",
+      "decision.printSpare.completed",
+      "decision.reorderRepairQueue.changed",
     ];
 
     for (const level of DIAL_LEVELS) {

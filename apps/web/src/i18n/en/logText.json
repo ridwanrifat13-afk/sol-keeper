@@ -111,7 +111,13 @@
     "decision.cleanSolarArrays.insufficientTime": "Not enough time left today to send someone out.",
     "decision.waterReclamationMode.set": "Water recycler set to {waterReclamationMode}.",
     "decision.thermalControlMode.set": "Cabin heater set to {thermalControlMode}.",
-    "decision.overtimeAuthorized.set": "Extra work hours {authorized}."
+    "decision.overtimeAuthorized.set": "Extra work hours {authorized}.",
+    "decision.scheduledMaintenance.performed": "Did a maintenance check on {system}.",
+    "decision.scheduledMaintenance.insufficientTime": "No time today to check on {system}.",
+    "decision.printSpare.started": "Started printing a spare part for {system}.",
+    "decision.printSpare.insufficientTime": "No time today to start a print for {system}.",
+    "decision.printSpare.completed": "A new spare part for {system} finished printing.",
+    "decision.reorderRepairQueue.changed": "Moved a repair job {direction} the list."
   },
   "specialist": {
     "power.brownout": "Brownout: demand {demandKw} kW, only {servedKw} kW available. {shedCount} system(s) shut down.",
@@ -225,7 +231,13 @@
     "decision.cleanSolarArrays.insufficientTime": "Not enough crew-hours left today ({remainingHours} h available, {neededHours} h needed).",
     "decision.waterReclamationMode.set": "Water reclamation set to {waterReclamationMode}.",
     "decision.thermalControlMode.set": "Thermal control set to {thermalControlMode}.",
-    "decision.overtimeAuthorized.set": "Crew overtime {authorized}."
+    "decision.overtimeAuthorized.set": "Crew overtime {authorized}.",
+    "decision.scheduledMaintenance.performed": "Scheduled maintenance performed on {system}.",
+    "decision.scheduledMaintenance.insufficientTime": "Not enough crew-hours left today for {system} maintenance ({remainingHours} h available, {neededHours} h needed).",
+    "decision.printSpare.started": "Started printing a spare for {system}, ready at hour {readyAtHour}.",
+    "decision.printSpare.insufficientTime": "Not enough crew-hours left today to start a print for {system} ({remainingHours} h available, {neededHours} h needed).",
+    "decision.printSpare.completed": "A printed spare for {system} finished ({spares} now in stock).",
+    "decision.reorderRepairQueue.changed": "Repair queue item moved {direction}."
   },
   "commander": {
     "power.brownout": "Load shed: demand {demandKw} kW vs. {servedKw} kW served, battery at {batteryKwh} kWh. {shedCount} system(s) dropped.",
@@ -339,6 +351,12 @@
     "decision.cleanSolarArrays.insufficientTime": "Array-cleaning EVA declined: insufficient crew-hours budget ({remainingHours} h remaining, {neededHours} h required).",
     "decision.waterReclamationMode.set": "Water reclamation mode set: {waterReclamationMode}.",
     "decision.thermalControlMode.set": "Thermal control duty cycle set: {thermalControlMode}.",
-    "decision.overtimeAuthorized.set": "Crew overtime authorization {authorized}."
+    "decision.overtimeAuthorized.set": "Crew overtime authorization {authorized}.",
+    "decision.scheduledMaintenance.performed": "Preventive maintenance session completed on {system}; failure-rate reduction active for {windowHours} h.",
+    "decision.scheduledMaintenance.insufficientTime": "Preventive maintenance on {system} deferred: insufficient crew-hours budget ({remainingHours} h remaining, {neededHours} h required).",
+    "decision.printSpare.started": "Additive-manufacturing print job queued for {system}, ready at mission hour {readyAtHour}.",
+    "decision.printSpare.insufficientTime": "Print job for {system} deferred: insufficient crew-hours budget ({remainingHours} h remaining, {neededHours} h required).",
+    "decision.printSpare.completed": "Printed spare for {system} added to stock ({spares} on hand).",
+    "decision.reorderRepairQueue.changed": "Repair queue reordered: item moved {direction}."
   }
 }

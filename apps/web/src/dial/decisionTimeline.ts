@@ -30,6 +30,16 @@ const DECISION_CODE_STATION: Readonly<Record<string, StationId>> = {
   "decision.thermalControlMode.set": "lifeSupport",
   // Player request (M9.x batch 2): a whole-crew scheduling policy, Mission Command's console.
   "decision.overtimeAuthorized.set": "missionCommand",
+  // Player request: the Habitat page's scheduled-maintenance lever applies to any system, not
+  // one station's own hardware — tagged missionCommand, the same cross-cutting-policy bucket
+  // overtimeAuthorized above already uses, rather than invented as a sixth station.
+  "decision.scheduledMaintenance.performed": "missionCommand",
+  "decision.scheduledMaintenance.insufficientTime": "missionCommand",
+  // Player request: Incident Command's repair/spares interactivity.
+  "decision.printSpare.started": "incidentCommand",
+  "decision.printSpare.insufficientTime": "incidentCommand",
+  "decision.printSpare.completed": "incidentCommand",
+  "decision.reorderRepairQueue.changed": "incidentCommand",
 };
 
 /** An incident-response decision (`incident.<id>.resolved`/`.detected`/`.queued`/

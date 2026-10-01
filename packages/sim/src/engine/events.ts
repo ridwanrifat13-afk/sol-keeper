@@ -165,7 +165,18 @@ export function hazardsAndFailuresStage(ctx: TickContext): void {
     }
 
     const difficultyMultiplier = missionDifficulty[ctx.params.difficulty].failureRateMultiplier.value;
-    if (stream.chance(failureRatePerHour(system.trl, difficultyMultiplier) * ctx.dtHours)) {
+    // Player request: Habitat page's scheduled-maintenance lever — a temporary, re-earnable
+    // reduction (not a permanent SystemState.efficiencyPenaltyFraction-style change) while a
+    // recent maintenance session's window is still open.
+    const maintained = state.hour < system.maintenanceCreditUntilHour;
+    const maintenanceMultiplier = maintained
+      ? management.scheduledMaintenanceRiskReductionFraction.value
+      : 1;
+    if (
+      stream.chance(
+        failureRatePerHour(system.trl, difficultyMultiplier) * maintenanceMultiplier * ctx.dtHours,
+      )
+    ) {
       system.operational = false;
       log.log({
         kind: "fault",

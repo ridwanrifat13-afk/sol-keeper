@@ -111,7 +111,13 @@
     "decision.cleanSolarArrays.insufficientTime": "আজ কাউকে বাইরে পাঠানোর মতো যথেষ্ট সময় নেই।",
     "decision.waterReclamationMode.set": "পানি পুনর্ব্যবহার {waterReclamationMode}-এ সেট করা হয়েছে।",
     "decision.thermalControlMode.set": "কেবিন হিটার {thermalControlMode}-এ সেট করা হয়েছে।",
-    "decision.overtimeAuthorized.set": "অতিরিক্ত কাজের সময় {authorized}।"
+    "decision.overtimeAuthorized.set": "অতিরিক্ত কাজের সময় {authorized}।",
+    "decision.scheduledMaintenance.performed": "{system}-এ রক্ষণাবেক্ষণ পরীক্ষা করা হয়েছে।",
+    "decision.scheduledMaintenance.insufficientTime": "আজ {system} পরীক্ষা করার সময় নেই।",
+    "decision.printSpare.started": "{system}-এর জন্য একটি যন্ত্রাংশ প্রিন্ট করা শুরু হয়েছে।",
+    "decision.printSpare.insufficientTime": "আজ {system}-এর জন্য প্রিন্ট শুরু করার সময় নেই।",
+    "decision.printSpare.completed": "{system}-এর নতুন যন্ত্রাংশ প্রিন্ট শেষ হয়েছে।",
+    "decision.reorderRepairQueue.changed": "মেরামতের তালিকায় একটি কাজ {direction} সরানো হয়েছে।"
   },
   "specialist": {
     "power.brownout": "লোড শেডিং: চাহিদা {demandKw} কিলোওয়াট, মাত্র {servedKw} কিলোওয়াট সরবরাহ করা যাচ্ছে। {shedCount}টি সিস্টেম বন্ধ করা হয়েছে।",
@@ -225,7 +231,13 @@
     "decision.cleanSolarArrays.insufficientTime": "আজ যথেষ্ট ক্রু-সময় নেই ({remainingHours} ঘণ্টা আছে, {neededHours} ঘণ্টা দরকার)।",
     "decision.waterReclamationMode.set": "পানি পুনরুদ্ধার মোড {waterReclamationMode}-এ সেট করা হয়েছে।",
     "decision.thermalControlMode.set": "তাপ নিয়ন্ত্রণ {thermalControlMode}-এ সেট করা হয়েছে।",
-    "decision.overtimeAuthorized.set": "ক্রু ওভারটাইম {authorized}।"
+    "decision.overtimeAuthorized.set": "ক্রু ওভারটাইম {authorized}।",
+    "decision.scheduledMaintenance.performed": "{system}-এ নির্ধারিত রক্ষণাবেক্ষণ সম্পন্ন হয়েছে।",
+    "decision.scheduledMaintenance.insufficientTime": "{system} রক্ষণাবেক্ষণের জন্য আজ যথেষ্ট ক্রু-সময় নেই ({remainingHours} ঘণ্টা আছে, {neededHours} ঘণ্টা দরকার)।",
+    "decision.printSpare.started": "{system}-এর জন্য একটি যন্ত্রাংশ প্রিন্ট শুরু হয়েছে, {readyAtHour} ঘণ্টায় প্রস্তুত হবে।",
+    "decision.printSpare.insufficientTime": "{system}-এর জন্য প্রিন্ট শুরু করার মতো আজ যথেষ্ট ক্রু-সময় নেই ({remainingHours} ঘণ্টা আছে, {neededHours} ঘণ্টা দরকার)।",
+    "decision.printSpare.completed": "{system}-এর একটি প্রিন্ট করা যন্ত্রাংশ প্রস্তুত হয়েছে (এখন মজুদে {spares}টি)।",
+    "decision.reorderRepairQueue.changed": "মেরামতের তালিকার একটি আইটেম {direction} সরানো হয়েছে।"
   },
   "commander": {
     "power.brownout": "লোড শেড: চাহিদা {demandKw} kW বনাম সরবরাহ {servedKw} kW, ব্যাটারি {batteryKwh} kWh। {shedCount}টি সিস্টেম বিচ্ছিন্ন।",
@@ -339,6 +351,12 @@
     "decision.cleanSolarArrays.insufficientTime": "অ্যারে-পরিষ্কার ইভিএ প্রত্যাখ্যাত: অপর্যাপ্ত ক্রু-সময় বাজেট ({remainingHours} ঘণ্টা অবশিষ্ট, {neededHours} ঘণ্টা প্রয়োজন)।",
     "decision.waterReclamationMode.set": "পানি পুনরুদ্ধার মোড নির্ধারিত: {waterReclamationMode}।",
     "decision.thermalControlMode.set": "তাপ নিয়ন্ত্রণ ডিউটি সাইকেল নির্ধারিত: {thermalControlMode}।",
-    "decision.overtimeAuthorized.set": "ক্রু ওভারটাইম অনুমোদন: {authorized}।"
+    "decision.overtimeAuthorized.set": "ক্রু ওভারটাইম অনুমোদন: {authorized}।",
+    "decision.scheduledMaintenance.performed": "{system}-এ প্রতিরোধমূলক রক্ষণাবেক্ষণ সম্পন্ন হয়েছে; {windowHours} ঘণ্টার জন্য ব্যর্থতার হার হ্রাস সক্রিয়।",
+    "decision.scheduledMaintenance.insufficientTime": "{system}-এর প্রতিরোধমূলক রক্ষণাবেক্ষণ স্থগিত: অপর্যাপ্ত ক্রু-সময় বাজেট ({remainingHours} ঘণ্টা অবশিষ্ট, {neededHours} ঘণ্টা প্রয়োজন)।",
+    "decision.printSpare.started": "{system}-এর জন্য সংযোজন-উৎপাদন প্রিন্ট কাজ সারিবদ্ধ করা হয়েছে, মিশন ঘণ্টা {readyAtHour}-এ প্রস্তুত হবে।",
+    "decision.printSpare.insufficientTime": "{system}-এর প্রিন্ট কাজ স্থগিত: অপর্যাপ্ত ক্রু-সময় বাজেট ({remainingHours} ঘণ্টা অবশিষ্ট, {neededHours} ঘণ্টা প্রয়োজন)।",
+    "decision.printSpare.completed": "{system}-এর প্রিন্ট করা যন্ত্রাংশ মজুদে যোগ হয়েছে ({spares}টি হাতে আছে)।",
+    "decision.reorderRepairQueue.changed": "মেরামতের সারি পুনর্বিন্যাস করা হয়েছে: আইটেমটি {direction} সরানো হয়েছে।"
   }
 }

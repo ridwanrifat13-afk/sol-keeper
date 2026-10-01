@@ -9,7 +9,7 @@ import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { systemStatusInfo } from "../../dial/systemStatus.js";
 import { decisionText } from "../../i18n/decisionText.js";
 import { STATUS, statusFromReserve, type StatusPresentation } from "../../components/status.js";
-import { INCIDENT_CATALOG, radiation, type CrewLocation, type SystemId } from "@sol-keeper/sim";
+import { INCIDENT_CATALOG, management, radiation, type CrewLocation, type SystemId } from "@sol-keeper/sim";
 
 const LOCATIONS: readonly CrewLocation[] = ["habitat", "stormShelter", "eva"];
 
@@ -58,6 +58,8 @@ export function IncidentCommandConsole() {
   const scenario = useRun((s) => s.scenario);
   const phase = useRun((s) => s.phase);
   const setCrewLocation = useRun((s) => s.setCrewLocation);
+  const printSpare = useRun((s) => s.printSpare);
+  const reorderRepairQueue = useRun((s) => s.reorderRepairQueue);
   const level = useDial((s) => s.level);
   const language = useAppLanguage();
   const locked = phase !== "planning";
@@ -79,6 +81,13 @@ export function IncidentCommandConsole() {
         radiation.careerLimitMSv.value
       : 0;
   const batteryFraction = state.power.batteryEnergyKwh / state.power.batteryCapacityKwh;
+
+  // Player request: "repair/spares interactivity in Incident Command" — a print-a-spare
+  // lever (NASA AMF-inspired, management.printSpareWallClockHours's own doc comment) plus
+  // repair-queue reordering, same locked/afford pattern every other quiet-sol lever uses.
+  const remainingCrewHours = Math.max(0, state.crewHours.budgetTodayHours - state.crewHours.spentTodayHours);
+  const printCostHours = management.printSpareCrewHours.value;
+  const printWaitHours = management.printSpareWallClockHours.value;
 
   function nodeStatus(node: RippleNode): NodeStatus {
     if (node.kind === "system") {
@@ -236,7 +245,7 @@ export function IncidentCommandConsole() {
           <p className="panel-hint">Nothing queued.</p>
         ) : (
           <ul className="status-list">
-            {state.crewHours.queue.map((item) => {
+            {state.crewHours.queue.map((item, index, queue) => {
               const def = INCIDENT_CATALOG.find((d) => d.id === item.definitionId);
               const response = def?.responses.find((r) => r.id === item.responseId);
               const sparesSystem =
@@ -260,11 +269,44 @@ export function IncidentCommandConsole() {
                       </span>
                     )}
                   </span>
-                  <span className="status-list-value">{item.hoursRemaining.toFixed(1)} h left</span>
+                  <span className="status-list-value">
+                    {item.hoursRemaining.toFixed(1)} h left
+                    <span className="button-row" role="group" aria-label="Reorder this repair">
+                      <button
+                        type="button"
+                        className="btn btn-tiny"
+                        disabled={locked || index === 0}
+                        aria-label="Move earlier in the queue"
+                        onClick={() => {
+                          reorderRepairQueue(index, -1);
+                        }}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-tiny"
+                        disabled={locked || index === queue.length - 1}
+                        aria-label="Move later in the queue"
+                        onClick={() => {
+                          reorderRepairQueue(index, 1);
+                        }}
+                      >
+                        ▼
+                      </button>
+                    </span>
+                  </span>
                 </li>
               );
             })}
           </ul>
+        )}
+        {state.crewHours.queue.length > 1 && (
+          <p className="panel-hint">
+            First in, first served by default — move an item up to pay it down sooner out of
+            today's crew-hours budget.
+            {locked && " Locked while the sol is running — adjust it during Sol Planning."}
+          </p>
         )}
       </section>
 
@@ -273,15 +315,42 @@ export function IncidentCommandConsole() {
         <p className="panel-hint">
           What each system has on hand right now — a response that costs more spares than a
           system has in stock still gets attempted, but leaves a permanent efficiency penalty
-          (an improvised repair), same as the Decision Card's own declared trade-offs.
+          (an improvised repair), same as the Decision Card's own declared trade-offs. Out of
+          spares? Print one: modelled on the ISS Additive Manufacturing Facility, a real
+          ground-controlled 3D printer — {printCostHours} crew-hour(s) to start, then a real{" "}
+          {printWaitHours}-hour wait (the real time NASA's AMF took to print its first tool)
+          before the part exists.
+          {locked && " Locked while the sol is running — adjust it during Sol Planning."}
         </p>
         <ul className="status-list">
-          {Object.entries(state.systems).map(([id, sys]) => (
-            <li key={id}>
-              <span className="status-list-label">{systemLabel(id as SystemId, level, language)}</span>
-              <span className="status-list-value">{sys.spares} spare(s)</span>
-            </li>
-          ))}
+          {Object.entries(state.systems).map(([id, sys]) => {
+            const systemId = id as SystemId;
+            const pending = state.printQueue.filter((job) => job.systemId === systemId);
+            const canAfford = remainingCrewHours >= printCostHours;
+            return (
+              <li key={id}>
+                <span className="status-list-label">{systemLabel(systemId, level, language)}</span>
+                <span className="status-list-value">
+                  {sys.spares} spare(s)
+                  {pending.map((job) => (
+                    <span key={job.id} className="status-pill is-caution">
+                      <span aria-hidden="true">▲</span> printing, {Math.max(0, job.readyAtHour - state.hour)} h left
+                    </span>
+                  ))}
+                  <button
+                    type="button"
+                    className="btn btn-tiny"
+                    disabled={locked || !canAfford}
+                    onClick={() => {
+                      printSpare(systemId);
+                    }}
+                  >
+                    Print spare
+                  </button>
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </section>
 

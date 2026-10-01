@@ -192,6 +192,19 @@ interface RunStore {
    *  fatigue on whatever's actually spent above the un-boosted budget — see
    *  CrewHoursState.overtimeAuthorized's own doc comment (@sol-keeper/sim). */
   setOvertimeAuthorized: (authorized: boolean) => void;
+  /** Player request: Habitat page's "quiet sol" scheduled-maintenance lever — see
+   *  SystemState.maintenanceCreditUntilHour's own doc comment (@sol-keeper/sim). A no-op
+   *  (same "invalid target"/"can't afford it" discipline every other lever here uses) when
+   *  the system doesn't exist for this scenario or today's crew-hours budget can't cover it. */
+  performScheduledMaintenance: (systemId: SystemId) => void;
+  /** Player request: Incident Command's print-a-spare lever (NASA AMF-inspired) — see
+   *  management.printSpareWallClockHours's own doc comment (@sol-keeper/sim). The spare
+   *  itself appears only once real wall-clock time has passed, not immediately. */
+  printSpare: (systemId: SystemId) => void;
+  /** Player request: Incident Command's repair-queue reordering — the same swap-with-
+   *  neighbour pattern setPriority already uses, applied to state.crewHours.queue instead of
+   *  system load-shed order. */
+  reorderRepairQueue: (index: number, direction: -1 | 1) => void;
   setPriority: (id: SystemId, direction: -1 | 1) => void;
   /** M8.1: the player-driven counterpart to `tickWithBot`'s bot-driven incident resolution
    *  (packages/sim/src/engine/runWithBot.ts) — the exact seam that file's own doc comment
@@ -349,6 +362,18 @@ export const useRun = create<RunStore>((set, get) => ({
 
   setOvertimeAuthorized: (authorized) => {
     applyAndRecord(get, set, { kind: "overtimeAuthorized", authorized });
+  },
+
+  performScheduledMaintenance: (systemId) => {
+    applyAndRecord(get, set, { kind: "scheduledMaintenance", systemId });
+  },
+
+  printSpare: (systemId) => {
+    applyAndRecord(get, set, { kind: "printSpare", systemId });
+  },
+
+  reorderRepairQueue: (index, direction) => {
+    applyAndRecord(get, set, { kind: "reorderRepairQueue", index, direction });
   },
 
   /**

@@ -71,6 +71,9 @@
   "NASA-AMES-STD8070": {
     "verified": false
   },
+  "NASA-AMF-RATCHET": {
+    "verified": false
+  },
   "NASA-ARTEMIS-CLR": {
     "verified": false
   },
@@ -117,6 +120,9 @@
     "verified": false
   },
   "NSSDC-FACTS": {
+    "verified": false
+  },
+  "NTRS-LUNAR-MAINT-CREWTIME": {
     "verified": false
   },
   "OCHMO-RAD": {

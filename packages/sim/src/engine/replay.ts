@@ -28,7 +28,7 @@ import type {
   ThermalControlMode,
   WaterReclamationMode,
 } from "../types.js";
-import { power as powerConstants } from "../data/constants.js";
+import { management, power as powerConstants } from "../data/constants.js";
 import type { TickContext } from "./context.js";
 import { INCIDENT_CATALOG, applyCleaningEvaDose, applyResponse } from "./incidents.js";
 import { EventLogger } from "./log.js";
@@ -54,7 +54,12 @@ export type RunInput =
   // KIND_TAGS append-only rule for why order here matters just as much as it does there.
   | { readonly kind: "waterReclamationMode"; readonly mode: WaterReclamationMode }
   | { readonly kind: "thermalControlMode"; readonly mode: ThermalControlMode }
-  | { readonly kind: "overtimeAuthorized"; readonly authorized: boolean };
+  | { readonly kind: "overtimeAuthorized"; readonly authorized: boolean }
+  // Appended (player request), not inserted — see share/runLink.ts's own KIND_TAGS
+  // append-only rule for why order here matters just as much as it does there.
+  | { readonly kind: "scheduledMaintenance"; readonly systemId: SystemId }
+  | { readonly kind: "printSpare"; readonly systemId: SystemId }
+  | { readonly kind: "reorderRepairQueue"; readonly index: number; readonly direction: -1 | 1 };
 
 /** One `RunInput` plus the `state.hour` it was applied at — what `store/run.ts`'s new
  *  `inputLog` records, and all `replayRun` needs to reproduce a run byte-identically: no
@@ -247,6 +252,98 @@ export function applyInput(ctx: TickContext, input: RunInput): void {
         severity: "info",
         code: "decision.overtimeAuthorized.set",
         data: { authorized: input.authorized ? 1 : 0 },
+      });
+      return;
+    }
+
+    case "scheduledMaintenance": {
+      // Player request: "quiet sol" interactivity for the Habitat page — see
+      // management.scheduledMaintenanceCrewHours's own doc comment for the real-data
+      // grounding and the disclosed apportionment.
+      const system = state.systems[input.systemId];
+      if (system === undefined) return;
+
+      const cost = management.scheduledMaintenanceCrewHours.value;
+      const remainingToday = Math.max(0, state.crewHours.budgetTodayHours - state.crewHours.spentTodayHours);
+      if (remainingToday < cost) {
+        log.log({
+          kind: "decision",
+          severity: "info",
+          code: "decision.scheduledMaintenance.insufficientTime",
+          system: input.systemId,
+          data: { neededHours: cost, remainingHours: Math.round(remainingToday * 100) / 100 },
+        });
+        return;
+      }
+
+      state.crewHours.spentTodayHours += cost;
+      system.maintenanceCreditUntilHour = state.hour + management.scheduledMaintenanceWindowHours.value;
+      log.log({
+        kind: "decision",
+        severity: "info",
+        code: "decision.scheduledMaintenance.performed",
+        system: input.systemId,
+        data: { windowHours: management.scheduledMaintenanceWindowHours.value },
+      });
+      return;
+    }
+
+    case "printSpare": {
+      // Player request: "repair/spares interactivity in Incident Command" — NASA AMF-inspired
+      // (management.printSpareWallClockHours's own doc comment). Small crew-hours cost spent
+      // up front; the spare itself only appears once real wall-clock time has passed
+      // (resolved in engine/crewHours.ts alongside the repair queue).
+      const system = state.systems[input.systemId];
+      if (system === undefined) return;
+
+      const cost = management.printSpareCrewHours.value;
+      const remainingToday = Math.max(0, state.crewHours.budgetTodayHours - state.crewHours.spentTodayHours);
+      if (remainingToday < cost) {
+        log.log({
+          kind: "decision",
+          severity: "info",
+          code: "decision.printSpare.insufficientTime",
+          system: input.systemId,
+          data: { neededHours: cost, remainingHours: Math.round(remainingToday * 100) / 100 },
+        });
+        return;
+      }
+
+      state.crewHours.spentTodayHours += cost;
+      const readyAtHour = state.hour + management.printSpareWallClockHours.value;
+      state.printQueue.push({
+        id: `print-${input.systemId}-${state.hour}`,
+        systemId: input.systemId,
+        queuedAtHour: state.hour,
+        readyAtHour,
+      });
+      log.log({
+        kind: "decision",
+        severity: "info",
+        code: "decision.printSpare.started",
+        system: input.systemId,
+        data: { readyAtHour },
+      });
+      return;
+    }
+
+    case "reorderRepairQueue": {
+      // Mirrors the "priority" case above exactly: swap with the neighbour, bounds-checked.
+      const queue = state.crewHours.queue;
+      const target = input.index + input.direction;
+      if (input.index < 0 || input.index >= queue.length || target < 0 || target >= queue.length) return;
+
+      const a = queue[input.index];
+      const b = queue[target];
+      if (a === undefined || b === undefined) return;
+
+      queue[input.index] = b;
+      queue[target] = a;
+      log.log({
+        kind: "decision",
+        severity: "info",
+        code: "decision.reorderRepairQueue.changed",
+        data: { direction: input.direction },
       });
       return;
     }

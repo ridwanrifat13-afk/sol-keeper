@@ -70,6 +70,7 @@ function buildSystems(scenario: Scenario): Partial<Record<SystemId, SystemState>
       spares: spec.spares,
       poweredThisHour: false,
       efficiencyPenaltyFraction: 0,
+      maintenanceCreditUntilHour: 0,
     };
   }
   return out;
@@ -191,6 +192,7 @@ export function createInitialState(params: Params, scenario: Scenario = getScena
     crew,
     systems: buildSystems(scenario),
     activeIncidents: [],
+    printQueue: [],
 
     comms: {
       oneWayLightSeconds:

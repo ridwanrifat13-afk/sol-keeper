@@ -95,6 +95,13 @@ export const SOURCE_IDS = [
   // M9.x (player request #8): elevated cabin CO2's real, documented effect on crop growth —
   // the food group's co2 enrichment constants.
   "WHEELER-2024-CO2-SALAD",
+  // Player request: real data grounding Habitat quiet-sol and Incident Command repair/spares
+  // interactivity. NTRS-LUNAR-MAINT-CREWTIME is a primary NASA Langley/Binera study (read
+  // locally from docs/sources/, NTRS repeatedly failed to serve it to an automated fetch);
+  // NASA-AMF-RATCHET is NASA's own mission-update article on the ISS 3D printer's first
+  // uplinked tool.
+  "NTRS-LUNAR-MAINT-CREWTIME",
+  "NASA-AMF-RATCHET",
 ] as const;
 
 export type SourceId = (typeof SOURCE_IDS)[number];

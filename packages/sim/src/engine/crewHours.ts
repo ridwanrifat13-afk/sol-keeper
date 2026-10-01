@@ -7,7 +7,7 @@
  * crewtime figures are stated per Earth-CM-day, not per sol — the same reasoning
  * `units.ts`'s `perDayToPerHour` already uses everywhere else).
  */
-import { crew as crewConstants, lifeSupport } from "../data/constants.js";
+import { crew as crewConstants, lifeSupport, management } from "../data/constants.js";
 import { availableCrewHours } from "../models/crew.js";
 import { clamp } from "../units.js";
 import type { TickContext } from "./context.js";
@@ -39,6 +39,30 @@ function payDownQueue(ctx: TickContext): void {
     const def = INCIDENT_CATALOG.find((d) => d.id === item.definitionId);
     if (incident === undefined || def === undefined) continue;
     resolveResponseAttempt(ctx, def, incident, item.responseId);
+  }
+}
+
+/** Player request: Incident Command's print-a-spare lever — resolves any `PrintJob` whose
+ *  real wall-clock print time (management.printSpareWallClockHours) has elapsed. Unlike
+ *  `payDownQueue`, nothing here touches the crew-hours budget: the only cost was paid up
+ *  front when the job was queued (engine/replay.ts's "printSpare" case). */
+function resolvePrintQueue(ctx: TickContext): void {
+  const { state, log } = ctx;
+  const ready = state.printQueue.filter((job) => state.hour >= job.readyAtHour);
+  if (ready.length === 0) return;
+
+  state.printQueue = state.printQueue.filter((job) => state.hour < job.readyAtHour);
+  for (const job of ready) {
+    const system = state.systems[job.systemId];
+    if (system === undefined) continue;
+    system.spares += management.printSpareYieldCount.value;
+    log.log({
+      kind: "decision",
+      severity: "info",
+      code: "decision.printSpare.completed",
+      system: job.systemId,
+      data: { spares: system.spares },
+    });
   }
 }
 
@@ -88,4 +112,5 @@ export function crewHoursStage(ctx: TickContext): void {
   }
 
   payDownQueue(ctx);
+  resolvePrintQueue(ctx);
 }
