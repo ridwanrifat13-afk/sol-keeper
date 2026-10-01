@@ -97,13 +97,14 @@ test.describe("Mission Briefing", () => {
     await expect(page.getByText("Not affiliated with or endorsed by NASA")).toBeVisible();
   });
 
-  test("cadet level swaps in icon-led, shorter briefing text", async ({ page }) => {
+  test("cadet level swaps in plain-word, shorter briefing text (no emoji)", async ({ page }) => {
     await gotoApp(page);
     await skipSetup(page);
     await page.getByRole("button", { name: /^Cadet/ }).click();
 
-    await expect(page.getByText(/⚠️/)).toBeVisible();
-    await expect(page.getByText(/📦/)).toBeVisible();
+    await expect(page.getByText(/a huge dust storm will block the sun/)).toBeVisible();
+    await expect(page.getByText(/The ship is packing about/)).toBeVisible();
+    await expect(page.getByText(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u)).toHaveCount(0);
   });
 
   test("full-page screenshot for a human to look at", async ({ page }, testInfo) => {

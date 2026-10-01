@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FiLink } from "react-icons/fi";
 
 interface CopyLinkButtonProps {
   readonly label: string;
@@ -45,7 +46,7 @@ export function CopyLinkButton({ label, buildUrl }: CopyLinkButtonProps) {
             });
         }}
       >
-        {label}
+        <FiLink aria-hidden="true" /> {label}
       </button>
       {url !== undefined && (
         <p className="copy-link-result">

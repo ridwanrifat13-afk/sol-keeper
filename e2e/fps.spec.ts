@@ -51,7 +51,7 @@ test.describe("Mobile performance (M9.7)", () => {
     await gotoApp(page);
     await throttleCpu(page);
     for (let i = 0; i < 7; i++) await page.getByRole("button", { name: "Next" }).click();
-    await page.getByRole("button", { name: "▶ Launch Mission" }).click();
+    await page.getByRole("button", { name: "Launch Mission" }).click();
     await openTab(page, "Habitat");
     await expect(page.getByRole("heading", { name: "Habitat", exact: true })).toBeVisible();
 

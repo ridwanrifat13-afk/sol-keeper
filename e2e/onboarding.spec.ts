@@ -99,7 +99,7 @@ test.describe("First Light coach mark", () => {
   }) => {
     await gotoApp(page);
     await clickTab(page, "Power");
-    await page.getByRole("button", { name: "▶ Run the sol" }).click();
+    await page.getByRole("button", { name: "Run the sol" }).click();
     await page.getByRole("button", { name: "1×" }).click();
     await page.waitForTimeout(1500);
     const hourAfterRunning = await page.locator(".clock-hour").textContent();
@@ -112,7 +112,7 @@ test.describe("First Light coach mark", () => {
     await page.waitForTimeout(1500);
 
     // If it paused, "Run the sol" (only shown while phase === "planning") would be back.
-    await expect(page.getByRole("button", { name: "▶ Run the sol" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Run the sol" })).toHaveCount(0);
     const hourAfterSwitching = await page.locator(".clock-hour").textContent();
     expect(hourAfterSwitching).not.toBe(hourAfterRunning);
   });

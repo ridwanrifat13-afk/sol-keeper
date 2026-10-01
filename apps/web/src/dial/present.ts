@@ -9,6 +9,12 @@
  * Every function takes the already-decided `StatusLevel` rather than re-deriving it from
  * thresholds, so the actual caution/critical bands live in exactly one place
  * (components/status.ts) and cannot drift between what the bar shows and what the words say.
+ *
+ * Player request: no emoji in cadet text — every Gauge-backed presenter below already sits
+ * beside that gauge's own shape-distinct `icon` prop (Gauge.tsx), so the cadet headline here
+ * is plain words with no redundant pictograph; `presentDose` (CrewPanel's one non-Gauge
+ * presenter) drops its own emoji the same way, since the text alone ("Barely any"/"Some"/
+ * "A lot") already carries the meaning without one.
  */
 import type { StatusLevel } from "../components/status.js";
 import type { DialLevel } from "./types.js";
@@ -30,9 +36,9 @@ export function presentOxygen(level: DialLevel, status: StatusLevel, o2Kg: numbe
   if (level === "cadet") {
     return {
       valueText: byStatus(status, {
-        nominal: "🫁 Plenty of air",
-        caution: "🫁 Air is a bit low",
-        critical: "🫁 Air is very low!",
+        nominal: "Plenty of air",
+        caution: "Air is a bit low",
+        critical: "Air is very low!",
       }),
       unit: "",
       decimals: 0,
@@ -54,9 +60,9 @@ export function presentCo2(
   if (level === "cadet") {
     return {
       valueText: byStatus(status, {
-        nominal: "☁️ Air is clean",
-        caution: "☁️ Getting stuffy",
-        critical: "☁️ Too much bad air!",
+        nominal: "Air is clean",
+        caution: "Getting stuffy",
+        critical: "Too much bad air!",
       }),
       unit: "",
       decimals: 0,
@@ -77,9 +83,9 @@ export function presentWater(level: DialLevel, status: StatusLevel, days: number
   if (level === "cadet") {
     return {
       valueText: byStatus(status, {
-        nominal: "💧 Plenty of water",
-        caution: "💧 Water is getting low",
-        critical: "💧 Almost out of water!",
+        nominal: "Plenty of water",
+        caution: "Water is getting low",
+        critical: "Almost out of water!",
       }),
       unit: "",
       decimals: 0,
@@ -101,9 +107,9 @@ export function presentFood(
   if (level === "cadet") {
     return {
       valueText: byStatus(status, {
-        nominal: "🍽️ Plenty of food",
-        caution: "🍽️ Food is getting low",
-        critical: "🍽️ Almost out of food!",
+        nominal: "Plenty of food",
+        caution: "Food is getting low",
+        critical: "Almost out of food!",
       }),
       unit: "",
       decimals: 0,
@@ -134,9 +140,9 @@ export function presentBattery(
   if (level === "cadet") {
     return {
       valueText: byStatus(status, {
-        nominal: "🔋 Plenty of power",
-        caution: "🔋 Power is getting low",
-        critical: "🔋 Almost out of power!",
+        nominal: "Plenty of power",
+        caution: "Power is getting low",
+        critical: "Almost out of power!",
       }),
       unit: "",
       decimals: 0,
@@ -166,9 +172,9 @@ export function presentCabin(
   if (level === "cadet") {
     return {
       valueText: byStatus(status, {
-        nominal: "🌡️ Cosy",
-        caution: "🌡️ A bit chilly",
-        critical: "🌡️ Freezing!",
+        nominal: "Cosy",
+        caution: "A bit chilly",
+        critical: "Freezing!",
       }),
       unit: "",
       decimals: 0,
@@ -199,7 +205,7 @@ export function presentDose(level: DialLevel, doseMSv: number, limitMSv: number)
   const fraction = doseMSv / limitMSv;
   if (level === "cadet") {
     const headline =
-      fraction < 0.25 ? "☢️ Barely any" : fraction < 0.6 ? "☢️ Some" : "☢️ A lot — watch closely";
+      fraction < 0.25 ? "Barely any" : fraction < 0.6 ? "Some" : "A lot — watch closely";
     return { headline, detail: "Radiation from space, over the whole mission." };
   }
   const pct = (fraction * 100).toFixed(0);

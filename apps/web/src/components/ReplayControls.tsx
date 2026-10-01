@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { FiClock } from "react-icons/fi";
 import { SPEEDS, useRun, type Speed } from "../store/run.js";
 import { useReplay } from "../store/replay.js";
 import { timestampLabel } from "../dial/missionTime.js";
@@ -52,7 +53,7 @@ export function ReplayControls() {
         {/* Same sol countdown as TimeControls, beside the same pause button and on the same
          *  left side of the row, for the replay UI. */}
         <span className="sol-countdown">
-          <span aria-hidden="true">⏳</span> Sol ends in {24 - (hour % 24)}h
+          <FiClock aria-hidden="true" /> Sol ends in {24 - (hour % 24)}h
         </span>
         {(Object.keys(SPEEDS) as Speed[]).map((s) => (
           <button

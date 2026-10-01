@@ -15,7 +15,7 @@ const CAR_MASS_KG = 1500;
 export function esmCadetHeadline(totalKg: number): string {
   const cars = totalKg / CAR_MASS_KG;
   const carsText = cars < 0.5 ? "less than half a car" : `about ${cars.toFixed(1)} cars`;
-  return `🚀 This outpost's gear weighs about ${Math.round(totalKg).toLocaleString()} kg — ${carsText}.`;
+  return `This outpost's gear weighs about ${Math.round(totalKg).toLocaleString()} kg — ${carsText}.`;
 }
 
 export function esmIntro(level: DialLevel): string {

@@ -118,10 +118,9 @@ describe("dial/labels", () => {
     }
   });
 
-  it("crop labels keep the plain crop name even for cadet, plus an emoji", () => {
+  it("crop labels keep the plain crop name at every level, no emoji", () => {
     expect(cropLabel("lettuce", "specialist")).toBe("lettuce");
-    expect(cropLabel("lettuce", "cadet")).toContain("lettuce");
-    expect(cropLabel("lettuce", "cadet")).not.toBe("lettuce");
+    expect(cropLabel("lettuce", "cadet")).toBe("lettuce");
   });
 });
 

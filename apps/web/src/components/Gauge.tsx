@@ -18,7 +18,8 @@ export interface GaugeProps {
   readonly decimals?: number;
   /**
    * Reality Dial cadet level: replaces the numeric "value unit" headline with a plain-word
-   * phrase outright (e.g. "🫁 Plenty of air"). `value`/`unit`/`decimals` are still required
+   * phrase outright (e.g. "Plenty of air" beside the gauge's own shape icon). `value`/`unit`/
+   * `decimals` are still required
    * even when this is set, because the real number still drives `aria-valuenow` — a screen
    * reader user gets the same simplified wording, not a worse experience than a sighted one.
    */

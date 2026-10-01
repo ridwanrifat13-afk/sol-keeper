@@ -110,13 +110,6 @@ export function locationLabel(location: CrewLocation, level: DialLevel, language
   return level === "cadet" ? LOCATION_LABELS_CADET[location] : LOCATION_LABELS[location];
 }
 
-const CROP_EMOJI: Record<CropTray["crop"], string> = {
-  lettuce: "🥬",
-  wheat: "🌾",
-  soybean: "🫘",
-  potato: "🥔",
-};
-
 const CROP_LABELS_BN: Record<CropTray["crop"], string> = {
   lettuce: "লেটুস",
   wheat: "গম",
@@ -124,10 +117,9 @@ const CROP_LABELS_BN: Record<CropTray["crop"], string> = {
   potato: "আলু",
 };
 
-/** Cadet gets an emoji alongside the crop name; the name itself needs no simplifying. */
-export function cropLabel(crop: CropTray["crop"], level: DialLevel, language: Language = "en"): string {
-  const name = language === "bn" ? CROP_LABELS_BN[crop] : crop;
-  return level === "cadet" ? `${CROP_EMOJI[crop]} ${name}` : name;
+/** The crop name itself needs no simplifying at any Reality Dial level. */
+export function cropLabel(crop: CropTray["crop"], _level: DialLevel, language: Language = "en"): string {
+  return language === "bn" ? CROP_LABELS_BN[crop] : crop;
 }
 
 /**

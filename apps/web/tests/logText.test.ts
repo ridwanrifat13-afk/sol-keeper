@@ -127,7 +127,6 @@ describe("Reality Dial log templates", () => {
     });
     expect(logText(e, "specialist")).toContain("lettuce");
     expect(logText(e, "cadet")).toContain("lettuce");
-    expect(logText(e, "cadet")).toContain("🥬");
   });
 
   it("interpolates a survival mode through its friendly label", () => {

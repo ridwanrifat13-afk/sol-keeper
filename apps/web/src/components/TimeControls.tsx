@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { FiClock, FiPlay } from "react-icons/fi";
 import { SPEEDS, useRun, type Speed } from "../store/run.js";
 import { units } from "@sol-keeper/sim";
 import { timestampLabel } from "../dial/missionTime.js";
@@ -69,7 +70,7 @@ export function TimeControls() {
               setPhase("running");
             }}
           >
-            ▶ Run the sol
+            <FiPlay aria-hidden="true" /> Run the sol
           </button>
         </div>
       )}
@@ -80,7 +81,7 @@ export function TimeControls() {
          *  `step()`), so the number shown here is exactly how many ticks are left before
          *  that happens. */}
         <span className="sol-countdown">
-          <span aria-hidden="true">⏳</span> Sol ends in {24 - (hour % 24)}h
+          <FiClock aria-hidden="true" /> Sol ends in {24 - (hour % 24)}h
         </span>
         {(Object.keys(SPEEDS) as Speed[]).map((s) => (
           <button

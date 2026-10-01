@@ -40,7 +40,7 @@ test.describe("Mission Setup", () => {
       await expect(page.getByRole("button", { name: "Back" })).toBeEnabled();
     }
     // The last step's action launches the mission, it doesn't say "Next".
-    await expect(page.getByRole("button", { name: "▶ Launch Mission" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Launch Mission" })).toBeVisible();
 
     for (const [i, label] of [...steps].reverse().slice(1).entries()) {
       await page.getByRole("button", { name: "Back" }).click();
@@ -157,7 +157,7 @@ test.describe("Mission Setup", () => {
     await expect(waterWall).toHaveAttribute("aria-pressed", "true");
 
     await page.getByRole("button", { name: "Next" }).click();
-    await expect(page.getByRole("button", { name: "▶ Launch Mission" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Launch Mission" })).toBeVisible();
   });
 
   test("launch packing step: previews the real grand total, and reflects the regolith berm's crew-hours line", async ({
@@ -176,7 +176,7 @@ test.describe("Mission Setup", () => {
     // The regolith berm's 80 crew-hours convert to a non-zero ESM-equivalent kg line.
     await expect(page.getByText(/80 pre-mission construction crew-hours/)).toBeVisible();
 
-    await expect(page.getByRole("button", { name: "▶ Launch Mission" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Launch Mission" })).toBeVisible();
   });
 
   test("choosing a different scenario, difficulty, crew size, site, power, and shielding, then launching, actually starts that mission", async ({
@@ -208,7 +208,7 @@ test.describe("Mission Setup", () => {
     await page.getByRole("button", { name: /Regolith berm/ }).click();
     await page.getByRole("button", { name: "Next" }).click();
 
-    await page.getByRole("button", { name: "▶ Launch Mission" }).click();
+    await page.getByRole("button", { name: "Launch Mission" }).click();
 
     // Launching lands on Briefing (App.tsx's onLaunch), with the real chosen mission.
     await expect(page.getByText("Mission Briefing")).toBeVisible();
@@ -221,7 +221,7 @@ test.describe("Mission Setup", () => {
   }) => {
     await gotoApp(page);
     await clickNext(page, 7);
-    await page.getByRole("button", { name: "▶ Launch Mission" }).click(); // launch with defaults
+    await page.getByRole("button", { name: "Launch Mission" }).click(); // launch with defaults
     await expect(page.getByText("Mission Briefing")).toBeVisible();
 
     await page.getByRole("button", { name: "New Mission" }).click();

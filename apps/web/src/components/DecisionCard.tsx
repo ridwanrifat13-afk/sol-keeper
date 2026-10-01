@@ -14,6 +14,7 @@
  * field isn't declared.
  */
 import { type KeyboardEvent, useEffect, useRef } from "react";
+import { FiSettings } from "react-icons/fi";
 import {
   EventLogger,
   Rng,
@@ -135,7 +136,7 @@ export function DecisionCard() {
                 <span className="decision-card-response-text">{decisionText(response.i18nKey, level, undefined, language)}</span>
                 {hasMechanism && (
                   <span className="decision-card-response-mechanism">
-                    <span aria-hidden="true">⚙</span> {decisionText(mechanismKey, level, undefined, language)}
+                    <FiSettings aria-hidden="true" /> {decisionText(mechanismKey, level, undefined, language)}
                   </span>
                 )}
                 <span className="decision-card-response-tradeoffs">

@@ -59,7 +59,7 @@ test.describe("Habitat view", () => {
     await gotoApp(page);
     await page.getByRole("button", { name: /First Light/ }).click();
     for (let i = 0; i < 7; i++) await page.getByRole("button", { name: "Next" }).click();
-    await page.getByRole("button", { name: "▶ Launch Mission" }).click();
+    await page.getByRole("button", { name: "Launch Mission" }).click();
     await skipSetup(page, "Habitat");
 
     await expect(page.getByText(/the Moon/).first()).toBeVisible();
@@ -123,7 +123,7 @@ test.describe("Habitat view", () => {
     await gotoApp(page);
     await page.getByRole("button", { name: /First Light/ }).click();
     for (let i = 0; i < 7; i++) await page.getByRole("button", { name: "Next" }).click();
-    await page.getByRole("button", { name: "▶ Launch Mission" }).click();
+    await page.getByRole("button", { name: "Launch Mission" }).click();
 
     // First Light's own scripted event (packages/sim/src/data/scenarios/firstLight.ts):
     // a solar particle event at hour 100, lasting 18 hours — deterministic, not RNG.

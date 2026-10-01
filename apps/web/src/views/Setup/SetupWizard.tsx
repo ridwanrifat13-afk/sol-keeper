@@ -1,3 +1,4 @@
+import { FiPlay } from "react-icons/fi";
 import { SETUP_STEPS, useSetup, type SetupStepId } from "../../store/setup.js";
 import { ScenarioStep } from "./ScenarioStep.js";
 import { DifficultyStep } from "./DifficultyStep.js";
@@ -77,7 +78,7 @@ export function SetupWizard({ onLaunch }: SetupWizardProps) {
               onLaunch();
             }}
           >
-            ▶ Launch Mission
+            <FiPlay aria-hidden="true" /> Launch Mission
           </button>
         ) : (
           <button type="button" className="btn btn-active" onClick={next}>

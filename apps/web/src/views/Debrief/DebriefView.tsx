@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import { FiFileText } from "react-icons/fi";
 import { causalCascade, directEffects, type Body, type LogEntry, type RunStatus } from "@sol-keeper/sim";
 import { useDial } from "../../store/dial.js";
 import { useRun } from "../../store/run.js";
@@ -67,7 +68,7 @@ export function DebriefView({ onViewReport }: { onViewReport: () => void }) {
             decision timeline, a "What NASA did" card, a replay link, a data-sources footer) —
             Debrief stays the interactive/exploratory view, per the M10 plan's own finding #5. */}
         <button type="button" className="btn" onClick={onViewReport}>
-          {t("debrief.viewReport")}
+          <FiFileText aria-hidden="true" /> {t("debrief.viewReport")}
         </button>
       </div>
 

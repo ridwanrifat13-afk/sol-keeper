@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FiShuffle } from "react-icons/fi";
 import {
   failureRatePerHour,
   requiredMarginFraction,
@@ -114,7 +115,7 @@ export function LaunchPackingStep() {
           }}
         />
         <button type="button" className="btn btn-tiny" onClick={rerollSeed}>
-          🎲 Reroll
+          <FiShuffle aria-hidden="true" /> Reroll
         </button>
       </div>
       <p className="panel-hint">

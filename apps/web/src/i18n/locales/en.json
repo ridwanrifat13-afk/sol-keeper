@@ -1,11 +1,11 @@
 {
   "shareLink": {
-    "versionMismatch": "⚠️ This link was made with an older version of Sol Keeper and can't be replayed here — starting a fresh mission instead.",
-    "invalid": "⚠️ This link isn't valid — starting a fresh mission instead.",
+    "versionMismatch": "This link was made with an older version of Sol Keeper and can't be replayed here — starting a fresh mission instead.",
+    "invalid": "This link isn't valid — starting a fresh mission instead.",
     "dismiss": "Dismiss",
-    "createClassLink": "🔗 Create class link",
+    "createClassLink": "Create class link",
     "classLinkHint": "Every student who opens this link gets the identical mission — same scenario, same seed, same incidents. No accounts, no backend: the whole mission lives in the link itself.",
-    "copyReportLink": "🔗 Copy report link",
+    "copyReportLink": "Copy report link",
     "copied": "Copied!",
     "linkLabel": "Shareable mission link"
   },
@@ -104,19 +104,19 @@
     "jezero": {
       "briefing": {
         "specialist": "A major dust storm arrives around sol 8, cutting solar power sharply for about two and a half days.",
-        "cadet": "⚠️ Around day 8, a huge dust storm will block the sun for a couple of days."
+        "cadet": "Around day 8, a huge dust storm will block the sun for a couple of days."
       }
     },
     "firstLight": {
       "briefing": {
         "specialist": "A solar particle event arrives early, around day 4 — the crew will need to shelter.",
-        "cadet": "⚠️ Around day 4, a solar storm means everyone has to hide in the safe room."
+        "cadet": "Around day 4, a solar storm means everyone has to hide in the safe room."
       }
     },
     "theLongNight": {
       "briefing": {
         "specialist": "A solar particle event arrives partway through the first lunar night, around day 6.",
-        "cadet": "⚠️ Around day 6, deep in the first long night, a solar storm hits."
+        "cadet": "Around day 6, deep in the first long night, a solar storm hits."
       }
     }
   },
@@ -135,20 +135,20 @@
     "failure": {
       "partial": {
         "specialist": "The mission can end with the whole crew alive but the goal unmet — a real, distinct outcome from a crew loss, not a milder version of it.",
-        "cadet": "😕 Everyone can make it home safe, but still not finish the mission's goal."
+        "cadet": "Everyone can make it home safe, but still not finish the mission's goal."
       },
       "abort": {
         "specialist": "The crew can end the mission early, on purpose, if things are going badly enough — a real, deliberate call, not a failure of skill.",
-        "cadet": "🛑 You can decide to end the mission early to keep everyone safe."
+        "cadet": "You can decide to end the mission early to keep everyone safe."
       },
       "loss": {
         "specialist": "If every crew member is lost, the mission ends immediately, whatever else was going right.",
-        "cadet": "💔 If the whole crew is lost, the mission is over."
+        "cadet": "If the whole crew is lost, the mission is over."
       }
     },
     "massHeading": "Packed mass",
     "massLine": "{{kg}} kg of hardware, packed with real PDR-phase margin (NASA Ames APR 8070.1) — see the full breakdown on Mission Command.",
-    "massLineCadet": "📦 The ship is packing about {{kg}} kg of gear."
+    "massLineCadet": "The ship is packing about {{kg}} kg of gear."
   },
   "solSummary": {
     "heading": "{{timestamp}} complete",
@@ -166,7 +166,7 @@
     "outcomeAbort": "The crew chose to abort. Ended at hour {{hour}} ({{timestamp}}).",
     "titleLoss": "Mission lost",
     "outcomeLoss": "Ended at hour {{hour}} ({{timestamp}}).",
-    "viewReport": "📄 View printable Mission Report",
+    "viewReport": "View printable Mission Report",
     "finalNumbersHeading": "Final numbers",
     "oxygen": "Oxygen",
     "water": "Water",

@@ -186,6 +186,11 @@ test.describe("Incident Command console", () => {
 
     await page.getByRole("button", { name: "Run the sol" }).click();
     await expect(firstRow.getByRole("button", { name: "the habitat", exact: true })).toBeDisabled();
-    await expect(page.getByText("Locked while the sol is running")).toBeVisible();
+    // Scoped to the crew-location panel specifically — the spares-inventory panel now carries
+    // its own, identically-worded locked notice too (print-a-spare), so an unscoped match is
+    // ambiguous.
+    await expect(
+      page.locator("#crew-location-heading").locator("..").getByText("Locked while the sol is running"),
+    ).toBeVisible();
   });
 });

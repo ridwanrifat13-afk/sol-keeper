@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FiAlertTriangle, FiMenu, FiX } from "react-icons/fi";
 import { useRun } from "./store/run.js";
 import { useSetup } from "./store/setup.js";
 import { useAccessibility } from "./store/accessibility.js";
@@ -267,7 +268,7 @@ export function App({ initialView = "home" }: AppProps = {}) {
                   setMobileNavOpen((open) => !open);
                 }}
               >
-                <span aria-hidden="true">{mobileNavOpen ? "✕" : "☰"}</span>
+                <span aria-hidden="true">{mobileNavOpen ? <FiX /> : <FiMenu />}</span>
                 <span className="mobile-nav-toggle-label">Menu</span>
               </button>
               <button
@@ -307,6 +308,7 @@ export function App({ initialView = "home" }: AppProps = {}) {
               (linkBanner.kind === "versionMismatch" || linkBanner.kind === "invalid") && (
                 <div className="run-link-banner" role="status">
                   <p>
+                    <FiAlertTriangle aria-hidden="true" />{" "}
                     {t(
                       linkBanner.kind === "versionMismatch"
                         ? "shareLink.versionMismatch"
@@ -321,7 +323,7 @@ export function App({ initialView = "home" }: AppProps = {}) {
                       setLinkBanner(undefined);
                     }}
                   >
-                    ✕
+                    <FiX aria-hidden="true" />
                   </button>
                 </div>
               )}
@@ -414,7 +416,7 @@ export function App({ initialView = "home" }: AppProps = {}) {
                 setDataSourcesOpen(false);
               }}
             >
-              Close ✕
+              Close <FiX aria-hidden="true" />
             </button>
             <DataSourcesView />
           </div>
