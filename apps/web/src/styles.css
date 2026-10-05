@@ -32,6 +32,13 @@
 
   --radius: 10px;
   --gap: 12px;
+  
+  --text-outline: -1px -1px 0 rgba(255, 255, 255, 0.85),
+                   1px -1px 0 rgba(255, 255, 255, 0.85),
+                  -1px  1px 0 rgba(255, 255, 255, 0.85),
+                   1px  1px 0 rgba(255, 255, 255, 0.85);
+  --text-outline-sm: 0 0 2px rgba(255, 255, 255, 0.95),
+                     0 0 4px rgba(255, 255, 255, 0.7);
 }
 
 * {
@@ -41,6 +48,7 @@
 html,
 body {
   margin: 0;
+  min-height: 100vh;
   padding: 0;
   background: var(--shell-bg);
   color: var(--text);
@@ -55,50 +63,6 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Player request: a real lunar/Mars-surface photo pinned behind the five station consoles
- * (`App.tsx`'s own `STATION_VIEWS` sets `data-station-bg` on `<html>`, only for those five —
- * Habitat/Briefing/Debrief already carry their own real imagery and stay on the plain shell
- * background).
- *
- * `background-attachment: fixed`, not a separate `position: fixed` pseudo-element: a pseudo
- * was tried first, to sidestep `fixed` attachment's old iOS Safari jank — but a `position:
- * fixed` box's z-index is resolved against the *root* stacking context, where normal in-flow
- * content (`.app` and everything inside it) paints above *any* negative z-index and below
- * any positive one, so there is no z-index that lands strictly "under the page, over the
- * canvas" the way a plain background does — confirmed directly: at `z-index: -1` the photo
- * was fully hidden behind `.app`'s own content, not just the panels. `background-attachment:
- * fixed` paints as part of `body`'s own background (no stacking-order contest with anything),
- * pinned to the viewport instead of `body`'s own, scrollable box — which is the "shouldn't be
- * scrollable" request. The jank this has historically caused is a Safari/iOS-specific
- * rendering issue; brief rule 6's own device target is Android, where Chrome handles a fixed
- * background normally.
- *
- * `background-size: 100% 100%` (player request: "don't crop, stretch if needed") fills the
- * viewport exactly regardless of the photo's own aspect ratio, at the cost of visible
- * distortion on a viewport far from the source photo's own shape — the explicitly chosen
- * trade against `cover`'s cropping. The photo is blended with the shell's own light tint
- * rather than shown at full strength: `h1`/`.view-head`/`.mission-site` sit directly on this
- * background (unlike every panel, gauge and button, which are opaque and so unaffected either
- * way), and brief rule 6's contrast guarantee has to hold against a photo, not just a flat
- * colour. */
-html[data-station-bg="moon"] body {
-  background-image: linear-gradient(rgba(238, 243, 251, 0.72), rgba(238, 243, 251, 0.72)),
-    url("/images/station-bg-moon.jpg");
-  background-size: 100% 100%;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
-
-html[data-station-bg="mars"] body {
-  background-image: linear-gradient(rgba(238, 243, 251, 0.72), rgba(238, 243, 251, 0.72)),
-    url("/images/station-bg-mars.jpg");
-  background-size: 100% 100%;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
-
 .app {
   max-width: 1100px;
   margin: 0 auto;
@@ -109,7 +73,7 @@ html[data-station-bg="mars"] body {
   /* Room for the left sidebar nav (player request) without squeezing the reading column it
      used to have all to itself. */
   .app {
-    max-width: 1320px;
+    max-width: 1600px;
   }
 }
 
@@ -144,10 +108,12 @@ h2 {
    content, so nothing inside an actual .panel is affected. */
 .mission-head h1 {
   color: var(--shell-text);
+  text-shadow: var(--text-outline);
 }
 
 .view-head h2 {
   color: var(--shell-text);
+  text-shadow: var(--text-outline);
 }
 
 code {
@@ -227,8 +193,10 @@ code {
 
 .mission-site {
   margin: 2px 0 0;
-  color: var(--shell-text-dim);
+  color: #000000;
+  font-weight: bold;
   font-size: 0.85rem;
+  text-shadow: var(--text-outline-sm);
 }
 
 .run-badge {
@@ -242,8 +210,9 @@ code {
 }
 
 .run-badge-reason {
-  color: var(--text-dim);
-  font-weight: 400;
+  color: #000000;
+  font-weight: bold;
+  text-shadow: var(--text-outline-sm);
 }
 
 /* UI upgrade #1: one consistent panel-chrome system, everywhere. The accent-topped border
@@ -254,7 +223,10 @@ code {
    looking more finished than others — headers/labels already share one h2 rule, so this was
    the one remaining piece of chrome that wasn't actually consistent. */
 .panel {
-  background: var(--bg-panel);
+  background:
+    repeating-linear-gradient(0deg, rgba(139, 147, 184, 0.06) 0px, rgba(139, 147, 184, 0.06) 1px, transparent 1px, transparent 22px),
+    repeating-linear-gradient(90deg, rgba(139, 147, 184, 0.06) 0px, rgba(139, 147, 184, 0.06) 1px, transparent 1px, transparent 22px),
+    var(--bg-panel);
   border: 1px solid var(--line);
   border-top: 3px solid var(--shell-accent);
   border-radius: var(--radius);
@@ -567,7 +539,10 @@ code {
 
 /* ---------------------------------------------------------------- clock */
 .time-controls {
-  background: var(--bg-panel);
+  background:
+    repeating-linear-gradient(0deg, rgba(139, 147, 184, 0.06) 0px, rgba(139, 147, 184, 0.06) 1px, transparent 1px, transparent 22px),
+    repeating-linear-gradient(90deg, rgba(139, 147, 184, 0.06) 0px, rgba(139, 147, 184, 0.06) 1px, transparent 1px, transparent 22px),
+    var(--bg-panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 12px 14px;
@@ -1029,9 +1004,11 @@ code {
 
 /* ---------------------------------------------------------------- credits */
 .credits {
-  color: var(--shell-text-dim);
+  color: #000000;
+  font-weight: bold;
   font-size: 0.75rem;
   padding: 4px 2px 24px;
+  text-shadow: var(--text-outline-sm);
 }
 
 .credits p {
@@ -1160,15 +1137,17 @@ code {
 
   .tab-nav {
     position: sticky;
-    top: 16px;
+    top: 24px;
     left: auto;
     bottom: auto;
     flex: none;
     width: 190px;
     min-width: 190px;
     padding: 0 0 4px;
-    border-right: 1px solid var(--line);
+    border: 1px solid var(--line);
+    border-radius: 12px;
     overflow-y: visible;
+    overflow-x: hidden;
     z-index: auto;
     transform: none;
     transition: none;
@@ -1191,7 +1170,7 @@ code {
   background: transparent;
   border: none;
   border-left: 3px solid transparent;
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 12px 12px 0;
   color: var(--shell-text-dim);
   font: inherit;
   font-size: 0.9rem;
@@ -1205,10 +1184,13 @@ code {
   justify-content: flex-start;
   gap: 6px;
   width: 100%;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), color 0.2s ease, background 0.2s ease;
 }
 
 .tab-button:hover {
   color: var(--shell-text);
+  transform: scale(1.12);
+  transform-origin: left center;
 }
 
 .tab-button:focus-visible {
@@ -1546,9 +1528,11 @@ code {
 }
 
 .view-hint {
-  color: var(--shell-text-dim);
+  color: #000000;
+  font-weight: bold;
   font-size: 0.85rem;
   margin: 0;
+  text-shadow: var(--text-outline-sm);
 }
 
 /* ---------------------------------------------------------------- debrief: final numbers */
@@ -2253,6 +2237,10 @@ code {
   color: var(--text-dim);
 }
 
+.repair-queue-panel {
+  min-height: 420px;
+}
+
 /* ---------------------------------------------------------------- read-only status lists (M8.4) */
 .status-list {
   list-style: none;
@@ -2670,7 +2658,10 @@ code {
 
 /* ---------------------------------------------------------------- replay controls (M10.9) */
 .replay-controls {
-  background: var(--bg-raised);
+  background:
+    repeating-linear-gradient(0deg, rgba(139, 147, 184, 0.06) 0px, rgba(139, 147, 184, 0.06) 1px, transparent 1px, transparent 22px),
+    repeating-linear-gradient(90deg, rgba(139, 147, 184, 0.06) 0px, rgba(139, 147, 184, 0.06) 1px, transparent 1px, transparent 22px),
+    var(--bg-raised);
   border: 1px solid var(--line);
   border-left: 4px solid var(--shell-accent);
   border-radius: var(--radius);
@@ -2851,6 +2842,196 @@ code {
     break-inside: avoid;
     page-break-inside: avoid;
   }
+
+  /* A cockpit photo is dead weight on paper, and its regions carry no readable headings of
+     their own — print the plain Classic layout instead, same as every other visitor who
+     can't use cockpit view (M9.1's own fallback list). */
+  .cockpit-frame,
+  .cockpit-toggle {
+    display: none !important;
+  }
+
+  .station-cockpit-classic-source {
+    display: block !important;
+  }
+}
+
+/* ---------------------------------------------------------------- cockpit view (M9.1) */
+/* Station Cockpit View — docs/PHASE2_BRIEF.md's own M9.1 section (the outer, non-git-tracked
+   copy). Presentation only: every control/number inside a cockpit screen is the exact same
+   DOM content Classic view renders, just portaled elsewhere (apps/web/src/cockpit/). */
+
+.station-cockpit-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.cockpit-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cockpit-fallback-note {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
+/* The hidden copy of the console StationCockpit.tsx keeps mounted so panels keep ticking —
+   never shown, never reachable by Tab (`aria-hidden` on the wrapper isn't enough on its own:
+   a focusable control inside it would still be Tab-reachable while invisible). */
+.station-cockpit-classic-source {
+  display: none;
+}
+
+.cockpit-frame {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #000;
+}
+
+.cockpit-frame-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* M9.1's own asset note: "don't crop, stretch if needed" — the photo fills the frame at
+     its own declared aspectRatio exactly, so the region percentages painted over it line up
+     with what's actually visible, at the cost of distortion if the photo's own proportions
+     don't match that declared ratio (true for the current placeholder; see screenMaps.ts). */
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* One region's own frame/backing — the "Screen styling" section. A dark backing (so a region
+   with little content doesn't show the photo through it, which would look like a broken
+   screen) plus a thin bezel glow and inset shadow, matching this app's own dark-panel
+   language (--bg-panel/--line) rather than inventing a new palette. */
+.cockpit-screen {
+  box-sizing: border-box;
+  display: flex;
+  border-radius: 4px;
+}
+
+.cockpit-screen-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 2px 6px rgba(0, 0, 0, 0.5),
+    0 0 6px rgba(80, 120, 255, 0.15);
+  padding: 4px;
+  font-size: 0.78rem;
+}
+
+/* A region this small still needs every control inside it to clear the brief's own 44px
+   touch-target rule and 14px text floor — scaling the chrome down, never the content. */
+.cockpit-screen-content .panel {
+  margin-bottom: 0;
+  padding: 6px;
+  border-top-width: 2px;
+}
+
+.cockpit-screen-content h2 {
+  font-size: 0.82rem;
+}
+
+.cockpit-screen-ticker .cockpit-screen-content {
+  display: flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+.cockpit-screen-alert .cockpit-screen-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cockpit-alert-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  padding: 4px;
+}
+
+.cockpit-alert-summary-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.cockpit-alert-summary-status {
+  font-weight: 700;
+}
+
+.cockpit-alert-summary-value {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.cockpit-screen-overflow-host {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+.cockpit-overflow {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.cockpit-overflow-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cockpit-overflow-tab {
+  background: var(--bg-raised);
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-size: 0.64rem;
+  padding: 2px 6px;
+  cursor: pointer;
+  min-height: 0;
+}
+
+.cockpit-overflow-tab-active {
+  color: var(--text);
+  border-color: var(--nominal);
+}
+
+.cockpit-overflow-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 4px;
+}
+
+.cockpit-overflow-panel .panel {
+  margin-bottom: 0;
 }
 
 /* ---------------------------------------------------------------- reduced motion (M9.7 fix) */

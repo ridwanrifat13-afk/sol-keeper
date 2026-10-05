@@ -180,7 +180,7 @@ export function IncidentCommandConsole() {
         </svg>
       </section>
 
-      <section className="panel" aria-labelledby="repair-queue-heading">
+      <section className="panel repair-queue-panel" aria-labelledby="repair-queue-heading">
         <h2 id="repair-queue-heading">Repair queue</h2>
         <p className="panel-hint">
           First in, first served — queued work pays down from each new day's crew-hours budget.

@@ -93,6 +93,23 @@ export function DataSourcesView() {
         </p>
       </section>
 
+      {/* M9.1's own "Provenance and disclosure (REQUIRED)" section: station cockpit-view
+          photographs are illustrative artwork, not NASA photography, stated plainly here as
+          well as in apps/web/public/stations/CREDITS.md (the fuller, per-image record). */}
+      <section className="panel" aria-labelledby="artwork-heading">
+        <h2 id="artwork-heading">Artwork</h2>
+        <p className="panel-hint">
+          Cockpit view (an optional, toggleable layout on Life Support) shows that console's
+          own real content inside a photograph of a monitor — illustrative artwork, not NASA
+          photography, and carrying no NASA insignia.
+        </p>
+        <p className="source-verification source-unverified">
+          <span aria-hidden="true">○</span> moon-lifeSupport.jpg is a disclosed placeholder
+          with unresolved provenance — not yet cleared to ship. Full record in{" "}
+          <code>apps/web/public/stations/CREDITS.md</code>.
+        </p>
+      </section>
+
       <section className="panel" aria-labelledby="sources-heading">
         <h2 id="sources-heading">Sources ({rows.length})</h2>
         <ul className="source-list">

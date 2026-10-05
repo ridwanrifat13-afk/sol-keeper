@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FiAlertTriangle, FiMenu, FiRotateCcw, FiX } from "react-icons/fi";
 import { clearAllLayouts } from "./components/dashboardReorder.js";
@@ -7,6 +7,8 @@ import { useSetup } from "./store/setup.js";
 import { useAccessibility } from "./store/accessibility.js";
 import { PowerConsole } from "./views/Power/PowerConsole.js";
 import { LifeSupportConsole } from "./views/LifeSupport/LifeSupportConsole.js";
+import { LifeSupportAlertSummary } from "./views/LifeSupport/LifeSupportAlertSummary.js";
+import { StationCockpit } from "./cockpit/StationCockpit.js";
 import { CommsConsole } from "./views/Comms/CommsConsole.js";
 import { IncidentCommandConsole } from "./views/IncidentCommand/IncidentCommandConsole.js";
 import { MissionCommandConsole } from "./views/MissionCommand/MissionCommandConsole.js";
@@ -43,13 +45,6 @@ type TabView =
   | "habitat"
   | "briefing"
   | "debrief";
-
-/** Player request: a themed page background (a real lunar-surface or Mars-surface photo,
- *  images/station-bg-{moon,mars}.jpg) behind the five station consoles proper — `StationId`'s
- *  own five (CLAUDE.md's "Station" section) — not Habitat/Briefing/Debrief, which already carry
- *  their own real imagery (the habitat scene, the landing-site map, NASA fact-card galleries)
- *  and would visually compete with a second photo behind them. */
-const STATION_VIEWS = new Set<TabView>(["power", "lifeSupport", "comms", "incidentCommand", "missionCommand"]);
 
 /** M9: Setup is a real screen but deliberately not a tab-nav destination (see this file's own
  *  doc comment) — a separate, wider type rather than adding it to `TabView` and every
@@ -136,7 +131,37 @@ export interface AppProps {
   initialView?: View | undefined;
 }
 
-export function App({ initialView = "home" }: AppProps = {}) {
+/** M9.1's own "Calibration tool... excluded from the production build" — `import.meta.env.DEV`
+ *  is a Vite build-time constant, so this whole branch (the dynamic import included) is dead
+ *  code in a production build and Rollup drops it, not just the route that would reach it. */
+const CockpitCalibrateView = import.meta.env.DEV
+  ? lazy(() => import("./views/CockpitCalibrate/CockpitCalibrateView.js").then((m) => ({ default: m.CockpitCalibrateView })))
+  : undefined;
+
+/**
+ * Dev-only escape hatch, reached by URL path rather than the tab nav (it isn't a real player
+ * destination) — this dispatch happens in a wrapper with no hooks of its own, specifically so
+ * the real `AppShell` below can keep calling its own hooks unconditionally (React's rules of
+ * hooks apply per component; a component that renders nothing but a plain `if` before handing
+ * off to one or the other child never violates them, unlike an early return *inside* a
+ * component that already has hooks below it).
+ */
+export function App(props: AppProps = {}) {
+  if (
+    CockpitCalibrateView !== undefined &&
+    typeof window !== "undefined" &&
+    window.location.pathname === "/cockpit-calibrate"
+  ) {
+    return (
+      <Suspense fallback={null}>
+        <CockpitCalibrateView />
+      </Suspense>
+    );
+  }
+  return <AppShell {...props} />;
+}
+
+function AppShell({ initialView = "home" }: AppProps) {
   const [view, setView] = useState<View>(initialView);
   // Player request: "make a navigation bar for the pages on mobile ui too" — below the
   // sidebar breakpoint (.app-shell's own 860px, styles.css), the tab-nav becomes an
@@ -174,20 +199,6 @@ export function App({ initialView = "home" }: AppProps = {}) {
   useEffect(() => {
     document.documentElement.classList.toggle("low-power-mode", lowPowerMode);
   }, [lowPowerMode]);
-
-  // Player request: the station consoles' background reflects the real body the current
-  // mission is on. One attribute, read by styles.css — set only on a station view (the home/
-  // setup/report screens, and Habitat/Briefing/Debrief, stay on the plain shell background).
-  useEffect(() => {
-    if (STATION_VIEWS.has(view as TabView)) {
-      document.documentElement.setAttribute("data-station-bg", scenario.body === "mars" ? "mars" : "moon");
-    } else {
-      document.documentElement.removeAttribute("data-station-bg");
-    }
-    return () => {
-      document.documentElement.removeAttribute("data-station-bg");
-    };
-  }, [view, scenario.body]);
 
   // M11: `?debug=1` shows docs/DEVICE_TEST.md's FPS/memory/tick overlay. Read the same way
   // the run-link query is (a `useEffect`, never at render time — `window` doesn't exist under
@@ -391,7 +402,11 @@ export function App({ initialView = "home" }: AppProps = {}) {
                 <CoachMark view={view} onNavigate={setView} />
 
                 {view === "power" && <PowerConsole />}
-                {view === "lifeSupport" && <LifeSupportConsole />}
+                {view === "lifeSupport" && (
+                  <StationCockpit body={scenario.body} station="lifeSupport" alertContent={<LifeSupportAlertSummary />}>
+                    <LifeSupportConsole />
+                  </StationCockpit>
+                )}
                 {view === "comms" && <CommsConsole />}
                 {view === "incidentCommand" && <IncidentCommandConsole />}
                 {view === "missionCommand" && <MissionCommandConsole />}
