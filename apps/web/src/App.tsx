@@ -6,12 +6,16 @@ import { useRun } from "./store/run.js";
 import { useSetup } from "./store/setup.js";
 import { useAccessibility } from "./store/accessibility.js";
 import { PowerConsole } from "./views/Power/PowerConsole.js";
+import { PowerAlertSummary } from "./views/Power/PowerAlertSummary.js";
 import { LifeSupportConsole } from "./views/LifeSupport/LifeSupportConsole.js";
 import { LifeSupportAlertSummary } from "./views/LifeSupport/LifeSupportAlertSummary.js";
 import { StationCockpit } from "./cockpit/StationCockpit.js";
 import { CommsConsole } from "./views/Comms/CommsConsole.js";
+import { CommsAlertSummary } from "./views/Comms/CommsAlertSummary.js";
 import { IncidentCommandConsole } from "./views/IncidentCommand/IncidentCommandConsole.js";
+import { IncidentCommandAlertSummary } from "./views/IncidentCommand/IncidentCommandAlertSummary.js";
 import { MissionCommandConsole } from "./views/MissionCommand/MissionCommandConsole.js";
+import { MissionCommandAlertSummary } from "./views/MissionCommand/MissionCommandAlertSummary.js";
 import { HabitatView } from "./views/Habitat/HabitatView.js";
 import { BriefingView } from "./views/Briefing/BriefingView.js";
 import { DebriefView } from "./views/Debrief/DebriefView.js";
@@ -135,7 +139,11 @@ export interface AppProps {
  *  is a Vite build-time constant, so this whole branch (the dynamic import included) is dead
  *  code in a production build and Rollup drops it, not just the route that would reach it. */
 const CockpitCalibrateView = import.meta.env.DEV
-  ? lazy(() => import("./views/CockpitCalibrate/CockpitCalibrateView.js").then((m) => ({ default: m.CockpitCalibrateView })))
+  ? lazy(() =>
+      import("./views/CockpitCalibrate/CockpitCalibrateView.js").then((m) => ({
+        default: m.CockpitCalibrateView,
+      })),
+    )
   : undefined;
 
 /**
@@ -401,15 +409,51 @@ function AppShell({ initialView = "home" }: AppProps) {
                 <SolSummaryView />
                 <CoachMark view={view} onNavigate={setView} />
 
-                {view === "power" && <PowerConsole />}
+                {view === "power" && (
+                  <StationCockpit
+                    body={scenario.body}
+                    station="power"
+                    alertContent={<PowerAlertSummary />}
+                  >
+                    <PowerConsole />
+                  </StationCockpit>
+                )}
                 {view === "lifeSupport" && (
-                  <StationCockpit body={scenario.body} station="lifeSupport" alertContent={<LifeSupportAlertSummary />}>
+                  <StationCockpit
+                    body={scenario.body}
+                    station="lifeSupport"
+                    alertContent={<LifeSupportAlertSummary />}
+                  >
                     <LifeSupportConsole />
                   </StationCockpit>
                 )}
-                {view === "comms" && <CommsConsole />}
-                {view === "incidentCommand" && <IncidentCommandConsole />}
-                {view === "missionCommand" && <MissionCommandConsole />}
+                {view === "comms" && (
+                  <StationCockpit
+                    body={scenario.body}
+                    station="comms"
+                    alertContent={<CommsAlertSummary />}
+                  >
+                    <CommsConsole />
+                  </StationCockpit>
+                )}
+                {view === "incidentCommand" && (
+                  <StationCockpit
+                    body={scenario.body}
+                    station="incidentCommand"
+                    alertContent={<IncidentCommandAlertSummary />}
+                  >
+                    <IncidentCommandConsole />
+                  </StationCockpit>
+                )}
+                {view === "missionCommand" && (
+                  <StationCockpit
+                    body={scenario.body}
+                    station="missionCommand"
+                    alertContent={<MissionCommandAlertSummary />}
+                  >
+                    <MissionCommandConsole />
+                  </StationCockpit>
+                )}
                 {view === "habitat" && <HabitatView />}
                 {view === "briefing" && <BriefingView />}
                 {view === "debrief" && (

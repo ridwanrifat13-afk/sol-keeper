@@ -32,6 +32,7 @@ import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { durationLabel, elapsedValue, timeUnitWord } from "../../dial/missionTime.js";
 import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
 import { DashboardGrid } from "../../components/DashboardGrid.js";
+import { CockpitTarget } from "../../cockpit/CockpitTarget.js";
 
 /**
  * The Mission Command console (M8.3): crew status, which mission is running, and the whole
@@ -102,236 +103,285 @@ export function MissionCommandConsole() {
   const stretchMet = checkGoal(scenario.stretchGoal, state, scenario);
 
   const aliveCrewCount = state.crew.filter((c) => c.alive).length;
-  const activeAlertCount = state.activeIncidents.filter((i) => i.resolvedAtHour === undefined).length;
+  const activeAlertCount = state.activeIncidents.filter(
+    (i) => i.resolvedAtHour === undefined,
+  ).length;
 
   return (
     <DashboardGrid className="console ops-center two-col" layoutKey="missionCommand">
       <header className="view-head">
         <h2>Mission Command</h2>
-        <p className="view-hint">Crew status, the current mission, and the whole-mission mass budget.</p>
+        <p className="view-hint">
+          Crew status, the current mission, and the whole-mission mass budget.
+        </p>
       </header>
 
-      <section className="ops-board panel-span-full" aria-labelledby="ops-board-heading">
-        <h2 id="ops-board-heading" className="visually-hidden">
-          Mission status board
-        </h2>
-        <div className="ops-board-row">
-          <span className="ops-live-dot" aria-hidden="true" />
-          <span className="ops-board-title">
-            {SCENARIO_LABELS[scenario.id].label.toUpperCase()} ·{" "}
-            {state.status === "running" ? "MISSION IN PROGRESS" : state.status.toUpperCase()}
-          </span>
-        </div>
-        <div className="ops-board-readouts">
-          <div className="ops-readout">
-            <span className="ops-readout-icon" aria-hidden="true">
-              <FiCalendar />
+      <CockpitTarget id="mission-ops-board" role="primary" priority={1}>
+        <section className="ops-board panel-span-full" aria-labelledby="ops-board-heading">
+          <h2 id="ops-board-heading" className="visually-hidden">
+            Mission status board
+          </h2>
+          <div className="ops-board-row">
+            <span className="ops-live-dot" aria-hidden="true" />
+            <span className="ops-board-title">
+              {SCENARIO_LABELS[scenario.id].label.toUpperCase()} ·{" "}
+              {state.status === "running" ? "MISSION IN PROGRESS" : state.status.toUpperCase()}
             </span>
-            <span className="ops-readout-body">
-              <span className="ops-readout-value">
-                {elapsedValue(state.hour, scenario.body).toFixed(2)}
-                <span className="ops-readout-unit"> / {durationLabel(scenario.durationHours, scenario.body)}</span>
+          </div>
+          <div className="ops-board-readouts">
+            <div className="ops-readout">
+              <span className="ops-readout-icon" aria-hidden="true">
+                <FiCalendar />
               </span>
-              <span className="ops-readout-label">{timeUnitWord(scenario.body)} elapsed</span>
-            </span>
-          </div>
-          <div className="ops-readout">
-            <span className="ops-readout-icon" aria-hidden="true">
-              <FiUsers />
-            </span>
-            <span className="ops-readout-body">
-              <span className="ops-readout-value">
-                {aliveCrewCount}
-                <span className="ops-readout-unit"> / {state.crew.length}</span>
-              </span>
-              <span className="ops-readout-label">Crew alive</span>
-            </span>
-          </div>
-          <div className="ops-readout">
-            <span className="ops-readout-icon" aria-hidden="true">
-              <FiAlertTriangle />
-            </span>
-            <span className="ops-readout-body">
-              <span className={`ops-readout-value ${activeAlertCount > 0 ? "ops-readout-alert" : ""}`}>
-                {activeAlertCount}
-              </span>
-              <span className="ops-readout-label">Active alerts</span>
-            </span>
-          </div>
-          <div className="ops-readout">
-            <span className="ops-readout-icon" aria-hidden="true">
-              <FiClock />
-            </span>
-            <span className="ops-readout-body">
-              <span className="ops-readout-value">{state.hour}</span>
-              <span className="ops-readout-label">Mission hour</span>
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <OrbitalView />
-
-      <ScenarioSwitch />
-      <CrewPanel />
-
-      <section className="panel" aria-labelledby="station-coverage-heading">
-        <h2 id="station-coverage-heading">Station coverage</h2>
-        <p className="panel-hint">Who covers what right now, and how effectively.</p>
-        <ul className="status-list">
-          {STATION_IDS.map((station) => {
-            const coverer = stationCoverer(ctx, station);
-            const performance = stationPerformance(ctx, station, crewCondition);
-            const doubleCovering = coverer !== undefined && isDoubleCovering(ctx, coverer);
-            return (
-              <li key={station}>
-                <span className="status-list-label">{stationLabel(station, level, language)}</span>
-                <span className="status-list-value">
-                  {coverer !== undefined ? coverer.name : "Unassigned"} · {Math.round(performance * 100)}%
-                  {doubleCovering ? " (double-covering)" : ""}
+              <span className="ops-readout-body">
+                <span className="ops-readout-value">
+                  {elapsedValue(state.hour, scenario.body).toFixed(2)}
+                  <span className="ops-readout-unit">
+                    {" "}
+                    / {durationLabel(scenario.durationHours, scenario.body)}
+                  </span>
                 </span>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      <section className="panel" aria-labelledby="crew-assignment-heading">
-        <h2 id="crew-assignment-heading">Crew assignment</h2>
-        <p className="panel-hint">
-          Which station each crew member covers.
-          {locked && " Locked while the sol is running — adjust it during Sol Planning."}
-        </p>
-        <ul className="crew-location-list">
-          {state.crew
-            .filter((c) => c.alive)
-            .map((member) => (
-              <li key={member.id} className="crew-location-row">
-                <span className="crew-location-name">{member.name}</span>
-                <span className="button-row" role="group" aria-label={`${member.name}'s station`}>
-                  {STATION_IDS.map((station: StationId) => (
-                    <button
-                      key={station}
-                      type="button"
-                      className={`btn btn-tiny ${member.primaryStation === station ? "btn-active" : ""}`}
-                      aria-pressed={member.primaryStation === station}
-                      disabled={locked}
-                      onClick={() => {
-                        assignStation(member.id, station);
-                      }}
-                    >
-                      {stationLabel(station, level, language)}
-                    </button>
-                  ))}
+                <span className="ops-readout-label">{timeUnitWord(scenario.body)} elapsed</span>
+              </span>
+            </div>
+            <div className="ops-readout">
+              <span className="ops-readout-icon" aria-hidden="true">
+                <FiUsers />
+              </span>
+              <span className="ops-readout-body">
+                <span className="ops-readout-value">
+                  {aliveCrewCount}
+                  <span className="ops-readout-unit"> / {state.crew.length}</span>
                 </span>
-              </li>
-            ))}
-        </ul>
-      </section>
+                <span className="ops-readout-label">Crew alive</span>
+              </span>
+            </div>
+            <div className="ops-readout">
+              <span className="ops-readout-icon" aria-hidden="true">
+                <FiAlertTriangle />
+              </span>
+              <span className="ops-readout-body">
+                <span
+                  className={`ops-readout-value ${activeAlertCount > 0 ? "ops-readout-alert" : ""}`}
+                >
+                  {activeAlertCount}
+                </span>
+                <span className="ops-readout-label">Active alerts</span>
+              </span>
+            </div>
+            <div className="ops-readout">
+              <span className="ops-readout-icon" aria-hidden="true">
+                <FiClock />
+              </span>
+              <span className="ops-readout-body">
+                <span className="ops-readout-value">{state.hour}</span>
+                <span className="ops-readout-label">Mission hour</span>
+              </span>
+            </div>
+          </div>
+        </section>
+      </CockpitTarget>
 
-      <section className="panel" aria-labelledby="crew-schedule-heading">
-        <h2 id="crew-schedule-heading">Crew schedule</h2>
-        <p className="panel-hint">
-          A fourth real lever: authorizing overtime raises today's crew-hours ceiling by{" "}
-          {Math.round((crewConstants.overtimeCeilingFractionOfAverage.value - 1) * 100)}%
-          (BVAD-2022's own "maximum available VST" figure) — more room for incident response and
-          repairs — but any hours actually worked past the ordinary budget cost the whole crew
-          real, felt fatigue once the sol ends. Costs nothing if the extra hours go unused.
-          {locked && " Locked while the sol is running — adjust it during Sol Planning."}
-        </p>
-        <div className="button-row" role="group" aria-label="Overtime authorization">
-          <button
-            type="button"
-            className={`btn ${!state.crewHours.overtimeAuthorized ? "btn-active" : ""}`}
-            aria-pressed={!state.crewHours.overtimeAuthorized}
-            disabled={locked}
-            onClick={() => {
-              setOvertimeAuthorized(false);
-            }}
-          >
-            Standard hours
-            <span className="btn-sub">no fatigue risk</span>
-          </button>
-          <button
-            type="button"
-            className={`btn ${state.crewHours.overtimeAuthorized ? "btn-active" : ""}`}
-            aria-pressed={state.crewHours.overtimeAuthorized}
-            disabled={locked}
-            onClick={() => {
-              setOvertimeAuthorized(true);
-            }}
-          >
-            Authorize overtime
-            <span className="btn-sub">
-              up to {(state.crewHours.unboostedBudgetTodayHours * crewConstants.overtimeCeilingFractionOfAverage.value).toFixed(1)} h today
-            </span>
-          </button>
-        </div>
-        <p className="panel-hint">
-          Today: {state.crewHours.spentTodayHours.toFixed(1)} / {state.crewHours.budgetTodayHours.toFixed(1)} h spent.
-        </p>
-      </section>
+      <CockpitTarget id="mission-orbital-view" role="secondary" priority={6}>
+        <OrbitalView />
+      </CockpitTarget>
 
-      <section className="panel" aria-labelledby="daily-plan-heading">
-        <h2 id="daily-plan-heading">Daily plan</h2>
-        <ul className="status-list">
-          <li>
-            <span className="status-list-label">Rations</span>
-            <span className="status-list-value">{survivalModeLabel(state.food.mode, level, language)}</span>
-          </li>
-          <li>
-            <span className="status-list-label">Downlink priority</span>
-            <span className="status-list-value">
-              {state.comms.priority === "personal" ? "Personal correspondence" : "Science downlink"}
-            </span>
-          </li>
-          <li>
-            <span className="status-list-label">Air cleaner</span>
-            <span className="status-list-value">{co2ScrubberModeLabel(state.atmosphere.co2ScrubberMode, level, language)}</span>
-          </li>
-          <li>
-            <span className="status-list-label">Water reclamation</span>
-            <span className="status-list-value">{waterReclamationModeLabel(state.water.reclamationMode, level, language)}</span>
-          </li>
-          <li>
-            <span className="status-list-label">Thermal control</span>
-            <span className="status-list-value">{thermalControlModeLabel(state.thermal.controlMode, level, language)}</span>
-          </li>
-          <li>
-            <span className="status-list-label">Overtime</span>
-            <span className="status-list-value">{state.crewHours.overtimeAuthorized ? "Authorized" : "Standard hours"}</span>
-          </li>
-          <li>
-            <span className="status-list-label">Repair queue</span>
-            <span className="status-list-value">{state.crewHours.queue.length} item(s)</span>
-          </li>
-        </ul>
-      </section>
+      <CockpitTarget id="mission-scenario-switch" role="secondary" priority={7}>
+        <ScenarioSwitch />
+      </CockpitTarget>
+      <CockpitTarget id="mission-crew-panel" role="secondary" priority={8}>
+        <CrewPanel />
+      </CockpitTarget>
 
-      <section className="panel" aria-labelledby="goals-heading">
-        <h2 id="goals-heading">Goals</h2>
-        <p>
-          <StatusPill
-            status={STATUS[primaryMet ? "nominal" : "caution"]}
-            label={primaryMet ? "Primary goal met" : "Primary goal"}
-          />
-        </p>
-        <p className="panel-hint">{goalText(scenario.primaryGoal.briefKey, level, language)}</p>
-        <p>
-          <StatusPill
-            status={STATUS[stretchMet ? "nominal" : "caution"]}
-            label={stretchMet ? "Stretch goal met" : "Stretch goal"}
-          />
-        </p>
-        <p className="panel-hint">{goalText(scenario.stretchGoal.briefKey, level, language)}</p>
-        {scenario.scienceTargetPoints > 0 && (
+      <CockpitTarget id="mission-station-coverage" role="secondary" priority={3}>
+        <section className="panel" aria-labelledby="station-coverage-heading">
+          <h2 id="station-coverage-heading">Station coverage</h2>
+          <p className="panel-hint">Who covers what right now, and how effectively.</p>
+          <ul className="status-list">
+            {STATION_IDS.map((station) => {
+              const coverer = stationCoverer(ctx, station);
+              const performance = stationPerformance(ctx, station, crewCondition);
+              const doubleCovering = coverer !== undefined && isDoubleCovering(ctx, coverer);
+              return (
+                <li key={station}>
+                  <span className="status-list-label">
+                    {stationLabel(station, level, language)}
+                  </span>
+                  <span className="status-list-value">
+                    {coverer !== undefined ? coverer.name : "Unassigned"} ·{" "}
+                    {Math.round(performance * 100)}%{doubleCovering ? " (double-covering)" : ""}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      </CockpitTarget>
+
+      <CockpitTarget id="mission-crew-assignment" role="secondary" priority={1}>
+        <section className="panel" aria-labelledby="crew-assignment-heading">
+          <h2 id="crew-assignment-heading">Crew assignment</h2>
           <p className="panel-hint">
-            Science: {state.science.points.toFixed(1)} / {scenario.scienceTargetPoints} points
+            Which station each crew member covers.
+            {locked && " Locked while the sol is running — adjust it during Sol Planning."}
           </p>
-        )}
-      </section>
+          <ul className="crew-location-list">
+            {state.crew
+              .filter((c) => c.alive)
+              .map((member) => (
+                <li key={member.id} className="crew-location-row">
+                  <span className="crew-location-name">{member.name}</span>
+                  <span className="button-row" role="group" aria-label={`${member.name}'s station`}>
+                    {STATION_IDS.map((station: StationId) => (
+                      <button
+                        key={station}
+                        type="button"
+                        className={`btn btn-tiny ${member.primaryStation === station ? "btn-active" : ""}`}
+                        aria-pressed={member.primaryStation === station}
+                        disabled={locked}
+                        onClick={() => {
+                          assignStation(member.id, station);
+                        }}
+                      >
+                        {stationLabel(station, level, language)}
+                      </button>
+                    ))}
+                  </span>
+                </li>
+              ))}
+          </ul>
+        </section>
+      </CockpitTarget>
 
-      <EsmPanel className="panel-span-full" />
+      <CockpitTarget id="mission-crew-schedule" role="secondary" priority={2}>
+        <section className="panel" aria-labelledby="crew-schedule-heading">
+          <h2 id="crew-schedule-heading">Crew schedule</h2>
+          <p className="panel-hint">
+            A fourth real lever: authorizing overtime raises today's crew-hours ceiling by{" "}
+            {Math.round((crewConstants.overtimeCeilingFractionOfAverage.value - 1) * 100)}%
+            (BVAD-2022's own "maximum available VST" figure) — more room for incident response and
+            repairs — but any hours actually worked past the ordinary budget cost the whole crew
+            real, felt fatigue once the sol ends. Costs nothing if the extra hours go unused.
+            {locked && " Locked while the sol is running — adjust it during Sol Planning."}
+          </p>
+          <div className="button-row" role="group" aria-label="Overtime authorization">
+            <button
+              type="button"
+              className={`btn ${!state.crewHours.overtimeAuthorized ? "btn-active" : ""}`}
+              aria-pressed={!state.crewHours.overtimeAuthorized}
+              disabled={locked}
+              onClick={() => {
+                setOvertimeAuthorized(false);
+              }}
+            >
+              Standard hours
+              <span className="btn-sub">no fatigue risk</span>
+            </button>
+            <button
+              type="button"
+              className={`btn ${state.crewHours.overtimeAuthorized ? "btn-active" : ""}`}
+              aria-pressed={state.crewHours.overtimeAuthorized}
+              disabled={locked}
+              onClick={() => {
+                setOvertimeAuthorized(true);
+              }}
+            >
+              Authorize overtime
+              <span className="btn-sub">
+                up to{" "}
+                {(
+                  state.crewHours.unboostedBudgetTodayHours *
+                  crewConstants.overtimeCeilingFractionOfAverage.value
+                ).toFixed(1)}{" "}
+                h today
+              </span>
+            </button>
+          </div>
+          <p className="panel-hint">
+            Today: {state.crewHours.spentTodayHours.toFixed(1)} /{" "}
+            {state.crewHours.budgetTodayHours.toFixed(1)} h spent.
+          </p>
+        </section>
+      </CockpitTarget>
+
+      <CockpitTarget id="mission-daily-plan" role="secondary" priority={4}>
+        <section className="panel" aria-labelledby="daily-plan-heading">
+          <h2 id="daily-plan-heading">Daily plan</h2>
+          <ul className="status-list">
+            <li>
+              <span className="status-list-label">Rations</span>
+              <span className="status-list-value">
+                {survivalModeLabel(state.food.mode, level, language)}
+              </span>
+            </li>
+            <li>
+              <span className="status-list-label">Downlink priority</span>
+              <span className="status-list-value">
+                {state.comms.priority === "personal"
+                  ? "Personal correspondence"
+                  : "Science downlink"}
+              </span>
+            </li>
+            <li>
+              <span className="status-list-label">Air cleaner</span>
+              <span className="status-list-value">
+                {co2ScrubberModeLabel(state.atmosphere.co2ScrubberMode, level, language)}
+              </span>
+            </li>
+            <li>
+              <span className="status-list-label">Water reclamation</span>
+              <span className="status-list-value">
+                {waterReclamationModeLabel(state.water.reclamationMode, level, language)}
+              </span>
+            </li>
+            <li>
+              <span className="status-list-label">Thermal control</span>
+              <span className="status-list-value">
+                {thermalControlModeLabel(state.thermal.controlMode, level, language)}
+              </span>
+            </li>
+            <li>
+              <span className="status-list-label">Overtime</span>
+              <span className="status-list-value">
+                {state.crewHours.overtimeAuthorized ? "Authorized" : "Standard hours"}
+              </span>
+            </li>
+            <li>
+              <span className="status-list-label">Repair queue</span>
+              <span className="status-list-value">{state.crewHours.queue.length} item(s)</span>
+            </li>
+          </ul>
+        </section>
+      </CockpitTarget>
+
+      <CockpitTarget id="mission-goals" role="secondary" priority={5}>
+        <section className="panel" aria-labelledby="goals-heading">
+          <h2 id="goals-heading">Goals</h2>
+          <p>
+            <StatusPill
+              status={STATUS[primaryMet ? "nominal" : "caution"]}
+              label={primaryMet ? "Primary goal met" : "Primary goal"}
+            />
+          </p>
+          <p className="panel-hint">{goalText(scenario.primaryGoal.briefKey, level, language)}</p>
+          <p>
+            <StatusPill
+              status={STATUS[stretchMet ? "nominal" : "caution"]}
+              label={stretchMet ? "Stretch goal met" : "Stretch goal"}
+            />
+          </p>
+          <p className="panel-hint">{goalText(scenario.stretchGoal.briefKey, level, language)}</p>
+          {scenario.scienceTargetPoints > 0 && (
+            <p className="panel-hint">
+              Science: {state.science.points.toFixed(1)} / {scenario.scienceTargetPoints} points
+            </p>
+          )}
+        </section>
+      </CockpitTarget>
+
+      <CockpitTarget id="mission-esm-panel" role="secondary" priority={9}>
+        <EsmPanel className="panel-span-full" />
+      </CockpitTarget>
     </DashboardGrid>
   );
 }

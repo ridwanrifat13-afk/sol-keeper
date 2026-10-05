@@ -7,6 +7,7 @@ import { ProvenanceBadge } from "../../components/ProvenanceBadge.js";
 import { FactCardGallery } from "../../components/FactCardGallery.js";
 import type { LightTimeResponse } from "../../../server-lib/types.js";
 import { DashboardGrid } from "../../components/DashboardGrid.js";
+import { CockpitTarget } from "../../cockpit/CockpitTarget.js";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -14,7 +15,11 @@ function todayIso(): string {
 
 const PRIORITIES: readonly { id: CommsPriority; label: string; hint: string }[] = [
   { id: "science", label: "Science downlink", hint: "Progress toward the mission's science goal." },
-  { id: "personal", label: "Personal correspondence", hint: "A real, felt crew morale bonus instead." },
+  {
+    id: "personal",
+    label: "Personal correspondence",
+    hint: "A real, felt crew morale bonus instead.",
+  },
 ];
 
 /**
@@ -53,70 +58,78 @@ export function CommsConsole() {
     <DashboardGrid className="console two-col" layoutKey="comms">
       <header className="view-head">
         <h2>Comms</h2>
-        <p className="view-hint">The real delay to Earth, and — on Mars — why urgent problems can't wait for a reply.</p>
+        <p className="view-hint">
+          The real delay to Earth, and — on Mars — why urgent problems can't wait for a reply.
+        </p>
       </header>
 
-      <section className="panel" aria-labelledby="light-time-heading">
-        <div className="panel-head-row">
-          <h2 id="light-time-heading">{t("liveSky.distanceHeading")}</h2>
-          <ProvenanceBadge status={lightTime.status} fetchedAt={lightTime.data?.fetchedAt} />
-        </div>
-        {lightTime.data ? (
-          <>
-            <p className="live-sky-distance">
-              {t("liveSky.distanceLine", {
-                km: Math.round(lightTime.data.distanceKm).toLocaleString(),
-                body: bodyWord,
-              })}
-            </p>
+      <CockpitTarget id="comms-light-time" role="secondary" priority={1}>
+        <section className="panel" aria-labelledby="light-time-heading">
+          <div className="panel-head-row">
+            <h2 id="light-time-heading">{t("liveSky.distanceHeading")}</h2>
+            <ProvenanceBadge status={lightTime.status} fetchedAt={lightTime.data?.fetchedAt} />
+          </div>
+          {lightTime.data ? (
+            <>
+              <p className="live-sky-distance">
+                {t("liveSky.distanceLine", {
+                  km: Math.round(lightTime.data.distanceKm).toLocaleString(),
+                  body: bodyWord,
+                })}
+              </p>
+              <p className="panel-hint">
+                {t("liveSky.radioDelay", {
+                  oneWay: oneWayMinutes !== undefined ? oneWayMinutes.toFixed(1) : "—",
+                  roundTrip: oneWayMinutes !== undefined ? (oneWayMinutes * 2).toFixed(1) : "—",
+                })}
+              </p>
+            </>
+          ) : (
+            <p className="panel-hint">{t("liveSky.distanceLoading")}</p>
+          )}
+          {scenario.body === "mars" && (
             <p className="panel-hint">
-              {t("liveSky.radioDelay", {
-                oneWay: oneWayMinutes !== undefined ? oneWayMinutes.toFixed(1) : "—",
-                roundTrip: oneWayMinutes !== undefined ? (oneWayMinutes * 2).toFixed(1) : "—",
-              })}
+              On Mars, a problem that needs an answer within the round-trip delay above has to be
+              solved by the crew — Mission Control's reply will not arrive in time.
             </p>
-          </>
-        ) : (
-          <p className="panel-hint">{t("liveSky.distanceLoading")}</p>
-        )}
-        {scenario.body === "mars" && (
+          )}
+        </section>
+      </CockpitTarget>
+
+      <CockpitTarget id="comms-downlink-priority" role="primary" priority={1}>
+        <section className="panel" aria-labelledby="downlink-priority-heading">
+          <h2 id="downlink-priority-heading">Downlink priority</h2>
           <p className="panel-hint">
-            On Mars, a problem that needs an answer within the round-trip delay above has to be
-            solved by the crew — Mission Control's reply will not arrive in time.
+            The same comms uptime feeds one of these, never both this hour.
+            {locked && " Locked while the sol is running — adjust it during Sol Planning."}
           </p>
-        )}
-      </section>
+          <div className="button-row" role="group" aria-label="Downlink priority">
+            {PRIORITIES.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className={`btn ${commsPriority === p.id ? "btn-active" : ""}`}
+                aria-pressed={commsPriority === p.id}
+                disabled={locked}
+                onClick={() => {
+                  setCommsPriority(p.id);
+                }}
+              >
+                {p.label}
+                <span className="btn-sub">{p.hint}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      </CockpitTarget>
 
-      <section className="panel" aria-labelledby="downlink-priority-heading">
-        <h2 id="downlink-priority-heading">Downlink priority</h2>
-        <p className="panel-hint">
-          The same comms uptime feeds one of these, never both this hour.
-          {locked && " Locked while the sol is running — adjust it during Sol Planning."}
-        </p>
-        <div className="button-row" role="group" aria-label="Downlink priority">
-          {PRIORITIES.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className={`btn ${commsPriority === p.id ? "btn-active" : ""}`}
-              aria-pressed={commsPriority === p.id}
-              disabled={locked}
-              onClick={() => {
-                setCommsPriority(p.id);
-              }}
-            >
-              {p.label}
-              <span className="btn-sub">{p.hint}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <FactCardGallery
-        topic="deep-space-network"
-        heading="Real hardware: the Deep Space Network"
-        className="panel-span-full"
-      />
+      <CockpitTarget id="comms-fact-gallery" role="secondary" priority={2}>
+        <FactCardGallery
+          topic="deep-space-network"
+          heading="Real hardware: the Deep Space Network"
+          className="panel-span-full"
+        />
+      </CockpitTarget>
     </DashboardGrid>
   );
 }

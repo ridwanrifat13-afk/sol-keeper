@@ -1,32 +1,40 @@
 # Station cockpit photographs — provenance
 
-M9.1's own "Provenance and disclosure (REQUIRED)" section. One entry per image in this
-folder, stating how it was produced and who holds the rights, before it ships.
+M9.1's own "Provenance and disclosure (REQUIRED)" section. One entry per image this folder's
+derivatives are generated from, stating how it was produced and who holds the rights, before
+it ships.
 
-## moon-lifeSupport.jpg
+## power / comms / incidentCommand / missionCommand / lifeSupport × moon / mars (ten images)
 
-**Status: placeholder, provenance unknown — flagged, not resolved.** This is a stand-in used
-to build and demonstrate the cockpit-view mechanism (regions, panel assignment, overflow
-tabs) end to end, **not** the real lunar life-support console photograph the brief's own seed
-region layout was written for.
+**Status: provenance not yet recorded — flagged, not resolved.** Ten real, multi-monitor
+console photographs supplied by the lead developer directly into this project (originals in
+`apps/web/stations-src/`, not served — see that directory's own note, and
+`scripts/generate-station-images.ts`'s doc comment, for why), replacing the single
+stock-photo placeholder (`moon-lifeSupport.jpg`) this mechanism was originally demonstrated
+against. Source filenames: `{moon-,mars-}{power,comms,incidentCommand,missionCommand,
+lifeSupport}.{png,jpg}`.
 
-- What it shows: a stock photograph of a broadcast video monitor (visually a Sony-branded
-  production monitor), background removed.
-- How it reached this project: supplied by the lead developer as a local file during this
-  session (filename `_ (7)-Photoroom.png`, the "Photoroom" background-removal app's own
-  output naming), with no source URL, photographer, or license attached.
-- **I could not determine who holds the rights to the original photograph, or under what
-  license (if any) it may be used.** Per the brief's own instruction ("Flag to me any image
-  where you cannot determine provenance"), this is that flag: do not ship this file, and
-  replace this whole entry before any public build — including the Space Apps submission,
-  which separately requires disclosing AI-generated or third-party imagery.
-- Not NASA photography, and carries no NASA insignia.
+- What they show: realistic multi-screen mission-control console interiors (wall-mounted
+  monitor arrays, physical control panels, keyboards), one per station per body — no NASA
+  logo, insignia, or "meatball" visible in any of them (brief rule 5, checked directly).
+- How they reached this project: supplied by the lead developer as local files. **I do not
+  know the tool, prompt, process, or date used to produce them, or who holds the rights** —
+  per the brief's own instruction ("Flag to me any image where you cannot determine
+  provenance"), this is that flag. If these are AI-generated, the brief notes Space Apps
+  separately requires disclosing that in the project submission, not just here.
+- **Lead developer: please fill in, per image or as one note covering all ten if they share
+  a single source/process:** the tool or model used (if AI-generated), the prompt or process,
+  the date, and who holds the rights to the output. Until this is filled in, do not treat
+  these as cleared for public submission.
 
-Once the real photograph (and the lead developer's own `/cockpit-calibrate` pass over it,
-per M9.1's "Order of work") replaces this file, update this entry — or add a new one, if the
-filename changes — with its real source, license, and date.
+None of the ten has been calibrated yet (`/cockpit-calibrate`) — `screenMaps.ts` is
+deliberately empty, so every station renders Classic view only until a real, drag-calibrated
+entry is added for it.
 
-The `moon-lifeSupport-{1920,1280,960}w.{avif,webp,jpg}` files alongside it are
-machine-generated from this same source (`scripts/generate-station-images.ts`, re-run by
-hand whenever the source changes) — they carry the identical unresolved-provenance flag
-above, not a separate one. Delete and regenerate them once the real photograph lands.
+## moon-lifeSupport.jpg (retired placeholder — no longer in this folder)
+
+The original stock-photo placeholder (a broadcast video monitor, background removed,
+provenance also unresolved) this mechanism was first built and demonstrated against has been
+deleted, along with its generated derivatives and its screenMaps.ts entry (calibrated against
+that specific image's geometry — meaningless for the real photograph above). Nothing to
+migrate; this note exists only so a reader of git history isn't left guessing why it vanished.

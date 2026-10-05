@@ -4,16 +4,18 @@
  * local-only tool (CLAUDE.md's own `scripts/` convention — "run by the lead developer"), not
  * wired into `apps/web`'s own Vercel build: station photos change rarely, sharp is a native
  * binary not worth adding to the deploy path for that, and the derived files are committed
- * as ordinary static assets (the same way the source photo itself already is), re-run by
- * hand (`pnpm gen:station-images`) whenever a station photo is replaced or added.
+ * as ordinary static assets, re-run by hand (`pnpm gen:station-images`) whenever a station
+ * photo is replaced or added.
  *
- * Reads every `*.jpg`/`*.png` directly under apps/web/public/stations (skipping files that
- * already look like a generated output, so re-running is idempotent) and writes
- * `<base>-<width>w.<ext>` siblings for each of WIDTHS × FORMATS. `withoutEnlargement: true`
- * (sharp's own option) means a source narrower than a given width is left at its own native
- * width instead of being blown up — relevant today specifically because moon-lifeSupport.jpg
- * is a disclosed 357px-wide placeholder (apps/web/public/stations/CREDITS.md), not the
- * 1920px-class photograph this pipeline is really sized for.
+ * Reads every `*.jpg`/`*.png` in `apps/web/stations-src/` (deliberately **not**
+ * `apps/web/public/`: the raw sources here run 1.7-2.3MB each, and vite-plugin-pwa's service
+ * worker precache step hard-fails the production build the moment any precached asset exceeds
+ * its 2MB default — confirmed directly, not a hypothetical — so the sources that only this
+ * script ever reads must never land under `public/` where both Vite's static-copy and the PWA
+ * precache would otherwise pick them up) and writes `<base>-<width>w.<ext>` siblings, for each
+ * of WIDTHS × FORMATS, into `apps/web/public/stations/` — the one directory the app itself
+ * references. `withoutEnlargement: true` (sharp's own option) means a source narrower than a
+ * given width is left at its own native width instead of being blown up.
  *
  * Usage:
  *   pnpm gen:station-images
@@ -22,14 +24,11 @@ import { readdir } from "node:fs/promises";
 import { join, basename, extname } from "node:path";
 import sharp, { type Sharp } from "sharp";
 
-const STATIONS_DIR = join(process.cwd(), "apps/web/public/stations");
+const SOURCE_DIR = join(process.cwd(), "apps/web/stations-src");
+const OUTPUT_DIR = join(process.cwd(), "apps/web/public/stations");
 const WIDTHS = [1920, 1280, 960] as const;
 const FORMATS = ["avif", "webp", "jpg"] as const;
 const AVIF_1280W_BUDGET_BYTES = 250 * 1024;
-
-function isGeneratedName(name: string): boolean {
-  return /-(1920|1280|960)w\.(avif|webp|jpe?g)$/i.test(name);
-}
 
 async function encode(image: Sharp, format: (typeof FORMATS)[number]): Promise<Buffer> {
   if (format === "avif") return image.avif({ quality: 55 }).toBuffer();
@@ -38,29 +37,26 @@ async function encode(image: Sharp, format: (typeof FORMATS)[number]): Promise<B
 }
 
 async function main(): Promise<void> {
-  const entries = await readdir(STATIONS_DIR, { withFileTypes: true });
+  const entries = await readdir(SOURCE_DIR, { withFileTypes: true });
   const sources = entries.filter(
-    (e) =>
-      e.isFile() &&
-      [".jpg", ".jpeg", ".png"].includes(extname(e.name).toLowerCase()) &&
-      !isGeneratedName(e.name),
+    (e) => e.isFile() && [".jpg", ".jpeg", ".png"].includes(extname(e.name).toLowerCase()),
   );
 
   if (sources.length === 0) {
-    console.log("No source station photos found in", STATIONS_DIR);
+    console.log("No source station photos found in", SOURCE_DIR);
     return;
   }
 
   let overBudget = 0;
   for (const source of sources) {
-    const path = join(STATIONS_DIR, source.name);
+    const path = join(SOURCE_DIR, source.name);
     const base = basename(source.name, extname(source.name));
     console.log(`\n${source.name}:`);
 
     for (const width of WIDTHS) {
       for (const format of FORMATS) {
         const outName = `${base}-${width}w.${format}`;
-        const outPath = join(STATIONS_DIR, outName);
+        const outPath = join(OUTPUT_DIR, outName);
         const resized = sharp(path).resize({ width, withoutEnlargement: true });
         const buffer = await encode(resized, format);
         await sharp(buffer).toFile(outPath);

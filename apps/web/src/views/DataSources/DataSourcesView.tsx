@@ -99,13 +99,14 @@ export function DataSourcesView() {
       <section className="panel" aria-labelledby="artwork-heading">
         <h2 id="artwork-heading">Artwork</h2>
         <p className="panel-hint">
-          Cockpit view (an optional, toggleable layout on Life Support) shows that console's
-          own real content inside a photograph of a monitor — illustrative artwork, not NASA
-          photography, and carrying no NASA insignia.
+          Cockpit view (an optional, toggleable layout on each station console) shows that
+          console's own real content inside a photograph of a mission-control console —
+          illustrative artwork, not NASA photography, and carrying no NASA insignia.
         </p>
         <p className="source-verification source-unverified">
-          <span aria-hidden="true">○</span> moon-lifeSupport.jpg is a disclosed placeholder
-          with unresolved provenance — not yet cleared to ship. Full record in{" "}
+          <span aria-hidden="true">○</span> All ten station photographs (power, comms,
+          incident command, mission command, life support — Moon and Mars) have unresolved
+          provenance — not yet cleared to ship. Full record in{" "}
           <code>apps/web/public/stations/CREDITS.md</code>.
         </p>
       </section>
