@@ -11,6 +11,7 @@ import { createPortal } from "react-dom";
 import { assignPanelsToRegions } from "./assignPanels.js";
 import { CockpitContext, type CockpitApi } from "./CockpitContext.js";
 import { CockpitScreen } from "./CockpitScreen.js";
+import { CockpitTicker, TICKER_METRICS } from "./CockpitTicker.js";
 import { OverflowTabs } from "./OverflowTabs.js";
 import { getScreenMap } from "./screenMaps.js";
 import { stationImageSrcSet, stationImageFallback } from "./stationImage.js";
@@ -133,9 +134,15 @@ export function StationCockpit({
   // small screen can't fit on its own to go.
   const secondaryRegions = nonAlertRegions.filter((r) => r.role === "secondary");
   const overflowHost = secondaryRegions[secondaryRegions.length - 1];
+  // Ticker regions don't take a registered console panel at all (CockpitTicker.tsx's own
+  // doc comment) — excluded from the generic assignment pool the same way the alert region
+  // is, and rendered directly below instead.
+  const tickerRegions = nonAlertRegions.filter((r) => r.role === "ticker");
   const assignableRegions = useMemo(
     () =>
-      overflowHost ? nonAlertRegions.filter((r) => r.id !== overflowHost.id) : nonAlertRegions,
+      nonAlertRegions.filter(
+        (r) => r.role !== "ticker" && (overflowHost === undefined || r.id !== overflowHost.id),
+      ),
     [nonAlertRegions, overflowHost],
   );
 
@@ -220,6 +227,9 @@ export function StationCockpit({
         {assignableRegions.map((region) => (
           <CockpitScreen key={region.id} region={region} ref={getRegionRef(region.id)} />
         ))}
+        {tickerRegions.map((region) => (
+          <CockpitScreen key={region.id} region={region} ref={getRegionRef(region.id)} />
+        ))}
         {overflowHost && overflowTabs.length > 0 && (
           <div
             className="cockpit-screen cockpit-screen-overflow-host"
@@ -243,6 +253,15 @@ export function StationCockpit({
       {alertRegion &&
         regionNodes.current[alertRegion.id] &&
         createPortal(alertContent, regionNodes.current[alertRegion.id] as HTMLElement)}
+      {/* Ticker regions cycle through TICKER_METRICS in the screen map's own declared order —
+         see CockpitTicker.tsx's own doc comment for why this isn't a registered panel. */}
+      {tickerRegions.map((region, i) => {
+        const node = regionNodes.current[region.id];
+        if (!node) return null;
+        const metric = TICKER_METRICS[i % TICKER_METRICS.length];
+        if (metric === undefined) return null;
+        return createPortal(<CockpitTicker metric={metric} />, node, region.id);
+      })}
       {/* The console still renders here, fully mounted (so its state, gauges and every
          useRun/useDial subscription keep ticking) — just visually hidden, since whichever of
          its panels CockpitTarget could place have already portaled out into the regions

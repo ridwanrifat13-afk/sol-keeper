@@ -2953,6 +2953,17 @@ code {
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
+.cockpit-ticker-readout {
+  /* M9.1's own accessibility rule: "minimum body text 14px after scaling" — set explicitly
+     here since the ticker strip is the narrowest region and otherwise inherits
+     .cockpit-screen-content's smaller 0.78rem. One-line only, per the brief's own rule for
+     this region role; it clips rather than wraps or pushes the strip taller. */
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .cockpit-screen-alert .cockpit-screen-content {
   display: flex;
   align-items: center;
