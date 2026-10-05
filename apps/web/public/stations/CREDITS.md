@@ -25,3 +25,8 @@ region layout was written for.
 Once the real photograph (and the lead developer's own `/cockpit-calibrate` pass over it,
 per M9.1's "Order of work") replaces this file, update this entry — or add a new one, if the
 filename changes — with its real source, license, and date.
+
+The `moon-lifeSupport-{1920,1280,960}w.{avif,webp,jpg}` files alongside it are
+machine-generated from this same source (`scripts/generate-station-images.ts`, re-run by
+hand whenever the source changes) — they carry the identical unresolved-provenance flag
+above, not a separate one. Delete and regenerate them once the real photograph lands.

@@ -14,7 +14,7 @@ import { CockpitScreen } from "./CockpitScreen.js";
 import { CockpitTicker, TICKER_METRICS } from "./CockpitTicker.js";
 import { OverflowTabs } from "./OverflowTabs.js";
 import { getScreenMap } from "./screenMaps.js";
-import { stationImageSrcSet, stationImageFallback } from "./stationImage.js";
+import { stationImageSources } from "./stationImage.js";
 import { useCockpitMode } from "./useCockpitMode.js";
 import type { Body, CockpitPanel, StationKey } from "./types.js";
 
@@ -205,24 +205,30 @@ export function StationCockpit({
   }
 
   const overflowTabs = assignment.overflow.map((id) => ({ id, label: id }));
+  const sources = stationImageSources(screenMap.imageBase);
+  const sizes = "(min-width: 1280px) 1280px, 100vw";
 
   return (
     <div className="station-cockpit-shell">
       {toggle}
       <div ref={frameRef} className="cockpit-frame" style={{ aspectRatio: screenMap.aspectRatio }}>
-        <img
-          className="cockpit-frame-img"
-          src={stationImageFallback(screenMap.imageBase)}
-          srcSet={stationImageSrcSet(screenMap.imageBase)}
-          sizes="(min-width: 1280px) 1280px, 100vw"
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          onError={() => {
-            setImageFailed(true);
-          }}
-          onLoad={bump}
-        />
+        <picture>
+          <source type="image/avif" srcSet={sources.avifSrcSet} sizes={sizes} />
+          <source type="image/webp" srcSet={sources.webpSrcSet} sizes={sizes} />
+          <img
+            className="cockpit-frame-img"
+            src={sources.fallbackSrc}
+            srcSet={sources.jpegSrcSet}
+            sizes={sizes}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            onError={() => {
+              setImageFailed(true);
+            }}
+            onLoad={bump}
+          />
+        </picture>
         {alertRegion && <CockpitScreen region={alertRegion} ref={getRegionRef(alertRegion.id)} />}
         {assignableRegions.map((region) => (
           <CockpitScreen key={region.id} region={region} ref={getRegionRef(region.id)} />

@@ -120,7 +120,10 @@ test.describe("Cockpit view — Moon Life Support", () => {
   test("falls back to Classic, fully usable, when the station photo fails to load", async ({
     page,
   }) => {
-    await page.route("**/stations/moon-lifeSupport.jpg", (route) => route.abort());
+    // Matches every generated width/format variant (scripts/generate-station-images.ts),
+    // not just one filename — a real failure (network, CDN, ad blocker) would block the
+    // whole <picture> negotiation, not one specific file.
+    await page.route("**/stations/moon-lifeSupport*", (route) => route.abort());
     await gotoMoonLifeSupport(page);
 
     await expect(page.getByText("The station photo failed to load.")).toBeVisible();
