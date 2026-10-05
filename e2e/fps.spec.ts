@@ -103,4 +103,22 @@ test.describe("Mobile performance (M9.7)", () => {
     const animationName = await craft.evaluate((el) => getComputedStyle(el).animationName);
     expect(animationName).toBe("none");
   });
+
+  // M9.1's own performance rule: "30+ FPS on low-end Android; if cockpit image regresses
+  // Lighthouse mobile, cockpit stays desktop-only" — the same throttled-CPU technique as the
+  // Habitat/establishing-shot checks above, applied to the one station with a real cockpit
+  // screen map today.
+  test("Life Support cockpit view sustains 30+ FPS on a throttled CPU while idle", async ({
+    page,
+  }) => {
+    await gotoApp(page);
+    await openTab(page, "Mission Command");
+    await page.getByRole("button", { name: /^First Light/ }).click();
+    await openTab(page, "Life Support");
+    await throttleCpu(page);
+    await expect(page.locator(".cockpit-frame")).toBeVisible();
+
+    const fps = await measureFps(page, MEASURE_MS);
+    expect(fps).toBeGreaterThanOrEqual(MIN_FPS);
+  });
 });
