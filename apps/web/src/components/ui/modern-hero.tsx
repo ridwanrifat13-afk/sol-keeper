@@ -1,8 +1,9 @@
 import { ReactLenis } from "lenis/react";
-import { motion, useMotionTemplate, useScroll, useTransform } from "framer-motion";
+import { motion, useInView, useMotionTemplate, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { FiArrowRight, FiBookOpen, FiMapPin } from "react-icons/fi";
 import { useEffect, useRef, useState } from "react";
 import { SCENARIOS, type ScenarioId } from "@sol-keeper/sim";
+import { useAccessibility } from "../../store/accessibility.js";
 import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
 import { CONTROLS_REFERENCE, MISSION_GUIDES, SETUP_CONTROLS_REFERENCE } from "../../dial/missionGuides.js";
 import { durationLabel } from "../../dial/missionTime.js";
@@ -370,6 +371,64 @@ const SCENARIO_ORDER: readonly ScenarioId[] = ["jezero-outpost", "first-light", 
  * different card is a genuinely different shortcut, not just different marketing copy on top
  * of the same one destination.
  */
+/**
+ * Player request: give Launch Windows the same full-bleed, astronaut-on-the-surface backdrop
+ * as the reference composition — a looping video behind the card list instead of the flat
+ * colour it had before. Three real constraints shaped this, not just dropping in a `<video>`:
+ *   - Lazy, once: `useInView(..., { once: true })` means the ~7MB clip only starts
+ *     downloading once a reader actually scrolls near this section, never on first paint of
+ *     the homepage, and never re-triggers once it has.
+ *   - Reduced motion / low-power mode (CLAUDE.md rule 6). A looping background is exactly the
+ *     kind of motion `prefers-reduced-motion` and the player's own low-power toggle
+ *     (store/accessibility.ts) exist to suppress — both skip mounting the `<video>` entirely
+ *     and leave its real first-frame extract (launch-windows-poster.jpg) showing as a static
+ *     image instead, not a placeholder.
+ *   - The PWA precache's 2MB-per-file limit (vite.config.ts's own `globPatterns`) only matches
+ *     image/script/style extensions, never `.mp4` — this clip is never precached, so it's
+ *     outside the offline-after-first-load guarantee. Fine for a decorative backdrop; the
+ *     poster image (a `.jpg`, so it IS precached) is what keeps the section looking right
+ *     offline or on a blocked connection.
+ */
+const ScheduleVideoBackground = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const inView = useInView(containerRef, { once: true, margin: "200px" });
+  const lowPowerMode = useAccessibility((s) => s.lowPowerMode);
+  const prefersReducedMotion = useReducedMotion();
+  const canPlayVideo = inView && !lowPowerMode && !prefersReducedMotion;
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (canPlayVideo) {
+      video.play().catch(() => {
+        // Autoplay can be blocked by the browser (data-saver mode, strict permissions) — the
+        // poster frame underneath still shows either way, so there's no blank/broken state.
+      });
+    } else {
+      video.pause();
+    }
+  }, [canPlayVideo]);
+
+  return (
+    <div ref={containerRef} className="modern-hero-schedule-bg" aria-hidden="true">
+      <img src="/images/hero/launch-windows-poster.jpg" alt="" className="modern-hero-schedule-poster" />
+      {canPlayVideo && (
+        <video
+          ref={videoRef}
+          className="modern-hero-schedule-video"
+          src="/videos/launch-windows-astronaut.mp4"
+          muted
+          loop
+          playsInline
+          preload="auto"
+        />
+      )}
+      <div className="modern-hero-schedule-bg-gradient" />
+    </div>
+  );
+};
+
 const Schedule = ({ onLaunchMission }: ScheduleProps) => {
   return (
     <section
@@ -377,6 +436,7 @@ const Schedule = ({ onLaunchMission }: ScheduleProps) => {
       className="modern-hero-schedule"
       aria-label="Mission Launch Windows"
     >
+      <ScheduleVideoBackground />
       {/* Player request: remove the generic "Start Mission Setup" button that used to sit
        *  here — each card below already has its own real, scenario-specific launch action
        *  (`onLaunch`), and Nav's own "Launch Outpost" button (top of the page) already covers

@@ -384,9 +384,74 @@
   position: relative;
   z-index: 10;
   /* A visible seam, not just a same-color continuation, so the shortcuts list reads as its
-     own section rather than a fade-out of the hero above it. */
+     own section rather than a fade-out of the hero above it. Flat colour, not a gradient —
+     ScheduleVideoBackground's own gradient (below) sits on top of this as a fallback base
+     while the video/poster loads in, so there's never a flash of raw black underneath them. */
   background-color: #09090b;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+/* Player request: give Launch Windows the same full-bleed, astronaut-on-the-surface look as
+   the hero above it — a looping video instead of a static photo, scoped to this section (not
+   the whole page) as its own backdrop. `absolute`, not `fixed`: `overflow: hidden` on
+   `.modern-hero-schedule` only clips a `fixed` descendant when that ancestor also has a
+   `transform`/`filter`/etc. establishing a containing block for it — without one, a `fixed`
+   layer here would render relative to the viewport, not this section, and bleed out past its
+   top/bottom edges (visible behind the hero above, or past the page's real end). `absolute`
+   sizes correctly to `.modern-hero-schedule`'s own box (`inset: 0` fills it, height included,
+   since the section's height comes from its real content, not a fixed value) with no such
+   edge case, at the cost of scrolling with the section rather than staying viewport-pinned —
+   an acceptable trade for a section that can grow tall once Mission Guides is expanded. */
+.modern-hero-schedule-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.modern-hero-schedule-video,
+.modern-hero-schedule-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Bright enough to actually read as "an astronaut on the surface" (the reference's own
+     backdrop is clearly visible, not a near-black suggestion of one) — the gradient below
+     still carries the legibility work at the very top/bottom edges where text sits. */
+  opacity: 0.85;
+}
+
+/* Vignette concentrated at the top (nav/heading) and bottom (card list fading toward
+   whatever follows) edges only, with the middle left close to full brightness — the same
+   "dark edges, clear centre" read as the reference composition, not a flat scrim over the
+   whole frame. */
+.modern-hero-schedule-bg-gradient {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(9, 9, 11, 0.75) 0%,
+      rgba(9, 9, 11, 0.2) 25%,
+      rgba(9, 9, 11, 0.2) 60%,
+      rgba(9, 9, 11, 0.85) 100%
+    ),
+    linear-gradient(
+      to right,
+      rgba(9, 9, 11, 0.35) 0%,
+      rgba(9, 9, 11, 0) 35%,
+      rgba(9, 9, 11, 0) 65%,
+      rgba(9, 9, 11, 0.35) 100%
+    );
+}
+
+.modern-hero-schedule-head,
+.modern-hero-schedule-item {
+  position: relative;
+  z-index: 1;
 }
 
 .modern-hero-schedule-head {
@@ -421,8 +486,13 @@
   margin-bottom: 0.75rem;
   border-radius: 10px;
   /* Solid-ish panel at rest, not just on hover (player request: "make the shortcuts section a
-     bit less transparent") — each shortcut now reads as its own card against the page. */
+     bit less transparent") — each shortcut now reads as its own card against the page. The
+     blur (same `blur(6px)` the nav/parallax cards already use) is what keeps this reading as
+     a glass panel instead of a flat tint now that there's a moving video behind it, not just
+     a static colour. */
   background-color: rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.09);
   transition:
     background-color 0.2s,
@@ -622,12 +692,23 @@
   .modern-hero-feature {
     transform: none !important;
   }
+
+  /* Belt-and-braces alongside ScheduleVideoBackground's own JS check (modern-hero.tsx) —
+     the component already skips mounting the <video> under reduced motion, this just makes
+     sure nothing shows/plays it if that ever changes. */
+  .modern-hero-schedule-video {
+    display: none;
+  }
 }
 
 .low-power-mode .modern-hero-center-img,
 .low-power-mode .modern-hero-parallax-img,
 .low-power-mode .modern-hero-feature {
   transform: none !important;
+}
+
+.low-power-mode .modern-hero-schedule-video {
+  display: none;
 }
 
 /* Mobile responsiveness */
