@@ -1180,13 +1180,20 @@ html.cockpit-active .app {
 }
 
 @media (min-width: 860px) {
+  /* Player request: shorter (hugs its own nav items instead of stretching to the window's
+     bottom edge — `bottom: 20px` removed, `max-height` only as a safety net on a short
+     viewport) and translucent (a blurred, partly see-through panel reads as a HUD floating
+     over the photo, rather than an opaque card sitting on top of it). */
   html.cockpit-active .tab-nav {
     position: fixed;
     top: 20px;
     left: 20px;
-    bottom: 20px;
+    max-height: calc(100vh - 40px);
     overflow-y: auto;
     z-index: 50;
+    background: rgba(238, 243, 251, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
   }
 

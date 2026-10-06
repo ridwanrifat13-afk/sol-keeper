@@ -116,7 +116,9 @@ export function MissionCommandConsole() {
         </p>
       </header>
 
-      <CockpitTarget id="mission-ops-board" role="primary" priority={1} label="Mission status">
+      {/* Player request: swapped with the orbital view below — that now takes the top/primary
+         screen, this one takes the secondary slot it used to hold. */}
+      <CockpitTarget id="mission-ops-board" role="secondary" priority={6} label="Mission status">
         <section className="ops-board panel-span-full" aria-labelledby="ops-board-heading">
           <h2 id="ops-board-heading" className="visually-hidden">
             Mission status board
@@ -182,7 +184,7 @@ export function MissionCommandConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="mission-orbital-view" role="secondary" priority={6} label="Orbital view">
+      <CockpitTarget id="mission-orbital-view" role="primary" priority={1} label="Orbital view">
         <OrbitalView />
       </CockpitTarget>
 
