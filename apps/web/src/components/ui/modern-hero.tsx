@@ -470,47 +470,53 @@ const Schedule = ({ onLaunchMission }: ScheduleProps) => {
       aria-label="Mission Launch Windows"
     >
       <ScheduleVideoBackground />
-      {/* Player request: remove the generic "Start Mission Setup" button that used to sit
-       *  here — each card below already has its own real, scenario-specific launch action
-       *  (`onLaunch`), and Nav's own "Launch Outpost" button (top of the page) already covers
-       *  the generic, no-scenario-preselected entry point, so this wasn't the only way in. */}
-      <div className="modern-hero-schedule-head">
-        <div>
-          <motion.h2
-            initial={{ y: 36, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ ease: "easeInOut", duration: 0.6 }}
-            className="modern-hero-schedule-title"
-          >
-            Launch Windows
-          </motion.h2>
-          <p className="modern-hero-schedule-subtitle">
-            Sol Keeper's three real training missions — pick one to jump straight into Setup
-            with it already selected.
-          </p>
+      {/* Player request: the video fills this section corner to corner — unlike the rest of
+       *  the page, the card list itself no longer spans the section's full width. This inner
+       *  wrapper holds the real max-width + right alignment, so the video (sized to the
+       *  section itself, not this wrapper) shows fully down the left side behind it. */}
+      <div className="modern-hero-schedule-content">
+        {/* Player request: remove the generic "Start Mission Setup" button that used to sit
+         *  here — each card below already has its own real, scenario-specific launch action
+         *  (`onLaunch`), and Nav's own "Launch Outpost" button (top of the page) already covers
+         *  the generic, no-scenario-preselected entry point, so this wasn't the only way in. */}
+        <div className="modern-hero-schedule-head">
+          <div>
+            <motion.h2
+              initial={{ y: 36, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ ease: "easeInOut", duration: 0.6 }}
+              className="modern-hero-schedule-title"
+            >
+              Launch Windows
+            </motion.h2>
+            <p className="modern-hero-schedule-subtitle">
+              Sol Keeper's three real training missions — pick one to jump straight into Setup
+              with it already selected.
+            </p>
+          </div>
         </div>
+
+        {SCENARIO_ORDER.map((id, index) => {
+          const scenario = SCENARIOS[id];
+          const meta = SCENARIO_LABELS[id];
+          const cardMeta = SCENARIO_CARD_META[id];
+          return (
+            <ScheduleItem
+              key={id}
+              title={meta.label}
+              siteLine={`${scenario.site.name} · ${durationLabel(scenario.durationHours, scenario.body)}`}
+              thumb={cardMeta.thumb}
+              bodyLine={cardMeta.bodyLine}
+              hazardLine={cardMeta.hazardLine}
+              hazardIcon={cardMeta.hazardIcon}
+              featured={index === 0}
+              onLaunch={onLaunchMission === undefined ? undefined : () => onLaunchMission(id)}
+            />
+          );
+        })}
+
+        <GuideShortcut onLaunchMission={onLaunchMission} />
       </div>
-
-      {SCENARIO_ORDER.map((id, index) => {
-        const scenario = SCENARIOS[id];
-        const meta = SCENARIO_LABELS[id];
-        const cardMeta = SCENARIO_CARD_META[id];
-        return (
-          <ScheduleItem
-            key={id}
-            title={meta.label}
-            siteLine={`${scenario.site.name} · ${durationLabel(scenario.durationHours, scenario.body)}`}
-            thumb={cardMeta.thumb}
-            bodyLine={cardMeta.bodyLine}
-            hazardLine={cardMeta.hazardLine}
-            hazardIcon={cardMeta.hazardIcon}
-            featured={index === 0}
-            onLaunch={onLaunchMission === undefined ? undefined : () => onLaunchMission(id)}
-          />
-        );
-      })}
-
-      <GuideShortcut onLaunchMission={onLaunchMission} />
     </section>
   );
 };

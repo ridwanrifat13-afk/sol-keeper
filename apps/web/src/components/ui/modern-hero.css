@@ -377,9 +377,11 @@
 
 /* Launch Schedule section */
 .modern-hero-schedule {
-  margin: 0 auto;
-  max-width: 68rem;
-  padding: 8rem 1.5rem 10rem;
+  /* Player request: the video fills this section corner to corner — full viewport width, not
+     the old centered 68rem column. `.modern-hero-schedule-content` (below) is what carries the
+     real reading-width constraint now, right-aligned over this full-bleed backdrop instead. */
+  width: 100%;
+  padding: 8rem 2.5rem 10rem;
   color: #fff;
   position: relative;
   z-index: 10;
@@ -390,6 +392,16 @@
   background-color: #09090b;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
+}
+
+/* The real reading column — right-aligned (`margin-left: auto`) over the full-bleed video, so
+   the astronaut stays visible down the left side of the section instead of being covered by
+   the card list the way the old full-width centered layout covered it. */
+.modern-hero-schedule-content {
+  max-width: 34rem;
+  margin-left: auto;
+  position: relative;
+  z-index: 1;
 }
 
 /* Player request: give Launch Windows the same full-bleed, astronaut-on-the-surface look as
@@ -424,10 +436,12 @@
   opacity: 0.85;
 }
 
-/* Vignette concentrated at the top (nav/heading) and bottom (card list fading toward
-   whatever follows) edges only, with the middle left close to full brightness — the same
-   "dark edges, clear centre" read as the reference composition, not a flat scrim over the
-   whole frame. */
+/* Vignette concentrated at the top (nav) and bottom (card list fading toward whatever
+   follows) edges, plus a left-to-right wash: the left side (where the video's own subject —
+   the astronaut — actually stands) is left close to full brightness, darkening only toward
+   the right where the card column (.modern-hero-schedule-content) now sits, for legibility —
+   the reference composition's own "clear astronaut, readable cards" read, not a flat scrim or
+   a symmetric vignette that would darken the astronaut just as much as the cards. */
 .modern-hero-schedule-bg-gradient {
   position: absolute;
   inset: 0;
@@ -441,17 +455,11 @@
     ),
     linear-gradient(
       to right,
-      rgba(9, 9, 11, 0.35) 0%,
-      rgba(9, 9, 11, 0) 35%,
-      rgba(9, 9, 11, 0) 65%,
-      rgba(9, 9, 11, 0.35) 100%
+      rgba(9, 9, 11, 0) 0%,
+      rgba(9, 9, 11, 0) 38%,
+      rgba(9, 9, 11, 0.55) 68%,
+      rgba(9, 9, 11, 0.78) 100%
     );
-}
-
-.modern-hero-schedule-head,
-.modern-hero-schedule-item {
-  position: relative;
-  z-index: 1;
 }
 
 .modern-hero-schedule-head {
@@ -794,6 +802,19 @@
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
+  /* The right-aligned reading column (desktop: astronaut visible down the left, cards
+     right-aligned) has no room to also show the astronaut on a narrow viewport — full width,
+     same as every other breakpoint-collapsed layout in this file. */
+  .modern-hero-schedule {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .modern-hero-schedule-content {
+    max-width: none;
+    margin-left: 0;
+  }
+
   .modern-hero-schedule-title {
     font-size: 1.75rem;
   }
