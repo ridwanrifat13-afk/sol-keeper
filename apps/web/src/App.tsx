@@ -68,19 +68,25 @@ const TAB_IDS: readonly TabView[] = [
   "debrief",
 ];
 /** Player request: restores a themed page background (a real lunar- or Mars-surface photo,
- *  images/station-bg-{moon,mars}.jpg) behind the five station consoles proper — removed
- *  earlier in M9.1 ("remove the existing backgrounds for the stations") to make room for the
- *  cockpit view's own full-bleed station photo, then asked back for Classic view specifically.
+ *  images/station-bg-{moon,mars}.jpg) behind every tab-nav destination — removed earlier in
+ *  M9.1 ("remove the existing backgrounds for the stations") to make room for the cockpit
+ *  view's own full-bleed station photo, then asked back for Classic view specifically, then
+ *  explicitly extended from just the five station consoles to Habitat/Briefing/Debrief too
+ *  (the original commit's own reasoning — "they already carry their own real imagery and would
+ *  visually compete" — was a real design call, overridden here on request, not an oversight).
  *  Harmless to set unconditionally (not just when Classic is active): Cockpit mode's own
  *  `.cockpit-frame` is opaque and covers the full page when it's on, so this sits unseen behind
- *  it rather than conflicting with it. Not Habitat/Briefing/Debrief, which already carry their
- *  own real imagery and would visually compete with a second photo behind them. */
-const STATION_VIEWS = new Set<TabView>([
+ *  it rather than conflicting with it; Habitat/Briefing/Debrief have no cockpit mode at all, so
+ *  it's simply always visible there. */
+const THEMED_BACKGROUND_VIEWS = new Set<TabView>([
   "power",
   "lifeSupport",
   "comms",
   "incidentCommand",
   "missionCommand",
+  "habitat",
+  "briefing",
+  "debrief",
 ]);
 
 const TAB_KEYS: Record<TabView, string> = {
@@ -224,11 +230,12 @@ function AppShell({ initialView = "home" }: AppProps) {
     document.documentElement.classList.toggle("low-power-mode", lowPowerMode);
   }, [lowPowerMode]);
 
-  // Player request: the station consoles' background reflects the real body the current
-  // mission is on. One attribute, read by styles.css — set only on a station view (the home/
-  // setup/report screens, and Habitat/Briefing/Debrief, stay on the plain shell background).
+  // Player request: the themed background reflects the real body the current mission is on.
+  // One attribute, read by styles.css — set on every tab-nav destination (THEMED_BACKGROUND_
+  // VIEWS); only the Home/Setup/Report screens, which aren't tab-nav destinations at all,
+  // stay on the plain shell background.
   useEffect(() => {
-    if (STATION_VIEWS.has(view as TabView)) {
+    if (THEMED_BACKGROUND_VIEWS.has(view as TabView)) {
       document.documentElement.setAttribute("data-station-bg", scenario.body === "mars" ? "mars" : "moon");
     } else {
       document.documentElement.removeAttribute("data-station-bg");

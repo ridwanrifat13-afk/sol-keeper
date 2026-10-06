@@ -64,10 +64,10 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Player request: a real lunar/Mars-surface photo behind the five station consoles
- * (App.tsx's own `STATION_VIEWS` sets `data-station-bg` on `<html>`, only for those five —
- * Habitat/Briefing/Debrief already carry their own real imagery and stay on the plain shell
- * background). Shown at full strength, no tint (player request — an earlier light-tint blend
+/* Player request: a real lunar/Mars-surface photo behind every tab-nav destination
+ * (App.tsx's own `THEMED_BACKGROUND_VIEWS` sets `data-station-bg` on `<html>` — originally just
+ * the five station consoles, extended on request to Habitat/Briefing/Debrief too). Shown at
+ * full strength, no tint (player request — an earlier light-tint blend
  * was tried first, then faded further, then dropped entirely here): `h1`/`.view-head`/
  * `.mission-site` sit directly on this background (unlike every panel, gauge and button,
  * which are opaque and so unaffected either way) — if a specific scenario's photo ever reads
@@ -82,10 +82,11 @@ body {
  * `fixed` off here, on the documented grounds that a repainted fixed background is real
  * scroll jank on a low-end Android phone (brief rule 6) — these station pages are short
  * enough that the tradeoff seemed worth it when asked for directly, but if a real low-end
- * device shows jank, that's the rule 6 concern materializing, not a surprise. Invisible
- * whenever Cockpit mode is active (its own `.cockpit-frame` is opaque and covers the page) —
- * see App.tsx's own doc comment on why this is still set unconditionally for all five
- * stations rather than only for Classic. */
+ * device shows jank, that's the rule 6 concern materializing, not a surprise. Invisible on the
+ * five station consoles whenever Cockpit mode is active there (its own `.cockpit-frame` is
+ * opaque and covers the page) — see App.tsx's own doc comment on why this is still set
+ * unconditionally rather than only for Classic; always visible on Habitat/Briefing/Debrief,
+ * which have no cockpit mode to hide behind. */
 html[data-station-bg="moon"] body {
   background-image: url("/images/station-bg-moon.jpg");
   background-position: center;
