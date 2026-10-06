@@ -6,13 +6,23 @@
  * note in apps/web/tests/render.test.tsx) — a real page load and real clicks don't have that
  * limitation, so switching the dial and finishing a mission can actually be observed here.
  */
-import { expect, gotoApp, openMobileNavIfPresent, openTab, reloadApp, skipSetup, test } from "./fixtures.js";
+import {
+  expect,
+  gotoApp,
+  openMobileNavIfPresent,
+  openTab,
+  reloadApp,
+  skipSetup,
+  switchToClassicIfPresent,
+  test,
+} from "./fixtures.js";
 import type { Page } from "@playwright/test";
 
 test.describe("Reality Dial", () => {
   test("switching level changes gauge text without changing status colour", async ({ page }) => {
     await gotoApp(page);
     await openTab(page, "Life Support");
+    await switchToClassicIfPresent(page);
 
     await expect(page.getByText("161 mmHg")).toBeVisible();
     const oxygenGaugeBefore = await page.locator(".gauge").first().getAttribute("class");
@@ -31,6 +41,7 @@ test.describe("Reality Dial", () => {
   test("the choice persists across a reload", async ({ page }) => {
     await gotoApp(page);
     await openTab(page, "Life Support");
+    await switchToClassicIfPresent(page);
     await page.getByRole("button", { name: /^Cadet/ }).click();
     await expect(page.getByText(/Plenty of air/)).toBeVisible();
 

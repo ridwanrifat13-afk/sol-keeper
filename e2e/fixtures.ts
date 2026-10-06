@@ -104,3 +104,23 @@ export async function reloadApp(page: Page): Promise<void> {
   await page.reload();
   await page.getByRole("button", { name: "Launch Outpost" }).click();
 }
+
+/**
+ * M9.1: every station now has a calibrated screen map (screenMaps.ts), so Cockpit is the
+ * default view on a wide viewport — real console photos with their own panel layout, not the
+ * plain page these specs were written against. Most specs here predate cockpit view and test
+ * console behavior that has nothing to do with it (a specific gauge, a specific button, the
+ * page's own heading) — Classic is still the exact same DOM those specs always exercised
+ * (CockpitTarget is a pure passthrough with no CockpitContext.Provider above it), so this is
+ * the one-line fix that keeps them testing what they always tested, rather than incidentally
+ * asserting on cockpit's own panel-to-screen-region assignment (which overflow-tabs panels
+ * when a console has more of them than the photo has screens — expected, not a bug, and
+ * covered on its own terms by e2e/cockpit.spec.ts). A no-op wherever no screen map exists yet
+ * for the current station (the toggle itself doesn't render then).
+ */
+export async function switchToClassicIfPresent(page: Page): Promise<void> {
+  const classicButton = page.getByRole("button", { name: "Classic", exact: true });
+  if ((await classicButton.count()) > 0) {
+    await classicButton.click();
+  }
+}

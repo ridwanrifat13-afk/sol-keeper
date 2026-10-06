@@ -106,17 +106,17 @@ test.describe("Mobile performance (M9.7)", () => {
 
   // M9.1's own performance rule: "30+ FPS on low-end Android; if cockpit image regresses
   // Lighthouse mobile, cockpit stays desktop-only" — the same throttled-CPU technique as the
-  // Habitat/establishing-shot checks above. No station has a calibrated screen map yet
-  // (screenMaps.ts is empty — see cockpit.spec.ts's own doc comment), so this measures the
-  // Life Support console itself, the heaviest of the five consoles once a station photo
-  // exists to swap in; re-point this at `.cockpit-frame` once a real cockpit screen map lands.
-  test("Life Support console sustains 30+ FPS on a throttled CPU while idle", async ({ page }) => {
+  // Habitat/establishing-shot checks above, now against the real calibrated cockpit frame
+  // (all ten stations have one — screenMaps.ts) rather than the Classic console underneath it.
+  test("Life Support cockpit view sustains 30+ FPS on a throttled CPU while idle", async ({
+    page,
+  }) => {
     await gotoApp(page);
     await openTab(page, "Mission Command");
     await page.getByRole("button", { name: /^First Light/ }).click();
     await openTab(page, "Life Support");
     await throttleCpu(page);
-    await expect(page.getByRole("heading", { level: 2, name: "Life Support" })).toBeVisible();
+    await expect(page.locator(".cockpit-frame")).toBeVisible();
 
     const fps = await measureFps(page, MEASURE_MS);
     expect(fps).toBeGreaterThanOrEqual(MIN_FPS);

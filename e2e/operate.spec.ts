@@ -6,7 +6,7 @@
  * the page actually paints, the CSS actually applies, and a click actually reaches the
  * store and comes back out as a DOM change — in a real Chromium, at a phone viewport.
  */
-import { expect, gotoApp, skipSetup, test } from "./fixtures.js";
+import { expect, gotoApp, skipSetup, switchToClassicIfPresent, test } from "./fixtures.js";
 import type { Page } from "@playwright/test";
 
 /**
@@ -177,6 +177,7 @@ test.describe("Life Support console", () => {
   test("shows every resource gauge", async ({ page }) => {
     await gotoApp(page);
     await skipSetup(page, "Life Support");
+    await switchToClassicIfPresent(page);
 
     for (const label of ["Oxygen", "Carbon dioxide", "Water", "Food", "Cabin"]) {
       await expect(page.getByText(label, { exact: true })).toBeVisible();
@@ -186,6 +187,7 @@ test.describe("Life Support console", () => {
   test("shows read-only ISRU and crop status, no invented controls", async ({ page }) => {
     await gotoApp(page);
     await skipSetup(page, "Life Support");
+    await switchToClassicIfPresent(page);
 
     // Player request: crop conditions split out of the old combined "ISRU & crops" panel into
     // its own standalone box — Jezero (Mars) has both panels; a Moon scenario would have only
@@ -207,6 +209,7 @@ test.describe("Life Support console", () => {
   test("Sol Planning locks rations until Run the sol is clicked", async ({ page }) => {
     await gotoApp(page);
     await skipSetup(page, "Life Support");
+    await switchToClassicIfPresent(page);
 
     await expect(page.getByRole("button", { name: "Survival", exact: false })).toBeEnabled();
 
@@ -236,6 +239,7 @@ test.describe("Life Support console", () => {
   test("changing survival mode updates the CO2 limit shown on the gauge", async ({ page }) => {
     await gotoApp(page);
     await skipSetup(page, "Life Support");
+    await switchToClassicIfPresent(page);
 
     await expect(page.getByText("limit 3 mmHg in Nominal mode")).toBeVisible();
 
@@ -264,6 +268,7 @@ test.describe("Life Support console", () => {
   test("no NASA logo or insignia is present (brief rule 5)", async ({ page }) => {
     await gotoApp(page);
     await skipSetup(page, "Life Support");
+    await switchToClassicIfPresent(page);
     await page.waitForTimeout(500);
 
     await expect(page.getByText("Not affiliated with or endorsed by NASA")).toBeVisible();

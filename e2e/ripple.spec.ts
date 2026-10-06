@@ -7,7 +7,7 @@
  * switching scenarios exercises the same zustand-store-mutation-after-mount path that a
  * server render can't observe either.
  */
-import { expect, gotoApp, openTab, test } from "./fixtures.js";
+import { expect, gotoApp, openTab, switchToClassicIfPresent, test } from "./fixtures.js";
 
 test.describe("Scenario switch (Mission Command console)", () => {
   test("switching to a Moon scenario changes the mission header and system list", async ({
@@ -97,6 +97,7 @@ test.describe("Incident Command console", () => {
   }) => {
     await gotoApp(page);
     await openTab(page, "Incident Command");
+    await switchToClassicIfPresent(page);
 
     await expect(page.getByRole("heading", { level: 2, name: "Incident Command" })).toBeVisible();
 

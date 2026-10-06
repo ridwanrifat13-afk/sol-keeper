@@ -8,12 +8,13 @@
  * reach the "live succeeded" branch (that would need `vercel dev`, a separate manual check
  * the lead developer can run).
  */
-import { expect, gotoApp, openTab, test } from "./fixtures.js";
+import { expect, gotoApp, openTab, switchToClassicIfPresent, test } from "./fixtures.js";
 
 test.describe("Comms console", () => {
   test("falls back to the real committed snapshot when /api is unavailable, and says so", async ({ page }) => {
     await gotoApp(page);
     await openTab(page, "Comms");
+    await switchToClassicIfPresent(page);
 
     await expect(page.getByRole("heading", { level: 2, name: "Comms" })).toBeVisible();
 
