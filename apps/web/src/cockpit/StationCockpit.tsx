@@ -211,7 +211,7 @@ export function StationCockpit({
   return (
     <div className="station-cockpit-shell">
       {toggle}
-      <div ref={frameRef} className="cockpit-frame" style={{ aspectRatio: screenMap.aspectRatio }}>
+      <div ref={frameRef} className="cockpit-frame">
         <picture>
           <source type="image/avif" srcSet={sources.avifSrcSet} sizes={sizes} />
           <source type="image/webp" srcSet={sources.webpSrcSet} sizes={sizes} />

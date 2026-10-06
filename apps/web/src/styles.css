@@ -2887,8 +2887,15 @@ code {
 }
 
 .cockpit-frame {
+  /* Player request: fill the page, no blank space below the photo — previously sized by the
+     photo's own `aspectRatio` (a 16:9-ish source letterboxed well short of typical viewport
+     height). `object-fit: fill` on the image below (M9.1's own "don't crop, stretch if
+     needed") means this frame can take any height/width without breaking the region
+     percentages painted over it — they scale with the stretch, not with the photo's own
+     shape, so growing this box needed no change to any calibrated screenMaps.ts entry. */
   position: relative;
   width: 100%;
+  height: min(82vh, 980px);
   border-radius: var(--radius);
   overflow: hidden;
   background: #000;
@@ -2899,10 +2906,11 @@ code {
   inset: 0;
   width: 100%;
   height: 100%;
-  /* M9.1's own asset note: "don't crop, stretch if needed" — the photo fills the frame at
-     its own declared aspectRatio exactly, so the region percentages painted over it line up
-     with what's actually visible, at the cost of distortion if the photo's own proportions
-     don't match that declared ratio (true for the current placeholder; see screenMaps.ts). */
+  /* M9.1's own asset note: "don't crop, stretch if needed" — the photo fills the frame
+     exactly, whatever shape the frame is sized to (see .cockpit-frame's own comment on why
+     that's no longer tied to the photo's own aspect ratio), so the region percentages painted
+     over it always line up with what's actually visible — `object-fit: cover` would crop,
+     silently moving every calibrated region's true position. */
   object-fit: fill;
   pointer-events: none;
   user-select: none;
