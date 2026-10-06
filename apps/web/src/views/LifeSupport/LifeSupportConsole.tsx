@@ -72,10 +72,15 @@ export function LifeSupportConsole() {
         <p className="view-hint">Air, water, food, and how hard the crew is rationing.</p>
       </header>
 
-      <section className="panel" aria-labelledby="resources-heading">
-        <h2 id="resources-heading">Resources</h2>
-        <div className="gauge-grid">
-          <CockpitTarget id="lifesupport-o2" role="secondary" priority={1} label="Oxygen">
+      {/* Player request: the five resource gauges used to compete for five separate cockpit
+         screens, one each — crowding out ISRU/Rations/Heating & cooling/Crop conditions into
+         overflow tabs. One CockpitTarget around the whole section (not one per gauge) means
+         they share a single screen, same as they already share one panel in Classic view,
+         freeing four screens for those other panels below. */}
+      <CockpitTarget id="lifesupport-resources" role="secondary" priority={1} label="Resources">
+        <section className="panel" aria-labelledby="resources-heading">
+          <h2 id="resources-heading">Resources</h2>
+          <div className="gauge-grid">
             <Gauge
               icon="◇"
               label="Oxygen"
@@ -95,8 +100,6 @@ export function LifeSupportConsole() {
               level={level}
               history={oxygenHistory}
             />
-          </CockpitTarget>
-          <CockpitTarget id="lifesupport-co2" role="secondary" priority={2} label="Carbon dioxide">
             <Gauge
               icon="▽"
               label="Carbon dioxide"
@@ -111,8 +114,6 @@ export function LifeSupportConsole() {
               helpKey="gauge.co2"
               level={level}
             />
-          </CockpitTarget>
-          <CockpitTarget id="lifesupport-water" role="secondary" priority={3} label="Water">
             <Gauge
               icon="≈"
               label="Water"
@@ -132,8 +133,6 @@ export function LifeSupportConsole() {
               level={level}
               history={waterHistory}
             />
-          </CockpitTarget>
-          <CockpitTarget id="lifesupport-food" role="secondary" priority={4} label="Food">
             <Gauge
               icon="✦"
               label="Food"
@@ -148,8 +147,6 @@ export function LifeSupportConsole() {
               helpKey="gauge.food"
               level={level}
             />
-          </CockpitTarget>
-          <CockpitTarget id="lifesupport-cabin" role="secondary" priority={5} label="Cabin">
             <Gauge
               icon="◈"
               label="Cabin"
@@ -168,9 +165,9 @@ export function LifeSupportConsole() {
               helpKey="gauge.cabin"
               level={level}
             />
-          </CockpitTarget>
-        </div>
-      </section>
+          </div>
+        </section>
+      </CockpitTarget>
 
       <CockpitTarget id="lifesupport-scrubber" role="primary" priority={1} label="Air cleaner">
         <section className="panel" aria-labelledby="scrubber-heading">
@@ -213,7 +210,12 @@ export function LifeSupportConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="lifesupport-water-reclaim" role="secondary" priority={7} label="Water reclamation">
+      <CockpitTarget
+        id="lifesupport-water-reclaim"
+        role="secondary"
+        priority={6}
+        label="Water reclamation"
+      >
         <section className="panel" aria-labelledby="water-reclamation-heading">
           <h2 id="water-reclamation-heading">Water reclamation</h2>
           <p className="panel-hint">
@@ -251,7 +253,12 @@ export function LifeSupportConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="lifesupport-thermal" role="secondary" priority={8} label="Heating & cooling">
+      <CockpitTarget
+        id="lifesupport-thermal"
+        role="secondary"
+        priority={2}
+        label="Heating & cooling"
+      >
         <section className="panel" aria-labelledby="thermal-heading">
           <h2 id="thermal-heading">Heating &amp; cooling</h2>
           <p className="panel-hint">
@@ -288,7 +295,7 @@ export function LifeSupportConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="lifesupport-rations" role="secondary" priority={9} label="Rations">
+      <CockpitTarget id="lifesupport-rations" role="secondary" priority={3} label="Rations">
         <section className="panel" aria-labelledby="rations-heading">
           <h2 id="rations-heading">Rations</h2>
           <p className="panel-hint">
@@ -356,7 +363,7 @@ export function LifeSupportConsole() {
        *  Moon (no atmosphere for MOXIE-style ISRU to work on), so this panel simply doesn't
        *  render there rather than showing an empty "ISRU" box with nothing in it. */}
       {state.systems.moxie !== undefined && (
-        <CockpitTarget id="lifesupport-isru" role="secondary" priority={10} label="ISRU">
+        <CockpitTarget id="lifesupport-isru" role="secondary" priority={4} label="ISRU">
           <section className="panel" aria-labelledby="isru-heading">
             <h2 id="isru-heading">ISRU</h2>
             <p className="panel-hint">Status only — no adjustable MOXIE control exists yet.</p>
@@ -379,7 +386,7 @@ export function LifeSupportConsole() {
        *  are the same ones HabitatView's own "Current conditions" table and CropSprite visuals
        *  already read — MiniBar (built for that table) reused here rather than a second bar
        *  component for the identical purpose. */}
-      <CockpitTarget id="lifesupport-crops" role="secondary" priority={11} label="Crop conditions">
+      <CockpitTarget id="lifesupport-crops" role="secondary" priority={5} label="Crop conditions">
         <section className="panel" aria-labelledby="crop-conditions-heading">
           <h2 id="crop-conditions-heading">Crop conditions</h2>
           <p className="panel-hint">Status only — no adjustable crop-task control exists yet.</p>
@@ -412,13 +419,18 @@ export function LifeSupportConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="lifesupport-gallery-co2" role="secondary" priority={12} label="CDRA photos">
+      <CockpitTarget id="lifesupport-gallery-co2" role="secondary" priority={7} label="CDRA photos">
         <FactCardGallery
           topic="co2-scrubber"
           heading="Real hardware: the ISS's CDRA CO₂ scrubber"
         />
       </CockpitTarget>
-      <CockpitTarget id="lifesupport-gallery-veggie" role="secondary" priority={13} label="Veggie photos">
+      <CockpitTarget
+        id="lifesupport-gallery-veggie"
+        role="secondary"
+        priority={8}
+        label="Veggie photos"
+      >
         <FactCardGallery
           topic="veggie"
           heading="Real hardware: NASA's Veggie plant-growth hardware"
