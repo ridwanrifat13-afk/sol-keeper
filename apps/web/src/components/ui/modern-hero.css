@@ -482,7 +482,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.75rem 1.25rem;
+  gap: 1.25rem;
+  padding: 1.1rem 1.25rem;
   margin-bottom: 0.75rem;
   border-radius: 10px;
   /* Solid-ish panel at rest, not just on hover (player request: "make the shortcuts section a
@@ -497,11 +498,50 @@
   transition:
     background-color 0.2s,
     border-color 0.2s;
+  /* ScheduleItem renders this as a real <button> when it's clickable (reference's own
+     full-row tap target, see modern-hero.tsx) — reset the button chrome back to how the div
+     version looked. */
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
 }
 
 .modern-hero-schedule-item:hover {
   background-color: rgba(255, 255, 255, 0.08);
   border-color: #3f3f46;
+}
+
+/* Player-attached reference's own glow treatment on its first (default) card — a visible
+   NASA-blue ring, not just a brighter border, so the featured scenario reads as a real visual
+   difference, not just a subtle one. Icon+text elsewhere already carries which scenario is
+   which; this is decoration on top of real info, not the only way to tell them apart. */
+.modern-hero-schedule-item-featured {
+  border-color: var(--shell-accent, #0b3d91);
+  background-color: rgba(11, 61, 145, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(96, 165, 250, 0.35),
+    0 0 24px rgba(37, 99, 235, 0.25);
+}
+
+.modern-hero-schedule-item-featured:hover {
+  background-color: rgba(11, 61, 145, 0.2);
+  border-color: #60a5fa;
+}
+
+.modern-hero-item-thumb {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.modern-hero-item-main {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .modern-hero-item-title {
@@ -519,14 +559,50 @@
   letter-spacing: 0.05em;
 }
 
-.modern-hero-item-location {
+/* The real site+duration line ("Jezero Crater · 30 Sols"), pin icon included — sits under the
+   title, replacing the old plain-text `.modern-hero-item-date` use here (that class still
+   serves the Mission Guides card's own subtitle, unchanged). */
+.modern-hero-item-site {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   font-size: 0.85rem;
   text-transform: uppercase;
   color: #a1a1aa;
   letter-spacing: 0.04em;
+  margin: 0;
+}
+
+/* The right-hand badge stack — body+duration always, an optional hazard/power-mode line
+   underneath it (reference's own two-line read for Jezero Outpost and The Long Night; First
+   Light has only the one line, same as the reference). */
+.modern-hero-item-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.modern-hero-item-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #d4d4d8;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.modern-hero-item-chevron {
+  flex-shrink: 0;
+  color: #71717a;
+  font-size: 1.25rem;
+}
+
+.modern-hero-schedule-item:hover .modern-hero-item-chevron {
+  color: #fff;
 }
 
 .modern-hero-item-action {
@@ -570,6 +646,11 @@
   flex-direction: column;
   align-items: stretch;
   gap: 1rem;
+  padding: 1.75rem 1.25rem;
+  /* Unlike the three scenario cards, this one's still a plain `motion.div` (its own select
+     and toggle button are the real controls, not the row itself) — `.modern-hero-schedule-item`
+     now sets `cursor: pointer` for the button-based cards, which would mislead here. */
+  cursor: default;
 }
 
 .modern-hero-guide-head {
@@ -803,6 +884,16 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
+    /* Anchors the chevron (below) without needing a 5th wrapper element just for mobile. */
+    position: relative;
+  }
+
+  /* Stacked, the chevron reads better pinned to the card's own top-right corner than as an
+     orphaned icon below the stat lines. */
+  .modern-hero-item-chevron {
+    position: absolute;
+    top: 1.1rem;
+    right: 1.25rem;
   }
 
   .modern-hero-item-action {

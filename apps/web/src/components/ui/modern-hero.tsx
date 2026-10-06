@@ -1,6 +1,6 @@
 import { ReactLenis } from "lenis/react";
 import { motion, useInView, useMotionTemplate, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { FiArrowRight, FiBookOpen, FiMapPin } from "react-icons/fi";
+import { FiArrowRight, FiBookOpen, FiChevronRight, FiClock, FiMapPin, FiWind, FiZap } from "react-icons/fi";
 import { useEffect, useRef, useState } from "react";
 import { SCENARIOS, type ScenarioId } from "@sol-keeper/sim";
 import { useAccessibility } from "../../store/accessibility.js";
@@ -363,6 +363,39 @@ interface ScheduleProps {
 const SCENARIO_ORDER: readonly ScenarioId[] = ["jezero-outpost", "first-light", "the-long-night"];
 
 /**
+ * Player-attached reference screenshot's own card layout: a thumbnail photo, plus a two-line
+ * stat badge stack (body+duration, then an optional hazard/power-mode line) instead of the
+ * single `hint` string a plain-text row used to show. Same real facts as
+ * `SCENARIO_LABELS[id].hint` — a body, a duration, and (for two of the three) a hazard/power
+ * descriptor — just split into the two separate lines the reference's card design needs,
+ * rather than parsed back out of that one free-text string. `thumb` reuses the same
+ * already-licensed Mars/Moon photography the station console backgrounds use
+ * (styles.css's `station-bg-mars.jpg`/`station-bg-moon.jpg`), cropped to a card-sized still —
+ * not new, unsourced imagery.
+ */
+const SCENARIO_CARD_META: Record<
+  ScenarioId,
+  { thumb: string; bodyLine: string; hazardLine?: string; hazardIcon?: typeof FiWind }
+> = {
+  "jezero-outpost": {
+    thumb: "/images/hero/card-jezero-outpost.jpg",
+    bodyLine: "Mars · 30 Sols",
+    hazardLine: "Dust Storm",
+    hazardIcon: FiWind,
+  },
+  "first-light": {
+    thumb: "/images/hero/card-first-light.jpg",
+    bodyLine: "Moon · One 354 H Night",
+  },
+  "the-long-night": {
+    thumb: "/images/hero/card-long-night.jpg",
+    bodyLine: "Moon · 3 Lunar Nights",
+    hazardLine: "Reactor-Powered",
+    hazardIcon: FiZap,
+  },
+};
+
+/**
  * Three cards, one per real scenario — replaces the original five invented "launch windows"
  * (place names and durations that matched no scenario `packages/sim` actually has), which all
  * called the identical `onLaunchMission()` regardless of which card was clicked: every
@@ -458,15 +491,20 @@ const Schedule = ({ onLaunchMission }: ScheduleProps) => {
         </div>
       </div>
 
-      {SCENARIO_ORDER.map((id) => {
+      {SCENARIO_ORDER.map((id, index) => {
         const scenario = SCENARIOS[id];
         const meta = SCENARIO_LABELS[id];
+        const cardMeta = SCENARIO_CARD_META[id];
         return (
           <ScheduleItem
             key={id}
             title={meta.label}
-            date={`${scenario.site.name} · ${durationLabel(scenario.durationHours, scenario.body)}`}
-            location={meta.hint}
+            siteLine={`${scenario.site.name} · ${durationLabel(scenario.durationHours, scenario.body)}`}
+            thumb={cardMeta.thumb}
+            bodyLine={cardMeta.bodyLine}
+            hazardLine={cardMeta.hazardLine}
+            hazardIcon={cardMeta.hazardIcon}
+            featured={index === 0}
             onLaunch={onLaunchMission === undefined ? undefined : () => onLaunchMission(id)}
           />
         );
@@ -597,37 +635,81 @@ const GuideShortcut = ({ onLaunchMission }: ScheduleProps) => {
 
 interface ScheduleItemProps {
   title: string;
-  date: string;
-  location: string;
+  /** Real site name + duration ("Jezero Crater · 30 Sols") — shown with the pin icon, under
+   *  the title, same as the reference card's own site line. */
+  siteLine: string;
+  thumb: string;
+  bodyLine: string;
+  hazardLine?: string | undefined;
+  hazardIcon?: typeof FiWind | undefined;
+  /** The reference's own glowing-border treatment on its first card — reused here for
+   *  whichever scenario is first in `SCENARIO_ORDER`, not a per-scenario "recommended" claim. */
+  featured?: boolean | undefined;
   onLaunch?: (() => void) | undefined;
 }
 
-const ScheduleItem = ({ title, date, location, onLaunch }: ScheduleItemProps) => {
+/**
+ * Whole-card click target, not a small nested "Select" button inside a non-interactive row —
+ * a real `<button>` (via `motion.button`) when `onLaunch` exists, matching the reference's
+ * full-row tap affordance (chevron, no visible button chrome) while staying more accessible
+ * than the old small nested-button version (bigger target, one focusable element instead of
+ * an inert wrapper plus a button). Falls back to a plain `motion.div` wrapper when there's no
+ * `onLaunch` at all (`onLaunchMission` itself undefined) — the card then shows no chevron.
+ */
+const ScheduleItem = ({ title, siteLine, thumb, bodyLine, hazardLine, hazardIcon, featured, onLaunch }: ScheduleItemProps) => {
+  const HazardIcon = hazardIcon;
+  const className = `modern-hero-schedule-item ${featured ? "modern-hero-schedule-item-featured" : ""}`;
+  const content = (
+    <>
+      <img src={thumb} alt="" className="modern-hero-item-thumb" />
+      <div className="modern-hero-item-main">
+        <h3 className="modern-hero-item-title">{title}</h3>
+        <p className="modern-hero-item-site">
+          <FiMapPin aria-hidden="true" />
+          <span>{siteLine}</span>
+        </p>
+      </div>
+      <div className="modern-hero-item-stats">
+        <span className="modern-hero-item-stat">
+          <FiClock aria-hidden="true" />
+          {bodyLine}
+        </span>
+        {hazardLine && HazardIcon && (
+          <span className="modern-hero-item-stat">
+            <HazardIcon aria-hidden="true" />
+            {hazardLine}
+          </span>
+        )}
+      </div>
+      {onLaunch && <FiChevronRight aria-hidden="true" className="modern-hero-item-chevron" />}
+    </>
+  );
+
+  if (onLaunch) {
+    return (
+      <motion.button
+        type="button"
+        onClick={onLaunch}
+        initial={{ y: 32, opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        transition={{ ease: "easeInOut", duration: 0.55 }}
+        viewport={{ once: true }}
+        className={className}
+      >
+        {content}
+      </motion.button>
+    );
+  }
+
   return (
     <motion.div
       initial={{ y: 32, opacity: 0 }}
       whileInView={{ y: 0, opacity: 1 }}
       transition={{ ease: "easeInOut", duration: 0.55 }}
       viewport={{ once: true }}
-      className="modern-hero-schedule-item"
+      className={className}
     >
-      <div>
-        <h3 className="modern-hero-item-title">{title}</h3>
-        <p className="modern-hero-item-date">{date}</p>
-      </div>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <div className="modern-hero-item-location">
-          <FiMapPin />
-          <span>{location}</span>
-        </div>
-        {onLaunch && (
-          <div className="modern-hero-item-action">
-            <button type="button" onClick={onLaunch} className="modern-hero-item-btn">
-              Select
-            </button>
-          </div>
-        )}
-      </div>
+      {content}
     </motion.div>
   );
 };
