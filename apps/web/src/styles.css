@@ -3030,6 +3030,94 @@ html.cockpit-active .app {
   display: none;
 }
 
+/* Player request: a further density pass — Classic's own gauge/list/button spacing is sized
+   for a roomy desktop panel, and even after the floor/clamp fixes above, a screen holding
+   five gauges (Resources) or a long status list needed more scrolling than it should. Tighter
+   gaps and padding throughout, plus a smaller (but still prominent) headline number on each
+   gauge — none of this touches Classic view, which never has `.cockpit-screen-content` as an
+   ancestor.
+
+   One real catch while doing this: several of these elements set their OWN `rem` font-size
+   (`.gauge-head`, `.status-list-label`, `.panel-hint`, `.chip-grid-sub`) — `rem` is always
+   relative to the root `<html>` size, never to an ancestor's overridden `font-size`, so
+   `.cockpit-screen-content`'s own 14px above never actually reached them; they were still
+   rendering around 12-13px inside every cockpit screen this whole time. Fixed here by setting
+   each one explicitly to 14px rather than relying on inheritance — the one place this pass
+   makes something *larger*, because it was quietly under the floor already, not because this
+   task asked for it. */
+.cockpit-screen-content .gauge-grid {
+  gap: 6px;
+}
+
+.cockpit-screen-content .gauge {
+  padding: 6px 8px;
+  border-left-width: 3px;
+}
+
+.cockpit-screen-content .gauge-head {
+  font-size: 14px;
+}
+
+.cockpit-screen-content .gauge-value-row {
+  margin: 2px 0 4px;
+}
+
+.cockpit-screen-content .gauge-value {
+  font-size: 1.05rem;
+}
+
+.cockpit-screen-content .gauge-track {
+  height: 7px;
+}
+
+.cockpit-screen-content .gauge-detail {
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.cockpit-screen-content .panel-hint {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.cockpit-screen-content .panel-head-row {
+  gap: 8px;
+}
+
+.cockpit-screen-content .status-list {
+  gap: 3px;
+}
+
+.cockpit-screen-content .status-list li {
+  padding: 4px 0;
+}
+
+.cockpit-screen-content .status-list-label {
+  font-size: 14px;
+}
+
+.cockpit-screen-content .chip-grid {
+  gap: 6px;
+}
+
+.cockpit-screen-content .chip-grid-item {
+  padding: 6px 8px;
+}
+
+.cockpit-screen-content .chip-grid-sub {
+  font-size: 14px;
+}
+
+.cockpit-screen-content .button-row {
+  gap: 6px;
+}
+
+/* Padding only, never `min-height` — that 44px stays the real touch-target floor, same
+   control as Classic view just tighter-fitting. */
+.cockpit-screen-content .btn {
+  padding: 6px 10px;
+}
+
 .cockpit-screen-ticker .cockpit-screen-content {
   display: flex;
   align-items: center;
@@ -3126,6 +3214,17 @@ html.cockpit-active .app {
   min-height: 0;
   overflow: auto;
   padding: 4px;
+}
+
+/* Strips the box chrome `.cockpit-screen-content` (shared via OverflowTabs.tsx, see its own
+   comment) would otherwise duplicate inside `.cockpit-overflow`, which already draws a
+   border/background around the whole tab strip + body — everything else that class brings
+   (14px floor, gauge/panel/list density, panel-hint clamp, gallery hiding) still applies. */
+.cockpit-overflow-body.cockpit-screen-content {
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .cockpit-overflow-panel .panel {

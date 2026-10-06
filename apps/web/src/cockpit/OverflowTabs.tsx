@@ -41,7 +41,12 @@ export function OverflowTabs({
           </button>
         ))}
       </div>
-      <div className="cockpit-overflow-body">
+      {/* Shares cockpit-screen-content so every density/floor fix scoped to that class
+         (gauge/panel/status-list sizing, panel-hint clamping, FactCardGallery hiding — see
+         styles.css) applies here too, not just to a panel that fit a region directly. Its own
+         box chrome (border/background/shadow) is reset right after — .cockpit-overflow
+         already draws that, once, around the whole tab strip + body. */}
+      <div className="cockpit-overflow-body cockpit-screen-content">
         {tabs.map((tab) => (
           <div
             key={tab.id}
