@@ -22,11 +22,13 @@ export function CockpitTarget({
   id,
   role,
   priority,
+  label,
   children,
 }: {
   readonly id: string;
   readonly role: CockpitPanel["role"];
   readonly priority: number;
+  readonly label: string;
   readonly children: ReactNode;
 }) {
   const api = useCockpitApi();
@@ -35,7 +37,7 @@ export function CockpitTarget({
   const unregister = api?.unregister;
   useLayoutEffect(() => {
     if (register === undefined || unregister === undefined) return;
-    register({ id, role, priority });
+    register({ id, role, priority, label });
     return () => {
       unregister(id);
     };
@@ -43,7 +45,7 @@ export function CockpitTarget({
     // no deps) — depending on them directly, not the whole `api` object, means this effect
     // only re-runs when the panel's own declared metadata changes, not every time the
     // assignment (and so `api.regionFor`'s closure) recomputes.
-  }, [register, unregister, id, role, priority]);
+  }, [register, unregister, id, role, priority, label]);
 
   if (api === null) return <>{children}</>;
   const target = api.regionFor(id);

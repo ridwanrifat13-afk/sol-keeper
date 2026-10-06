@@ -116,7 +116,7 @@ export function MissionCommandConsole() {
         </p>
       </header>
 
-      <CockpitTarget id="mission-ops-board" role="primary" priority={1}>
+      <CockpitTarget id="mission-ops-board" role="primary" priority={1} label="Mission status">
         <section className="ops-board panel-span-full" aria-labelledby="ops-board-heading">
           <h2 id="ops-board-heading" className="visually-hidden">
             Mission status board
@@ -182,18 +182,18 @@ export function MissionCommandConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="mission-orbital-view" role="secondary" priority={6}>
+      <CockpitTarget id="mission-orbital-view" role="secondary" priority={6} label="Orbital view">
         <OrbitalView />
       </CockpitTarget>
 
-      <CockpitTarget id="mission-scenario-switch" role="secondary" priority={7}>
+      <CockpitTarget id="mission-scenario-switch" role="secondary" priority={7} label="Scenario">
         <ScenarioSwitch />
       </CockpitTarget>
-      <CockpitTarget id="mission-crew-panel" role="secondary" priority={8}>
+      <CockpitTarget id="mission-crew-panel" role="secondary" priority={8} label="Crew">
         <CrewPanel />
       </CockpitTarget>
 
-      <CockpitTarget id="mission-station-coverage" role="secondary" priority={3}>
+      <CockpitTarget id="mission-station-coverage" role="secondary" priority={3} label="Station coverage">
         <section className="panel" aria-labelledby="station-coverage-heading">
           <h2 id="station-coverage-heading">Station coverage</h2>
           <p className="panel-hint">Who covers what right now, and how effectively.</p>
@@ -218,7 +218,7 @@ export function MissionCommandConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="mission-crew-assignment" role="secondary" priority={1}>
+      <CockpitTarget id="mission-crew-assignment" role="secondary" priority={1} label="Crew assignment">
         <section className="panel" aria-labelledby="crew-assignment-heading">
           <h2 id="crew-assignment-heading">Crew assignment</h2>
           <p className="panel-hint">
@@ -253,7 +253,7 @@ export function MissionCommandConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="mission-crew-schedule" role="secondary" priority={2}>
+      <CockpitTarget id="mission-crew-schedule" role="secondary" priority={2} label="Crew schedule">
         <section className="panel" aria-labelledby="crew-schedule-heading">
           <h2 id="crew-schedule-heading">Crew schedule</h2>
           <p className="panel-hint">
@@ -304,7 +304,7 @@ export function MissionCommandConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="mission-daily-plan" role="secondary" priority={4}>
+      <CockpitTarget id="mission-daily-plan" role="secondary" priority={4} label="Daily plan">
         <section className="panel" aria-labelledby="daily-plan-heading">
           <h2 id="daily-plan-heading">Daily plan</h2>
           <ul className="status-list">
@@ -354,7 +354,7 @@ export function MissionCommandConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="mission-goals" role="secondary" priority={5}>
+      <CockpitTarget id="mission-goals" role="secondary" priority={5} label="Goals">
         <section className="panel" aria-labelledby="goals-heading">
           <h2 id="goals-heading">Goals</h2>
           <p>
@@ -379,7 +379,7 @@ export function MissionCommandConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="mission-esm-panel" role="secondary" priority={9}>
+      <CockpitTarget id="mission-esm-panel" role="secondary" priority={9} label="ESM budget">
         <EsmPanel className="panel-span-full" />
       </CockpitTarget>
     </DashboardGrid>

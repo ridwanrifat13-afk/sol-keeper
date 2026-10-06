@@ -56,7 +56,7 @@ export function PowerConsole() {
         </p>
       </header>
 
-      <CockpitTarget id="power-battery" role="secondary" priority={1}>
+      <CockpitTarget id="power-battery" role="secondary" priority={1} label="Battery">
         <section className="panel" aria-labelledby="power-resources-heading">
           <h2 id="power-resources-heading">Battery</h2>
           <div className="gauge-grid">
@@ -94,7 +94,7 @@ export function PowerConsole() {
        *  request, M9.x): "quiet sol" interactivity, a routine any-sol maintenance action using
        *  the same real physics duststorm-2018's own post-storm cleanArrays response already
        *  models, not gated behind that one scripted incident. */}
-      <CockpitTarget id="power-reactor-array" role="secondary" priority={2}>
+      <CockpitTarget id="power-reactor-array" role="secondary" priority={2} label="Reactor & array">
         <section className="panel" aria-labelledby="reactor-array-heading">
           <h2 id="reactor-array-heading">Reactor &amp; array status</h2>
           <p className="panel-hint">
@@ -152,11 +152,11 @@ export function PowerConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="power-priorities" role="primary" priority={1}>
+      <CockpitTarget id="power-priorities" role="primary" priority={1} label="Power priority">
         <PowerPriorities />
       </CockpitTarget>
 
-      <CockpitTarget id="power-space-weather" role="secondary" priority={3}>
+      <CockpitTarget id="power-space-weather" role="secondary" priority={3} label="Space weather">
         <section className="panel" aria-labelledby="space-weather-heading">
           <div className="panel-head-row">
             <h2 id="space-weather-heading">{t("liveSky.activityHeading")}</h2>
@@ -199,7 +199,7 @@ export function PowerConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="power-fact-gallery" role="secondary" priority={4}>
+      <CockpitTarget id="power-fact-gallery" role="secondary" priority={4} label="NASA photos">
         <FactCardGallery
           topic={powerFactCardTopicFor(scenario.body)}
           heading={

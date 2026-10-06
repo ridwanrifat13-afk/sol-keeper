@@ -18,11 +18,18 @@ const region = (over: Partial<ScreenRegion> & Pick<ScreenRegion, "id" | "role">)
   ...over,
 });
 
+const panel = (
+  over: Partial<CockpitPanel> & Pick<CockpitPanel, "id" | "role" | "priority">,
+): CockpitPanel => ({
+  label: over.id,
+  ...over,
+});
+
 describe("assignPanelsToRegions", () => {
   it("places one panel per region of the matching role, in priority order", () => {
     const panels: CockpitPanel[] = [
-      { id: "b", role: "secondary", priority: 2 },
-      { id: "a", role: "secondary", priority: 1 },
+      panel({ id: "b", role: "secondary", priority: 2 }),
+      panel({ id: "a", role: "secondary", priority: 1 }),
     ];
     const regions = [region({ id: "r1", role: "secondary" }), region({ id: "r2", role: "secondary" })];
     const { placements, overflow } = assignPanelsToRegions(panels, regions, 1000);
@@ -33,8 +40,8 @@ describe("assignPanelsToRegions", () => {
 
   it("is total: a panel with no region of its own role goes to overflow, never dropped", () => {
     const panels: CockpitPanel[] = [
-      { id: "a", role: "secondary", priority: 1 },
-      { id: "b", role: "secondary", priority: 2 },
+      panel({ id: "a", role: "secondary", priority: 1 }),
+      panel({ id: "b", role: "secondary", priority: 2 }),
     ];
     const regions = [region({ id: "r1", role: "secondary" })];
     const { placements, overflow } = assignPanelsToRegions(panels, regions, 1000);
@@ -44,9 +51,9 @@ describe("assignPanelsToRegions", () => {
 
   it("is deterministic: the same input always produces the same assignment", () => {
     const panels: CockpitPanel[] = [
-      { id: "x", role: "primary", priority: 1 },
-      { id: "y", role: "ticker", priority: 1 },
-      { id: "z", role: "secondary", priority: 3 },
+      panel({ id: "x", role: "primary", priority: 1 }),
+      panel({ id: "y", role: "ticker", priority: 1 }),
+      panel({ id: "z", role: "secondary", priority: 3 }),
     ];
     const regions = [
       region({ id: "p", role: "primary" }),
@@ -60,7 +67,7 @@ describe("assignPanelsToRegions", () => {
   });
 
   it("treats a region narrower than its own minPanelWidthPx as absent", () => {
-    const panels: CockpitPanel[] = [{ id: "a", role: "secondary", priority: 1 }];
+    const panels: CockpitPanel[] = [panel({ id: "a", role: "secondary", priority: 1 })];
     // 10% of a 500px frame is 50px, under this region's own 200px minimum.
     const regions = [region({ id: "r1", role: "secondary", wPct: 10, minPanelWidthPx: 200 })];
     const { placements, overflow } = assignPanelsToRegions(panels, regions, 500);
@@ -69,7 +76,7 @@ describe("assignPanelsToRegions", () => {
   });
 
   it("never assigns a panel to a region of a different role", () => {
-    const panels: CockpitPanel[] = [{ id: "a", role: "ticker", priority: 1 }];
+    const panels: CockpitPanel[] = [panel({ id: "a", role: "ticker", priority: 1 })];
     const regions = [region({ id: "r1", role: "primary" }), region({ id: "r2", role: "secondary" })];
     const { placements, overflow } = assignPanelsToRegions(panels, regions, 1000);
     expect(placements.size).toBe(0);

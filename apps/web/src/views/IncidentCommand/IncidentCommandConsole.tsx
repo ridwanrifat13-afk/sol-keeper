@@ -149,7 +149,7 @@ export function IncidentCommandConsole() {
         </p>
       </header>
 
-      <CockpitTarget id="incident-ripple-graph" role="primary" priority={1}>
+      <CockpitTarget id="incident-ripple-graph" role="primary" priority={1} label="Dependency map">
         <section className="panel panel-span-full" aria-labelledby="ripple-graph-heading">
           <h2 id="ripple-graph-heading">Dependency map</h2>
           <svg
@@ -203,7 +203,7 @@ export function IncidentCommandConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="incident-repair-queue" role="secondary" priority={1}>
+      <CockpitTarget id="incident-repair-queue" role="secondary" priority={1} label="Repair queue">
         <section className="panel repair-queue-panel" aria-labelledby="repair-queue-heading">
           <h2 id="repair-queue-heading">Repair queue</h2>
           <p className="panel-hint">
@@ -288,7 +288,7 @@ export function IncidentCommandConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="incident-spares" role="secondary" priority={2}>
+      <CockpitTarget id="incident-spares" role="secondary" priority={2} label="Spares inventory">
         <section className="panel" aria-labelledby="spares-heading">
           <h2 id="spares-heading">Spares inventory</h2>
           <p className="panel-hint">
@@ -334,7 +334,7 @@ export function IncidentCommandConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="incident-ripple-table" role="secondary" priority={3}>
+      <CockpitTarget id="incident-ripple-table" role="secondary" priority={3} label="Status table">
         <section className="panel" aria-labelledby="ripple-table-heading">
           <h2 id="ripple-table-heading">Same information, as text</h2>
           <p className="panel-hint">
@@ -367,7 +367,7 @@ export function IncidentCommandConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="incident-ripple-evidence" role="secondary" priority={4}>
+      <CockpitTarget id="incident-ripple-evidence" role="secondary" priority={4} label="Connection evidence">
         <section className="panel" aria-labelledby="ripple-evidence-heading">
           <h2 id="ripple-evidence-heading">How the connections work</h2>
           <p className="panel-hint">
@@ -402,7 +402,7 @@ export function IncidentCommandConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="incident-crew-location" role="secondary" priority={5}>
+      <CockpitTarget id="incident-crew-location" role="secondary" priority={5} label="Crew location">
         <section className="panel panel-span-full" aria-labelledby="crew-location-heading">
           <h2 id="crew-location-heading">Crew location</h2>
           <p className="panel-hint">

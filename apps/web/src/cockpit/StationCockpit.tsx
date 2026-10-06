@@ -218,7 +218,10 @@ export function StationCockpit({
     );
   }
 
-  const overflowTabs = assignment.overflow.map((id) => ({ id, label: id }));
+  const overflowTabs = assignment.overflow.map((id) => ({
+    id,
+    label: registry.get(id)?.label ?? id,
+  }));
   const sources = stationImageSources(screenMap.imageBase);
   const sizes = "(min-width: 1280px) 1280px, 100vw";
 

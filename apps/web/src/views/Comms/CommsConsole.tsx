@@ -63,7 +63,7 @@ export function CommsConsole() {
         </p>
       </header>
 
-      <CockpitTarget id="comms-light-time" role="secondary" priority={1}>
+      <CockpitTarget id="comms-light-time" role="secondary" priority={1} label="Distance to Earth">
         <section className="panel" aria-labelledby="light-time-heading">
           <div className="panel-head-row">
             <h2 id="light-time-heading">{t("liveSky.distanceHeading")}</h2>
@@ -96,7 +96,7 @@ export function CommsConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="comms-downlink-priority" role="primary" priority={1}>
+      <CockpitTarget id="comms-downlink-priority" role="primary" priority={1} label="Downlink priority">
         <section className="panel" aria-labelledby="downlink-priority-heading">
           <h2 id="downlink-priority-heading">Downlink priority</h2>
           <p className="panel-hint">
@@ -123,7 +123,7 @@ export function CommsConsole() {
         </section>
       </CockpitTarget>
 
-      <CockpitTarget id="comms-fact-gallery" role="secondary" priority={2}>
+      <CockpitTarget id="comms-fact-gallery" role="secondary" priority={2} label="Deep Space Network">
         <FactCardGallery
           topic="deep-space-network"
           heading="Real hardware: the Deep Space Network"

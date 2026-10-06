@@ -43,6 +43,10 @@ export interface CockpitPanel {
   /** Lower sorts first — the panel placed before its same-role siblings when a role has more
    *  panels than regions. */
   readonly priority: number;
+  /** Short human-readable name for this panel, shown as its overflow-tab label when it
+   *  doesn't fit a region of its own — distinct from `id` (a stable, player-never-sees
+   *  identifier) so a tab reads "Crew location", not "incident-crew-location". */
+  readonly label: string;
 }
 
 export interface CockpitAssignment {

@@ -2983,8 +2983,10 @@ html.cockpit-active .app {
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
     inset 0 2px 6px rgba(0, 0, 0, 0.5),
     0 0 6px rgba(80, 120, 255, 0.15);
-  padding: 4px;
-  font-size: 0.78rem;
+  padding: 6px;
+  /* Was 0.78rem (~12.5px) — under this file's own stated 14px floor for cockpit screens
+     (see the comment below). Set in px, not rem, so it holds regardless of root font-size. */
+  font-size: 14px;
 }
 
 /* A region this small still needs every control inside it to clear the brief's own 44px
@@ -2996,7 +2998,29 @@ html.cockpit-active .app {
 }
 
 .cockpit-screen-content h2 {
-  font-size: 0.82rem;
+  font-size: 15px;
+}
+
+/* Player report: Classic view's own hint paragraphs are written for a full-width desktop
+   panel and routinely ran 3-5 lines — inside a cockpit screen a fraction of that width, they
+   pushed the actual data (gauges, buttons) below the fold or cut off mid-sentence with no
+   visible scroll affordance. Clamped to the headline sentence; the full text is one toggle
+   away in Classic view, never lost. */
+.cockpit-screen-content .panel-hint {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Same overcrowding problem, specific to FactCardGallery (power-fact-gallery,
+   comms-fact-gallery, lifesupport-gallery-*): a horizontally-scrolling photo strip needs real
+   width to read as photos at all — inside a cockpit screen it rendered as a sliver of cropped
+   thumbnails below the (already clamped) heading, adding noise without conveying anything.
+   The heading + provenance badge stay, so the panel is still clearly "present" (reachable via
+   its own overflow tab if it doesn't fit a region); the photos themselves stay Classic-only. */
+.cockpit-screen-content .fact-card-strip {
+  display: none;
 }
 
 .cockpit-screen-ticker .cockpit-screen-content {
@@ -3033,7 +3057,10 @@ html.cockpit-active .app {
 }
 
 .cockpit-alert-summary-label {
-  font-size: 0.68rem;
+  /* Was 0.68rem (~11px) — under the 14px body-text floor the rest of this cockpit CSS now
+     holds to (see .cockpit-screen-content's own comment); this is real content (which gauge
+     the alert is about), not decorative chrome. */
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-dim);
@@ -3044,7 +3071,7 @@ html.cockpit-active .app {
 }
 
 .cockpit-alert-summary-value {
-  font-size: 0.72rem;
+  font-size: 14px;
   color: var(--text-dim);
 }
 
