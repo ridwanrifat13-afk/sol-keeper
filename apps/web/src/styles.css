@@ -67,28 +67,27 @@ body {
 /* Player request: a real lunar/Mars-surface photo behind the five station consoles
  * (App.tsx's own `STATION_VIEWS` sets `data-station-bg` on `<html>`, only for those five —
  * Habitat/Briefing/Debrief already carry their own real imagery and stay on the plain shell
- * background). The photo is blended with the shell's own light tint rather than shown at
- * full strength: `h1`/`.view-head`/`.mission-site` sit directly on this background (unlike
- * every panel, gauge and button, which are opaque and so unaffected either way), and brief
- * rule 6's contrast guarantee has to hold against a photo, not just a flat colour. The image
- * is fixed-size `cover`/`center`, not `background-attachment: fixed` — a repainted fixed
- * background is real scroll jank on a low-end Android phone (brief rule 6), and this still
- * reads as "the backdrop", not "a sticker", since every page here is short enough to need
- * little or no scrolling. Invisible whenever Cockpit mode is active (its own
- * `.cockpit-frame` is opaque and covers the page) — see App.tsx's own doc comment on why this
- * is still set unconditionally for all five stations rather than only for Classic. */
+ * background). Shown at full strength, no tint (player request — an earlier light-tint blend
+ * was tried first, then faded further, then dropped entirely here): `h1`/`.view-head`/
+ * `.mission-site` sit directly on this background (unlike every panel, gauge and button,
+ * which are opaque and so unaffected either way) — if a specific scenario's photo ever reads
+ * as too low-contrast under that text, that's a real brief-rule-6 issue to flag and fix
+ * locally (e.g. a text-shadow on the header), not a reason to silently re-add a global tint
+ * this instruction asked removed. The image is fixed-size `cover`/`center`, not
+ * `background-attachment: fixed` — a repainted fixed background is real scroll jank on a
+ * low-end Android phone (brief rule 6), and this still reads as "the backdrop", not "a
+ * sticker", since every page here is short enough to need little or no scrolling. Invisible
+ * whenever Cockpit mode is active (its own `.cockpit-frame` is opaque and covers the page) —
+ * see App.tsx's own doc comment on why this is still set unconditionally for all five
+ * stations rather than only for Classic. */
 html[data-station-bg="moon"] body {
-  /* Player request: faded further than the original 0.72 tint — the photo reads as a
-     background now, not competing with foreground text/panels for attention. */
-  background-image: linear-gradient(rgba(238, 243, 251, 0.88), rgba(238, 243, 251, 0.88)),
-    url("/images/station-bg-moon.jpg");
+  background-image: url("/images/station-bg-moon.jpg");
   background-position: center;
   background-repeat: no-repeat;
 }
 
 html[data-station-bg="mars"] body {
-  background-image: linear-gradient(rgba(238, 243, 251, 0.88), rgba(238, 243, 251, 0.88)),
-    url("/images/station-bg-mars.jpg");
+  background-image: url("/images/station-bg-mars.jpg");
   background-position: center;
   background-repeat: no-repeat;
 }
