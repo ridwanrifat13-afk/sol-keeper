@@ -73,10 +73,16 @@ body {
  * which are opaque and so unaffected either way) — if a specific scenario's photo ever reads
  * as too low-contrast under that text, that's a real brief-rule-6 issue to flag and fix
  * locally (e.g. a text-shadow on the header), not a reason to silently re-add a global tint
- * this instruction asked removed. The image is fixed-size `cover`/`center`, not
- * `background-attachment: fixed` — a repainted fixed background is real scroll jank on a
- * low-end Android phone (brief rule 6), and this still reads as "the backdrop", not "a
- * sticker", since every page here is short enough to need little or no scrolling. Invisible
+ * this instruction asked removed.
+ *
+ * `background-attachment: fixed` (player request — "fixed in the background") pins the photo
+ * to the viewport instead of the page, so it doesn't scroll past with the content; `cover`/
+ * `center` (unchanged) is what makes it fill the viewport cleanly at any window size ("fit
+ * in"). Flagged, not silently overridden: an earlier version of this file deliberately left
+ * `fixed` off here, on the documented grounds that a repainted fixed background is real
+ * scroll jank on a low-end Android phone (brief rule 6) — these station pages are short
+ * enough that the tradeoff seemed worth it when asked for directly, but if a real low-end
+ * device shows jank, that's the rule 6 concern materializing, not a surprise. Invisible
  * whenever Cockpit mode is active (its own `.cockpit-frame` is opaque and covers the page) —
  * see App.tsx's own doc comment on why this is still set unconditionally for all five
  * stations rather than only for Classic. */
@@ -84,12 +90,14 @@ html[data-station-bg="moon"] body {
   background-image: url("/images/station-bg-moon.jpg");
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 html[data-station-bg="mars"] body {
   background-image: url("/images/station-bg-mars.jpg");
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 .app {
