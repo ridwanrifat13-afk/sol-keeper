@@ -78,14 +78,16 @@ body {
  * `.cockpit-frame` is opaque and covers the page) — see App.tsx's own doc comment on why this
  * is still set unconditionally for all five stations rather than only for Classic. */
 html[data-station-bg="moon"] body {
-  background-image: linear-gradient(rgba(238, 243, 251, 0.72), rgba(238, 243, 251, 0.72)),
+  /* Player request: faded further than the original 0.72 tint — the photo reads as a
+     background now, not competing with foreground text/panels for attention. */
+  background-image: linear-gradient(rgba(238, 243, 251, 0.88), rgba(238, 243, 251, 0.88)),
     url("/images/station-bg-moon.jpg");
   background-position: center;
   background-repeat: no-repeat;
 }
 
 html[data-station-bg="mars"] body {
-  background-image: linear-gradient(rgba(238, 243, 251, 0.72), rgba(238, 243, 251, 0.72)),
+  background-image: linear-gradient(rgba(238, 243, 251, 0.88), rgba(238, 243, 251, 0.88)),
     url("/images/station-bg-mars.jpg");
   background-position: center;
   background-repeat: no-repeat;
