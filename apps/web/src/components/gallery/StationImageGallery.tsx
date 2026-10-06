@@ -1,21 +1,7 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
-import { useLiveOrSnapshot } from "../../data/liveOrSnapshot.js";
 import { useAccessibility } from "../../store/accessibility.js";
-import { InfiniteGallery, type GalleryImage } from "./InfiniteGallery.js";
-import type { NasaImagesResponse } from "../../../server-lib/types.js";
-import type { ImageQueryKey } from "../../../server-lib/validate.js";
-
-function useTopicImages(topic: ImageQueryKey) {
-  return useLiveOrSnapshot<NasaImagesResponse>(`/snapshots/nasa-images-${topic}.json`, `/api/nasa-images?q=${topic}`);
-}
-
-/** images-assets.nasa.gov sends no CORS header, so a plain <img> can show it (the station
- *  consoles already do) but WebGL cannot load it as a texture — the browser refuses the
- *  cross-origin fetch. /api/nasa-image-thumb re-serves the same bytes same-origin so the
- *  gallery's three.js textures can actually load; see that endpoint's own doc comment. */
-function proxiedThumbUrl(thumbUrl: string): string {
-  return `/api/nasa-image-thumb?url=${encodeURIComponent(thumbUrl)}`;
-}
+import { InfiniteGallery } from "./InfiniteGallery.js";
+import { GALLERY_IMAGES } from "./galleryImages.js";
 
 /** A single failed/rejected texture load (a flaky network, one bad image) would otherwise
  *  throw past Suspense — Suspense only catches *pending* promises, not rejected ones — and
@@ -59,10 +45,14 @@ function hasWebgl(): boolean {
 }
 
 /**
- * Decorative background for the homepage's Launch Windows section — the exact same live
- * NASA photos the station consoles already pull (same /api/nasa-images + snapshot fallback
- * FactCardGallery.tsx uses), repurposed as a drifting photo backdrop behind the launch-window
- * glass cards instead of a second, separate image fetch.
+ * Decorative background for the homepage's Launch Windows section — a curated, self-hosted
+ * subset of the exact same NASA photos the station consoles pull live (galleryImages.ts).
+ * Player report: the first version fetched all ~60 live photos through a CORS proxy
+ * (images-assets.nasa.gov sends no Access-Control-Allow-Origin header, so WebGL can't load
+ * them directly) and `useTexture` suspends until every one of them resolves — on a slow
+ * connection that meant the gallery's first real paint took far too long. Self-hosting a
+ * fixed set fixes this at the root: same-origin, no round trip to NASA's CDN, PWA-precached
+ * for offline use.
  *
  * Purely atmospheric: aria-hidden, since these photos carry no information the player needs
  * that isn't already presented — with real credit text, per CLAUDE.md rule 5 — inside the
@@ -82,22 +72,6 @@ function hasWebgl(): boolean {
  * this is a backdrop, not a content list.
  */
 export function StationImageGallery({ className }: { readonly className?: string }) {
-  // Every topic a station console actually pulls from /api/nasa-images (PowerConsole,
-  // HabitatView, CommsConsole, LifeSupportConsole — both bodies, since this gallery runs on
-  // the homepage before any scenario/body is chosen). A fixed set of hook calls, not a loop
-  // over a topic list — React's rules of hooks.
-  const marsHabitat = useTopicImages("mars-habitat-concept");
-  const lunarHabitat = useTopicImages("lunar-habitat-concept");
-  const deepSpaceNetwork = useTopicImages("deep-space-network");
-  const co2Scrubber = useTopicImages("co2-scrubber");
-  const veggie = useTopicImages("veggie");
-  const moxie = useTopicImages("moxie");
-  const lunarSouthPole = useTopicImages("lunar-south-pole");
-
-  const images: GalleryImage[] = [marsHabitat, lunarHabitat, deepSpaceNetwork, co2Scrubber, veggie, moxie, lunarSouthPole]
-    .flatMap((result) => result.data?.items ?? [])
-    .map((item) => ({ src: proxiedThumbUrl(item.thumbUrl), alt: item.title }));
-
   const lowPowerMode = useAccessibility((s) => s.lowPowerMode);
   const reducedMotion = usePrefersReducedMotion();
   const [webgl] = useState(hasWebgl);
@@ -125,8 +99,8 @@ export function StationImageGallery({ className }: { readonly className?: string
     };
   }, []);
 
-  const animated = nearViewport && webgl && !lowPowerMode && !reducedMotion && images.length > 0;
-  const firstImage = images[0];
+  const animated = nearViewport && webgl && !lowPowerMode && !reducedMotion;
+  const firstImage = GALLERY_IMAGES[0];
   const staticFallback = firstImage ? (
     <div className="station-image-gallery-static" style={{ backgroundImage: `url(${firstImage.src})` }} />
   ) : null;
@@ -135,7 +109,7 @@ export function StationImageGallery({ className }: { readonly className?: string
     <div ref={ref} className={className} aria-hidden="true">
       {animated ? (
         <GalleryErrorBoundary fallback={staticFallback}>
-          <InfiniteGallery images={images} visibleCount={6} />
+          <InfiniteGallery images={GALLERY_IMAGES} visibleCount={6} />
         </GalleryErrorBoundary>
       ) : (
         staticFallback

@@ -81,31 +81,3 @@ export function parseImageQueryParam(raw: string | null): ParseResult<ImageQuery
   const allowed = Object.keys(IMAGE_QUERY_WHITELIST).join(", ");
   return fail(`q must be one of: ${allowed}; got ${JSON.stringify(raw)}`);
 }
-
-/** Every `thumbUrl` /api/nasa-images (and its snapshots) ever returns has exactly this
- *  shape — checked directly against all 96 committed snapshot entries before writing this
- *  pattern, not assumed. */
-const NASA_IMAGE_THUMB_PATTERN = /^\/image\/[^/]+\/[^/]+~thumb\.jpg$/;
-
-/**
- * `url` for /api/nasa-image-thumb: not a free-text path — exactly an
- * images-assets.nasa.gov thumbnail URL this project's own /api/nasa-images response could
- * have produced. Rejects every other host/scheme/path, so this can never become an open
- * proxy onto arbitrary URLs.
- */
-export function parseNasaImageUrlParam(raw: string | null): ParseResult<string> {
-  if (raw === null) return fail("url is required");
-  let parsed: URL;
-  try {
-    parsed = new URL(raw);
-  } catch {
-    return fail(`url must be a valid URL, got ${JSON.stringify(raw)}`);
-  }
-  if (parsed.protocol !== "https:" || parsed.hostname !== "images-assets.nasa.gov") {
-    return fail(`url must be an https://images-assets.nasa.gov thumbnail URL, got ${JSON.stringify(raw)}`);
-  }
-  if (!NASA_IMAGE_THUMB_PATTERN.test(parsed.pathname)) {
-    return fail(`url path must match /image/<id>/<id>~thumb.jpg, got ${JSON.stringify(parsed.pathname)}`);
-  }
-  return ok(parsed.toString());
-}
