@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useReducer,
@@ -55,6 +56,19 @@ export function StationCockpit({
     screenMap !== undefined,
     imageFailed,
   );
+
+  // Player request: the sidebar nav should float on top of the cockpit photo (true
+  // corner-to-corner), not reserve its own column that shrinks the frame. CSS alone can't
+  // react to "is a StationCockpit currently active" — only one is ever mounted at a time
+  // (App.tsx renders at most one station view), so a single class on <html> is enough, no
+  // store or context needed. Mirrors this codebase's own established pattern for view-driven
+  // document-level state (compare App.tsx's removed data-station-bg effect, same idea).
+  useEffect(() => {
+    document.documentElement.classList.toggle("cockpit-active", active);
+    return () => {
+      document.documentElement.classList.remove("cockpit-active");
+    };
+  }, [active]);
 
   const frameRef = useRef<HTMLDivElement | null>(null);
   const [frameWidth, setFrameWidth] = useState(0);

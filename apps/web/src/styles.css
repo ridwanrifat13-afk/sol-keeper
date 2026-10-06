@@ -1156,6 +1156,51 @@ code {
   }
 }
 
+/* Player request: while a station's cockpit view is active, the photo should reach the
+   browser window's own corners — the sidebar nav floats on top of it instead of reserving
+   its own column that would shrink the frame. StationCockpit.tsx toggles this class on
+   <html> (not a prop) since only one station view is ever mounted at a time — see that
+   file's own doc comment. `.app`'s own max-width (the same shape `.app-full-bleed` already
+   uses for Home) is what actually frees the width; removing `.tab-nav` from the flex flow
+   below then lets `.app-main` (flex: 1, the only remaining flex item) claim all of it
+   automatically, no extra width rule needed.
+
+   The header/toolbar chrome above the photo (mission title, time controls, the Cockpit/
+   Classic toggle itself) stays indented past the floating sidebar's own footprint — only
+   `.cockpit-frame` breaks back out to the true left edge, under the sidebar, since it's the
+   one thing meant to sit behind it. Without this split, that chrome would render flush at
+   x:0, directly underneath the floating sidebar, fully obscured (caught exactly this in a
+   screenshot before adding the split). SIDEBAR_FOOTPRINT_PX below (230 = 20px inset + 190px
+   width + 20px gap) has to stay in sync with the fixed-position numbers in the next rule by
+   hand — CSS has no shared-constant mechanism across two separate declarations like this. */
+html.cockpit-active .app {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (min-width: 860px) {
+  html.cockpit-active .tab-nav {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    bottom: 20px;
+    overflow-y: auto;
+    z-index: 50;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  /* SIDEBAR_FOOTPRINT_PX = 230, see the shared comment above. */
+  html.cockpit-active .app-main {
+    padding-left: 230px;
+  }
+
+  html.cockpit-active .cockpit-frame {
+    margin-left: -230px;
+    width: calc(100% + 230px);
+  }
+}
+
 .language-switch {
   display: flex;
   gap: 4px;
@@ -2895,7 +2940,7 @@ code {
      shape, so growing this box needed no change to any calibrated screenMaps.ts entry. */
   position: relative;
   width: 100%;
-  height: min(82vh, 980px);
+  height: min(92vh, 1100px);
   border-radius: var(--radius);
   overflow: hidden;
   background: #000;
