@@ -394,12 +394,16 @@
   overflow: hidden;
 }
 
-/* The real reading column — right-aligned (`margin-left: auto`) over the full-bleed video, so
-   the astronaut stays visible down the left side of the section instead of being covered by
-   the card list the way the old full-width centered layout covered it. */
+/* The real reading column — right-of-centre (`margin-left: auto`) over the full-bleed video,
+   so the astronaut stays visible down the left side of the section instead of being covered
+   by the card list the way the old full-width centered layout covered it. Player follow-up:
+   wider than the first cut (34rem → 42rem) and pulled in from the right edge via
+   `margin-right` instead of sitting flush against the section's own padding, so it reads as
+   sitting over the middle-right of the frame rather than pinned to the corner. */
 .modern-hero-schedule-content {
-  max-width: 34rem;
+  max-width: 42rem;
   margin-left: auto;
+  margin-right: 4rem;
   position: relative;
   z-index: 1;
 }
@@ -491,8 +495,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  padding: 1.1rem 1.25rem;
-  margin-bottom: 0.75rem;
+  /* Player follow-up: shorter cards — less top/bottom padding (the thumbnail, not the text
+     block, was setting the card's real height before; shrinking it below is what let this
+     come down further without clipping anything). */
+  padding: 0.65rem 1.25rem;
+  margin-bottom: 0.6rem;
   border-radius: 10px;
   /* Solid-ish panel at rest, not just on hover (player request: "make the shortcuts section a
      bit less transparent") — each shortcut now reads as its own card against the page. The
@@ -539,8 +546,8 @@
 }
 
 .modern-hero-item-thumb {
-  width: 4.5rem;
-  height: 4.5rem;
+  width: 3.25rem;
+  height: 3.25rem;
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
@@ -553,10 +560,10 @@
 }
 
 .modern-hero-item-title {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #fafafa;
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.2rem;
 }
 
 .modern-hero-item-date {
@@ -813,6 +820,7 @@
   .modern-hero-schedule-content {
     max-width: none;
     margin-left: 0;
+    margin-right: 0;
   }
 
   .modern-hero-schedule-title {
