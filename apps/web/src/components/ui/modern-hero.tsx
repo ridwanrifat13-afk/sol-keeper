@@ -1,12 +1,19 @@
 import { ReactLenis } from "lenis/react";
 import { motion, useMotionTemplate, useScroll, useTransform } from "framer-motion";
 import { FiArrowRight, FiBookOpen, FiMapPin } from "react-icons/fi";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { SCENARIOS, type ScenarioId } from "@sol-keeper/sim";
 import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
 import { CONTROLS_REFERENCE, MISSION_GUIDES, SETUP_CONTROLS_REFERENCE } from "../../dial/missionGuides.js";
 import { durationLabel } from "../../dial/missionTime.js";
 import "./modern-hero.css";
+
+/** The three.js gallery is a real, separate bundle (CLAUDE.md rule 7's "ask before adding a
+ *  dependency" dependency) — lazy-loaded so it only ever downloads once a visitor scrolls
+ *  near Launch Windows, not as part of the homepage's critical first paint. */
+const StationImageGallery = lazy(() =>
+  import("../gallery/StationImageGallery.js").then((m) => ({ default: m.StationImageGallery })),
+);
 
 export interface SmoothScrollHeroProps {
   onLaunchMission?: ((scenarioId?: ScenarioId) => void) | undefined;
@@ -377,42 +384,55 @@ const Schedule = ({ onLaunchMission }: ScheduleProps) => {
       className="modern-hero-schedule"
       aria-label="Mission Launch Windows"
     >
-      {/* Player request: remove the generic "Start Mission Setup" button that used to sit
-       *  here — each card below already has its own real, scenario-specific launch action
-       *  (`onLaunch`), and Nav's own "Launch Outpost" button (top of the page) already covers
-       *  the generic, no-scenario-preselected entry point, so this wasn't the only way in. */}
-      <div className="modern-hero-schedule-head">
-        <div>
-          <motion.h2
-            initial={{ y: 36, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ ease: "easeInOut", duration: 0.6 }}
-            className="modern-hero-schedule-title"
-          >
-            Launch Windows
-          </motion.h2>
-          <p className="modern-hero-schedule-subtitle">
-            Sol Keeper's three real training missions — pick one to jump straight into Setup
-            with it already selected.
-          </p>
+      {/* Player request: the real NASA photos already pulled into the station consoles,
+       *  reused as a drifting background behind this section — see StationImageGallery.tsx
+       *  for why it's lazy-loaded, gated behind low-power-mode/reduced-motion/WebGL support,
+       *  and aria-hidden. A dark scrim sits between it and the "liquid glass" cards below so
+       *  the real content (`.modern-hero-schedule-content`) stays readable over a moving
+       *  photo instead of the old flat background. */}
+      <Suspense fallback={null}>
+        <StationImageGallery className="modern-hero-schedule-gallery" />
+      </Suspense>
+      <div className="modern-hero-schedule-scrim" />
+
+      <div className="modern-hero-schedule-content">
+        {/* Player request: remove the generic "Start Mission Setup" button that used to sit
+         *  here — each card below already has its own real, scenario-specific launch action
+         *  (`onLaunch`), and Nav's own "Launch Outpost" button (top of the page) already covers
+         *  the generic, no-scenario-preselected entry point, so this wasn't the only way in. */}
+        <div className="modern-hero-schedule-head">
+          <div>
+            <motion.h2
+              initial={{ y: 36, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ ease: "easeInOut", duration: 0.6 }}
+              className="modern-hero-schedule-title"
+            >
+              Launch Windows
+            </motion.h2>
+            <p className="modern-hero-schedule-subtitle">
+              Sol Keeper's three real training missions — pick one to jump straight into Setup
+              with it already selected.
+            </p>
+          </div>
         </div>
+
+        {SCENARIO_ORDER.map((id) => {
+          const scenario = SCENARIOS[id];
+          const meta = SCENARIO_LABELS[id];
+          return (
+            <ScheduleItem
+              key={id}
+              title={meta.label}
+              date={`${scenario.site.name} · ${durationLabel(scenario.durationHours, scenario.body)}`}
+              location={meta.hint}
+              onLaunch={onLaunchMission === undefined ? undefined : () => onLaunchMission(id)}
+            />
+          );
+        })}
+
+        <GuideShortcut onLaunchMission={onLaunchMission} />
       </div>
-
-      {SCENARIO_ORDER.map((id) => {
-        const scenario = SCENARIOS[id];
-        const meta = SCENARIO_LABELS[id];
-        return (
-          <ScheduleItem
-            key={id}
-            title={meta.label}
-            date={`${scenario.site.name} · ${durationLabel(scenario.durationHours, scenario.body)}`}
-            location={meta.hint}
-            onLaunch={onLaunchMission === undefined ? undefined : () => onLaunchMission(id)}
-          />
-        );
-      })}
-
-      <GuideShortcut onLaunchMission={onLaunchMission} />
     </section>
   );
 };

@@ -383,10 +383,58 @@
   color: #fff;
   position: relative;
   z-index: 10;
-  /* A visible seam, not just a same-color continuation, so the shortcuts list reads as its
-     own section rather than a fade-out of the hero above it. */
+  overflow: hidden;
+  /* The solid colour is still the base/fallback layer (shows through before the gallery's
+     lazy chunk loads, and whenever it isn't mounted at all — see StationImageGallery.tsx) —
+     not just a same-colour continuation, so the shortcuts list reads as its own section
+     rather than a fade-out of the hero above it. */
   background-color: #09090b;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Player request: the live NASA photo gallery as this section's background. Absolutely
+   positioned behind everything else in the section (z-index 0, DOM order + the scrim right
+   after it handle the actual layering — see .modern-hero-schedule-content below), and
+   click/hover-through (it's decorative, aria-hidden — see StationImageGallery.tsx). */
+.modern-hero-schedule-gallery {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.modern-hero-schedule-gallery canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The static (low-power-mode / reduced-motion / no-WebGL) fallback: one real photo, not a
+   grid — this is a backdrop, not a content list — dimmed and blurred so it reads the same
+   "quiet background" role the live gallery plays without costing a running WebGL context. */
+.station-image-gallery-static {
+  position: absolute;
+  inset: -20px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(12px) brightness(0.35) saturate(0.7);
+}
+
+/* A dark scrim between the photo background and the glass cards — without it, a bright
+   NASA photo behind translucent glass would fight the card text for contrast. Sits after
+   the gallery in DOM order (paints on top of it) but still behind .modern-hero-schedule-
+   content below. */
+.modern-hero-schedule-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(180deg, rgba(9, 9, 11, 0.65) 0%, rgba(9, 9, 11, 0.55) 40%, rgba(9, 9, 11, 0.8) 100%);
+}
+
+.modern-hero-schedule-content {
+  position: relative;
+  z-index: 1;
 }
 
 .modern-hero-schedule-head {
@@ -405,6 +453,9 @@
   letter-spacing: -0.02em;
   color: #fafafa;
   margin: 0;
+  /* Extra legibility margin on top of the scrim, now that this sits over a moving photo
+     background instead of a flat colour. */
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
 }
 
 .modern-hero-schedule-subtitle {
@@ -413,25 +464,34 @@
   margin: 0.5rem 0 0;
 }
 
+/* Player request: now that the section has a moving photo background, style these as
+   "liquid glass" — frosted, translucent panels the backdrop shows through, with a soft
+   inner highlight along the top edge standing in for a specular reflection and a real drop
+   shadow lifting each card off the photo behind it, rather than the previous near-opaque
+   flat panel that was tuned for a plain dark background. */
 .modern-hero-schedule-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1.75rem 1.25rem;
   margin-bottom: 0.75rem;
-  border-radius: 10px;
-  /* Solid-ish panel at rest, not just on hover (player request: "make the shortcuts section a
-     bit less transparent") — each shortcut now reads as its own card against the page. */
-  background-color: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    0 12px 32px rgba(0, 0, 0, 0.45);
   transition:
     background-color 0.2s,
     border-color 0.2s;
 }
 
 .modern-hero-schedule-item:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: #3f3f46;
+  background-color: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .modern-hero-item-title {
@@ -628,6 +688,19 @@
 .low-power-mode .modern-hero-parallax-img,
 .low-power-mode .modern-hero-feature {
   transform: none !important;
+}
+
+/* Belt-and-suspenders on top of StationImageGallery.tsx's own JS gating (which is what
+   actually decides whether the WebGL canvas mounts at all) — covers the brief instant
+   before that check runs. */
+@media (prefers-reduced-motion: reduce) {
+  .modern-hero-schedule-gallery canvas {
+    display: none;
+  }
+}
+
+.low-power-mode .modern-hero-schedule-gallery canvas {
+  display: none;
 }
 
 /* Mobile responsiveness */
