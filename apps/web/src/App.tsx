@@ -67,6 +67,22 @@ const TAB_IDS: readonly TabView[] = [
   "briefing",
   "debrief",
 ];
+/** Player request: restores a themed page background (a real lunar- or Mars-surface photo,
+ *  images/station-bg-{moon,mars}.jpg) behind the five station consoles proper — removed
+ *  earlier in M9.1 ("remove the existing backgrounds for the stations") to make room for the
+ *  cockpit view's own full-bleed station photo, then asked back for Classic view specifically.
+ *  Harmless to set unconditionally (not just when Classic is active): Cockpit mode's own
+ *  `.cockpit-frame` is opaque and covers the full page when it's on, so this sits unseen behind
+ *  it rather than conflicting with it. Not Habitat/Briefing/Debrief, which already carry their
+ *  own real imagery and would visually compete with a second photo behind them. */
+const STATION_VIEWS = new Set<TabView>([
+  "power",
+  "lifeSupport",
+  "comms",
+  "incidentCommand",
+  "missionCommand",
+]);
+
 const TAB_KEYS: Record<TabView, string> = {
   power: "tabs.power",
   lifeSupport: "tabs.lifeSupport",
@@ -207,6 +223,20 @@ function AppShell({ initialView = "home" }: AppProps) {
   useEffect(() => {
     document.documentElement.classList.toggle("low-power-mode", lowPowerMode);
   }, [lowPowerMode]);
+
+  // Player request: the station consoles' background reflects the real body the current
+  // mission is on. One attribute, read by styles.css — set only on a station view (the home/
+  // setup/report screens, and Habitat/Briefing/Debrief, stay on the plain shell background).
+  useEffect(() => {
+    if (STATION_VIEWS.has(view as TabView)) {
+      document.documentElement.setAttribute("data-station-bg", scenario.body === "mars" ? "mars" : "moon");
+    } else {
+      document.documentElement.removeAttribute("data-station-bg");
+    }
+    return () => {
+      document.documentElement.removeAttribute("data-station-bg");
+    };
+  }, [view, scenario.body]);
 
   // M11: `?debug=1` shows docs/DEVICE_TEST.md's FPS/memory/tick overlay. Read the same way
   // the run-link query is (a `useEffect`, never at render time — `window` doesn't exist under
