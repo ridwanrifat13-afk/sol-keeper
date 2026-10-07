@@ -2289,11 +2289,23 @@ html.cockpit-active .app {
   border: 0;
 }
 
+/* Player report, confirmed by reproduction: the Decision Card overlay (z-index 100 below)
+   could render BEHIND this map's own tiles/controls/popups once they'd loaded — Leaflet's
+   own stylesheet gives its internal panes z-index values up to 700 (the popup pane) and
+   1000 (zoom controls), and Leaflet only sets `position: relative` on this element at
+   runtime, never a z-index — a positioned element with no z-index of its own does not
+   establish a new stacking context, so those high z-index panes were never actually
+   contained here; they competed directly against the decision card's own z-index in
+   whatever ancestor stacking context actually contained both. `isolation: isolate` forces
+   a real stacking context on this element regardless of that ancestor chain, trapping every
+   descendant pane/control/popup inside it for good — the map's own z-index in the page stays
+   effectively 0 (auto), reliably below the card's 100, without touching layout or position. */
 .trek-map {
   width: 100%;
   height: 420px;
   border-radius: 8px;
   border: 1px solid var(--line);
+  isolation: isolate;
 }
 
 /* ---------------------------------------------------------------- Decision Card (M8.2) */
