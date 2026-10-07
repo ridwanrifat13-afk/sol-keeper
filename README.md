@@ -3,6 +3,8 @@
 **Junior Astronaut Mission Trainer** — a NASA Space Apps Challenge 2026 submission for
 *"Build a Junior Astronaut Mission Trainer"*.
 
+**Live app:** [build-a-junior-astronaut-mission-tr.vercel.app](https://build-a-junior-astronaut-mission-tr.vercel.app)
+
 Sol Keeper is a browser game (ages 8–18) where students run a lunar or Martian outpost,
 balancing life support, radiation shielding, power, and food production over a real
 mission timeline. Every number the simulation uses — crew metabolic rate, battery
