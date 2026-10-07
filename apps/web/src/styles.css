@@ -296,6 +296,55 @@ code {
   color: var(--text-dim);
 }
 
+/* Briefing's User Guide section (views/Briefing/BriefingView.tsx) — the same .panel-detail
+   collapsed-by-default wrapper above, holding real content (mission steps/failure modes,
+   control reference tables) rather than a single paragraph. */
+.briefing-guide-list {
+  margin: 8px 0;
+  padding-left: 1.25rem;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.briefing-guide-list li {
+  margin-bottom: 8px;
+}
+
+.briefing-guide-controls {
+  margin: 8px 0;
+}
+
+.briefing-guide-control-row {
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.briefing-guide-control-row:first-child {
+  border-top: none;
+}
+
+.briefing-guide-control-row dt {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.briefing-guide-control-where {
+  display: block;
+  font-weight: 400;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+
+.briefing-guide-control-row dd {
+  margin: 4px 0 0;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
 /* `.two-col`'s own `gap` (both here and at 760px+ below) replaces each child's individual
    `margin-bottom` entirely — grid gap plus every panel's own margin would double up the space
    between them, at any width, not just above the breakpoint, so the reset lives right beside
