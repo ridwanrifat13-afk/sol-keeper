@@ -1416,6 +1416,11 @@ html.cockpit-active .app {
 
 .overlay-panel .view-hint {
   color: var(--text-dim);
+  /* Player request: the base `.view-hint` rule's `text-shadow` (a light-background readability
+     outline, for Debrief's own themed backdrop) just muddies this text against the Data
+     Sources overlay's own plain dark panel — there's no bright background here to outline
+     against, so it only ever worked against legibility in this one context. */
+  text-shadow: none;
 }
 
 .overlay-close {
