@@ -224,4 +224,50 @@ export const MISSION_GUIDES: Record<ScenarioId, MissionGuide> = {
       "Calling off the mission (abort) is allowed at any time on the Moon, at the same real cost as First Light — about six added days of transit time taken directly off the mission clock.",
     ],
   },
+  "crisis-apollo13-co2": {
+    title: "Apollo 13 CO₂ Buildup",
+    tagline: "Translunar Return · 3 crew · 4 hours nominal to fix (April 1970)",
+    paragraphs: [
+      "Following an oxygen tank rupture at ~56 hours MET, the three crew evacuated to the Lunar Module Aquarius. Sized for 2 crew for ~2 days, Aquarius now supported 3 crew on a ~4-day return trajectory.",
+      "The Command Module's square LiOH canisters were incompatible with Aquarius's round receptacles. Carbon dioxide rose steadily toward toxic levels until Mission Control devised an improvised adapter using suit hoses, flight plan covers, plastic bags, and duct tape.",
+    ],
+    steps: [
+      "Open Life Support Console to inspect the rising CO2 partial pressure (starting at ~3.8 mmHg and climbing).",
+      "Deploy the improvised LiOH adapter before ppCO2 reaches dangerous levels.",
+      "Maintain cabin air quality through translunar return.",
+    ],
+    failureModes: [
+      "ppCO2 exceeding lethal thresholds (~15-20 mmHg) without implementing the improvised canister adapter.",
+    ],
+  },
+  "crisis-spe-1972": {
+    title: "Solar Particle Event 1972",
+    tagline: "Translunar Space · August 1972 · Lethal Proton Flux",
+    paragraphs: [
+      "The largest solar particle event of the space age occurred between Apollo 16 and Apollo 17 in August 1972.",
+      "An unshielded astronaut on the lunar surface would have received a potentially lethal dose (>400 rem). Quick evacuation to high-shielding areas is required.",
+    ],
+    steps: [
+      "Detect proton flux surge at event onset.",
+      "Evacuate crew to storm shelter immediately.",
+    ],
+    failureModes: [
+      "Crew radiation dose exceeding acute radiation sickness thresholds.",
+    ],
+  },
+  "crisis-mir-fire": {
+    title: "Mir Space Station Fire 1997",
+    tagline: "Mir Kvant-1 · February 1997 · Solid-Fuel Oxygen Generator Fire",
+    paragraphs: [
+      "A solid-fuel oxygen generator (Vika) caught fire in the Kvant-1 module of Mir, filling the station with thick, toxic smoke.",
+      "The crew had to don gas masks and fight the fire with extinguishers while power and communications were disrupted.",
+    ],
+    steps: [
+      "Don respirators and deploy fire extinguishers.",
+      "Isolate ventilation to prevent toxic combustion products from engulfing the station.",
+    ],
+    failureModes: [
+      "Atmospheric hypoxia or crew asphyxiation from toxic combustion gases.",
+    ],
+  },
 };

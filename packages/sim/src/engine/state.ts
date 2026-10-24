@@ -120,7 +120,7 @@ export function createInitialState(params: Params, scenario: Scenario = getScena
   );
   const crew = buildCrew(params.crewSize, pio2MmHg(initialO2MmHg, initialCo2MmHg), params.crewNames);
 
-  return {
+  const state: SimState = {
     hour: 0,
 
     environment: {
@@ -232,4 +232,27 @@ export function createInitialState(params: Params, scenario: Scenario = getScena
     log: [],
     status: "running",
   };
+
+  // M9.3: If this is a CrisisScenario with an entryState, layer the crisis onset state
+  // directly onto the freshly created SimState without modifying any simulation rules.
+  if ("entryState" in scenario && scenario.entryState) {
+    const entry = scenario.entryState as Partial<SimState>;
+    return {
+      ...state,
+      ...entry,
+      atmosphere: entry.atmosphere ? { ...state.atmosphere, ...entry.atmosphere } : state.atmosphere,
+      power: entry.power ? { ...state.power, ...entry.power } : state.power,
+      thermal: entry.thermal ? { ...state.thermal, ...entry.thermal } : state.thermal,
+      radiation: entry.radiation ? { ...state.radiation, ...entry.radiation } : state.radiation,
+      crew: entry.crew ? [...entry.crew] : state.crew,
+      activeIncidents: entry.activeIncidents ? [...entry.activeIncidents] : state.activeIncidents,
+      systems: entry.systems ? { ...state.systems, ...entry.systems } : state.systems,
+      safetyConsumables: entry.safetyConsumables
+        ? { ...state.safetyConsumables, ...entry.safetyConsumables }
+        : state.safetyConsumables,
+      crewHours: entry.crewHours ? { ...state.crewHours, ...entry.crewHours } : state.crewHours,
+    };
+  }
+
+  return state;
 }

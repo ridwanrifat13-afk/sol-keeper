@@ -376,6 +376,123 @@ human reaches SUCCESS, and an idle one cannot.
 Done when: 30+ FPS in the Lighthouse mobile profile, low-power mode works, reduced motion
 honored.
 
+# M9.3 — Historical Crisis Replay (new scenario type)
+
+## Goal
+Add a "Crisis Replay" mode: the player drops into a real documented spaceflight emergency
+at its moment of onset, with historically sourced parameters, and the debrief compares
+their solution to what actually happened.
+
+## Hard rules
+1. REUSE EVERYTHING. Crisis replays are scenarios with a new entry mechanism. No new
+   engine code, no new physics, no new station logic. If something requires an engine
+   change, STOP and ask.
+2. Every parameter in a crisis scenario file must cite a source ID from DATA_SOURCES.md,
+   or be marked "tuned" with a note. No undocumented numbers.
+3. The "What Actually Happened" debrief panel must state its source explicitly in the UI.
+   NASA historical mission data is being presented as fact; it must be attributed.
+4. Crisis Replay is a standalone entry point, not the default. The existing scenarios
+   and setup flow are unchanged.
+
+## New types (packages/sim/src/data/crisisScenario.ts)
+```ts
+interface CrisisScenario extends Scenario {
+  entryState: Partial<BaseState>;   // world at the moment of onset
+  crisisOnsetDescription: string;   // i18n key
+  historicalOutcome: {
+    summary: string;                // i18n key
+    keyMetric: { label: string; playerValue: () => number; historicalValue: number; unit: string; };
+    resolution: string;             // what actually happened, i18n key
+    sourceId: string;               // DATA_SOURCES.md ID
+    nasaLink: string;
+  };
+  availableMaterials: string[];     // spares/resources actually available at crisis onset
+  crisisMaxDurationHours: number;   // auto-ends after this if unresolved
+}
+```
+
+## The three crisis files
+
+### crisis-apollo13-co2.ts
+- Onset: 3 crew, LM at ~56 hours elapsed, O2 stores at documented crisis level
+- Scrubber capacity: 2/3 of required (two crew rated, three crew present, 4-day return)
+- CO2 at onset: 3.8 mmHg and rising; peak historical: 15 mmHg [A13-CO2]
+- Rise rate: derived from 3× demand on 1× capacity, anchored to 15 mmHg peak timing
+- Available materials: hose from pressure suit, plastic bags, cardboard, duct tape, sock
+  (model as spares with specific IDs; the improvised fix consumes them)
+- Historical outcome: ppCO2 held below 2 mmHg after fix [A13-CO2]
+- keyMetric: peak ppCO2 during the player's run vs. 15 mmHg historical
+- Duration: ~4 hours game time (the real fix took several hours)
+- Source: A13-CO2, OCHMO-TB-004
+
+### crisis-spe-1972.ts
+- Onset: 2 crew on EVA, 1 in habitat; real warning window 30–90 minutes or zero
+  (seed-driven: 30% chance of no usable warning, matching measured false-alarm rates)
+- Dose rate: spe1972DoseMultiplier applied to Moon baseline [HRP-ARS]
+- EVA crew: receive multiplied dose every minute they stay outside
+- Habitat crew: receive attenuated dose based on shielding level at mission setup
+- Choices: immediate EVA recall (6 min return, costs EVA objectives),
+  shelter EVA crew in suit storm shelter (partial protection), continue EVA (full exposure)
+- Historical outcome: no crew was actually exposed — the event occurred between Apollo
+  missions. Show what the modeled dose would have been. [HRP-ARS, NASA-TP-3643]
+- keyMetric: crew peak acute dose vs. 250 mSv per-event limit
+- Source: HRP-ARS, CE4-LND-2020, OCHMO-RAD
+
+### crisis-mir-fire.ts
+- Onset: Incident Command station; Kvant-1 module; oxygen candle active
+- Burn duration: 14 minutes [NASA-SP-4030] (note dispute with 90-second alternative)
+- Smoke degrades air quality for 45 minutes post-burn [NASA-SMA-MIR-COLLISION]
+- Resources: 3 extinguishers, respirators (one faulty — random which one, seeded)
+- Choices: fight fire immediately (risk faulty mask), seal the module (lose its O2 supply),
+  evacuate and let it burn out (atmosphere contamination)
+- Historical outcome: crew used all 3 extinguishers over 14 minutes; dense smoke for
+  45 minutes; station survived [NASA-SP-4030]
+- keyMetric: minutes to fire suppression vs. 14 minutes historical
+- Source: NASA-SP-4030, NASA-SMA-MIR-COLLISION
+
+## Entry flow (new route: /crisis)
+- A card per crisis: declassified-looking briefing with date, crew names, opening line.
+  No difficulty selector — these are historical events, not adjustable scenarios.
+- Reality Dial is available and controls presentation as normal.
+- "Begin Crisis" → drops directly into the Operate view at the crisis onset state.
+- Sol clock replaced by elapsed time from crisis onset (HH:MM).
+
+## Debrief additions (CrisisDebriefPanel.tsx)
+- Render AFTER the existing Black Box panel, not instead of it.
+- "What Actually Happened" section: historicalOutcome.resolution text, source link,
+  NASA link as a button labeled "Read the original report."
+- Key metric comparison: one large visual — player's value vs. historical value, with a
+  one-line interpretation ("You solved it faster than the real crew" or "CO2 peaked
+  8 mmHg higher than the historical fix achieved").
+- AI Mission Director prompt for crisis scenarios adds: "The player just replayed the
+  [Apollo 13 CO2 / 1972 solar storm / 1997 Mir fire] crisis with real historical
+  parameters. Compare their decisions explicitly to what the real crew did. Name the
+  specific moment where their approach diverged. Be direct."
+
+## i18n
+All new strings go through en and bn keys. The historical outcome text is EN only in this
+milestone; mark needsReview: true in the bn file.
+
+## Tests
+- Unit: entryState correctly initialises crisis parameters for all three scenarios.
+- Unit: CO2 rises at the documented rate and peaks within ±2 mmHg of 15 mmHg with no
+  player intervention on apollo13 crisis.
+- Unit: SPE dose exceeds 250 mSv for unshielded EVA crew with no recall on spe-1972.
+- e2e: complete apollo13 crisis, assert CrisisDebriefPanel renders with historical text
+  and source link.
+- e2e: complete apollo13 crisis with a successful fix, assert keyMetric shows player
+  value below 15 mmHg historical.
+
+## Order of work
+1. CrisisScenario type and the apollo13 crisis file. 2. Entry flow and Operate view
+   with elapsed time clock. 3. CrisisDebriefPanel with key metric and source link.
+   STOP — show me one working crisis before building the other two.
+4. spe-1972 and mir-fire files. 5. AI Mission Director prompt update. 6. i18n keys. 7. Tests.
+
+Report: any parameter that required a new constant (add to constants.ts with source),
+any engine change that was tempting but avoided, and the total new lines of code
+(should be under 600 excluding scenario data files).
+
 ## M10 — Shareable seeded runs + mission report
 - URL encodes SIM_VERSION, scenario, difficulty, crew size, site, power choice, seed;
   optionally the compressed input log in the fragment for exact replay (ask before adding a

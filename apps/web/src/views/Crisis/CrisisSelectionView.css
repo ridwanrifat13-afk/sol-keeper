@@ -1,0 +1,371 @@
+/* Historical Crisis Replay — Dossier View Styles */
+
+.crisis-view {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 4rem;
+  color: var(--color-text, #e2e8f0);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.crisis-header {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 1.5rem;
+}
+
+.crisis-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  margin-bottom: 0.85rem;
+  text-transform: uppercase;
+}
+
+.crisis-badge-icon {
+  font-size: 0.85rem;
+}
+
+.crisis-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+}
+
+.crisis-subtitle {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #94a3b8;
+  max-width: 780px;
+  margin: 0;
+}
+
+/* Grid layout: Active crisis dossier (left) + Upcoming teasers (right) */
+.crisis-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .crisis-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Crisis Card Common */
+.crisis-card {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.crisis-card-active {
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 25px -5px rgba(239, 68, 68, 0.15);
+}
+
+.crisis-card-active:hover {
+  border-color: rgba(239, 68, 68, 0.6);
+}
+
+.crisis-card-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 1.25rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.crisis-tag-status {
+  color: #4ade80;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.crisis-tag-status::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade80;
+}
+
+.crisis-tag-upcoming {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.crisis-tag-source {
+  color: #64748b;
+  font-family: monospace;
+}
+
+.crisis-card-body {
+  padding: 1.5rem;
+}
+
+.crisis-mission-meta {
+  margin-bottom: 1.25rem;
+}
+
+.crisis-mission-date {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f59e0b;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.crisis-mission-name {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0.25rem 0 0.35rem 0;
+  line-height: 1.25;
+}
+
+.crisis-mission-name-sm {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  margin: 0.25rem 0 0.5rem 0;
+}
+
+.crisis-location {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+/* Meta rows */
+.crisis-meta-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.crisis-meta-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.2rem;
+}
+
+.crisis-meta-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+/* Dossier situation text */
+.crisis-dossier-box {
+  background: rgba(239, 68, 68, 0.06);
+  border-left: 3px solid #ef4444;
+  padding: 1rem 1.2rem;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 1.25rem;
+}
+
+.crisis-dossier-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #f87171;
+  margin: 0 0 0.65rem 0;
+  text-transform: uppercase;
+}
+
+.crisis-dossier-text {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #cbd5e1;
+  margin: 0 0 0.6rem 0;
+}
+
+.crisis-dossier-text:last-child {
+  margin-bottom: 0;
+}
+
+/* Materials box */
+.crisis-materials-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1rem 1.2rem;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.crisis-materials-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.crisis-material-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.crisis-material-chip .bullet {
+  color: #38bdf8;
+  font-size: 0.65rem;
+}
+
+/* Constraints */
+.crisis-constraints-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.crisis-constraint-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.75rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.constraint-title {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.constraint-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0.2rem 0;
+  font-family: monospace;
+}
+
+.constraint-sub {
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+/* Actions */
+.crisis-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.crisis-start-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.92rem;
+  letter-spacing: 0.05em;
+  padding: 0.85rem 1.6rem;
+  border-radius: 8px;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.crisis-start-btn:hover {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+}
+
+.crisis-source-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.crisis-source-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Upcoming teasers column */
+.crisis-upcoming-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.crisis-card-upcoming {
+  border-color: rgba(255, 255, 255, 0.06);
+  opacity: 0.82;
+  transition: opacity 0.2s ease;
+}
+
+.crisis-card-upcoming:hover {
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.crisis-teaser-text {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #94a3b8;
+  margin: 0;
+}

@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { FiFileText } from "react-icons/fi";
-import { causalCascade, directEffects, type Body, type LogEntry, type RunStatus } from "@sol-keeper/sim";
+import { causalCascade, directEffects, isCrisisScenario, type Body, type LogEntry, type RunStatus } from "@sol-keeper/sim";
+import { CrisisDebriefPanel } from "./CrisisDebriefPanel.js";
 import { useDial } from "../../store/dial.js";
 import { useRun } from "../../store/run.js";
 import { logText } from "../../i18n/logText.js";
@@ -31,7 +32,8 @@ const CREW_LOSS_WINDOW_HOURS = 72;
 
 export function DebriefView({ onViewReport }: { onViewReport: () => void }) {
   const state = useRun((s) => s.state);
-  const body = useRun((s) => s.scenario.body);
+  const scenario = useRun((s) => s.scenario);
+  const body = scenario.body;
   const level = useDial((s) => s.level);
   const language = useAppLanguage();
   const { t } = useTranslation();
@@ -135,6 +137,8 @@ export function DebriefView({ onViewReport }: { onViewReport: () => void }) {
           ))}
         </ul>
       </section>
+
+      {isCrisisScenario(scenario) && <CrisisDebriefPanel scenario={scenario} state={state} />}
 
       <section className="panel" aria-labelledby="timeline-heading">
         <h2 id="timeline-heading">{t("debrief.timelineHeading", { count: log.length })}</h2>

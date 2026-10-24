@@ -5,7 +5,9 @@
     "scenario.firstLight.goal.primary": "Keep everyone alive through the whole mission.",
     "scenario.firstLight.goal.stretch": "Don't let anything stay broken.",
     "scenario.theLongNight.goal.primary": "Keep everyone alive through all three long nights.",
-    "scenario.theLongNight.goal.stretch": "Don't let anything stay broken."
+    "scenario.theLongNight.goal.stretch": "Don't let anything stay broken.",
+    "crisis.apollo13.goal.primary": "Keep Lovell, Swigert, and Haise alive until the adapter is built.",
+    "crisis.apollo13.goal.stretch": "Build the adapter without losing any onboard systems."
   },
   "specialist": {
     "scenario.jezero.goal.primary": "Meet the science target, keep every system running, and bring the whole crew home.",
@@ -13,7 +15,9 @@
     "scenario.firstLight.goal.primary": "Survive the full night-day-night cycle with the whole crew alive.",
     "scenario.firstLight.goal.stretch": "End the mission with no system left failed.",
     "scenario.theLongNight.goal.primary": "Survive all three lunar nights with the whole crew alive.",
-    "scenario.theLongNight.goal.stretch": "End the mission with no system left failed."
+    "scenario.theLongNight.goal.stretch": "End the mission with no system left failed.",
+    "crisis.apollo13.goal.primary": "Prevent toxic hypercapnia and sustain 3 crew aboard LM Aquarius.",
+    "crisis.apollo13.goal.stretch": "Maintain cabin ppCO2 below toxic limit and leave all systems operational."
   },
   "commander": {
     "scenario.jezero.goal.primary": "science.points >= scenarioTargetPoints, every system operational, full crew survival (engine/goals.ts's missionGoalsMet).",
@@ -21,6 +25,8 @@
     "scenario.firstLight.goal.primary": "Full mission duration elapsed, zero crew loss (surviveFullDurationNoLoss).",
     "scenario.firstLight.goal.stretch": "No system in a failed state at mission end (noSystemLeftFailed).",
     "scenario.theLongNight.goal.primary": "Full mission duration elapsed, zero crew loss (surviveFullDurationNoLoss).",
-    "scenario.theLongNight.goal.stretch": "No system in a failed state at mission end (noSystemLeftFailed)."
+    "scenario.theLongNight.goal.stretch": "No system in a failed state at mission end (noSystemLeftFailed).",
+    "crisis.apollo13.goal.primary": "Full crisis elapsed duration survived with zero crew loss (surviveFullDurationNoLoss).",
+    "crisis.apollo13.goal.stretch": "No systems in a failed state at crisis end (noSystemLeftFailed)."
   }
 }

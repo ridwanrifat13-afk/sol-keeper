@@ -1,5 +1,6 @@
 import { useRun } from "../store/run.js";
 import { timestampLabel } from "../dial/missionTime.js";
+import { isCrisisScenario } from "@sol-keeper/sim";
 
 /**
  * M9.1's own rule for `ticker` regions: "one-line readouts only (mission elapsed time, sol
@@ -17,10 +18,20 @@ export const TICKER_METRICS: readonly TickerMetric[] = ["missionTime", "powerMar
 export function CockpitTicker({ metric }: { readonly metric: TickerMetric }) {
   const hour = useRun((s) => s.state.hour);
   const body = useRun((s) => s.scenario.body);
+  const scenario = useRun((s) => s.scenario);
   const generationKw = useRun((s) => s.state.power.generationKw);
   const demandKw = useRun((s) => s.state.power.demandKw);
 
   if (metric === "missionTime") {
+    if (isCrisisScenario(scenario)) {
+      const h = Math.floor(hour);
+      const m = Math.floor((hour % 1) * 60);
+      return (
+        <span className="cockpit-ticker-readout">
+          +{String(h).padStart(2, "0")}:{String(m).padStart(2, "0")} MET
+        </span>
+      );
+    }
     return <span className="cockpit-ticker-readout">{timestampLabel(hour, body)}</span>;
   }
 

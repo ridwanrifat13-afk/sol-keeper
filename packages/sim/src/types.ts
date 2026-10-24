@@ -11,7 +11,12 @@ import type { RngState } from "./engine/rng.js";
 import type { Constant, SourceId } from "./data/sources.js";
 
 export type Body = "mars" | "moon";
-export type ScenarioId = "jezero-outpost" | "first-light" | "the-long-night";
+export type StandardScenarioId = "jezero-outpost" | "first-light" | "the-long-night";
+export type CrisisScenarioId =
+  | "crisis-apollo13-co2"
+  | "crisis-spe-1972"
+  | "crisis-mir-fire";
+export type ScenarioId = StandardScenarioId | CrisisScenarioId;
 
 /** M9: docs/LANDING_SITES.md's own catalog, one entry per real candidate site. */
 export type LandingSiteId =

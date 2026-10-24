@@ -2,7 +2,7 @@ import { ReactLenis } from "lenis/react";
 import { motion, useInView, useMotionTemplate, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { FiArrowRight, FiBookOpen, FiChevronRight, FiClock, FiMapPin, FiWind, FiZap } from "react-icons/fi";
 import { useEffect, useRef, useState } from "react";
-import { SCENARIOS, type ScenarioId } from "@sol-keeper/sim";
+import { SCENARIOS, type ScenarioId, type StandardScenarioId } from "@sol-keeper/sim";
 import { useAccessibility } from "../../store/accessibility.js";
 import { SCENARIO_LABELS } from "../../dial/scenarioLabels.js";
 import { CONTROLS_REFERENCE, MISSION_GUIDES, SETUP_CONTROLS_REFERENCE } from "../../dial/missionGuides.js";
@@ -360,7 +360,7 @@ interface ScheduleProps {
 
 /** Real scenario order (matches ScenarioStep/ScenarioSwitch's own `SCENARIOS` iteration) —
  *  `Object.values` doesn't guarantee this, so it's spelled out once here too. */
-const SCENARIO_ORDER: readonly ScenarioId[] = ["jezero-outpost", "first-light", "the-long-night"];
+const SCENARIO_ORDER: readonly StandardScenarioId[] = ["jezero-outpost", "first-light", "the-long-night"];
 
 /**
  * Player-attached reference screenshot's own card layout: a thumbnail photo, plus a two-line
@@ -374,7 +374,7 @@ const SCENARIO_ORDER: readonly ScenarioId[] = ["jezero-outpost", "first-light", 
  * not new, unsourced imagery.
  */
 const SCENARIO_CARD_META: Record<
-  ScenarioId,
+  StandardScenarioId,
   { thumb: string; bodyLine: string; hazardLine?: string; hazardIcon?: typeof FiWind }
 > = {
   "jezero-outpost": {

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { FiClock, FiPlay } from "react-icons/fi";
 import { SPEEDS, useRun, type Speed } from "../store/run.js";
-import { units } from "@sol-keeper/sim";
+import { isCrisisScenario, units } from "@sol-keeper/sim";
 import { timestampLabel } from "../dial/missionTime.js";
 
 const SPEED_LABELS: Record<Speed, string> = {
@@ -31,6 +31,8 @@ export function TimeControls() {
   const phase = useRun((s) => s.phase);
   const hour = useRun((s) => s.state.hour);
   const body = useRun((s) => s.scenario.body);
+  const scenario = useRun((s) => s.scenario);
+  const isCrisis = isCrisisScenario(scenario);
   const step = useRun((s) => s.step);
   const setSpeed = useRun((s) => s.setSpeed);
   const setPhase = useRun((s) => s.setPhase);
@@ -57,8 +59,20 @@ export function TimeControls() {
   return (
     <div className="time-controls">
       <div className="clock">
-        <span className="clock-sol">{timestampLabel(hour, body)}</span>
-        <span className="clock-hour">hour {hour}</span>
+        {isCrisis ? (
+          <>
+            <span className="clock-sol">
+              +{String(Math.floor(hour)).padStart(2, "0")}:
+              {String(Math.floor((hour % 1) * 60)).padStart(2, "0")} MET
+            </span>
+            <span className="clock-hour">Crisis elapsed</span>
+          </>
+        ) : (
+          <>
+            <span className="clock-sol">{timestampLabel(hour, body)}</span>
+            <span className="clock-hour">hour {hour}</span>
+          </>
+        )}
       </div>
 
       {running && planning && (

@@ -40,6 +40,8 @@ export type {
   RunStatus,
   Scenario,
   ScenarioId,
+  StandardScenarioId,
+  CrisisScenarioId,
   ScriptedEvent,
   ShieldingApproach,
   Severity,
@@ -75,7 +77,17 @@ export {
   survivalModes,
 } from "./data/constants.js";
 
-export { SCENARIOS, firstLight, getScenario, jezeroOutpost, theLongNight } from "./data/scenarios/index.js";
+export {
+  SCENARIOS,
+  CRISIS_SCENARIOS,
+  firstLight,
+  getScenario,
+  jezeroOutpost,
+  theLongNight,
+  crisisApollo13Co2,
+} from "./data/scenarios/index.js";
+export type { CrisisScenario, HistoricalOutcome, KeyMetricSpec } from "./data/crisisScenario.js";
+export { isCrisisScenario } from "./data/crisisScenario.js";
 export { LANDING_SITES, getLandingSite, landingSitesForBody } from "./data/landingSites.js";
 
 export type { SizedPowerArchitecture } from "./engine/powerArchitecture.js";

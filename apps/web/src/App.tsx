@@ -17,6 +17,7 @@ import { IncidentCommandAlertSummary } from "./views/IncidentCommand/IncidentCom
 import { MissionCommandConsole } from "./views/MissionCommand/MissionCommandConsole.js";
 import { MissionCommandAlertSummary } from "./views/MissionCommand/MissionCommandAlertSummary.js";
 import { HabitatView } from "./views/Habitat/HabitatView.js";
+import { CrisisSelectionView } from "./views/Crisis/CrisisSelectionView.js";
 import { BriefingView } from "./views/Briefing/BriefingView.js";
 import { DebriefView } from "./views/Debrief/DebriefView.js";
 import { DataSourcesView } from "./views/DataSources/DataSourcesView.js";
@@ -47,6 +48,7 @@ type TabView =
   | "incidentCommand"
   | "missionCommand"
   | "habitat"
+  | "crisis"
   | "briefing"
   | "debrief";
 
@@ -64,6 +66,7 @@ const TAB_IDS: readonly TabView[] = [
   "incidentCommand",
   "missionCommand",
   "habitat",
+  "crisis",
   "briefing",
   "debrief",
 ];
@@ -85,6 +88,7 @@ const THEMED_BACKGROUND_VIEWS = new Set<TabView>([
   "incidentCommand",
   "missionCommand",
   "habitat",
+  "crisis",
   "briefing",
   "debrief",
 ]);
@@ -96,6 +100,7 @@ const TAB_KEYS: Record<TabView, string> = {
   incidentCommand: "tabs.incidentCommand",
   missionCommand: "tabs.missionCommand",
   habitat: "tabs.habitat",
+  crisis: "tabs.crisis",
   briefing: "tabs.briefing",
   debrief: "tabs.debrief",
 };
@@ -316,6 +321,7 @@ function AppShell({ initialView = "home" }: AppProps) {
             {TAB_IDS.map((id) => (
               <button
                 key={id}
+                id={`tab-${id}`}
                 type="button"
                 className={`tab-button ${view === id ? "tab-button-active" : ""}`}
                 aria-current={view === id ? "page" : undefined}
@@ -424,6 +430,12 @@ function AppShell({ initialView = "home" }: AppProps) {
               <MissionReportView
                 onBack={() => {
                   setView("debrief");
+                }}
+              />
+            ) : view === "crisis" ? (
+              <CrisisSelectionView
+                onLaunchCrisis={() => {
+                  setView("lifeSupport");
                 }}
               />
             ) : (

@@ -5,7 +5,9 @@
     "scenario.firstLight.goal.primary": "পুরো মিশন জুড়ে সবাইকে বাঁচিয়ে রাখুন।",
     "scenario.firstLight.goal.stretch": "কোনো কিছু ভাঙা রাখবেন না।",
     "scenario.theLongNight.goal.primary": "তিনটি লম্বা রাত জুড়ে সবাইকে বাঁচিয়ে রাখুন।",
-    "scenario.theLongNight.goal.stretch": "কোনো কিছু ভাঙা রাখবেন না।"
+    "scenario.theLongNight.goal.stretch": "কোনো কিছু ভাঙা রাখবেন না।",
+    "crisis.apollo13.goal.primary": "অ্যাডাপ্টার তৈরি না হওয়া পর্যন্ত লাভেল, সুইগার্ট ও হাইজকে বাঁচিয়ে রাখুন।",
+    "crisis.apollo13.goal.stretch": "অনবোর্ড সিস্টেম না হারিয়ে অ্যাডাপ্টার তৈরি সম্পন্ন করুন।"
   },
   "specialist": {
     "scenario.jezero.goal.primary": "বিজ্ঞান লক্ষ্য পূরণ করুন, প্রতিটি সিস্টেম চালু রাখুন, এবং পুরো ক্রুকে বাড়ি ফিরিয়ে আনুন।",
@@ -13,7 +15,9 @@
     "scenario.firstLight.goal.primary": "পুরো ক্রু জীবিত রেখে সম্পূর্ণ রাত-দিন-রাত চক্র টিকে থাকুন।",
     "scenario.firstLight.goal.stretch": "কোনো সিস্টেম বিকল না রেখে মিশন শেষ করুন।",
     "scenario.theLongNight.goal.primary": "পুরো ক্রু জীবিত রেখে তিনটি চন্দ্র-রাতই টিকে থাকুন।",
-    "scenario.theLongNight.goal.stretch": "কোনো সিস্টেম বিকল না রেখে মিশন শেষ করুন।"
+    "scenario.theLongNight.goal.stretch": "কোনো সিস্টেম বিকল না রেখে মিশন শেষ করুন।",
+    "crisis.apollo13.goal.primary": "বিষাক্ত হাইপারক্যাপনিয়া প্রতিরোধ করুন এবং এলএম অ্যাকোয়ারিয়াসে ৩ জন ক্রুকে বাঁচিয়ে রাখুন।",
+    "crisis.apollo13.goal.stretch": "ক্যাবিনের ppCO2 নিরাপদ সীমায় রাখুন এবং সমস্ত সিস্টেম সচল রেখে সংকট শেষ করুন।"
   },
   "commander": {
     "scenario.jezero.goal.primary": "science.points >= scenarioTargetPoints, প্রতিটি সিস্টেম কার্যক্ষম, সম্পূর্ণ ক্রু বেঁচে থাকা (engine/goals.ts-এর missionGoalsMet)।",
@@ -21,6 +25,8 @@
     "scenario.firstLight.goal.primary": "সম্পূর্ণ মিশন সময়কাল অতিক্রান্ত, শূন্য ক্রু ক্ষতি (surviveFullDurationNoLoss)।",
     "scenario.firstLight.goal.stretch": "মিশন শেষে কোনো সিস্টেম বিকল অবস্থায় নেই (noSystemLeftFailed)।",
     "scenario.theLongNight.goal.primary": "সম্পূর্ণ মিশন সময়কাল অতিক্রান্ত, শূন্য ক্রু ক্ষতি (surviveFullDurationNoLoss)।",
-    "scenario.theLongNight.goal.stretch": "মিশন শেষে কোনো সিস্টেম বিকল অবস্থায় নেই (noSystemLeftFailed)।"
+    "scenario.theLongNight.goal.stretch": "মিশন শেষে কোনো সিস্টেম বিকল অবস্থায় নেই (noSystemLeftFailed)।",
+    "crisis.apollo13.goal.primary": "সম্পূর্ণ সংকট সময়কাল অতিক্রান্ত, শূন্য ক্রু ক্ষতি (surviveFullDurationNoLoss)।",
+    "crisis.apollo13.goal.stretch": "সংকট শেষে কোনো সিস্টেম বিকল অবস্থায় নেই (noSystemLeftFailed)।"
   }
 }
