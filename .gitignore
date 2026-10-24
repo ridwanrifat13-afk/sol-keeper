@@ -27,3 +27,8 @@ lighthouse-report
 # os
 .DS_Store
 .env*.local
+
+# local backups & temporary media
+.tempmediaStorage
+apps/web/stations-src/backup
+brain/
