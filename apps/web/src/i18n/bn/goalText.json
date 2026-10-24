@@ -7,7 +7,11 @@
     "scenario.theLongNight.goal.primary": "তিনটি লম্বা রাত জুড়ে সবাইকে বাঁচিয়ে রাখুন।",
     "scenario.theLongNight.goal.stretch": "কোনো কিছু ভাঙা রাখবেন না।",
     "crisis.apollo13.goal.primary": "অ্যাডাপ্টার তৈরি না হওয়া পর্যন্ত লাভেল, সুইগার্ট ও হাইজকে বাঁচিয়ে রাখুন।",
-    "crisis.apollo13.goal.stretch": "অনবোর্ড সিস্টেম না হারিয়ে অ্যাডাপ্টার তৈরি সম্পন্ন করুন।"
+    "crisis.apollo13.goal.stretch": "অনবোর্ড সিস্টেম না হারিয়ে অ্যাডাপ্টার তৈরি সম্পন্ন করুন।",
+    "crisis.spe1972.goal.primary": "ঝড় কেটে না যাওয়া পর্যন্ত মারাত্মক সৌর বিকিরণ থেকে ৩ নভোচারীকেই সুরক্ষিত রাখুন।",
+    "crisis.spe1972.goal.stretch": "কোনো ইলেকট্রনিক্স বা লাইফ সাপোর্ট সিস্টেম বিকল না করে সৌর ঝড় টিকে থাকুন।",
+    "crisis.mirFire.goal.primary": "অক্সিজেন জেনারেটরের আগুন নেভান এবং ৬ জন নভোচারীকেই জীবিত রাখুন।",
+    "crisis.mirFire.goal.stretch": "বিদ্যুৎ বিতরণ ব্যবস্থা না হারিয়ে আগুন নেভান ও বিষাক্ত ধোঁয়া দূর করুন।"
   },
   "specialist": {
     "scenario.jezero.goal.primary": "বিজ্ঞান লক্ষ্য পূরণ করুন, প্রতিটি সিস্টেম চালু রাখুন, এবং পুরো ক্রুকে বাড়ি ফিরিয়ে আনুন।",
@@ -17,7 +21,11 @@
     "scenario.theLongNight.goal.primary": "পুরো ক্রু জীবিত রেখে তিনটি চন্দ্র-রাতই টিকে থাকুন।",
     "scenario.theLongNight.goal.stretch": "কোনো সিস্টেম বিকল না রেখে মিশন শেষ করুন।",
     "crisis.apollo13.goal.primary": "বিষাক্ত হাইপারক্যাপনিয়া প্রতিরোধ করুন এবং এলএম অ্যাকোয়ারিয়াসে ৩ জন ক্রুকে বাঁচিয়ে রাখুন।",
-    "crisis.apollo13.goal.stretch": "ক্যাবিনের ppCO2 নিরাপদ সীমায় রাখুন এবং সমস্ত সিস্টেম সচল রেখে সংকট শেষ করুন।"
+    "crisis.apollo13.goal.stretch": "ক্যাবিনের ppCO2 নিরাপদ সীমায় রাখুন এবং সমস্ত সিস্টেম সচল রেখে সংকট শেষ করুন।",
+    "crisis.spe1972.goal.primary": "ক্রুদের আশ্রয়কেন্দ্রে রেখে প্রতি-ঘটনায় তীব্র বিকিরণের মাত্রা ২৫০ mSv-এর নিচে রাখুন।",
+    "crisis.spe1972.goal.stretch": "ঘটনা শেষে কোনো সিস্টেম বিকল না রেখে তীব্র বিকিরণ অসুস্থতা প্রতিরোধ করুন।",
+    "crisis.mirFire.goal.primary": "১৪ মিনিটের মধ্যে কোয়ান্ট-১-এর আগুন দমন করুন এবং ক্রুদের শ্বাসরোধ হওয়া রোধ করুন।",
+    "crisis.mirFire.goal.stretch": "সমস্ত সিস্টেম সচল রেখে আগুন নিভিয়ে ফেলুন এবং স্টেশনের বাতাসের মান পুনরুদ্ধার করুন।"
   },
   "commander": {
     "scenario.jezero.goal.primary": "science.points >= scenarioTargetPoints, প্রতিটি সিস্টেম কার্যক্ষম, সম্পূর্ণ ক্রু বেঁচে থাকা (engine/goals.ts-এর missionGoalsMet)।",
@@ -27,6 +35,10 @@
     "scenario.theLongNight.goal.primary": "সম্পূর্ণ মিশন সময়কাল অতিক্রান্ত, শূন্য ক্রু ক্ষতি (surviveFullDurationNoLoss)।",
     "scenario.theLongNight.goal.stretch": "মিশন শেষে কোনো সিস্টেম বিকল অবস্থায় নেই (noSystemLeftFailed)।",
     "crisis.apollo13.goal.primary": "সম্পূর্ণ সংকট সময়কাল অতিক্রান্ত, শূন্য ক্রু ক্ষতি (surviveFullDurationNoLoss)।",
-    "crisis.apollo13.goal.stretch": "সংকট শেষে কোনো সিস্টেম বিকল অবস্থায় নেই (noSystemLeftFailed)।"
+    "crisis.apollo13.goal.stretch": "সংকট শেষে কোনো সিস্টেম বিকল অবস্থায় নেই (noSystemLeftFailed)।",
+    "crisis.spe1972.goal.primary": "সম্পূর্ণ এসপিই সংকট সময়কাল অতিক্রান্ত, শূন্য ক্রু ক্ষতি (surviveFullDurationNoLoss)।",
+    "crisis.spe1972.goal.stretch": "সংকট শেষে কোনো সিস্টেম বিকল অবস্থায় নেই (noSystemLeftFailed)।",
+    "crisis.mirFire.goal.primary": "সম্পূর্ণ মির অগ্নি সংকট সময়কাল অতিক্রান্ত, শূন্য ক্রু ক্ষতি (surviveFullDurationNoLoss)।",
+    "crisis.mirFire.goal.stretch": "সংকট শেষে কোনো সিস্টেম বিকল অবস্থায় নেই (noSystemLeftFailed)।"
   }
 }

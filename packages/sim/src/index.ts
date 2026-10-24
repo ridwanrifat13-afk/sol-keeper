@@ -85,6 +85,8 @@ export {
   jezeroOutpost,
   theLongNight,
   crisisApollo13Co2,
+  crisisSpe1972,
+  crisisMirFire,
 } from "./data/scenarios/index.js";
 export type { CrisisScenario, HistoricalOutcome, KeyMetricSpec } from "./data/crisisScenario.js";
 export { isCrisisScenario } from "./data/crisisScenario.js";

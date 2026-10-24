@@ -47,8 +47,8 @@ export const crisisApollo13Co2: CrisisScenario = {
   },
 
   systems: [
-    // co2Scrubber carry 1 spare representing the available improvised adapter kit materials
-    { id: "co2Scrubber", trl: 8, nominalPowerKw: 0.1, priority: 0, spares: 1 },
+    // co2Scrubber has 0 spares because CM square canisters do not fit LM round receptacles [A13-CO2]
+    { id: "co2Scrubber", trl: 8, nominalPowerKw: 0.1, priority: 0, spares: 0 },
     { id: "lifeSupport", trl: 8, nominalPowerKw: 0.2, priority: 1, spares: 0 },
     { id: "powerDistribution", trl: 9, nominalPowerKw: 0.1, priority: 2, spares: 0 },
     { id: "thermalControl", trl: 8, nominalPowerKw: 0.3, priority: 3, spares: 0 },
@@ -80,6 +80,19 @@ export const crisisApollo13Co2: CrisisScenario = {
       co2ScrubberMode: "full",
       cumulativeCo2ExposureAboveLimitMmHgHours: 0,
       chronicCo2PenaltyApplied: false,
+    },
+    systems: {
+      co2Scrubber: {
+        id: "co2Scrubber",
+        trl: 8,
+        nominalPowerKw: 0.1,
+        priority: 0,
+        operational: false, // LM canisters exhausted at onset [A13-CO2]
+        spares: 0,
+        poweredThisHour: false,
+        efficiencyPenaltyFraction: 0,
+        maintenanceCreditUntilHour: 0,
+      },
     },
     activeIncidents: [
       {

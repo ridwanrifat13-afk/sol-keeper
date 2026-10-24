@@ -434,8 +434,8 @@ function AppShell({ initialView = "home" }: AppProps) {
               />
             ) : view === "crisis" ? (
               <CrisisSelectionView
-                onLaunchCrisis={() => {
-                  setView("lifeSupport");
+                onLaunchCrisis={(targetTab) => {
+                  setView(targetTab ?? "lifeSupport");
                 }}
               />
             ) : (
