@@ -17,6 +17,7 @@
  * that keeps `tick()`'s own signature exactly as it was in Phase 1.
  */
 import { incidents as incidentConstants, management, missionDifficulty, physics, power as powerConstants } from "../data/constants.js";
+import { isCrisisScenario } from "../data/crisisScenario.js";
 import type { SourceId } from "../data/sources.js";
 import { crewCondition } from "../models/crew.js";
 import { effectiveShieldingGPerCm2, gcrTransmission, speTransmission } from "../models/radiation.js";
@@ -722,6 +723,11 @@ function triggeredThisHour(ctx: TickContext, trigger: IncidentTrigger): boolean 
  *  Decision Card (M8.2) can render a real countdown from the exact same figure the engine's
  *  own default-response fallback uses, rather than a second, invented one. */
 export function scaledWarningTimeHours(ctx: TickContext, def: IncidentDefinition): number {
+  if (isCrisisScenario(ctx.scenario)) {
+    // In historical crisis scenarios, the emergency decision remains actionable throughout the
+    // crisis rather than auto-resolving to "noResponse" / "ignore" after 1-2 hours.
+    return ctx.scenario.crisisMaxDurationHours;
+  }
   return def.warningTimeHours * missionDifficulty[ctx.params.difficulty].warningTimeMultiplier.value;
 }
 

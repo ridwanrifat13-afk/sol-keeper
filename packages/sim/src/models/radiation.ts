@@ -52,8 +52,11 @@ export function radiationStage(ctx: TickContext): void {
 
   const gcrPerHour = r.ambientMSvPerDay / HOURS_PER_EARTH_DAY;
   // During an event the flux rises by a large factor; the shelter is what makes it survivable.
+  // In the extreme August 1972 SPE (HRP-ARS, AGU-KNIPP-2018), unshielded dose exceeds 400 rem (4,000 mSv).
   const spePerHour = r.solarParticleEventActive
-    ? (r.ambientMSvPerDay * 40) / HOURS_PER_EARTH_DAY
+    ? ctx.scenario.id === "crisis-spe-1972"
+      ? 500 // >400 rem (4,000-5,000 mSv total storm) unshielded proton flux [HRP-ARS]
+      : (r.ambientMSvPerDay * 40) / HOURS_PER_EARTH_DAY
     : 0;
 
   for (const member of state.crew) {

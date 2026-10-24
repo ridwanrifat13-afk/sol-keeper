@@ -18,6 +18,7 @@ import {
 } from "@sol-keeper/sim";
 import { DashboardGrid } from "../../components/DashboardGrid.js";
 import { CockpitTarget } from "../../cockpit/CockpitTarget.js";
+import { CrisisActionBanner } from "../../components/CrisisActionBanner.js";
 
 const LOCATIONS: readonly CrewLocation[] = ["habitat", "stormShelter", "eva"];
 
@@ -148,6 +149,10 @@ export function IncidentCommandConsole() {
           connected to it on the right — see it before you decide, not after.
         </p>
       </header>
+
+      <CockpitTarget id="incident-crisis-action" role="primary" priority={0} label="Crisis Action">
+        <CrisisActionBanner targetStation="incidentCommand" />
+      </CockpitTarget>
 
       <CockpitTarget id="incident-ripple-graph" role="primary" priority={1} label="Dependency map">
         <section className="panel panel-span-full" aria-labelledby="ripple-graph-heading">

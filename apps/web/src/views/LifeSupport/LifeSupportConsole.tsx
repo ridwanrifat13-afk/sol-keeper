@@ -31,6 +31,7 @@ import { useAppLanguage } from "../../i18n/useAppLanguage.js";
 import { buildResourceSummary } from "../../dial/resourceSummary.js";
 import { DashboardGrid } from "../../components/DashboardGrid.js";
 import { CockpitTarget } from "../../cockpit/CockpitTarget.js";
+import { CrisisActionBanner } from "../../components/CrisisActionBanner.js";
 
 const SURVIVAL_MODES: readonly SurvivalMode[] = ["nominal", "mode1", "mode2"];
 const CO2_SCRUBBER_MODES: readonly Co2ScrubberMode[] = ["full", "balanced", "eco"];
@@ -71,6 +72,10 @@ export function LifeSupportConsole() {
         <h2>Life Support</h2>
         <p className="view-hint">Air, water, food, and how hard the crew is rationing.</p>
       </header>
+
+      <CockpitTarget id="lifesupport-crisis-action" role="primary" priority={0} label="Crisis Action">
+        <CrisisActionBanner targetStation="lifeSupport" />
+      </CockpitTarget>
 
       {/* Player request: the five resource gauges used to compete for five separate cockpit
          screens, one each — crowding out ISRU/Rations/Heating & cooling/Crop conditions into

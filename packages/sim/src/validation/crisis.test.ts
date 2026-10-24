@@ -69,6 +69,38 @@ describe("M9.3 — Historical Crisis Scenarios", () => {
       // Without scrubber repair, ppCO2 should have risen significantly
       expect(state.atmosphere.co2PartialPressureMmHg).toBeGreaterThan(initialCo2);
     });
+
+    it("does not prematurely auto-default the Apollo 13 decision within 2 hours", () => {
+      let state = createRun(
+        {
+          scenarioId: "crisis-apollo13-co2",
+          crewSize: 3,
+          difficulty: "nominal",
+          seed: 12345,
+          missionStartIso: "1970-04-11T19:13:00Z",
+        },
+        crisisApollo13Co2,
+      );
+
+      // Advance by 3 hours
+      for (let h = 0; h < 3; h++) {
+        state = tick(
+          state,
+          {
+            scenarioId: "crisis-apollo13-co2",
+            crewSize: 3,
+            difficulty: "nominal",
+            seed: 12345,
+            missionStartIso: "1970-04-11T19:13:00Z",
+          },
+          crisisApollo13Co2,
+        );
+      }
+
+      const incident = state.activeIncidents.find((i) => i.definitionId === "o2tank-apollo13");
+      // Must NOT have timed out to "noResponse"
+      expect(incident?.chosenResponseId).toBeUndefined();
+    });
   });
 
   describe("crisis-spe-1972", () => {
@@ -91,6 +123,42 @@ describe("M9.3 — Historical Crisis Scenarios", () => {
       const habCrew = state.crew.filter((c) => c.location === "habitat");
       expect(evaCrew.length).toBe(2);
       expect(habCrew.length).toBe(1);
+    });
+
+    it("maintains comfortable habitat temperature while EVA crew accumulates acute proton dose", () => {
+      let state = createRun(
+        {
+          scenarioId: "crisis-spe-1972",
+          crewSize: 3,
+          difficulty: "nominal",
+          seed: 12345,
+          missionStartIso: "1972-08-04T06:00:00Z",
+        },
+        crisisSpe1972,
+      );
+
+      // Tick 1 hour
+      state = tick(
+        state,
+        {
+          scenarioId: "crisis-spe-1972",
+          crewSize: 3,
+          difficulty: "nominal",
+          seed: 12345,
+          missionStartIso: "1972-08-04T06:00:00Z",
+        },
+        crisisSpe1972,
+      );
+
+      // Habitat temperature must not freeze (should stay > 18 deg C)
+      expect(state.thermal.habitatTempC).toBeGreaterThan(18);
+
+      // EVA crew must accumulate significant dose (>100 mSv ARS threshold in ~1 hour of >400 rem flux)
+      const evaCrew = state.crew.filter((c) => c.location === "eva");
+      expect(evaCrew.length).toBe(2);
+      for (const member of evaCrew) {
+        expect(member.cumulativeDoseMSv).toBeGreaterThan(100);
+      }
     });
 
     it("evaluates key metric properly for sheltered vs exposed crew", () => {

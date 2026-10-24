@@ -35,11 +35,11 @@ export const crisisSpe1972: CrisisScenario = {
     co2Kg: 0.05,
     potableWaterKg: 300,
     foodDryMassKg: 50,
-    batteryEnergyKwh: 60,
-    batteryCapacityKwh: 80,
+    batteryEnergyKwh: 120,
+    batteryCapacityKwh: 140,
     habitatVolumeM3: 45,
     solarArrayAreaM2: 25,
-    fissionReactorKwe: 0,
+    fissionReactorKwe: 10, // 10 kWe reactor power ensures heater functions through lunar night [NASA-FSP]
     shieldingGPerCm2: 20, // Moon habitat regolith shielding base [HRP-ARS]
     cropTrays: [],
   },
@@ -47,7 +47,7 @@ export const crisisSpe1972: CrisisScenario = {
   systems: [
     { id: "lifeSupport", trl: 9, nominalPowerKw: 0.5, priority: 0, spares: 1 },
     { id: "powerDistribution", trl: 9, nominalPowerKw: 0.3, priority: 1, spares: 1 },
-    { id: "thermalControl", trl: 8, nominalPowerKw: 0.4, priority: 2, spares: 1 },
+    { id: "thermalControl", trl: 8, nominalPowerKw: 7.5, priority: 2, spares: 1 }, // 7.5 kW heater matches Moon cold loss
     { id: "comms", trl: 9, nominalPowerKw: 0.2, priority: 3, spares: 1 },
   ],
 
@@ -135,6 +135,19 @@ export const crisisSpe1972: CrisisScenario = {
         backupStation: "incidentCommand",
       },
     ],
+    systems: {
+      thermalControl: {
+        id: "thermalControl",
+        trl: 8,
+        nominalPowerKw: 7.5,
+        priority: 2,
+        operational: true,
+        spares: 1,
+        poweredThisHour: true,
+        efficiencyPenaltyFraction: 0,
+        maintenanceCreditUntilHour: 0,
+      },
+    },
     activeIncidents: [
       {
         id: "spe-1972",
