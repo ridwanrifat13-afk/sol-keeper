@@ -223,4 +223,80 @@ describe("M9.3 — Historical Crisis Scenarios", () => {
       expect(metric.playerValue(state)).toBe(30);
     });
   });
+
+  describe("Replay state isolation across restarts", () => {
+    it("starts fresh after Apollo 13 decision was made in a previous run", () => {
+      const params = {
+        scenarioId: "crisis-apollo13-co2" as const,
+        crewSize: 3,
+        difficulty: "nominal" as const,
+        seed: 1,
+        missionStartIso: "1970-04-11T19:13:00Z",
+      };
+
+      // Run 1: Player improvises adapter and modifies system
+      const run1 = createRun(params, crisisApollo13Co2);
+      const inc1 = run1.activeIncidents.find((i) => i.definitionId === "o2tank-apollo13")!;
+      inc1.chosenResponseId = "improviseAdapter";
+      inc1.resolvedAtHour = 1;
+      run1.systems.co2Scrubber!.operational = true;
+
+      // Run 2: Re-initialized run must be completely pristine
+      const run2 = createRun(params, crisisApollo13Co2);
+      const inc2 = run2.activeIncidents.find((i) => i.definitionId === "o2tank-apollo13")!;
+      expect(inc2.chosenResponseId).toBeUndefined();
+      expect(inc2.resolvedAtHour).toBeUndefined();
+      expect(run2.systems.co2Scrubber!.operational).toBe(false);
+    });
+
+    it("restores original EVA/habitat locations for SPE 1972 crew on replay restart", () => {
+      const params = {
+        scenarioId: "crisis-spe-1972" as const,
+        crewSize: 3,
+        difficulty: "nominal" as const,
+        seed: 1,
+        missionStartIso: "1972-08-04T06:00:00Z",
+      };
+
+      // Run 1: Shelter all crew members
+      const run1 = createRun(params, crisisSpe1972);
+      for (const m of run1.crew) {
+        m.location = "stormShelter";
+      }
+
+      // Run 2: Must restore Commander & LMP to EVA, CMP to habitat
+      const run2 = createRun(params, crisisSpe1972);
+      const commander = run2.crew.find((c) => c.id === "cdr")!;
+      const lmp = run2.crew.find((c) => c.id === "lmp")!;
+      const cmp = run2.crew.find((c) => c.id === "cmp")!;
+
+      expect(commander.location).toBe("eva");
+      expect(lmp.location).toBe("eva");
+      expect(cmp.location).toBe("habitat");
+    });
+
+    it("resets safety consumables and incident state on Mir Fire restart", () => {
+      const params = {
+        scenarioId: "crisis-mir-fire" as const,
+        crewSize: 6,
+        difficulty: "nominal" as const,
+        seed: 1,
+        missionStartIso: "1997-02-23T19:35:00Z",
+      };
+
+      // Run 1: Extinguishers depleted
+      const run1 = createRun(params, crisisMirFire);
+      run1.safetyConsumables.fireExtinguishers = 0;
+      run1.safetyConsumables.respiratorCartridges = 0;
+      const inc1 = run1.activeIncidents.find((i) => i.definitionId === "fire-mir97")!;
+      inc1.chosenResponseId = "fight";
+
+      // Run 2: Must reset to 3 extinguishers and 4 cartridges, incident unresolved
+      const run2 = createRun(params, crisisMirFire);
+      expect(run2.safetyConsumables.fireExtinguishers).toBe(3);
+      expect(run2.safetyConsumables.respiratorCartridges).toBe(4);
+      const inc2 = run2.activeIncidents.find((i) => i.definitionId === "fire-mir97")!;
+      expect(inc2.chosenResponseId).toBeUndefined();
+    });
+  });
 });

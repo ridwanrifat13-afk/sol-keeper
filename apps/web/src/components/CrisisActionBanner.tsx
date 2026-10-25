@@ -1,12 +1,38 @@
 import {
+  FiAlertOctagon,
   FiAlertTriangle,
+  FiAward,
   FiCheckCircle,
+  FiRefreshCw,
   FiShield,
   FiZap,
 } from "react-icons/fi";
 import { isCrisisScenario } from "@sol-keeper/sim";
 import { useRun } from "../store/run.js";
+import { assessCrisisOutcome } from "../dial/crisisThreatAssessment.js";
 import "./CrisisActionBanner.css";
+
+const CRISIS_START_PARAMS: Record<string, { startIso: string; crewNames: string[] }> = {
+  "crisis-apollo13-co2": {
+    startIso: "1970-04-11T19:13:00Z",
+    crewNames: ["Jim Lovell", "Jack Swigert", "Fred Haise"],
+  },
+  "crisis-spe-1972": {
+    startIso: "1972-08-04T06:00:00Z",
+    crewNames: ["Commander", "Lunar Module Pilot", "Command Module Pilot"],
+  },
+  "crisis-mir-fire": {
+    startIso: "1997-02-23T19:35:00Z",
+    crewNames: [
+      "Valeri Korzun",
+      "Aleksandr Kaleri",
+      "Jerry Linenger",
+      "Vasily Tsibliyev",
+      "Aleksandr Lazutkin",
+      "Reinhold Ewald",
+    ],
+  },
+};
 
 export function CrisisActionBanner({
   targetStation,
@@ -18,8 +44,110 @@ export function CrisisActionBanner({
   const scenario = useRun((s) => s.scenario);
   const resolveIncident = useRun((s) => s.resolveIncident);
   const setCrewLocation = useRun((s) => s.setCrewLocation);
+  const resetRun = useRun((s) => s.reset);
 
   if (!isCrisisScenario(scenario)) return null;
+
+  // If the crisis has elapsed (run ended: success, partial, abort, loss),
+  // present the comprehensive Threat & Caution Assessment Evaluation card.
+  if (state.status !== "running") {
+    // Show only at the owning station console (or when no targetStation is specified)
+    if (
+      (scenario.id === "crisis-apollo13-co2" && targetStation && targetStation !== "lifeSupport") ||
+      ((scenario.id === "crisis-spe-1972" || scenario.id === "crisis-mir-fire") &&
+        targetStation &&
+        targetStation !== "incidentCommand")
+    ) {
+      return null;
+    }
+
+    const assessment = assessCrisisOutcome(scenario, state);
+    const outcomeCls =
+      assessment.outcomeLevel === "critical"
+        ? "is-critical"
+        : assessment.outcomeLevel === "caution"
+        ? "is-caution"
+        : "is-nominal";
+
+    const handleRestartFresh = () => {
+      const meta = CRISIS_START_PARAMS[scenario.id];
+      resetRun(
+        {
+          scenarioId: scenario.id,
+          crewSize: scenario.crewSize,
+          difficulty: "nominal",
+          ...(meta?.crewNames ? { crewNames: meta.crewNames } : {}),
+          ...(meta?.startIso ? { missionStartIso: meta.startIso } : {}),
+        },
+        structuredClone(scenario),
+      );
+    };
+
+    const handleOpenDebrief = () => {
+      window.dispatchEvent(new CustomEvent("sol-keeper:navigate", { detail: "debrief" }));
+    };
+
+    return (
+      <aside
+        className={`crisis-action-banner crisis-outcome-panel ${outcomeCls}`}
+        aria-label="Crisis Evaluation and Hazards"
+      >
+        <div className="crisis-banner-head">
+          <div className="crisis-banner-title">
+            {assessment.outcomeLevel === "critical" ? (
+              <FiAlertOctagon aria-hidden="true" />
+            ) : assessment.outcomeLevel === "caution" ? (
+              <FiAlertTriangle aria-hidden="true" />
+            ) : (
+              <FiCheckCircle aria-hidden="true" />
+            )}
+            <span>{assessment.badgeHeadline}</span>
+          </div>
+          <span className="crisis-banner-badge">
+            {assessment.outcomeLevel.toUpperCase()} OUTCOME
+          </span>
+        </div>
+
+        <div className="crisis-outcome-body">
+          <p className="crisis-outcome-decision">
+            <strong>Decision Taken:</strong> {assessment.decisionTakenText}
+          </p>
+
+          <div className="crisis-threats-section">
+            <h4 className="crisis-threats-title">Cautions &amp; Threats Incurred:</h4>
+            <ul className="crisis-threats-list">
+              {assessment.threatsAndCautions.map((threat, idx) => (
+                <li key={idx} className="crisis-threat-item">
+                  <span className="crisis-threat-bullet">▶</span> {threat}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <p className="crisis-outcome-hist">
+            <strong>Historical Telemetry:</strong> {assessment.historicalComparisonText}
+          </p>
+        </div>
+
+        <div className="crisis-banner-actions">
+          <button
+            type="button"
+            className="crisis-action-btn-primary"
+            onClick={handleRestartFresh}
+          >
+            <FiRefreshCw aria-hidden="true" /> Replay Crisis (Fresh Start)
+          </button>
+          <button
+            type="button"
+            className="crisis-action-btn-secondary"
+            onClick={handleOpenDebrief}
+          >
+            <FiAward aria-hidden="true" /> View Full Debrief &amp; Black Box
+          </button>
+        </div>
+      </aside>
+    );
+  }
 
   // Apollo 13 CO2 Buildup banner (targeted to lifeSupport)
   if (scenario.id === "crisis-apollo13-co2") {

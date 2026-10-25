@@ -1,5 +1,6 @@
 import { useRun } from "../store/run.js";
-import type { RunStatus } from "@sol-keeper/sim";
+import { isCrisisScenario, type RunStatus } from "@sol-keeper/sim";
+import { assessCrisisOutcome } from "../dial/crisisThreatAssessment.js";
 
 /** Icon + word + colour class per outcome — never colour alone (brief rule 6). */
 const RUN_STATUS_PRESENTATION: Record<RunStatus, { glyph: string; word: string; cls: string }> = {
@@ -15,6 +16,25 @@ const RUN_STATUS_PRESENTATION: Record<RunStatus, { glyph: string; word: string; 
 export function RunStatusBadge() {
   const status = useRun((s) => s.state.status);
   const reason = useRun((s) => s.state.endReasonCode);
+  const state = useRun((s) => s.state);
+  const scenario = useRun((s) => s.scenario);
+
+  if (status !== "running" && isCrisisScenario(scenario)) {
+    const assessment = assessCrisisOutcome(scenario, state);
+    const cls =
+      assessment.outcomeLevel === "critical"
+        ? "is-critical"
+        : assessment.outcomeLevel === "caution"
+        ? "is-caution"
+        : "is-nominal";
+
+    return (
+      <div className={`run-badge ${cls}`} role="status">
+        <span className="run-badge-headline">{assessment.badgeHeadline}</span>
+        <span className="run-badge-reason"> — {assessment.badgeDetail}</span>
+      </div>
+    );
+  }
 
   const presentation = RUN_STATUS_PRESENTATION[status];
 

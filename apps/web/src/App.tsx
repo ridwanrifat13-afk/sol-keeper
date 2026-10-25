@@ -257,6 +257,16 @@ function AppShell({ initialView = "home" }: AppProps) {
     setDebugOverlay(new URLSearchParams(window.location.search).get("debug") === "1");
   }, []);
 
+  // Programmatic navigation listener for banners/overlays
+  useEffect(() => {
+    function handleNavigate(e: Event) {
+      const custom = e as CustomEvent<View>;
+      if (custom.detail) setView(custom.detail);
+    }
+    window.addEventListener("sol-keeper:navigate", handleNavigate);
+    return () => window.removeEventListener("sol-keeper:navigate", handleNavigate);
+  }, []);
+
   // M10.6: read once, at boot — a run link is a landing-page concern, not something to
   // re-decode on every navigation, and re-running this after the player has started making
   // their own decisions would silently overwrite them with whatever the URL still says.
