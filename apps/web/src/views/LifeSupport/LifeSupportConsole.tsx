@@ -4,6 +4,7 @@ import {
   co2ScrubberDutyCycleFraction,
   cropRequiredLightHours,
   habitat,
+  isCrisisScenario,
   lifeSupport,
   physiology,
   survivalModes,
@@ -49,6 +50,7 @@ const THERMAL_CONTROL_MODES: readonly ThermalControlMode[] = ["comfort", "powerS
 export function LifeSupportConsole() {
   useRun((s) => s.version);
   const state = useRun((s) => s.state);
+  const scenario = useRun((s) => s.scenario);
   const oxygenHistory = useRun((s) => s.resourceHistory.oxygen);
   const waterHistory = useRun((s) => s.resourceHistory.water);
   const setSurvivalMode = useRun((s) => s.setSurvivalMode);
@@ -73,9 +75,11 @@ export function LifeSupportConsole() {
         <p className="view-hint">Air, water, food, and how hard the crew is rationing.</p>
       </header>
 
-      <CockpitTarget id="lifesupport-crisis-action" role="primary" priority={0} label="Crisis Action">
-        <CrisisActionBanner targetStation="lifeSupport" />
-      </CockpitTarget>
+      {isCrisisScenario(scenario) && (
+        <CockpitTarget id="lifesupport-crisis-action" role="primary" priority={0} label="Crisis Action">
+          <CrisisActionBanner targetStation="lifeSupport" />
+        </CockpitTarget>
+      )}
 
       {/* Player request: the five resource gauges used to compete for five separate cockpit
          screens, one each — crowding out ISRU/Rations/Heating & cooling/Crop conditions into

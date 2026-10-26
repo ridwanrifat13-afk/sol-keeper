@@ -11,6 +11,7 @@ import { decisionText } from "../../i18n/decisionText.js";
 import { STATUS, statusFromReserve, type StatusPresentation } from "../../components/status.js";
 import {
   INCIDENT_CATALOG,
+  isCrisisScenario,
   management,
   radiation,
   type CrewLocation,
@@ -150,9 +151,11 @@ export function IncidentCommandConsole() {
         </p>
       </header>
 
-      <CockpitTarget id="incident-crisis-action" role="primary" priority={0} label="Crisis Action">
-        <CrisisActionBanner targetStation="incidentCommand" />
-      </CockpitTarget>
+      {isCrisisScenario(scenario) && (
+        <CockpitTarget id="incident-crisis-action" role="primary" priority={0} label="Crisis Action">
+          <CrisisActionBanner targetStation="incidentCommand" />
+        </CockpitTarget>
+      )}
 
       <CockpitTarget id="incident-ripple-graph" role="primary" priority={1} label="Dependency map">
         <section className="panel panel-span-full" aria-labelledby="ripple-graph-heading">
