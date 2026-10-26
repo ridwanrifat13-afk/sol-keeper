@@ -1,0 +1,490 @@
+/* ==========================================================================
+   ScoreCard Styles (M9.4)
+   ========================================================================== */
+
+.scorecard-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(16, 22, 34, 0.95), rgba(11, 16, 26, 0.98));
+  border: 1px solid rgba(80, 140, 220, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+
+.scorecard-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #38bdf8, #818cf8, #34d399);
+}
+
+/* Header & Grade Badge */
+.scorecard-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scorecard-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.scorecard-grade-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  font-weight: 800;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.scorecard-grade-badge:hover {
+  transform: scale(1.04);
+}
+
+.grade-letter {
+  font-size: 2rem;
+  line-height: 1;
+  font-family: var(--font-display, monospace, sans-serif);
+}
+
+.grade-sublabel {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+/* Grade Colors */
+.grade-a-plus,
+.grade-a {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(16, 185, 129, 0.35));
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.5);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.25);
+}
+
+.grade-b {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(99, 102, 241, 0.35));
+  color: #60a5fa;
+  border-color: rgba(96, 165, 250, 0.5);
+  box-shadow: 0 0 20px rgba(96, 165, 250, 0.25);
+}
+
+.grade-c {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(234, 179, 8, 0.35));
+  color: #facc15;
+  border-color: rgba(250, 204, 21, 0.5);
+  box-shadow: 0 0 20px rgba(250, 204, 21, 0.25);
+}
+
+.grade-d {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.25), rgba(234, 88, 12, 0.35));
+  color: #fb923c;
+  border-color: rgba(251, 146, 60, 0.5);
+}
+
+.grade-f {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(220, 38, 38, 0.35));
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.5);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+/* Score Group */
+.scorecard-score-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.scorecard-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  letter-spacing: -0.01em;
+}
+
+.scorecard-total-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.scorecard-total-number {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1;
+  font-family: var(--font-display, monospace, sans-serif);
+}
+
+.scorecard-total-max {
+  font-size: 1.1rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.scorecard-stars {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 0.75rem;
+  color: #facc15;
+}
+
+.star-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.star-icon.filled {
+  fill: #facc15;
+}
+
+.star-icon.empty {
+  opacity: 0.2;
+}
+
+/* Percentile Card */
+.scorecard-percentile-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: rgba(30, 41, 59, 0.6);
+  padding: 0.75rem 1.1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.percentile-headline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: #cbd5e1;
+}
+
+.percentile-icon {
+  color: #38bdf8;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.percentile-bold {
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.percentile-bot-comparison {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+/* Category Progress Bars Grid */
+.scorecard-components {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.components-heading {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+
+.components-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.component-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.component-card:hover {
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.component-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.component-label-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.component-emoji {
+  font-size: 1.15rem;
+}
+
+.component-svg-icon {
+  color: #38bdf8;
+  display: flex;
+  font-size: 1.1rem;
+}
+
+.component-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.component-score-group {
+  font-size: 0.85rem;
+  font-family: monospace, sans-serif;
+}
+
+.component-score-val {
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.component-score-max {
+  color: #64748b;
+  margin-left: 2px;
+}
+
+.component-progress-track {
+  width: 100%;
+  height: 7px;
+  background: rgba(30, 41, 59, 0.8);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.component-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.component-progress-fill.outcome {
+  background: linear-gradient(90deg, #3b82f6, #06b6d4);
+}
+.component-progress-fill.margin {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+.component-progress-fill.decision {
+  background: linear-gradient(90deg, #8b5cf6, #a855f7);
+}
+.component-progress-fill.efficiency {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+.component-progress-fill.welfare {
+  background: linear-gradient(90deg, #ec4899, #f43f5e);
+}
+
+/* Commander Expandable Telemetry Breakdown */
+.component-commander-details {
+  margin-top: 0.4rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  padding-top: 0.4rem;
+}
+
+.commander-expand-btn {
+  background: none;
+  border: none;
+  color: #38bdf8;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.2rem 0;
+  transition: color 0.15s ease;
+}
+
+.commander-expand-btn:hover {
+  color: #7dd3fc;
+}
+
+.commander-event-list {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.commander-event-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+}
+
+.commander-event-item.positive .event-delta {
+  color: #34d399;
+  font-weight: 600;
+}
+
+.commander-event-item.negative .event-delta {
+  color: #f87171;
+  font-weight: 600;
+}
+
+.event-meta {
+  color: #64748b;
+  font-family: monospace;
+}
+
+.event-reason {
+  color: #cbd5e1;
+  flex: 1;
+}
+
+.event-jump-link {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  font-size: 0.68rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.event-jump-link:hover {
+  background: rgba(56, 189, 248, 0.25);
+}
+
+/* Decisions Grid */
+.scorecard-decisions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.decision-callout-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.decision-callout-card.positive {
+  border-left: 3px solid #34d399;
+}
+
+.decision-callout-card.negative {
+  border-left: 3px solid #f87171;
+}
+
+.decision-callout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.decision-header-icon {
+  font-size: 1.1rem;
+  margin-right: 0.4rem;
+}
+
+.decision-header-icon.positive {
+  color: #34d399;
+}
+
+.decision-header-icon.negative {
+  color: #f87171;
+}
+
+.decision-header-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  flex: 1;
+}
+
+.decision-net-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: monospace;
+}
+
+.decision-net-pill.positive {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.decision-net-pill.negative {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.decision-meta-row {
+  display: flex;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-transform: capitalize;
+}
+
+.decision-explanation {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #cbd5e1;
+}
+
+/* Responsive queries */
+@media (max-width: 640px) {
+  .scorecard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .scorecard-percentile-card {
+    width: 100%;
+  }
+}

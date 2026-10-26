@@ -3389,3 +3389,9 @@ html.cockpit-active .app {
 :root.low-power-mode .orbital-loading-spinner {
   animation: none;
 }
+
+.event-card.event-card-highlighted {
+  box-shadow: 0 0 0 3px #38bdf8, 0 0 25px rgba(56, 189, 248, 0.4) !important;
+  transform: scale(1.01);
+  transition: all 0.3s ease;
+}

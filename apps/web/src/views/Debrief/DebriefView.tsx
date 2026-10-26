@@ -3,6 +3,7 @@ import type { TFunction } from "i18next";
 import { FiFileText } from "react-icons/fi";
 import { causalCascade, directEffects, isCrisisScenario, type Body, type LogEntry, type RunStatus } from "@sol-keeper/sim";
 import { CrisisDebriefPanel } from "./CrisisDebriefPanel.js";
+import { ScoreCard } from "../../components/debrief/ScoreCard.js";
 import { useDial } from "../../store/dial.js";
 import { useRun } from "../../store/run.js";
 import { logText } from "../../i18n/logText.js";
@@ -140,13 +141,24 @@ export function DebriefView({ onViewReport }: { onViewReport: () => void }) {
 
       {isCrisisScenario(scenario) && <CrisisDebriefPanel scenario={scenario} state={state} />}
 
+      <ScoreCard
+        onJumpToEvent={(eventId) => {
+          const el = document.getElementById(`event-${eventId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.classList.add("event-card-highlighted");
+            setTimeout(() => el.classList.remove("event-card-highlighted"), 2000);
+          }
+        }}
+      />
+
       <section className="panel" aria-labelledby="timeline-heading">
         <h2 id="timeline-heading">{t("debrief.timelineHeading", { count: log.length })}</h2>
         <ul className="event-list event-list-full">
           {log.map((entry) => {
             const status = statusFromSeverity(entry.severity);
             return (
-              <li key={entry.id} className={`event-card ${status.className}`}>
+              <li key={entry.id} id={`event-${entry.id}`} className={`event-card ${status.className}`}>
                 <div className="event-head">
                   <span className="event-sev">
                     <span aria-hidden="true">{status.glyph}</span> {status.label}

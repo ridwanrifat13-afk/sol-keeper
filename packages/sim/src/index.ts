@@ -138,6 +138,19 @@ export type { CombinationResult, DecisionCoverageEntry, SeedOutcome } from "./en
 export { decisionCoverage, runCombination } from "./engine/balance.js";
 export { equivalentSystemMass, scenarioEsmBreakdown } from "./engine/esm.js";
 export type {
+  BotBaselines,
+  CrisisHistoricalComparison,
+  CrisisScoreComponent,
+  CrisisScoreComponentId,
+  HighlightedDecision,
+  MissionScore,
+  ScenarioCrisisScore,
+  ScoreComponent,
+  ScoreComponentId,
+  ScoreEvent,
+} from "./engine/scoring.js";
+export { calculateGrade, scoreCrisisReplay, scoreMission } from "./engine/scoring.js";
+export type {
   EsmBreakdown,
   EsmInputs,
   PowerInfrastructure,

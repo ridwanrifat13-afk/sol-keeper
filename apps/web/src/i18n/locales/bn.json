@@ -188,5 +188,67 @@
     "directEffect_other": "সরাসরি প্রভাব",
     "totalDownstream": ", মোট {{count}}টি পরবর্তী প্রভাব সহ",
     "effectsAcrossOccurrences": "→ সব {{count}}টি ঘটনা জুড়ে মোট {{total}}টি প্রভাব।"
+  },
+  "scoring": {
+    "component": {
+      "outcome": "মিশনের ফলাফল",
+      "margin": "নিরাপত্তা মার্জিন",
+      "decision": "সিদ্ধান্তের মান",
+      "efficiency": "সম্পদ ব্যবহারের দক্ষতা",
+      "welfare": "ক্রুদের কল্যাণ"
+    },
+    "outcome": {
+      "successWithStretch": "প্রাথমিক ও অতিরিক্ত লক্ষ্য সফলভাবে সম্পন্ন হয়েছে",
+      "successAllPrimary": "সব প্রাথমিক লক্ষ্য সফলভাবে সম্পন্ন হয়েছে",
+      "partialMajorityGoals": "মিশন আংশিক সম্পন্ন হয়েছে এবং বেশিরভাগ লক্ষ্য অর্জিত হয়েছে",
+      "partialNoGoals": "প্রাথমিক লক্ষ্য ছাড়া পূর্ণ সময় বেঁচে থাকা",
+      "abortEarlySafe": "ক্রুদের নিরাপদে প্রাথমিক মিশন বাতিল",
+      "abortLateSafe": "ক্রুদের নিরাপদে দেরিতে মিশন বাতিল",
+      "lossWithSurvivors": "আউটপোস্ট ক্ষতিগ্রস্ত কিন্তু ক্রু বেঁচে আছে",
+      "lossNoSurvivors": "সম্পূর্ণ আউটপোস্ট ও ক্রু ধ্বংস"
+    },
+    "margin": {
+      "batteryDepleted": "ব্যাটারি শূন্য শতাংশে নেমে গেছে",
+      "crewCritical": "ক্রু সদস্য আশঙ্কাজনক অবস্থায় প্রবেশ করেছে",
+      "doseExceeded": "বিকিরণের মাত্রা ৪০০ mSv সীমা অতিক্রম করেছে",
+      "rationingMode1": "মোড ১ রেশন সক্রিয়",
+      "rationingMode2": "মোড ২ রেশন সক্রিয়",
+      "lowOxygenExcursion": "অক্সিজেনের চাপ সতর্কীকরণ সীমার নিচে",
+      "highCo2Excursion": "কার্বন ডাই অক্সাইড ৩.০ mmHg-এর উপরে",
+      "severeCo2Excursion": "কার্বন ডাই অক্সাইড ৭.৬ mmHg-এর উপরে",
+      "lowWaterExcursion": "জরুরি সীমার নিচে পানির মজুদ"
+    },
+    "decision": {
+      "timerExpiredDefault": "সিদ্ধান্তের সময় শেষ — ডিফল্ট প্রয়োগ",
+      "superiorResponse": "উত্তম ব্যবস্থা গ্রহণ",
+      "acceptableResponse": "গ্রহণযোগ্য ব্যবস্থা গ্রহণ",
+      "costlyResponse": "অতিরিক্ত ক্ষতিকারক পদক্ষেপ",
+      "proactivePriorityBonus": "ব্রাউনআউটের আগে পাওয়ার অগ্রাধিকার পরিবর্তন",
+      "proactiveRationBonus": "সংকটের আগে রেশন কমানোর ব্যবস্থা",
+      "proactiveMaintenanceBonus": "ত্রুটির আগে পূর্বপ্রস্তুতিমূলক রক্ষণাবেক্ষণ",
+      "evaNoGoBeforeSpeBonus": "সৌরঝড়ের আগে স্পেসওয়াক বন্ধ",
+      "earlyShelterBonus": "ঝড়ের নিশ্চিতকরণের আগেই বাঙ্কারে আশ্রয়",
+      "nominalOperations": "স্বাভাবিক কার্যক্রম অব্যাহত",
+      "noCostlyErrors": "কোনো মারাত্মক ভুল নেই"
+    },
+    "efficiency": {
+      "improvisedRepairDeduction": "অপ্রস্তুত বিকল্প মেরামতে দক্ষতা হ্রাস",
+      "failedRepairDeduction": "ব্যর্থ মেরামত চেষ্টা",
+      "overProvisionedFoodDeduction": "মিশন শেষে অতিরিক্ত খাবারের মজুদ",
+      "prematureRefailureDeduction": "মেরামতের ১০ দিনের মধ্যে পুনরায় ত্রুটি"
+    },
+    "welfare": {
+      "averageMoraleScore": "মিশন জুড়ে গড় মনোবল",
+      "overtimeWithinBounds": "কর্মঘণ্টা গ্রহণযোগ্য সীমার মধ্যে (<= ৪৮ ঘণ্টা অতিরিক্ত)",
+      "overtimeExceededDeduction": "অতিরিক্ত কর্মঘণ্টার সীমা অতিক্রম",
+      "noPreventableImpairment": "প্রতিরোধযোগ্য কোনো স্বাস্থ্যহানি ঘটেনি",
+      "preventableImpairmentOccurred": "প্রতিরোধযোগ্য স্বাস্থ্যহানি বা ক্লান্তি ঘটেছে"
+    },
+    "crisis": {
+      "speed": "সমাধানের গতি",
+      "hazard": "সর্বোচ্চ বিপত্তি প্রশমন",
+      "resources": "সংরক্ষিত সম্পদ",
+      "crew": "ক্রুদের অবস্থা"
+    }
   }
 }

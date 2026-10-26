@@ -22,7 +22,8 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "lighthouse": "node scripts/lighthouse.ts",
-    "gen:station-images": "node scripts/generate-station-images.ts"
+    "gen:station-images": "node scripts/generate-station-images.ts",
+    "score:baselines": "node scripts/score-baselines.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

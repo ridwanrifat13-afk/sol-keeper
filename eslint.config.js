@@ -50,7 +50,7 @@ const SIM_PURITY_RULES = {
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/**", "**/node_modules/**", "**/.vercel/**", "**/coverage/**"],
+    ignores: ["**/dist/**", "**/node_modules/**", "**/.vercel/**", "**/coverage/**", "brain/**"],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

@@ -493,6 +493,202 @@ Report: any parameter that required a new constant (add to constants.ts with sou
 any engine change that was tempting but avoided, and the total new lines of code
 (should be under 600 excluding scenario data files).
 
+# M9.4 — Mission Scoring System
+
+## Goal
+A deterministic 0–100 scoring engine that evaluates a complete mission log and produces a
+structured score with per-category breakdowns, highlighted moments, and a percentile
+rank against the existing bot baseline runs.
+
+## Hard rules
+1. PURE FUNCTION. The scoring engine lives in packages/sim/src/engine/scoring.ts and has
+   zero side effects, zero imports from React, and zero access to external state.
+   Input: MissionLog + FinalState + ScenarioDefinition + Difficulty.
+   Output: MissionScore (typed, documented).
+2. DETERMINISTIC. Same log = same score always. No randomness, no Date.now().
+3. EVERY deduction and bonus must produce an explanatory string at all three Reality Dial
+   depths. The explanation string is a key into the i18n file, not a hardcoded sentence.
+4. NO new engine behavior. The scorer reads the existing event log; it does not write to
+   it or change how events are generated.
+5. The bot baseline distributions are precomputed and committed as
+   apps/web/public/scoring/baselines.json — never computed at runtime.
+
+## Types (packages/sim/src/engine/scoring.ts)
+```ts
+interface ScoreComponent {
+  id: 'outcome' | 'margin' | 'decision' | 'efficiency' | 'welfare';
+  label: string;                    // i18n key
+  score: number;                    // 0–max
+  maxScore: number;
+  events: ScoreEvent[];             // what drove this component
+}
+interface ScoreEvent {
+  sol: number; hour: number;
+  delta: number;                    // positive = bonus, negative = deduction
+  reason: string;                   // i18n key
+  causalEventId?: string;           // links to the Black Box log entry
+  depth: 'all' | 'specialist' | 'commander';
+}
+interface HighlightedDecision {
+  sol: number; station: string;
+  chosenOption: string; alternativeOption: string;
+  netEffect: number;                // positive = good call, negative = bad call
+  explanation: string;              // i18n key
+}
+interface MissionScore {
+  total: number;                    // 0–100, rounded to 1 decimal
+  grade: 'A+' | 'A' | 'B' | 'C' | 'D' | 'F';
+  components: ScoreComponent[];
+  bestDecision: HighlightedDecision;
+  costliestDecision: HighlightedDecision;
+  percentile: number;               // against bot baseline for this scenario + difficulty
+  baselineComparison: {
+    prudentBotMedian: number; greedyBotMedian: number; idleBotMedian: number;
+  };
+  isCrisisReplay: boolean;
+}
+```
+
+## Scoring logic (implement exactly as specified)
+
+### 1. Outcome (30 pts)
+Read outcome from FinalState.missionOutcome and ScenarioDefinition goals:
+- SUCCESS + all stretch goals: 30
+- SUCCESS + all primary goals: 24
+- SUCCESS + >50% primary goals: 18
+- SUCCESS + no goals: 10
+- ABORT, crew safe, before 20% of mission elapsed: 16
+- ABORT, crew safe, after 20% elapsed: 8
+- LOSS, at least one survivor: 3
+- LOSS, no survivors: 0
+
+### 2. Safety Margin (25 pts, penalty model)
+Scan the full event log chronologically. Accumulate penalties:
+- O2 below warning threshold: 0.1 per hour
+- CO2 above 3 mmHg: 0.08 per hour; above 7.6 mmHg: 0.15 per hour
+- Water below 5% of daily requirement: 0.1 per hour
+- Battery at 0%: 5 per event
+- Any crew member in 'critical' condition: 3 per crew member (once, not per hour)
+- Cumulative dose above 400 mSv (any crew member): 4 per crew member
+- Mode 1 rationing active: 0.05 per hour; mode 2: 0.15 per hour
+Final score = max(0, 25 − total_penalties). Penalties above 25 floor at 0.
+
+### 3. Decision Quality (25 pts)
+For each incident response in the log (type: 'incidentResponse'):
+  Look up the incident's response catalog. Compute the counterfactual: what would the
+  default response have cost? Compare to chosen response's actual downstream cost
+  (traceable via causalEventId chain in the log).
+  - Chosen outcome cost < default cost: +2
+  - Chosen outcome cost ≈ default cost (within 10%): +1
+  - Chosen outcome cost > default cost: 0
+  - Timer expired (chosenResponseId = 'default'): −1
+
+Proactive bonus (scan the planning log, type: 'solPlanUpdate'):
+- Power priority updated in the sol BEFORE a brownout event: +1 (max 5)
+- Ration level reduced in the sol BEFORE a critical resource warning: +1 (max 3)
+- Maintenance task scheduled in the sol BEFORE a failure event on that component: +2 (max 4)
+- EVA cleared as 'no-go' in the sol BEFORE an SPE event: +2
+- Crew sheltered before SPE confirmation (not after): +2
+Cap total decision score at 25.
+
+### 4. Resource Efficiency (10 pts)
+Start at 10. Deduct:
+- Each improvised repair (spares insufficient, penalty applied): −0.5
+- Each failed repair attempt (spares consumed, component still failed): −1
+- End-of-mission food surplus > 20% of initial stores: −1
+  (you could have packed more science; label this "over-provisioned" not "waste")
+- Each spare part consumed on a repair that itself failed within 10 sols: −0.5
+Floor at 0.
+
+### 5. Crew Welfare (10 pts)
+- Average crew morale across all crew and all hours, normalized 0–1: × 4
+- No crew member exceeding overtimeCeilingFractionOfAverage for more than 48 consecutive
+  hours: 3 pts (pro-rated: −1 per crew member who exceeded it)
+- No crew member entering 'impaired' state from a PREVENTABLE cause: 3 pts
+  (preventable = caused by a player planning decision, per causalEventId chain;
+   unavoidable = caused by an incident with no prior warning)
+Floor at 0.
+
+## Highlighted decisions
+bestDecision: the ScoreEvent with the highest positive delta in component 'decision'.
+costliestDecision: the ScoreEvent with the lowest (most negative) delta across ALL components,
+linked to a player action (not an environmental event). Must have a causalEventId.
+If tied, prefer the event with the longest downstream causal chain in the log.
+
+## Percentile computation
+Load apps/web/public/scoring/baselines.json (precomputed). Find the bucket for
+[scenario.id, difficulty]. The player's total falls somewhere in the distribution of
+200 bot scores. Return Math.round((rank / 200) * 100). Also return the three bot medians.
+
+Write scripts/score-baselines.ts: runs all bot logs from the existing balance harness
+through the scoring engine and writes baselines.json. I run this script; it is not
+run at runtime. It must be re-run whenever the scoring engine changes.
+
+## Grade mapping
+90–100: A+ · 80–89: A · 70–79: B · 60–69: C · 45–59: D · 0–44: F
+On a LOSS outcome, cap at C regardless of component scores.
+
+## Crisis Replay scoring (separate ScenarioCrisisScore type)
+- Resolution speed (40): score = 40 × (1 − playerMinutes / crisisMaxDurationHours × 60)
+  Floor at 0. If player exceeds maxDuration, score 0 on this component.
+- Peak hazard (30): score = 30 × (1 − playerPeakMetric / lethalThreshold)
+  For apollo13: playerPeakCO2 / 30.4 mmHg. For spe-1972: playerPeakDose / 3000 mGy.
+  Floor at 0.
+- Resources conserved (20): score = 20 × (sparesRemaining / sparesAtOnset)
+- Crew condition (10): all nominal = 10; one impaired = 6; one critical = 2; any lost = 0
+Include a historicalComparison block mirroring the player's key metric against the
+documented historical value (not a score, just a display field).
+
+## ScoreCard component (apps/web/src/components/debrief/ScoreCard.tsx)
+- Renders above the Black Box panel, not instead of it.
+- Large total score, grade, and star rating (1–5 stars, mapped from grade).
+- Five horizontal bars, one per component, with icon and score/max.
+- percentile line: "Better than X% of [difficulty] [scenario] runs"
+- Bot comparison: one line naming which bot level you exceeded.
+- bestDecision and costliestDecision blocks, each with sol, station, and the
+  explanation string at the current Reality Dial depth.
+- Cadet depth: emoji icons, star rating, two highlighted decisions in plain language.
+- Specialist: numerical scores per category, plain labels, the two decisions.
+- Commander: all of the above plus the raw penalty events listed per category,
+  each linking to its Black Box entry.
+- Score is included in the mission report (M10) and the seeded URL's metadata.
+
+## AI Mission Director integration
+Pass the MissionScore to the existing mission-debrief API function alongside the mission
+log. Add to the system prompt: "The player scored [total]/100 with breakdown [components].
+Their best decision was [bestDecision.explanation]. Their costliest was
+[costliestDecision.explanation]. Their percentile is [percentile]%. Reference the score
+components specifically in your analysis — don't just describe what happened, say what
+the numbers mean about their strategy."
+
+## i18n
+All ScoreEvent reason strings are i18n keys. Add en entries for all of them now.
+Mark bn entries needsReview: true — M11 handles translation.
+
+## Tests
+- Unit: idle player (no decisions, no proactive tweaks) scores 0 on decision quality,
+  scores max penalty on safety margin, and produces a valid MissionScore.
+- Unit: a log with zero planning updates scores 0 proactive bonuses.
+- Unit: the best and costliest decisions are always linked to player actions, never
+  to environmental events.
+- Unit: grade never exceeds C on a LOSS outcome regardless of component scores.
+- Unit: crisis replay — Apollo 13 with CO2 held below 5 mmHg and all spares used
+  scores above 70.
+- Unit: score-baselines.ts produces valid JSON with the correct schema when run.
+- e2e: complete First Light, assert ScoreCard renders with a total, a grade, and
+  two highlighted decisions.
+- e2e: complete First Light twice with different strategies; assert scores differ.
+
+## Order of work
+1. scoring.ts with all five components and MissionScore type. Unit tests.
+2. scripts/score-baselines.ts. I run it and commit baselines.json.
+3. ScoreCard component (Specialist depth first, then Cadet and Commander).
+4. Crisis Replay ScenarioCrisisScore.
+5. AI Mission Director integration.
+6. i18n keys.
+STOP after step 1 and show me the MissionScore type and three sample outputs
+(idle player, prudent player, greedy player on Jezero Nominal).
+
 ## M10 — Shareable seeded runs + mission report
 - URL encodes SIM_VERSION, scenario, difficulty, crew size, site, power choice, seed;
   optionally the compressed input log in the fragment for exact replay (ask before adding a

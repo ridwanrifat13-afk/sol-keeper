@@ -188,5 +188,67 @@
     "directEffect_other": "direct effects",
     "totalDownstream": ", {{count}} total downstream",
     "effectsAcrossOccurrences": "→ {{total}} effects across all {{count}} occurrences."
+  },
+  "scoring": {
+    "component": {
+      "outcome": "Mission Outcome",
+      "margin": "Safety Margin",
+      "decision": "Decision Quality",
+      "efficiency": "Resource Efficiency",
+      "welfare": "Crew Welfare"
+    },
+    "outcome": {
+      "successWithStretch": "Primary and stretch objectives completed",
+      "successAllPrimary": "Primary objectives completed successfully",
+      "partialMajorityGoals": "Partial mission completion with majority goals met",
+      "partialNoGoals": "Crew survived full duration without primary goals",
+      "abortEarlySafe": "Early mission abort with crew fully preserved",
+      "abortLateSafe": "Late mission abort with crew safe",
+      "lossWithSurvivors": "Outpost compromised with surviving crew members",
+      "lossNoSurvivors": "Total outpost and crew loss"
+    },
+    "margin": {
+      "batteryDepleted": "Battery depleted to zero percent reserve",
+      "crewCritical": "Crew member entered critical medical condition",
+      "doseExceeded": "Cumulative radiation dose exceeded 400 mSv career threshold",
+      "rationingMode1": "Mode 1 rationing active",
+      "rationingMode2": "Mode 2 rationing active",
+      "lowOxygenExcursion": "Atmospheric oxygen partial pressure below warning limit",
+      "highCo2Excursion": "Cabin carbon dioxide accumulated above 3.0 mmHg",
+      "severeCo2Excursion": "Cabin carbon dioxide accumulated above 7.6 mmHg",
+      "lowWaterExcursion": "Potable water reserves below emergency reserve"
+    },
+    "decision": {
+      "timerExpiredDefault": "Response timer lapsed — unmitigated default taken",
+      "superiorResponse": "Selected action mitigated hazard below counterfactual default cost",
+      "acceptableResponse": "Selected action addressed hazard within expected parameters",
+      "costlyResponse": "Response incurred elevated downstream resource friction",
+      "proactivePriorityBonus": "Power load priority preemptively rebalanced prior to brownout",
+      "proactiveRationBonus": "Ration consumption reduced prior to critical reserve breach",
+      "proactiveMaintenanceBonus": "Preventive maintenance completed prior to component wear failure",
+      "evaNoGoBeforeSpeBonus": "EVA operations suspended prior to solar particle event",
+      "earlyShelterBonus": "Crew sheltered in storm bunker prior to radiation event confirmation",
+      "nominalOperations": "Nominal station operations maintained",
+      "noCostlyErrors": "No critical tactical errors recorded"
+    },
+    "efficiency": {
+      "improvisedRepairDeduction": "Improvised repair completed with degraded component efficiency",
+      "failedRepairDeduction": "Repair attempt failed with consumed spare parts",
+      "overProvisionedFoodDeduction": "Food inventory over-provisioned at mission completion",
+      "prematureRefailureDeduction": "Repaired component failed prematurely within 10 sols"
+    },
+    "welfare": {
+      "averageMoraleScore": "Average crew morale across mission duration",
+      "overtimeWithinBounds": "Crew work hours kept within sustainable limits (<= 48h overtime)",
+      "overtimeExceededDeduction": "Crew work hours exceeded overtime endurance limits",
+      "noPreventableImpairment": "No crew members suffered preventable physical impairment",
+      "preventableImpairmentOccurred": "Preventable crew fatigue or impairment incurred"
+    },
+    "crisis": {
+      "speed": "Resolution Speed",
+      "hazard": "Peak Hazard Mitigation",
+      "resources": "Resources Conserved",
+      "crew": "Crew Condition"
+    }
   }
 }

@@ -5,6 +5,7 @@
  * erases, so no server code can ever reach the browser bundle — the thing that would leak
  * NASA_API_KEY handling into client JavaScript.
  */
+import type { LogEntry, MissionScore, Scenario } from "@sol-keeper/sim";
 
 export type Provenance = "live" | "snapshot";
 
@@ -62,3 +63,19 @@ export interface ApiError {
   readonly error: string;
   readonly fallback?: "snapshot";
 }
+
+export interface MissionDebriefRequest {
+  readonly log?: readonly LogEntry[];
+  readonly score: MissionScore;
+  readonly scenario?: Scenario;
+}
+
+export interface MissionDebriefResponse {
+  readonly systemPrompt: string;
+  readonly scoreSummary: {
+    readonly total: number;
+    readonly grade: string;
+    readonly percentile: number;
+  };
+}
+
